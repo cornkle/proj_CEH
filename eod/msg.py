@@ -22,9 +22,9 @@ from os import remove
 # Output: Filelist of TRMM files over West Africa at full/half hour; 
 # corrsponding time rounded to half or full hour
 #==============================================================================
-def read_TRMMswath():
+def extract_TRMMfile(tpath):
     
-    path = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
+    path = tpath
     pattern = path + '{0:d}/{1:02d}/2A25.{0:d}{1:02d}{2:02d}.*.7_rain_f4.gra' 
     
     yrange=[2013]
@@ -93,7 +93,7 @@ def parseCellTables(tab):
     
 
 #==============================================================================
-# Rewrites the METEOSAT cell table files from the nice object. 
+# Rewrites the METEOSAT cell table files from the nice object to nice txt files. 
 #==============================================================================
 def rewriteBigcellTab():
 
@@ -109,36 +109,113 @@ def rewriteBigcellTab():
         minute=tab["Date"][0].minute
         hour=tab["Date"][0].hour
         tab.to_csv(out+'cell_40c_'+str(hour).zfill(2)+str(minute).zfill(2)+'_JJAS.txt')
+        
+
+
+#==============================================================================
+# Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
+#==============================================================================
+def rewriteMsgLonLat():
+    llFile = '/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.gra'
+
+    llShape = (580,1640)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lon = ll[0:580*1640]
+    lat = ll[580*1640:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = '/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon'
+    np.savez(llsavefile,lon=lon,lat=lat)        
+
   
 #==============================================================================
 # Reads the METEOSAT blob files       
 #==============================================================================
 def readBlobFile(bfile):
-    blob_path = "/users/global/cornkle/data/OBS/meteosat/cell_blob_files/"
-    bfile = blob_path+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)
+    
+    rrShape = (580,1640) # msg shape
+    rrMDI = np.uint16() 
     rr = np.fromfile(bfile,dtype=rrMDI.dtype) 
-    rr.shape = rrShape      
+    rr.shape = rrShape
+    return rr
+    
+#==============================================================================
+# Reads the METEOSAT blob files       
+#==============================================================================
+def readTRMMswath(tpath):
+    
+    rr = np.fromfile(files,dtype=np.int16) 
+    x = 49
+    nb = rr.size
+    single = nb/4 # variables lon lat rainrate flag
+
+    lons = rr[0:single]
+    lats = rr[single:2*single]
+    rainrs = rr[2*single:3*single]
+    flags = rr[3*single:4*single]
+    
+    y = lons.size/x
+    lons = np.resize(lons, (y,x))
+    lats = np.resize(lats, (y,x))
+    rainrs = np.resize(rainrs, (y,x))
+    flags = np.resize(flags, (y,x))
+    lon=lons/100.
+    lat=lats/100.
+    rainr=rainrs/10.
+    lonmin, lonmax=np.amin(lon),np.amax(lon)
+    latmin, latmax=np.amin(lat),np.amax(lat)
+    lonx=lon[0,:]
+    laty=lat[:,0]
+
+    
         
 #==============================================================================
 # Compares TRMM to METEOSAT
 #==============================================================================
 def compare_TRMMmsg():
    msg  = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/rewrite/"
+   blob_path = "/users/global/cornkle/data/OBS/meteosat/cell_blob_files/"
+   msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
+   ttpath = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
+   mlon = msg_latlon['lon']
+   mlat = msg_latlon['lat']
+   trmm = extract_TRMMfile(ttpath)
+   tpath = trmm['fpath']
    
-   trmm = read_TRMMswath()
-   rrShape = (580,1640)
-   rrMDI = np.uint16()
-   
-   for hr, mins, yr, mon, day in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days):
-        # pick hour/ minute of msg where TRMM swath exists
+   for hr, mins, yr, mon, day, tfile in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days, tpath):
+        # pick hour/ minute of msg where TRMM swath exists, check blobfile!
+       d=dict()
        df = pd.read_csv(msg+'cell_40c_'+str(hr).zfill(2)+str(mins).zfill(2)+'_JJAS.txt')
        df.set_index('Date', inplace=True, drop=True)
        sel = df.loc[str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00)]
        big = sel.loc[sel['Area'] >= 25000]
+       d['lat']=big['Lat'].values.tolist()
+       d['lon']=big['Lon'].values.tolist()
+       d['area']=big['Area'].values.tolist()
+       d['temp']=big['Temp'].values.tolist()
+       d['mincol']=big['Mincol'].values.tolist()
        
-       blobs = readBlobFile
+       bfile = blob_path+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)
+       blobs = readBlobFile(bfile)
        
-       get blob hhere or extra??
+       for lon, lat in zip(d['lon'], d['lat']):
+           
+          a = abs(mlat - lat) + abs(mlon - lon)
+          i,j = np_unravel_index(a.argmin(), a.shape)
+          nb = blobs[i,j]
+          isblob = np.where(blobs == nb)
+          
+          blats=mlat[isblob]
+          blons=mlon[isblob]
+          
+          #get clostest to trmm now
+          
+           
+       
+       
+ #      get blob hhere or extra??
        
        
        
