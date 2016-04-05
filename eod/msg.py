@@ -13,7 +13,6 @@ from utils import u_arrays as uarr
 import pandas as pd
 import datetime as dt
 import os
-import math
 
 HOD=range(24)   # hours of day
 CFAC=-781648343
@@ -40,7 +39,7 @@ def extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE):
     
     fdic = {'fpath' : [], 'date' : ut.date_list()}
     
-    for yr,mo,dy in itertools.product(yrange,range(8,9),range(1,2)):
+    for yr,mo,dy in itertools.product(yrange,range(8,10),range(1,31)):
         
         a=''
         date = np.array([yr,mo,dy])
@@ -150,7 +149,8 @@ def rewriteMsgLonLat():
 # Reads the METEOSAT blob files       
 #========================================================================================
 def readBlobFile(bfile):
-    
+    if not os.path.isfile(bfile):
+        return np.array([False])
     rrShape = (580,1640) # msg shape
     rrMDI = np.uint16() 
     rr = np.fromfile(bfile,dtype=rrMDI.dtype) 
@@ -217,19 +217,18 @@ def readTRMMswath(tpath):
 #==============================================================================    
 def ll_toMSG(lons,lats,cfac=CFAC,lfac=LFAC,coff=COFF,loff=LOFF): 
     
-    print cfac, lfac,coff,loff
+  
     
-    lats = np.array([lats])
-    lons = np.array([lons])
-    print lats, lons
+    lats = np.array(lats)
+    lons = np.array(lons)
+  
     if not lats.shape == lons.shape:
         print 'Lats lons must have same dimensions'
         return
     if not lats.size == lons.size:
         print 'Lats lons must have same size'
         return 
-        
-    print lats    
+            
     if (np.min(lats) < -90.) | (np.max(lats) > 90.):
         print 'Lats are out of range'
         return
@@ -248,17 +247,17 @@ def ll_toMSG(lons,lats,cfac=CFAC,lfac=LFAC,coff=COFF,loff=LOFF):
     lons_r=lons*pi/180.
 
     # Calculate geocentric latitude from the geographic one.
-    c_lat=math.atan(0.993243*math.sin(lats_r)/math.cos(lats_r))
+    c_lat=np.arctan(0.993243*np.sin(lats_r)/np.cos(lats_r))
 
     # Use c_lat to calculate the length from the Earth centre
     # to the surface of the Earth ellipsoid equations.
-    re=r_pol/math.sqrt(1.-0.00675701*math.cos(c_lat)*math.cos(c_lat))
+    re=r_pol/np.sqrt(1.-0.00675701*np.cos(c_lat)*np.cos(c_lat))
 
     # Calculate the forward projection.
-    r1=sat_height-re*math.cos(c_lat)*math.cos(lons_r-sub_lon)
-    r2=-re*math.cos(c_lat)*math.sin(lons_r-sub_lon)
-    r3=re*math.sin(c_lat)
-    rn=math.sqrt(r1*r1+r2*r2+r3*r3)
+    r1=sat_height-re*np.cos(c_lat)*np.cos(lons_r-sub_lon)
+    r2=-re*np.cos(c_lat)*np.sin(lons_r-sub_lon)
+    r3=re*np.sin(c_lat)
+    rn=np.sqrt(r1*r1+r2*r2+r3*r3)
 
     # Create output arrays.
     cols=np.empty_like(lats)
@@ -266,7 +265,7 @@ def ll_toMSG(lons,lats,cfac=CFAC,lfac=LFAC,coff=COFF,loff=LOFF):
 
 
     # Check for visibility, whether the point is visible from the satellite.
-    dotprod=np.array([r1*re*math.cos(c_lat)*math.cos(lons_r-sub_lon)-r2*r2-r3*r3*(r_eq/r_pol)**2.])
+    dotprod=np.array([r1*re*np.cos(c_lat)*np.cos(lons_r-sub_lon)-r2*r2-r3*r3*(r_eq/r_pol)**2.])
 
 #    t=np.where(dotprod > 0., True, False)
 #
@@ -281,8 +280,8 @@ def ll_toMSG(lons,lats,cfac=CFAC,lfac=LFAC,coff=COFF,loff=LOFF):
 #    cols[t]=np.round(coff+cols[t]*cfac/2.**16) # This seems to be incorrect in the example program.
 #    rows[t]=np.round(loff+rows[t]*lfac/2.**16)
 
-    cols=math.atan(-r2/r1)
-    rows=math.asin(-r3/rn)
+    cols=np.arctan(-r2/r1)
+    rows=np.arcsin(-r3/rn)
     
     cols=np.round(coff+cols*cfac/2.**16) # This seems to be incorrect in the example program.
     rows=np.round(loff+rows*lfac/2.**16)
@@ -309,6 +308,9 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
    
    mdic = {'msg_temp' : [], 'trmm_pcp': [], 'hod' : [], 'lat' : [],'lon' : []}
    
+#   ll_msg = ll_toMSG(mlon,mlat)              
+   
+   
    for hr, mins, yr, mon, day, tfile in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days, tpath):       
      
        print 'Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)
@@ -316,10 +318,13 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
        # pick hour/ minute of msg where TRMM swath exists, check blobfile!
        d=dict()
        df = pd.read_csv(msg+'cell_40c_'+str(hr).zfill(2)+str(mins).zfill(2)+'_JJAS.txt')
-       df.set_index('Date', inplace=True, drop=True)
-       sel = df.loc[str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00).zfill(2)]
-       big = sel.loc[sel['Area'] >= 25000]
+       dstring=str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00).zfill(2)
+       print dstring
+       if not dstring in df['Date'].as_matrix():
+           continue
        
+       sel=df.loc[df['Date'] == dstring]       
+       big = sel.loc[sel['Area'] >= 25000] # only mcs over 25.000km2
        if big.empty:
            continue
        
@@ -335,8 +340,12 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
        bfile = blob_path+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
        blobs = readBlobFile(bfile)
        
+       # if blobfile is missing, continue
+       if not blobs.any():
+           continue
+       
        # loop for each blob center, to find the whole area
-       for lon, lat, mt in zip(d['lon'], d['lat'], d['temp']):    
+       for lon, lat, mt in zip(d['lon'], d['lat'], d['temp']):
            
           a = abs(mlat - lat) + abs(mlon - lon)
           i,j = np.unravel_index(a.argmin(), a.shape)
@@ -354,8 +363,7 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
           blonmin, blonmax = blons.min(), blons.max()
           
           # whole blob must be inside TRMM. This could be changed to check for every single pixel. 
-          # But computationally more expensive!
-          
+          # But computationally more expensive!         
           if not (trs['lonmin'] < blonmin) & (trs['lonmax'] > blonmax):
                  continue
           if not (trs['latmin'] < blatmin) & (trs['latmax'] > blatmax):
@@ -366,28 +374,141 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
           mdic['lat'].append(lat)
           mdic['lon'].append(lon)
           
+         # ll_trmm = ll_toMSG(trs['lons'],trs['lats'])
+          
+                   
           # get the indices in TRMM where TRMM lat lons are closest to blob lat lons
           binds = list()  # same as []
+         
           #loop over single blob and find closest TRMM
           for blon, blat in zip(blons, blats):
-              
-              # check whether blob pixel is in TRMM swath
-#              if not (trs['lonmin'] < blon) & (trs['lonmax'] > blon):
-#                  continue
-#              if not (trs['latmin'] < blat) & (trs['latmax'] > blat):
-#                  continue           
               
               #get smallest distance TRMM pixel
               
               a = abs(trs['lats'] - blat) + abs(trs['lons'] - blon)
               binds.append(a.argmin())
 
-          uniq = list(set(binds)) # remove double indices to avoid double averaging of same pixel          
-          mdic['trmm_pcp'].append(trs['pcp'].flatten()[uniq].mean())
+          uniq = list(set(binds)) # remove double indices to avoid double averaging of same pixel  
+          bprcp=trs['pcp'].flatten()[uniq]   
+          
+          mdic['trmm_pcp'].append(np.nanmean(bprcp))
+                   
           
    savefile = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
    np.save(savefile, mdic)       
    return mdic          
+   
+   
+   
+   #==============================================================================
+# Compares TRMM to METEOSAT  | MSG indices
+#==============================================================================
+def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
+   msg  = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/rewrite/"
+   blob_path = "/users/global/cornkle/data/OBS/meteosat/cell_blob_files/"
+   msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
+   ttpath = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
+   mlon = msg_latlon['lon']
+   mlat = msg_latlon['lat']
+   print 'Start extract Trmm'
+   trmm = extract_TRMMfile(ttpath, yrange=yrange, hod=hod)
+   
+   tpath = trmm['fpath']
+   
+   mdic = {'msg_temp' : [], 'trmm_pcp': [], 'hod' : [], 'lat' : [],'lon' : []}
+   
+   mll = ll_toMSG(mlon,mlat)
+      
+   for hr, mins, yr, mon, day, tfile in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days, tpath):       
+     
+       print 'Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)
+       
+       # pick hour/ minute of msg where TRMM swath exists, check blobfile!
+       d=dict()
+       df = pd.read_csv(msg+'cell_40c_'+str(hr).zfill(2)+str(mins).zfill(2)+'_JJAS.txt')
+       dstring=str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00).zfill(2)
+       print dstring
+       if not dstring in df['Date'].as_matrix():
+           continue
+       
+       sel=df.loc[df['Date'] == dstring]       
+       big = sel.loc[sel['Area'] >= 25000] # only mcs over 25.000km2
+       if big.empty:
+           continue
+       
+       trs = readTRMMswath(tfile)
+       
+       
+       d['lat']=big['Lat'].values.tolist()
+       d['lon']=big['Lon'].values.tolist()
+       d['area']=big['Area'].values.tolist()
+       d['temp']=big['Temp'].values.tolist()
+       d['mincol']=big['Mincol'].values.tolist()
+       
+       bfile = blob_path+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
+       blobs = readBlobFile(bfile)
+       
+       # if blobfile is missing, continue
+       if not blobs.any():
+           continue
+       
+       # loop for each blob center, to find the whole area
+       for lon, lat, mt in zip(d['lon'], d['lat'], d['temp']):
+           
+          pp = ll_toMSG(lon,lat)
+          point=np.where((mll['x']==pp['x']) & (mll['y']==pp['y']))
+          
+          # blob number
+          nb = blobs[point]
+          # find where else is blob number
+          isblob = np.where(blobs == nb)
+          
+          # lat lons of complete blob
+          blats=mlat[isblob]
+          blons=mlon[isblob]
+          
+          # msg indices of complete blob
+          my=mll['y'][isblob]
+          mx=mll['x'][isblob]
+          mx.shape
+          mpair = (mx+my)*(mx+my+1)/2+my
+          
+          blatmin, blatmax = blats.min(), blats.max()
+          blonmin, blonmax = blons.min(), blons.max()          
+                            
+          # whole blob must be inside TRMM. This could be changed to check for every single pixel. 
+          # But computationally more expensive!         
+          if not (trs['lonmin'] < blonmin) & (trs['lonmax'] > blonmax):                
+                 continue
+          if not (trs['latmin'] < blatmin) & (trs['latmax'] > blatmax):                 
+                 continue
+          
+          
+          
+          ll_trmm = ll_toMSG(trs['lons'],trs['lats'])
+          tx = ll_trmm['x']
+          ty = ll_trmm['y']
+          
+          tpair = (tx+ty)*(tx+ty+1)/2+ty
+         # if trs['lonmin'] == -11.3: 
+         #     print 'Saving!'
+         #     np.save('/users/global/cornkle/data/OBS/test.npy', {'t':tpair, 'm':mpair})      
+          inter=np.in1d(tpair, mpair)           
+          bprcp=trs['pcp'].flatten()[inter] 
+          mean=np.nanmean(bprcp)         
+          if not inter.any(): 
+              continue
+          
+          mdic['trmm_pcp'].append(mean)
+          mdic['msg_temp'].append(mt)
+          mdic['hod'].append(hr)
+          mdic['lat'].append(lat)
+          mdic['lon'].append(lon)
+                   
+          
+   savefile = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_inds_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
+   np.save(savefile, mdic)       
+   return mdic
        
        
        
