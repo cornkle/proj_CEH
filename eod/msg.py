@@ -39,7 +39,7 @@ def extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE):
     
     fdic = {'fpath' : [], 'date' : ut.date_list()}
     
-    for yr,mo,dy in itertools.product(yrange,range(8,10),range(1,31)):
+    for yr,mo,dy in itertools.product(yrange,range(6,10),range(1,31)):
         
         a=''
         date = np.array([yr,mo,dy])
@@ -157,6 +157,19 @@ def readBlobFile(bfile):
     rr.shape = rrShape
     return rr
     
+#========================================================================================
+# Reads the METEOSAT raw files     
+#========================================================================================
+def readMSGraw(bfile):
+    if not os.path.isfile(bfile):
+        return np.array([False])
+    rrShape = (580,1640) # msg shape
+    rrMDI = np.uint8(255)
+    rr = np.fromfile(bfile,dtype=rrMDI.dtype) 
+    rr.shape = rrShape
+    rr=rr.astype(np.int32) - 173
+    return rr    
+    
 #=======================================================================================
 # Reads the data of TRMM 2A25 swaths binary files with lon, lat, rain, flag in it
 # Every swath is 49 pixel wide. 2 bytes integer
@@ -207,7 +220,7 @@ def readTRMMswath(tpath):
     
     laty=latt[:,0]
     
-    trmm_obj = {'pcp' : rain, 'lons' : lont, 'lats' : latt, 'flag' : flags, 'laty' : laty, 'latmin' : lattmin, 'latmax' : lattmax, 'lonmin' : lontmin, 'lonmax' : lontmax} # lats lons numpy arrays!
+    trmm_obj = {'pcp' : rain, 'lons' : lont, 'lats' : latt, 'flags' : flags, 'laty' : laty, 'latmin' : lattmin, 'latmax' : lattmax, 'lonmin' : lontmin, 'lonmax' : lontmax} # lats lons numpy arrays!
     
     return trmm_obj
     
@@ -396,9 +409,52 @@ def compare_TRMMmsg(hod=HOD, yrange=YRANGE):
           
    savefile = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
    np.save(savefile, mdic)       
-   return mdic          
+   return mdic 
    
    
+def getTRMMconv(flags):
+  
+  bla=flags.astype(int)
+  npfalse=[]
+
+  for b, i in zip(np.nditer(bla), range(bla.size)): 
+       bb='{0:016b}'.format(int(b))    
+       npfalse.append(int(bb[-6]))
+
+  return npfalse
+  
+#def checkTRMMflag_sndtry(farray, is_set=[], not_set=[] ):
+#    conf_check=[]
+#    conf_ok=[]
+#    bytel=[]
+#    fa=farray.astype(int)
+#    mask=np.zeros_like(fa)
+#    
+#    for b in np.nditer(fa): 
+#        bytel.append('{0:016b}'.format(int(b)))
+#    
+#    if not len(is_set)==0:
+#        for bit in is_set:
+#            
+#            
+#    if not len(not_set)==0:
+#        for bit in not_set:
+#            conf_check=conf_check+2**bit
+#    result=farray.astype(int)
+#    for a in range(len(farray)):
+#        if (farray.flatten()[a] & conf_check) == conf_ok:
+#            result.flatten()[a]=True 
+#        else:
+#            result.flatten()[a]=False
+#         
+#    return result 
+#    
+#    bla=flags.astype(int)
+#bla.max()
+#blabyte='{0:016b}'.format(32)
+#print blabyte
+#print blabyte[10]
+#   
    
    #==============================================================================
 # Compares TRMM to METEOSAT  | MSG indices
@@ -408,6 +464,7 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
    blob_path = "/users/global/cornkle/data/OBS/meteosat/cell_blob_files/"
    msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
    ttpath = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
+   msg_rawp="rfile='/users/global/cmt/msg/WAfrica/archive_WAfrica/ch9/"
    mlon = msg_latlon['lon']
    mlat = msg_latlon['lat']
    print 'Start extract Trmm'
@@ -415,19 +472,19 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
    
    tpath = trmm['fpath']
    
-   mdic = {'msg_temp' : [], 'trmm_pcp': [], 'hod' : [], 'lat' : [],'lon' : []}
+   mdic = {'msg_temp' : [], 'trmm_pcp': [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'area' : []}
    
    mll = ll_toMSG(mlon,mlat)
       
    for hr, mins, yr, mon, day, tfile in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days, tpath):       
      
        print 'Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)
-       
+       print 'TRMM:'+tfile 
        # pick hour/ minute of msg where TRMM swath exists, check blobfile!
        d=dict()
        df = pd.read_csv(msg+'cell_40c_'+str(hr).zfill(2)+str(mins).zfill(2)+'_JJAS.txt')
        dstring=str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00).zfill(2)
-       print dstring
+       
        if not dstring in df['Date'].as_matrix():
            continue
        
@@ -436,8 +493,10 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
        if big.empty:
            continue
        
-       trs = readTRMMswath(tfile)
-       
+       trs = readTRMMswath(tfile)   
+
+       mfile=msg_rawp+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
+       msg_raw=readMSGraw(mfile) 
        
        d['lat']=big['Lat'].values.tolist()
        d['lon']=big['Lon'].values.tolist()
@@ -453,15 +512,23 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
            continue
        
        # loop for each blob center, to find the whole area
-       for lon, lat, mt in zip(d['lon'], d['lat'], d['temp']):
-           
+       for lon, lat, mt, area, mc in zip(d['lon'], d['lat'], d['temp'] , d['area'], d['mincol']):
+          
           pp = ll_toMSG(lon,lat)
           point=np.where((mll['x']==pp['x']) & (mll['y']==pp['y']))
           
           # blob number
           nb = blobs[point]
+          if not nb[0]:       
+              continue
+          
+       #   print 'CurrNb', nb
           # find where else is blob number
-          isblob = np.where(blobs == nb)
+          isblob = np.where(blobs == nb)          
+        #  print min(isblob[1])
+        #  print mc-1
+          if isblob[0].size < 2500:
+              continue
           
           # lat lons of complete blob
           blats=mlat[isblob]
@@ -476,38 +543,69 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           blatmin, blatmax = blats.min(), blats.max()
           blonmin, blonmax = blons.min(), blons.max()          
                             
-          # whole blob must be inside TRMM. This could be changed to check for every single pixel. 
-          # But computationally more expensive!         
+          # whole blob must be inside TRMM. Attention: This draws a rectangle. 
+          # There is still a chance that blob is not in TRMM. Checked later!               
           if not (trs['lonmin'] < blonmin) & (trs['lonmax'] > blonmax):                
                  continue
           if not (trs['latmin'] < blatmin) & (trs['latmax'] > blatmax):                 
                  continue
-          
-          
-          
+                             
           ll_trmm = ll_toMSG(trs['lons'],trs['lats'])
+          
           tx = ll_trmm['x']
           ty = ll_trmm['y']
           
-          tpair = (tx+ty)*(tx+ty+1)/2+ty
-         # if trs['lonmin'] == -11.3: 
-         #     print 'Saving!'
-         #     np.save('/users/global/cornkle/data/OBS/test.npy', {'t':tpair, 'm':mpair})      
-          inter=np.in1d(tpair, mpair)           
-          bprcp=trs['pcp'].flatten()[inter] 
-          mean=np.nanmean(bprcp)         
+          tpair = (tx+ty)*(tx+ty+1)/2+ty               
+          inter=np.in1d(tpair, mpair) 
+          inter_rev=np.in1d(mpair, tpair.flatten()[inter])
+          
+          # No intersection between Trmm and MSG? Continue!
           if not inter.any(): 
               continue
           
-          mdic['trmm_pcp'].append(mean)
-          mdic['msg_temp'].append(mt)
+          #Problem: taking parts of systems to compute rainfall, but mean T s for whole system
+          # Trmm swath are never as wide as the big systems!! 
+          
+          bprcp=trs['pcp'].flatten()[inter] 
+          flags=trs['flags'].flatten()[inter] 
+          mtt=msg_raw[isblob].flatten()[inter_rev]
+          
+          if not bprcp.size==mtt.size: 
+              print 'Tprcp and MSGT not same, someting wrong!'
+              return
+          
+          mask=getTRMMconv(flags)  # filter for convective rain
+          mask=np.array(mask)
+          # no convective rainfall in blob? Continue!
+          if not mask.any():
+              continue
+          
+         # pp=bprcp.flatten()[np.where(mask)]
+         # tt=mtt.flatten()[np.where(mask)] 
+          pp=bprcp
+          tt=mtt
+          
+        #  if not sum(mask)==pp.size: 
+        #      print 'Mask and rain not same, someting wrong!'
+        #      return
+          
+          
+          
+          pmean=np.nanmean(pp)  
+          tmean=np.nanmean(tt)
+          print 'Nb', nb
+          mdic['trmm_pcp'].append(pmean)
+          mdic['msg_temp'].append(tmean)
           mdic['hod'].append(hr)
+          mdic['yr'].append(yr)
+          mdic['mon'].append(mon)
           mdic['lat'].append(lat)
           mdic['lon'].append(lon)
-                   
+          mdic['area'].append(area)         
           
-   savefile = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_inds_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
-   np.save(savefile, mdic)       
+   savefile = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_inds_all_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
+   np.save(savefile, mdic)  
+   print 'Saved '+'MSG_TRMM_temp_pcp_inds_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
    return mdic
        
        

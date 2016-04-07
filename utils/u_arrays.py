@@ -21,9 +21,7 @@ def locate(pattern, root_path):
     for file in os.listdir(root_path):
         if file.endswith('.txt'):
             strg.append(os.path.join(root_path, file))
-    return strg
-    
-    
+    return strg    
     
             
             
