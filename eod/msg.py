@@ -455,17 +455,25 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
               continue
           
           # if TRMM zero for whole blob, continue
-          if not bprcp.any():
+          #if not bprcp.any():
+          #    continue
+          
+           # check for at least 500 TRMM pixels in MSG above 0 rain
+          if np.count_nonzero(bprcp) < 20:
               continue
           
           mask=getTRMMconv(flags)  # filter for convective rain
-          mask=np.array(mask)        
+          mask=np.array(mask)
+                    
           
           # remove all these zero rainfall from blob
           bprcp=bprcp.flat[np.where(bprcp)]
           mtt=mtt.flat[np.where(bprcp)]   
           flags=flags.flat[np.where(bprcp)] 
           mask=getTRMMconv(flags)  #list of 0 and 1, flattened!
+          
+          if sum(mask) < 2:
+              continue
           
           pm=np.nanmean(bprcp)  
           tm=np.nanmean(mtt)
@@ -523,8 +531,8 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           
           myDicts=[mdic, mdic_f]
           
-          pkl.dump(myDicts, open('/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p', 'wb'))
-          print 'Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p'
+   pkl.dump(myDicts, open('/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_300px'+str(yrange[0])+'-'+str(yrange[-1])+'.p', 'wb'))
+   print 'Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p'
           
   # savefile1 = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
   # savefile2 = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_conv_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
