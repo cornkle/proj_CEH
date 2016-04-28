@@ -13,14 +13,15 @@ from utils import u_arrays as uarr
 import pandas as pd
 import datetime as dt
 import os
-import cPickle as pkl
+import pickle as pkl
 
 HOD=range(24)   # hours of day
 CFAC=-781648343
 LFAC=-781648343
 COFF=1856
 LOFF=1856
-YRANGE=[2011,2012]
+YRANGE=range(2004,2014)
+MTRESH=0
 
 
 #=======================================================================================
@@ -33,15 +34,15 @@ YRANGE=[2011,2012]
 # Output: Filelist of TRMM files over West Africa at full/half hour; 
 # corrsponding time rounded to half or full hour
 #=======================================================================================
-def extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE):
+def extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE, mtresh=MTRESH):
     
     path = tpath
     pattern = path + '{0:d}/{1:02d}/2A25.{0:d}{1:02d}{2:02d}.*.7_rain_f4.gra' 
     
-    fdic = {'fpath' : [], 'date' : ut.date_list()}
+    fdic = {'fpath' : [], 'tmins' : [], 'date' : ut.date_list()}
     
     for yr,mo,dy in itertools.product(yrange,range(6,10),range(1,31)):
-        
+     #   print yr
         a=''
         date = np.array([yr,mo,dy])
         
@@ -64,14 +65,25 @@ def extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE):
                     continue
                 
                 # test whether close to 30mins or full hour
- 
-                minute = 0   # guessing that t.minute is shortly after full
+                if mtresh:
+                    if (t.minute > 3) & (t.minute < 27):
+                        continue
+                    if (t.minute > 33) & (t.minute < 57):
+                        continue
                 
+           #     print t.minute
+                minute = 0   # guessing that t.minute is shortly after full
+              
+               # print(t.minute)
+               # I could include a better minute filter here 
                 if t.minute > 15 and t.minute < 45: 
                     minute = 30 
+                  
                 
+           #     print 'MSG', minute
                 fdic['fpath'].append(rain_str)
                 fdic['date'].add(yr,mo,dy,t.hour,minute,0)
+                fdic['tmins'].append(t.minute)
     
     return fdic
     
@@ -115,12 +127,12 @@ def rewriteBigcellTab():
 
     path = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/"    
     out = path + 'rewrite/'
-    print out
+    print(out)
     os.system('rm '+out+'*.txt')
     ok=uarr.locate("*.txt", path)
     
     for a in ok:
-        print 'Doing '+a
+        print('Doing '+a)
         tab = parseCellTables(a)
         minute=tab["Date"][0].minute
         hour=tab["Date"][0].hour
@@ -170,7 +182,14 @@ def readMSGraw(bfile):
     rr = np.fromfile(bfile,dtype=rrMDI.dtype) 
     rr.shape = rrShape
     rr=rr.astype(np.int32) - 173
-    return rr    
+    msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
+    mlon = msg_latlon['lon']
+    mlat = msg_latlon['lat']
+    
+    msg_obj = {'t' : rr, 'lons' : mlon, 'lats' : mlat} # lats lons numpy arrays!      
+    
+    return msg_obj   
+    
     
 #=======================================================================================
 # Reads the data of TRMM 2A25 swaths binary files with lon, lat, rain, flag in it
@@ -185,14 +204,14 @@ def readTRMMswath(tpath):
     rr = np.fromfile(tpath,dtype=np.int16) 
     x = 49   # trmm swath is always 49 wide
     nb = rr.size
-    single = nb/4 # variables lon lat rainrate flag
+    single = int(nb/4) # variables lon lat rainrate flag
 
     lons = rr[0:single]
     lats = rr[single:2*single]
     rainrs = rr[2*single:3*single]
     flags = rr[3*single:4*single]
     
-    y = lons.size/x
+    y = int(lons.size/x)
     lons = np.resize(lons, (y,x))
     lats = np.resize(lats, (y,x))
     rainrs = np.resize(rainrs, (y,x))
@@ -212,7 +231,7 @@ def readTRMMswath(tpath):
         lont=lont[cut, :]
         latt=latt[cut, :]
         flags=flags[cut, :]
-        yy=rain.size/49
+        yy=int(rain.size/49)
     
         rain=rain.reshape(yy,49)
         lont=lont.reshape(yy,49)
@@ -240,17 +259,17 @@ def ll_toMSG(lons,lats,cfac=CFAC,lfac=LFAC,coff=COFF,loff=LOFF):
     lons = np.array(lons)
   
     if not lats.shape == lons.shape:
-        print 'Lats lons must have same dimensions'
+        print('Lats lons must have same dimensions')
         return
     if not lats.size == lons.size:
-        print 'Lats lons must have same size'
+        print('Lats lons must have same size')
         return 
             
     if (np.min(lats) < -90.) | (np.max(lats) > 90.):
-        print 'Lats are out of range'
+        print('Lats are out of range')
         return
     if (np.min(lons) < -180.) | (np.max(lons) > 180.):          
-        print 'Lons are out of range'
+        print('Lons are out of range')
         return
         
     pi=3.14159265359 # Define as double precision.
@@ -322,7 +341,7 @@ def getTRMMconv(flags):
   return npfalse
   
 
-   #==============================================================================
+#==============================================================================
 # Compares TRMM to METEOSAT  | MSG indices
 #==============================================================================
 def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
@@ -330,21 +349,25 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
    blob_path = "/users/global/cornkle/data/OBS/meteosat/cell_blob_files/"
    msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
    ttpath = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-   msg_rawp="/users/global/cmt/msg/WAfrica/archive_WAfrica/ch9/"
+   msg_rawp="/users/global/cornkle/data/OBS/meteosat/msg_raw_binary/"
    mlon = msg_latlon['lon']
    mlat = msg_latlon['lat']
-   print 'Start extract Trmm'
+   print('Start extract Trmm')
    trmm = extract_TRMMfile(ttpath, yrange=yrange, hod=hod)
    
    tpath = trmm['fpath']
    
-   mdic = {'perc' : [], 'p' : [], 'pp' : [], 'pi' : [], 'pmax' : [],  't' : [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
-   mdic_f = {'perc' : [],  'pconv': [],'ppconv': [], 'piconv': [],  'pmaxconv' : [], 'tconv' : [], 'tnfconv' : [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
-   mll = ll_toMSG(mlon,mlat)   
-      
+   mdic = {'perc' : [], 'p' : [], 'pp' : [], 'pi' : [], 'pmax' : [],  't' : [], 'hod' : [],
+           'lat' : [], 'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
+   mdic_f = {'perc' : [],  'pconv': [],'ppconv': [], 'piconv': [],  'pmaxconv' : [], 'tconv' : [], 
+             'tnfconv' : [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
+             
+   mll = ll_toMSG(mlon,mlat) 
+   
+   cnt=0      
    for hr, mins, yr, mon, day, tfile in zip(trmm['date'].hours, trmm['date'].minutes,trmm['date'].years, trmm['date'].months, trmm['date'].days, tpath):       
      
-       print 'Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)
+       print('Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2))
     #   print 'TRMM:'+tfile 
        # pick hour/ minute of msg where TRMM swath exists, check blobfile!
        d=dict()
@@ -361,8 +384,10 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
        
        trs = readTRMMswath(tfile)
        if not trs:
-           print 'TRMM file not found'
+           print('TRMM file not found')
            return
+           
+      # print ' went trough trmm'    
        
        
        fflags=trs['flags'][np.where(trs['lats']>4)]
@@ -374,9 +399,12 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
 
        mfile=msg_rawp+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
        
-       msg_raw=readMSGraw(mfile)       
-       if not msg_raw.any():
+       msg_raw=readMSGraw(mfile)          
+       
+       if not msg_raw:
            continue  
+#       print 'MSG Went trough'
+       msg_t=msg_raw['t']
        
        d['lat']=big['Lat'].values.tolist()
        d['lon']=big['Lon'].values.tolist()
@@ -447,11 +475,11 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           
           bprcp=trs['pcp'].flat[inter]            
           flags=trs['flags'].flat[inter] 
-          mtt=msg_raw[isblob].flat[inter_rev]       
+          mtt=msg_t[isblob].flat[inter_rev]       
           
           #we need same number of TRMM and MSG per plot to do the masking
           if not bprcp.size==mtt.size: 
-              print 'Tprcp and MSGT not same, someting wrong!'
+              print('Tprcp and MSGT not same, someting wrong!')
               continue
           
           # if TRMM zero for whole blob, continue
@@ -527,12 +555,13 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           mdic_f['mon'].append(mon)
           mdic_f['lat'].append(lat)
           mdic_f['lon'].append(lon)
-          mdic_f['tpixel'].append(sum(mask))    
+          mdic_f['tpixel'].append(sum(mask)) 
+          cnt=cnt+1
           
           myDicts=[mdic, mdic_f]
           
    pkl.dump(myDicts, open('/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_300px'+str(yrange[0])+'-'+str(yrange[-1])+'.p', 'wb'))
-   print 'Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p'
+   print('Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p with '+str(cnt)+' MCSs')
           
   # savefile1 = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
   # savefile2 = '/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_conv_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
@@ -541,7 +570,23 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
   # print 'Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
    
        
-       
-       
+NB=0
+def quickreadTrmmMSG(tfile, nb=NB):
+    
+          
+    msg_rawp="/users/global/cornkle/data/OBS/meteosat/msg_raw_binary/"
+
+    yr=tfile['date'].years[nb]
+    mon=tfile['date'].months[nb]
+    hr=tfile['date'].hours[nb]
+    day=tfile['date'].days[nb]
+    mins=tfile['date'].minutes[nb]
+    files = str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra' 
+    bfile=msg_rawp+files
+    msg=readMSGraw(bfile)
+    trmm = readTRMMswath(tfile['fpath'][nb])
+    
+    return (msg, trmm)
+          
     
         
