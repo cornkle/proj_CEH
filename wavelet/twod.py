@@ -139,8 +139,8 @@ def icwt2d(W, a, dx=0.25, dy=0.25, da=0.25, wavelet=Mexican_hat()):
     """
     m0, l0, k0 = W.shape
     if m0 != a.size:
-        raise Warning, 'Scale parameter array shape does not match wavelet' \
-                       ' transform array shape.'
+        raise Warning('Scale parameter array shape does not match wavelet' \
+                       ' transform array shape.')
     # Calculates the zonal and meridional wave numters.
     L, K = 2 ** int(ceil(log2(l0))), 2 ** int(ceil(log2(k0)))
     # Calculates the zonal and meridional wave numbers.
