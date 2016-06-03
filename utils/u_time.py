@@ -6,6 +6,7 @@ Created on Wed Mar 16 10:04:08 2016
 """
 
 from datetime import datetime, timedelta
+import numpy as np
 
 # Transforms seconds of day to hours, minutes, seconds
 def sec_to_time(isec):
@@ -21,37 +22,70 @@ def sec_to_time(isec):
 class date_list(object):
     
     def __init__(self):
-        self.years = []
-        self.months = []
-        self.days = []
-        self.hours = []
-        self.minutes = []
-        self.seconds = []
+        self.y = []
+        self.m = []
+        self.d = []
+        self.h = []
+        self.mi = []
+        self.s = []
         
     def add(self,y,mon,d,h,m,s):
-        self.years.append(y)
-        self.months.append(mon)
-        self.days.append(d)
-        self.hours.append(h)
-        self.minutes.append(m)
-        self.seconds.append(s) 
+        self.y.append(y)
+        self.m.append(mon)
+        self.d.append(d)
+        self.h.append(h)
+        self.mi.append(m)
+        self.s.append(s) 
         
-    def get_obj(self, ind):
+    def getObj(self, ind):
         
         x = date_list()
         
         for i in ind:
            print(ind)
-           x.add(self.years[i] , self.months[i] , self.days[i] , self.hours[i] , self.minutes[i] , self.seconds[i])
+           x.add(self.y[i] , self.m[i] , self.d[i] , self.h[i] , self.mi[i] , self.s[i])
            
         return x 
+    
+       
+    def getStr(self, ind= None):
         
-    def get_str(self, ind):
-        
+        if ind is None: ind=(list(range(len(self.y))))
         x = []
-        
+      
         for i in ind:
            
-           x.append(str(self.years[i])+str(self.months[i]).zfill(2)+str(self.days[i]).zfill(2)+' '+ str(self.hours[i]).zfill(2)+':'+str(self.minutes[i]).zfill(2)+':'+str(self.seconds[i]).zfill(2))
+           x.append(str(self.y[i])+str(self.m[i]).zfill(2)+str(self.d[i]).zfill(2)+' '+ str(self.h[i]).zfill(2)+':'+str(self.mi[i]).zfill(2)+':'+str(self.s[i]).zfill(2))
            
-        return x     
+        return x   
+        
+    def getInd(self, yr, mo, dy, hr, mi):
+        
+       yr=np.atleast_1d(yr) 
+       mo=np.atleast_1d(mo) 
+       dy=np.atleast_1d(dy) 
+       hr=np.atleast_1d(hr)
+       mi=np.atleast_1d(mi) 
+        
+       sstr=self.getStr()
+       
+       b=[]
+        
+       for _yr, _mo, _dy, _hr, _mi in zip(yr, mo, dy, hr, mi):
+
+         dstr=str(_yr)+str(_mo).zfill(2)+str(_dy).zfill(2)+' '+ str(_hr).zfill(2)+':'+str(_mi).zfill(2)+':'+'00'          
+         
+         try:
+            bb = sstr.index(dstr)      
+         except ValueError:
+            print('Date was not found') 
+            bb = False 
+         b.append(bb)      
+       return b   
+               
+               
+        
+       
+        
+        
+      

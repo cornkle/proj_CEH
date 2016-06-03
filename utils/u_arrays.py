@@ -16,13 +16,21 @@ def rlocate(pattern, root_path):
     return strg
     
     
+#def locate(pattern, root_path):
+#    strg=[]
+#    for file in os.listdir(root_path):
+#        if file.endswith('.txt'):
+#            strg.append(os.path.join(root_path, file))
+#    return strg    
+    
 def locate(pattern, root_path):
     strg=[]
     for file in os.listdir(root_path):
-        if file.endswith('.txt'):
+        #print(file)
+        if file.endswith(pattern):
             strg.append(os.path.join(root_path, file))
     return strg    
-    
+        
             
             
             
