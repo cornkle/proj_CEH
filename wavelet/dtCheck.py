@@ -14,14 +14,15 @@ import datetime as dt
 from eod import read_eod as re
 from wavelet import util
 from skimage.feature import match_template
+import pickle as pkl
 
 HOD=range(24)   # hours of day
 YRANGE=range(2004,2014)
 
 
-def test_msg_tshift():
+def tshift():
     
-    cdic = {'corr' : [] ,  'dt': []}
+    cdic = {'corr' : [] ,  'dt': [], 'date' : [], 'id' : [], 'pmatch' : []}
     
     trmm_folder= "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder='/users/global/cornkle/data/OBS/meteosat_SA15'
@@ -29,10 +30,10 @@ def test_msg_tshift():
     # make a salem grid
     proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
 
-    t=re.trmm(trmm_folder, yrange=range(2008, 2009), area=[-10, 10, 10, 20]) 
+    t=re.trmm(trmm_folder, yrange=range(2009, 2010), area=[-10, 10, 10, 20]) 
     m=re.msg(msg_folder)
 
-
+ 
 
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
     for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
@@ -51,7 +52,9 @@ def test_msg_tshift():
        dt0=dm[ind] 
        ndate = date + dt.timedelta(minutes=int(dt0))                                           
        mdic=m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute, llbox=[tdic['lon'].min(), tdic['lon'].max(), tdic['lat'].min(), tdic['lat'].max() ])        
-            
+       if not mdic:
+           continue
+       
        mdic['t'][mdic['t']>-20]=0
        labels, numL = label(mdic['t'])
            
@@ -76,15 +79,18 @@ def test_msg_tshift():
               dt0=dm[ind] 
               ndate = date + dt.timedelta(minutes=int(dt0) )                                           
               ml0=m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute, llbox=[lonmin-0.3, lonmax+0.3, latmin-0.25, latmax+0.25])        
-       
+              if not ml0:
+                  continue
               dt1=dm[ind]-15
               ndate = date + dt.timedelta(minutes=int(dt1))       
               ml1=m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute, llbox=[lonmin-0.3, lonmax+0.3, latmin-0.25, latmax+0.25])
-       
+              if not ml1:
+                  continue
               dt2=dm[ind]-30      
               ndate = date + dt.timedelta(minutes=int(dt2)  )     
               ml2=m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute, llbox=[lonmin-0.3, lonmax+0.3, latmin-0.25, latmax+0.25])     
-              
+              if not ml2:
+                  continue
               #create grid surrounding the blob
               # Transform lon, lats to the mercator projection
               x, y = pyproj.transform(salem.wgs84, proj, ml0['lon'], ml0['lat'])
@@ -136,10 +142,12 @@ def test_msg_tshift():
               
               tt=dic['t'][20,:,:]
               pp=dic['p'][20,:, :]
-              corr = min(match_template(tt, pp[10:-10, 10:-10]).flatten())
+              corr = max(match_template(tt, pp[10:-10, 10:-10]).flatten())
               
               cdic['corr'].append(corr)
               cdic['dt'].append(dt0)
+              cdic['date'].append(date)
+              cdic['pmatch'].append(sum(mask2.flatten()))
               
               
               # lag -1
@@ -153,10 +161,12 @@ def test_msg_tshift():
               
               tt=dic['t'][20,:,:]
               pp=dic['p'][20,:, :]
-              corr = min(match_template(tt, pp[10:-10, 10:-10]).flatten())
+              corr = max(match_template(tt, pp[10:-10, 10:-10]).flatten())
               
               cdic['corr'].append(corr)
               cdic['dt'].append(dt1)
+              cdic['date'].append(date)
+              cdic['pmatch'].append(sum(mask2.flatten()))
               
               # lag -2
               
@@ -173,7 +183,10 @@ def test_msg_tshift():
               
               cdic['corr'].append(corr)
               cdic['dt'].append(dt2)
+              cdic['date'].append(date)
+              cdic['pmatch'].append(sum(mask2.flatten()))
           
-    return cdic              
+    pkl.dump(cdic, open('/users/global/cornkle/timeshift.p', 'wb'))
+    print('Saved '+'timeshift file')             
             
            

@@ -46,7 +46,7 @@ class trmm(object):
        fdic = {'fpath' : [], 'tmins' : [], 'date' : ut.date_list()}
        rfiles = []                         
        
-       for yr,mo,dy in itertools.product(list(yrange),list(range(6,7)),list(range(1,32))):  # rain_f4 files only available for 6 to 10
+       for yr,mo,dy in itertools.product(list(yrange),list(range(8,9)),list(range(1,32))):  # rain_f4 files only available for 6 to 10
            
            tpath= os.path.join(trmm_folder, str(yr), str(mo).zfill(2))
            files=uarr.locate('_rain_f4.gra', tpath)         
@@ -223,7 +223,7 @@ class msg(object):
         if y:
             self.dpath=os.path.join(self.root, 'msg_raw_binary', str(y) , str(m).zfill(2), str(y)+str(m).zfill(2)+str(d).zfill(2)+str(h).zfill(2)+str(mi).zfill(2)+'.gra' ) 
         
-        if not self.dpath:
+        if not os.path.isfile(self.dpath):
             print('No data for date')
             return False
                 
