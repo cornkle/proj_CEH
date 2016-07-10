@@ -125,7 +125,7 @@ def parseCellTables(tab):
 #=========================================================================================
 def rewriteBigcellTab():
 
-    path = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/"    
+    path = "/users/global/cornkle/data/OBS/meteosat_WA30/bigcell_area_table/"    
     out = path + 'rewrite/'
     print(out)
     os.system('rm '+out+'*.txt')
@@ -144,7 +144,7 @@ def rewriteBigcellTab():
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
 def rewriteMsgLonLat():
-    llFile = '/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.gra'
+    llFile = '/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.gra'
 
     llShape = (580,1640)
     llMDI = np.float32(13.5)
@@ -154,7 +154,7 @@ def rewriteMsgLonLat():
     lat.shape = llShape
     lon.shape = llShape
 
-    llsavefile = '/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon'
+    llsavefile = '/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)        
 
   
@@ -182,7 +182,7 @@ def readMSGraw(bfile):
     rr = np.fromfile(bfile,dtype=rrMDI.dtype) 
     rr.shape = rrShape
     rr=rr.astype(np.int32) - 173
-    msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat/MSG_1640_580_lat_lon.npz')
+    msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.npz')
     mlon = msg_latlon['lon']
     mlat = msg_latlon['lat']
     
@@ -340,6 +340,17 @@ def getTRMMconv(flags):
 
   return npfalse
   
+def getTRMMstrat(flags):
+  
+  bla=flags.astype(int)
+  npfalse=[]
+
+  for b, i in zip(np.nditer(bla), range(bla.size)): 
+       bb='{0:016b}'.format(int(b))    
+       npfalse.append(int(bb[-5]))
+
+  return npfalse  
+  
 
 #==============================================================================
 # Compares TRMM to METEOSAT  | MSG indices
@@ -359,6 +370,8 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
    
    mdic = {'perc' : [], 'p' : [], 'pp' : [], 'pi' : [], 'pmax' : [],  't' : [], 'hod' : [],
            'lat' : [], 'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
+                              
+           
    mdic_f = {'perc' : [],  'pconv': [],'ppconv': [], 'piconv': [],  'pmaxconv' : [], 'tconv' : [], 
              'tnfconv' : [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : []}
              
@@ -503,23 +516,29 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           if sum(mask) < 2:
               continue
           
+          smask=getTRMMstrat(flags)  # filter for convective rain
+          smask=np.array(smask)
+          
           pm=np.nanmean(bprcp)  
           tm=np.nanmean(mtt)
           ppm=np.percentile(bprcp, 98)  
           pmaxm=bprcp.max()  
           pi=float(np.greater(bprcp, 30.).sum())/float(bprcp.size)
           
-          mdic['p'].append(pm)
-          mdic['pp'].append(ppm)
-          mdic['pmax'].append(pmaxm)
-          mdic['pi'].append(pi)
-          mdic['t'].append(tm)
-          mdic['hod'].append(hr)
-          mdic['yr'].append(yr)
-          mdic['mon'].append(mon)
+          mdic['p'].append(pm)                 # prcp mean of every MCS (no zero)
+          mdic['pp'].append(ppm)               # value of 98 percentile of MCS (no zero)
+          mdic['pmax'].append(pmaxm)           # maximum pcp in MCS
+          mdic['pi'].append(pi)                # share of > 30mmh pixel of > 0 pixel
+          mdic['t'].append(tm)                 # T where PCP > 0 and overlap
+          mdic['hod'].append(hr)               # hour of day for image
+          mdic['yr'].append(yr)                # year for image
+          mdic['mon'].append(mon)              # month for image
           mdic['lat'].append(lat)
           mdic['lon'].append(lon)
-          mdic['tpixel'].append(bprcp.size) 
+          mdic['tpixel_nzero'].append(bprcp.size)   # nb pixel of MCS for PCP > 0
+          mdic['tpixel'].append(sum(inter))         # nb pixel of MCS including 0
+          
+          
                    
           # if less than 100 pixel convective in blob, continue
           if sum(mask) < 50:
@@ -558,7 +577,7 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
           mdic_f['tpixel'].append(sum(mask)) 
           cnt=cnt+1
           
-          myDicts=[mdic, mdic_f]
+   myDicts=[mdic, mdic_f]
           
    pkl.dump(myDicts, open('/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_300px'+str(yrange[0])+'-'+str(yrange[-1])+'.p', 'wb'))
    print('Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.p with '+str(cnt)+' MCSs')
@@ -570,17 +589,266 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
   # print 'Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'.npy'
    
        
+def compare_TRMMmsg_indicesV2(hod=HOD, yrange=YRANGE):
+   msg  = "/users/global/cornkle/data/OBS/meteosat_WA30/bigcell_area_table/rewrite/"
+   blob_path = "/users/global/cornkle/data/OBS/meteosat_WA30/cell_blob_files/"
+   msg_latlon=np.load('/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.npz')
+   ttpath = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
+   msg_rawp="/users/global/cornkle/data/OBS/meteosat_WA30/msg_raw_binary/"
+   mlon = msg_latlon['lon']
+   mlat = msg_latlon['lat']
+   print('Start extract Trmm')
+   trmm = extract_TRMMfile(ttpath, yrange=yrange, hod=hod)
+   
+   tpath = trmm['fpath']
+   
+   mdic = {'perc' : [], 'p' : [], 'pp' : [], 'pi' : [], 'pmax' : [],  't' : [], 'hod' : [],
+           'lat' : [], 'lon' : [], 'yr' : [], 'mon' : [], 'tpixel' : [], 'tpixel_nzero' : [],  'tpixel_conv' : [],  'tpixel_strat' : [],  'tpixel_zero' : [], 'tpixel_derived' : [] ,
+           'twhole' : [], 'area' : [] }
+           
+   mdic_f = {'perc' : [],  'pconv': [],'ppconv': [], 'piconv': [],  'pmaxconv' : [], 'tconv' : [], 
+             'tnfconv' : [], 'hod' : [], 'lat' : [],'lon' : [], 'yr' : [], 'mon' : [], 'tpixel_convNZ' : [], 'tpixel_stratNZ' : []}        
+  
+             
+   mll = ll_toMSG(mlon,mlat) 
+   
+   cnt=0      
+   for hr, mins, yr, mon, day, tfile in zip(trmm['date'].h, trmm['date'].mi,trmm['date'].y, trmm['date'].m, trmm['date'].d, tpath):       
+     
+       print('Doing '+str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2))
+    #   print 'TRMM:'+tfile 
+       # pick hour/ minute of msg where TRMM swath exists, check blobfile!
+       d=dict()
+       df = pd.read_csv(msg+'cell_40c_'+str(hr).zfill(2)+str(mins).zfill(2)+'_JJAS.txt')
+       dstring=str(yr)+'-'+str(mon).zfill(2)+'-'+str(day).zfill(2)+' '+str(hr).zfill(2)+':'+str(mins).zfill(2)+':'+str(00).zfill(2)
+       
+       if not dstring in df['Date'].as_matrix():
+           continue
+       
+       sel=df.loc[df['Date'] == dstring]       
+       big = sel.loc[sel['Area'] >= 25000] # only mcs over 25.000km2
+       if big.empty:
+           continue
+       
+       trs = readTRMMswath(tfile)
+       if not trs:
+           print('TRMM file not found')
+           return
+           
+      # print ' went trough trmm'    
+       
+       
+       fflags=trs['flags'][np.where(trs['lats']>4)]
+       fpcp=trs['pcp'][np.where(trs['lats']>4)]
+       fmask=getTRMMconv(fflags)  # filter for convective rain
+       fmask=np.array(fmask)
+       if fpcp.flat[np.where(fmask)].any(): perc= np.percentile(fpcp.flat[np.where(fmask)], 98) 
+       mdic['perc'].append(perc)       
+
+       mfile=msg_rawp+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
+       
+       msg_raw=readMSGraw(mfile)          
+       
+       if not msg_raw:
+           continue  
+#       print 'MSG Went trough'
+       msg_t=msg_raw['t']
+       
+       d['lat']=big['Lat'].values.tolist()
+       d['lon']=big['Lon'].values.tolist()
+       d['area']=big['Area'].values.tolist()
+       d['temp']=big['Temp'].values.tolist()
+       d['mincol']=big['Mincol'].values.tolist()
+       
+       bfile = blob_path+str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra'
+       blobs = readBlobFile(bfile)               
+       if not blobs.any():
+           continue
+       
+       # loop for each blob center, to find the whole area
+       for lon, lat, mt, mc in zip(d['lon'], d['lat'], d['temp'] , d['mincol']):
+          
+          pp = ll_toMSG(lon,lat)
+          point=np.where((mll['x']==pp['x']) & (mll['y']==pp['y']))
+          
+          # blob number
+          nb = blobs[point]
+          # if we find a 0 instead of a blob, continue
+          if not nb[0]:       
+              continue          
+     
+          # find where else is blob number
+          isblob = np.where(blobs == nb)          
+          #  print min(isblob[1])
+          #  print mc-1
+          # check again whether found blob is approx 25.000km2
+          if isblob[0].size < 2500:
+              continue
+          
+          # lat lons of complete blob
+          blats=mlat[isblob]
+          blons=mlon[isblob]
+          
+          # msg indices of complete blob
+          my=mll['y'][isblob]
+          mx=mll['x'][isblob]          
+          mpair = (mx+my)*(mx+my+1)/2+my
+          
+          blatmin, blatmax = blats.min(), blats.max()
+          blonmin, blonmax = blons.min(), blons.max()          
+                            
+          # whole blob must be inside TRMM. Attention: This draws a rectangle. 
+          # There is still a chance that blob is not in TRMM. Checked later!               
+          if not (trs['lonmin'] < blonmin) & (trs['lonmax'] > blonmax):                
+                 continue
+          if not (trs['latmin'] < blatmin) & (trs['latmax'] > blatmax):                 
+                 continue
+                             
+          ll_trmm = ll_toMSG(trs['lons'],trs['lats'])
+          
+          tx = ll_trmm['x']
+          ty = ll_trmm['y']
+          
+          tpair = (tx+ty)*(tx+ty+1)/2+ty               
+          inter=np.in1d(tpair, mpair)                   #returns false and true, whole grid
+          inter_rev=np.in1d(mpair, tpair.flat[inter])   # Attention: this leaves out meteosat cells were no closest TRMM cell (since TRMM is coarser!)
+          
+          # No intersection between Trmm and MSG? Continue!
+          # if not inter.any(): 
+          #     continue  
+          
+          # have at least 500 pixels shared for MCS between TRMM and MSG
+          if sum(inter) < 500:  
+              continue
+          
+          bprcp=trs['pcp'].flat[inter]            
+          flags=trs['flags'].flat[inter] 
+          mtt=msg_t[isblob].flat[inter_rev]       
+          
+          #we need same number of TRMM and MSG per plot to do the masking
+          if not bprcp.size==mtt.size: 
+              print('Tprcp and MSGT not same, someting wrong!')
+              continue
+          
+          # if TRMM zero for whole blob, continue
+          #if not bprcp.any():
+          #    continue
+          
+           # check for at least 500 TRMM pixels in MSG above 0 rain
+          if np.count_nonzero(bprcp) < 20:
+              continue
+          
+          mask=getTRMMconv(flags)  # filter for convective rain
+          mask=np.array(mask)
+          
+          smask=getTRMMstrat(flags)  # filter for convective rain
+          smask=np.array(smask)
+          
+                    
+          
+          # remove all these zero rainfall from blob
+          bprcpNZ=bprcp.flat[np.where(bprcp)]
+          mttNZ=mtt.flat[np.where(bprcp)]   
+          flagsNZ=flags.flat[np.where(bprcp)] 
+          maskNZ=getTRMMconv(flagsNZ)  #list of 0 and 1, flattened!
+          smaskNZ=getTRMMstrat(flagsNZ)  #list of 0 and 1, flattened!                    
+          
+          if sum(maskNZ) < 2:
+              continue
+          
+          print(sum(mask), sum(maskNZ))
+       #   if not sum(mask)==sum(maskNZ):
+       #       print('Convective flag sum not the same as nozero convective flag?!')
+       #       continue
+       #   print(sum(smask), sum(smaskNZ))
+       #   if not sum(smask)==sum(smaskNZ):
+       #       print('Stratiform flag sum not the same as nozero stratiform flag?!')
+       #       continue
+          
+          pm=np.nanmean(bprcpNZ)  
+          tm=np.nanmean(mttNZ)
+          ppm=np.percentile(bprcpNZ, 98)  
+          pmax=bprcpNZ.max()  
+          pi=float(np.greater(bprcpNZ, 30.).sum())/float(bprcpNZ.size)
+          
+          mdic['p'].append(pm)                 # prcp mean of every MCS (no zero)
+          mdic['pp'].append(ppm)               # value of 98 percentile of MCS (no zero)
+          mdic['pmax'].append(pmax)           # maximum pcp in MCS
+          mdic['pi'].append(pi)                # share of > 30mmh pixel of > 0 pixel
+          mdic['t'].append(tm)                 # T where PCP > 0 and overlap
+          mdic['hod'].append(hr)               # hour of day for image
+          mdic['yr'].append(yr)                # year for image
+          mdic['mon'].append(mon)              # month for image
+          mdic['lat'].append(lat)
+          mdic['lon'].append(lon)
+          mdic['tpixel_nzero'].append(np.count_nonzero(bprcp))   # nb pixel of MCS for PCP > 0
+          mdic['tpixel'].append(bprcp.size)         # nb pixel of MCS including 0
+          mdic['tpixel_conv'].append(sum(mask))     # number convective pixel
+          mdic['tpixel_strat'].append(sum(smask))   # number stratiform pixel
+          mdic['tpixel_zero'].append(np.size(bprcp)-np.count_nonzero(bprcp)) # number zero pixel
+          mdic['tpixel_derived'].append(sum(mask)+sum(smask)+(np.size(bprcp)-np.count_nonzero(bprcp)))
+          mdic['twhole'].append(mt)
+          mdic['area'].append(isblob[0].size)
+          
+          
+          print('Passed flag filter')
+                   
+          # if less than 100 pixel convective in blob, continue
+      #    if sum(mask) < 50:
+      #        continue
+          
+                   
+          # check for at least 500 TRMM pixels in MSG above 0 rain
+          #if np.count_nonzero(bprcp) < 500:
+          #    continue
+                    
+                                                                   
+          pc=np.nanmean(bprcpNZ.flat[np.where(maskNZ)])
+          tc=np.nanmean(mttNZ.flat[np.where(maskNZ)])
+          pic=float(np.greater(bprcpNZ.flat[np.where(maskNZ)], 30.).sum())/float(sum(maskNZ))
+          ppc=np.percentile(bprcpNZ.flat[np.where(maskNZ)], 98)
+          pmaxc=bprcpNZ.flat[np.where(maskNZ)].max()
+          
+          
+          
+          # 30 is the treshold for intensive rainfall
+                         
+          
+
+        #  print 'Nb', nb
+          mdic_f['pconv'].append(pc)
+          mdic_f['piconv'].append(pic)
+          mdic_f['ppconv'].append(ppc)
+          mdic_f['pmaxconv'].append(pmaxc)
+          mdic_f['tconv'].append(tc)  
+          mdic_f['tnfconv'].append(tm)                  
+          mdic_f['hod'].append(hr)
+          mdic_f['yr'].append(yr)
+          mdic_f['mon'].append(mon)
+          mdic_f['lat'].append(lat)
+          mdic_f['lon'].append(lon)
+          mdic_f['tpixel_convNZ'].append(sum(maskNZ)) 
+          mdic_f['tpixel_stratNZ'].append(sum(smaskNZ))
+          cnt=cnt+1
+          print(cnt)
+          
+   myDicts=[mdic, mdic_f]
+          
+   pkl.dump(myDicts, open('/users/global/cornkle/data/OBS/MSG_TRMM_temp_pcp_300px'+str(yrange[0])+'-'+str(yrange[-1])+'_new.p', 'wb'))
+   print('Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'_new.p with '+str(cnt)+' MCSs')
+
+
 NB=0
 def quickreadTrmmMSG(tfile, nb=NB):
     
           
     msg_rawp="/users/global/cornkle/data/OBS/meteosat/msg_raw_binary/"
 
-    yr=tfile['date'].years[nb]
-    mon=tfile['date'].months[nb]
-    hr=tfile['date'].hours[nb]
-    day=tfile['date'].days[nb]
-    mins=tfile['date'].minutes[nb]
+    yr=tfile['date'].y[nb]
+    mon=tfile['date'].m[nb]
+    hr=tfile['date'].h[nb]
+    day=tfile['date'].d[nb]
+    mins=tfile['date'].mi[nb]
     files = str(yr)+'/'+str(mon).zfill(2)+'/'+str(yr)+str(mon).zfill(2)+str(day).zfill(2)+str(hr).zfill(2)+str(mins).zfill(2)+'.gra' 
     bfile=msg_rawp+files
     msg=readMSGraw(bfile)

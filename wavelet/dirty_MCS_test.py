@@ -32,8 +32,8 @@ def cutout_test_MCS():
     YRANGE=range(2004,2014)
 
     tpath= "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    tf=msg.extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE, mtresh=1)    
-   
+    tf=msg.extract_TRMMfile(tpath, hod=HOD, yrange=YRANGE, mtresh=1)       
+    print(tf)
     tnb=np.array(range(len(tf['fpath'])))
     maxs=[]
     for tp in tnb:
@@ -42,13 +42,18 @@ def cutout_test_MCS():
         maxs.append(td)
     sort_max, sort_nbs = zip(*sorted(zip(maxs, tnb), reverse=True))
     
+    print(tf['date'].getStr(['845']))
+    return
+    
         # Transform lons, lats to grid
     print(ind_dic.keys())
     for nb in ind_dic.keys():   
+                       
         nbn=int(nb)
         print(nbn)
         mi=tf['tmins'][nbn]
-        date=tf['date'].get_str([nbn])
+        date=tf['date'].getStr([nbn])
+        print(date)
         dmsg, dtrmm=msg.quickreadTrmmMSG(tf, nb=nbn)
 
         md=dmsg['t']

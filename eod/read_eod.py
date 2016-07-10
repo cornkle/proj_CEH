@@ -10,6 +10,7 @@ import os
 from utils import u_arrays as uarr
 import pandas as pd
 from utils import u_time as ut
+from utils import u_lists as ul
 #import datetime as dt
 #import glob
 import itertools
@@ -46,15 +47,16 @@ class trmm(object):
        fdic = {'fpath' : [], 'tmins' : [], 'date' : ut.date_list()}
        rfiles = []                         
        
-       for yr,mo,dy in itertools.product(list(yrange),list(range(8,9)),list(range(1,32))):  # rain_f4 files only available for 6 to 10
+       for yr,mo in itertools.product(list(yrange),list(range(6,10))):  # rain_f4 files only available for 6 to 10
            
            tpath= os.path.join(trmm_folder, str(yr), str(mo).zfill(2))
            files=uarr.locate('_rain_f4.gra', tpath)         
            rfiles.extend(files)
-           
+       rfiles.sort(key=ul.natural_keys)  
+       
        if not rfiles:
            print('Not trmm files found')
-           
+          
      #  self.fpath=fdic['fpath']     
      #  return
        for eachfile in rfiles:           
@@ -227,6 +229,7 @@ class msg(object):
             print('No data for date')
             return False
                 
+                
         rrShape = (self.ny, self.nx) # msg shape
         rrMDI = np.uint8(255)
         rr = np.fromfile(self.dpath,dtype=rrMDI.dtype) 
@@ -238,6 +241,10 @@ class msg(object):
            blat=self.lat[i.min():i.max()+1, j.min():j.max()+1 ]
            blon=self.lon[i.min():i.max()+1, j.min():j.max()+1 ]    
            rr=rr[i.min():i.max()+1, j.min():j.max()+1 ] 
+        else: 
+           blat=self.lat
+           blon=self.lon
+           rr=rr
            
         dic = {'t' : rr, 'lon' : blon, 'lat' : blat}   
         
