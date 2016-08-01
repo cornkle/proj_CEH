@@ -25,7 +25,9 @@ def rlocate(pattern, root_path):
     
 def locate(pattern, root_path):
     strg=[]
-    for file in os.listdir(root_path):
+    llist=os.listdir(root_path)
+    llist.sort()
+    for file in llist:
         #print(file)
         if file.endswith(pattern):
             strg.append(os.path.join(root_path, file))
