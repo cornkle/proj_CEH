@@ -35,7 +35,7 @@ def waveletTP(t, p, dt):
         
     dic['t']=powerTIR
     dic['p']=powerPCP
-    dic['scales'] = (period2d/2.).round()
+    dic['scales'] = (period2d/2.)#.round()
     
     
     return dic
@@ -74,7 +74,7 @@ def waveletTP_localMax(t, p, dt):
         
     dic['t']=powerTIR
     dic['p']=powerPCP
-    dic['scales'] = (period2d/2.).round()
+    dic['scales'] = (period2d/2.)#.round()
     dic['z'] = zpks
     dic['y'] = ypks
     dic['x'] = xpks

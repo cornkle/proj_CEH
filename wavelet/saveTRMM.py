@@ -15,13 +15,13 @@ import xarray as xr
 import os
 
 HOD=range(24)   # hours of day
-YRANGE=range(2004,2014)
+YRANGE=range(1998,2014)
 
 #BOX=[XL, XR, YL, YU]
 def saveTRMM():
    
     trmm_folder= "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"   
-    box = [-10, 10, 10, 20]
+    box = [-15, 10, 15, 20]
     # make grid
     #define projection
     proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
@@ -73,16 +73,38 @@ def saveTRMM():
            outt[boole]=np.nan
            outt[abs(grad[1])>300]=np.nan
            outt[abs(grad[0])>300]=np.nan  
-
-       attrs = {'units': 'hours since 2000-01-01'}                                                                        
+           
+       # add MSG
+       #define the "0 lag" frist
+       msg_folder='/users/global/cornkle/data/OBS/meteosat_SA15'    
+       m=re.msg(msg_folder)
+       arr=np.array([15,30,45,60, 0])
+       dm = arr - _mi
+       ind=(np.abs(dm)).argmin()
+       
+       dt0=dm[ind] 
+       ndate = date + dt.timedelta(minutes=int(dt0))                                           
+       ml0=m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute, llbox=box)     
+       if not ml0:
+           print('Date missing')
+           out = np.empty_like(outt)
+           out.fill(np.nan)
+       else:
+           xm, ym = grid.transform( ml0['lon'].flatten(), ml0['lat'].flatten(), crs=salem.wgs84)
+           mpoints = np.array((ym, xm)).T
+           out = griddata(mpoints, ml0['t'].flatten(), inter, method='linear')
+           out = out.reshape((grid.ny, grid.nx))   
+           
+                                                                                 
               
-       da = xr.Dataset({'p' : (['x', 'y', 'time'], outt),  
-                        'time' : ('time', date)       }, 
+       da = xr.Dataset({'p' : (['x', 'y'], outt),  
+                        't' : (['x', 'y'], out)        
+                         }, 
                             coords= {'lon' : (['x', 'y'], lon),
                                      'lat' : (['x', 'y'], lat),                                    
-                                      })
+                                     'time': date})
        da.close()  
-       savefile = '/users/global/cornkle/TRMMfiles/'+date.strftime('%Y-%m-%d_%H:%M:%S')+'.nc'
+       savefile = '/users/global/cornkle/TRMMfiles/new/'+date.strftime('%Y-%m-%d_%H:%M:%S')+'.nc'
        try:
            os.remove(savefile)
        except OSError:
@@ -93,3 +115,5 @@ def saveTRMM():
        cnt=cnt+1
              
     print('Saved '+str(cnt)+' TRMM swaths as netcdf.')   
+    
+saveTRMM()    

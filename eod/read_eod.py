@@ -161,7 +161,10 @@ class trmm(object):
              rain=rain.reshape(yy,49)
              lont=lont.reshape(yy,49)
              latt=latt.reshape(yy,49)
-             flags=flags.reshape(yy,49)                               
+             flags=flags.reshape(yy,49)   
+         else:                           
+             print('Cut problem')
+             return 
          
          self.lon = dlont
          self.lat = dlatt
