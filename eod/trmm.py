@@ -12,6 +12,8 @@ from utils import u_time as ut
 from utils import u_lists as ul
 import itertools
 import xarray as xr
+import pandas as pd
+import datetime as dt
 
 HOD = list(range(24))
 YRANGE = list(range(2004, 2014))
@@ -131,7 +133,7 @@ class ReadWA(object):
     cut: [lower,upper], list, gets the data and cuts swath at the given latitude upper and lower bondaries
     """
 
-    def get_ddata(self, yr, mo, dy, hr, mi, cut=None):
+    def get_ddata(self, yr, mo, dy, hr, mi, cut=None, netcdf_path=None):
         ind = self.dates.getInd(yr, mo, dy, hr, mi)
         # print('Ind:', ind)
         if not ind:
@@ -139,7 +141,7 @@ class ReadWA(object):
             return False
 
         tfile = self.fpaths[ind[0]]
-        da = self.get_data(tfile, cut=cut)
+        da = self.get_data(tfile, cut=cut, netcdf_path=netcdf_path)
 
         return da
 
@@ -151,7 +153,7 @@ class ReadWA(object):
     cut out smaller North-South ranges than initialised box (or 3-22N).
     """
 
-    def get_data(self, path, cut=None):
+    def get_data(self, path, cut=None, netcdf_path=None):
         tfile = path
         if not os.path.isfile(tfile):
             print('File does not exist. Error')
@@ -198,10 +200,32 @@ class ReadWA(object):
         except UnboundLocalError:
             pass  # don't cut if nothing to cut. Stay with former ranges
 
+        dind = self.fpaths.index(tfile)
+        time = self.dates.getObj(dind)
+
+        date = [pd.datetime(time.y[0], time.m[0], time.d[0], time.h[0], time.mi[0])]  # or np.atleast_1d(dt.datetime())
+
         self.nx = x
         self.ny = y
 
-        da = xr.DataArray(rain, coords={'lat': (('y', 'x'), latt), 'lon': (('y', 'x'), lont)},
-                          dims=['y', 'x'])
+        da = xr.DataArray(rain[None, ...], coords={'time': (('time'), date),
+                                                     'lat': (('y', 'x'), latt),
+                                                     'lon': (('y', 'x'), lont)},
+                          dims=['time', 'y', 'x']).isel(time=0)
+
+
+
+        if netcdf_path:
+            savefile = netcdf_path
+            if not os.path.isdir(savefile):
+                print('Netcdf path not a directory, file cannot be saved')
+                quit()
+            try:
+                os.remove(savefile)
+            except OSError:
+                pass
+            da.to_dataset(name='p').to_netcdf(path=savefile, mode='w')
+
+            print('Saved ' + savefile)
 
         return da
