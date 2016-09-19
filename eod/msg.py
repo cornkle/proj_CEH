@@ -2,6 +2,7 @@ import numpy as np
 import os
 from utils import u_arrays as uarr
 import pandas as pd
+import xarray as xr
 from utils import u_time as ut
 from utils import u_lists as ul
 # import datetime as dt
@@ -9,17 +10,20 @@ from utils import u_lists as ul
 import itertools
 
 
-class msg(object):
+class ReadMsg(object):
     def __init__(self, msg_folder):
 
-        if not os.path.isdir(msg_folder):
-            print('Not a directory')
+        try:
+            lpath = uarr.locate('lon.npz', msg_folder)
+        except:
+            print('Not a directory or no msg lat/lon found')
             quit()
 
-        lpath = uarr.locate('lon.npz', msg_folder)
         mpath = os.path.join(msg_folder, 'msg_raw_binary')
 
-        if not os.path.isdir(mpath):
+        try:
+            os.path.isdir(mpath)
+        except:
             print('No msg_raw_binary')
             quit()
 
@@ -40,21 +44,113 @@ class msg(object):
         self.dpath = os.path.join(self.root, 'msg_raw_binary', str(yr), str(mon).zfill(2),
                                   str(yr) + str(mon).zfill(2) + str(day).zfill(2) + str(hr).zfill(2) + str(
                                       mins).zfill(2) + '.gra')
-        if not os.path.isfile(self.dpath):
-            self.dpath = False
 
-        if os.path.isdir(os.path.join(self.root, 'cell_blob_files')):
-            self.bpath = os.path.join(self.root, 'cell_blob_files', str(yr), str(mon).zfill(2),
-                                      str(yr) + str(mon).zfill(2) + str(day).zfill(2) + str(hr).zfill(2) + str(
-                                          mins).zfill(2) + '.gra')
+        if not os.path.isfile(self.dpath):  # if the date is not found, it's silently omitted. Not perfect but allows loop without massive print
+            self.dpath = False              # self.dpath = False can be caught as non existant file
+            return
+
+        root = os.path.join(self.root, 'cell_blob_files')
+        file = os.path.join(root, str(yr), str(mon).zfill(2),
+                            str(yr) + str(mon).zfill(2) + str(day).zfill(2) + str(hr).zfill(2) + str(
+                                mins).zfill(2) + '.gra')
+        if os.path.isfile(file):
+            self.bpath = file
         else:
             print('No blob file dir found!')
             self.bpath = False
-        if os.path.isdir(os.path.join(self.root, 'bigcell_area_table')):
-            self.tpath = os.path.join(self.root, 'bigcell_area_table', 'rewrite',
-                                      'cell_40c_' + str(hr).zfill(2) + str(mins).zfill(2) + '_JJAS.txt')
+
+        root = os.path.join(self.root, 'bigcell_area_table')
+        file = os.path.join(root, 'rewrite',
+                                'cell_40c_' + str(hr).zfill(2) + str(mins).zfill(2) + '_JJAS.txt')
+        if os.path.isfile(file):
+            self.tpath = file
         else:
             print('No table file dir found!')
             self.tpath = False
-        self.date = {'year': yr, 'month': mon, 'day': day, 'hour': hr,
-                     'minute': mins}  # could be turned into python date
+
+        self.date = [pd.datetime(yr, mon, day, hr, mins)]
+
+    def get_data(self, llbox=None, netcdf_path=None):
+
+        if not self.dpath:
+            print('No data for date or date not set. Please set set_date first')
+            return False
+
+        rrShape = (self.ny, self.nx)  # msg shape
+        rrMDI = np.uint8(255)
+        rr = np.fromfile(self.dpath, dtype=rrMDI.dtype)
+        rr.shape = rrShape
+        rr = rr.astype(np.int32) - 173
+
+        if llbox:
+            i, j = np.where(
+                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+            blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
+            blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
+            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+        else:
+            blat = self.lat
+            blon = self.lon
+            rr = rr
+
+        date = self.date  # or np.atleast_1d(dt.datetime())
+
+        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
+                                                   'lat': (('y', 'x'), blat),
+                                                   'lon': (('y', 'x'), blon)},
+                          dims=['time', 'y', 'x']).isel(time=0)
+
+        if netcdf_path:
+            savefile = netcdf_path
+
+            try:
+                os.remove(savefile)
+            except OSError:
+                pass
+            try:
+                da.to_dataset(name='t').to_netcdf(path=savefile, mode='w')
+            except OSError:
+                print('File cannot be saved. Maybe directory wrong. Check your permissions')
+                raise
+
+            print('Saved ' + savefile)
+
+        return da
+
+
+    def get_blob(self, llbox=None):
+
+        if not self.bpath:
+            print('No blob file dir found!')
+            return False
+
+        rrShape = (self.ny, self.nx)  # msg shape
+        rrMDI = np.uint16()
+        rr = np.fromfile(self.bpath, dtype=rrMDI.dtype)
+        rr.shape = rrShape
+        if llbox:
+            i, j = np.where(
+                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+            blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
+            blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
+            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+
+        date = self.date
+
+        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
+                                                 'lat': (('y', 'x'), blat),
+                                                 'lon': (('y', 'x'), blon)},
+                          dims=['time', 'y', 'x']).isel(time=0)
+
+        return da
+
+
+    def get_table(self):
+
+        if not self.tpath:
+            print('No table file dir found!')
+            return False
+
+        tab = pd.read_csv(self.tpath)
+
+        return tab

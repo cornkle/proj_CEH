@@ -205,26 +205,24 @@ class ReadWA(object):
 
         date = [pd.datetime(time.y[0], time.m[0], time.d[0], time.h[0], time.mi[0])]  # or np.atleast_1d(dt.datetime())
 
-        self.nx = x
-        self.ny = y
-
         da = xr.DataArray(rain[None, ...], coords={'time': (('time'), date),
                                                      'lat': (('y', 'x'), latt),
                                                      'lon': (('y', 'x'), lont)},
                           dims=['time', 'y', 'x']).isel(time=0)
 
 
-
         if netcdf_path:
             savefile = netcdf_path
-            if not os.path.isdir(savefile):
-                print('Netcdf path not a directory, file cannot be saved')
-                quit()
+
             try:
                 os.remove(savefile)
             except OSError:
                 pass
-            da.to_dataset(name='p').to_netcdf(path=savefile, mode='w')
+            try:
+                da.to_dataset(name='p').to_netcdf(path=savefile, mode='w')
+            except OSError:
+                print('File cannot be saved. Maybe directory wrong. Check your permissions')
+                raise
 
             print('Saved ' + savefile)
 
