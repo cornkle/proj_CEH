@@ -838,6 +838,9 @@ def compare_TRMMmsg_indicesV2(hod=HOD, yrange=YRANGE):
    print('Saved '+'MSG_TRMM_temp_pcp_'+str(yrange[0])+'-'+str(yrange[-1])+'_new.p with '+str(cnt)+' MCSs')
 
 
+if __name__ == "__main__":
+    compare_TRMMmsg_indicesV2()
+
 NB=0
 def quickreadTrmmMSG(tfile, nb=NB):
     

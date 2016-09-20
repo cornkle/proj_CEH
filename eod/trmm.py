@@ -16,8 +16,8 @@ import pandas as pd
 import datetime as dt
 
 HOD = list(range(24))
-YRANGE = list(range(2004, 2014))
-MRANGE = list(range(6, 10))  # Jun - Sep
+YRANGE = range(2004, 2014)
+MRANGE = range(6, 10)  # Jun - Sep
 MTRESH = 0
 
 """
@@ -48,10 +48,11 @@ MTRESH = 0
 class ReadWA(object):
     def __init__(self, trmm_folder, yrange=YRANGE, mrange=MRANGE, hod=HOD, area=None):
 
-        min_rain_swath = 2000
-        min_rain_box = 500
+
+        min_rain_swath = 200
+        min_rain_box = 200
         min_tpixel = 2500
-        rain_thresh = 0.5
+        rain_thresh = 0.1
 
         if not os.path.isdir(trmm_folder):
             print('Not a directory')
@@ -73,6 +74,7 @@ class ReadWA(object):
 
         if not rfiles:
             print('No trmm files found')
+            quit()
 
             #  self.fpath=fdic['fpath']
             #  return
@@ -102,12 +104,12 @@ class ReadWA(object):
             lont = lons / 100.
             latt = lats / 100.
             rain = rainrs / 10.
-            print(np.sum(rain>rain_thresh))
+
             if np.sum(rain>rain_thresh) < min_rain_swath:  # minimum TRMM rainfall > 0.1 in swath
                 continue
             if area:
                 box = np.where((lont > area[0]) & (lont < area[2]) & (latt > area[1]) & (latt < area[3]))
-                print(np.sum(rain[box]>rain_thresh))
+
                 if not box[0].any():
                     continue
                     #       print(len(box[0]))
@@ -208,7 +210,14 @@ class ReadWA(object):
         da = xr.DataArray(rain[None, ...], coords={'time': (('time'), date),
                                                      'lat': (('y', 'x'), latt),
                                                      'lon': (('y', 'x'), lont)},
+                            dims=['time', 'y', 'x']).isel(time=0)
+
+        da2 = xr.DataArray(flags[None, ...], coords={'time': (('time'), date),
+                                                   'lat': (('y', 'x'), latt),
+                                                   'lon': (('y', 'x'), lont)},
                           dims=['time', 'y', 'x']).isel(time=0)
+
+        ds = xr.Dataset({'p': da, 'flags': da2})
 
 
         if netcdf_path:
@@ -219,11 +228,11 @@ class ReadWA(object):
             except OSError:
                 pass
             try:
-                da.to_dataset(name='p').to_netcdf(path=savefile, mode='w')
+                ds.to_netcdf(path=savefile, mode='w')
             except OSError:
                 print('File cannot be saved. Maybe directory wrong. Check your permissions')
                 raise
 
             print('Saved ' + savefile)
 
-        return da
+        return ds

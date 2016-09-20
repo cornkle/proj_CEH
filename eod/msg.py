@@ -134,6 +134,10 @@ class ReadMsg(object):
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+        else:
+            blat = self.lat
+            blon = self.lon
+            rr = rr
 
         date = self.date
 

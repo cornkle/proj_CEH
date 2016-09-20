@@ -1,7 +1,6 @@
 from eod import trmm
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
-import xarray as xr
 import unittest
 
 test_dir = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/eod/tests/test_files/trmm'
@@ -17,6 +16,9 @@ class TestTrmmRead(unittest.TestCase):
         assert files == [
             test_dir+'/2007/08/2A25.20070816.55562.7.gra',
             test_dir+'/2007/08/2A25.20070817.55577.7.gra']
+
+        with self.assertRaises(SystemExit):
+            trmm.ReadWA(test_dir, yrange=range(1999,2000))
 
     def test_area(self):
 
@@ -48,7 +50,7 @@ class TestTrmmRead(unittest.TestCase):
         box = np.where((td['lon'].values > area[0]) & (td['lon'].values < area[2]) & (td['lat'].values > area[1]) & (td['lat'].values < area[3]))
         # files are properly filtered according to the rain/box overlap thresholds
         assert len(box[0]) > min_tpixel
-        assert np.sum(td.values[box] > rain_thresh) > min_rain_box
+        assert np.sum(td['p'].values[box] > rain_thresh) > min_rain_box
 
         # use cut on two files
         obj = trmm.ReadWA(test_dir)
@@ -66,7 +68,8 @@ class TestTrmmRead(unittest.TestCase):
         assert td['lat'].values[:, 0].min() >= 8
 
         td2 = obj.get_data(obj.fpaths[0], cut = [8, 10])
-        assert_array_equal(td2.values, td.values)
+        assert_array_equal(td2['p'].values, td['p'].values)
+        assert_array_equal(td2['flags'].values, td['flags'].values)
 
     def test_write_netcdf(self):
         obj = trmm.ReadWA(test_dir)

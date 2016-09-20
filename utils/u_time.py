@@ -39,11 +39,11 @@ class date_list(object):
 
         x = date_list()
         if isinstance(ind, int):
-            print(self.y)
+
             x.add(self.y[ind], self.m[ind], self.d[ind], self.h[ind], self.mi[ind], self.s[ind])
         else:
             for i in ind:
-                #print(ind)
+
                 x.add(self.y[i], self.m[i], self.d[i], self.h[i], self.mi[i], self.s[i])
 
         return x
