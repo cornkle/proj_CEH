@@ -126,8 +126,6 @@ class ReadWA(object):
         self.fpaths = fdic['fpath']
         self.dates = fdic['date']
         self.__area = area
-        self.__lat = latt
-        self.__lon = lont
 
     """
     Gets a file with a certain date out of the initialised TRMM file list

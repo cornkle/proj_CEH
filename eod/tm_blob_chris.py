@@ -87,8 +87,7 @@ def tm_overlap_blobs():
 
             mcs = tm_utils.ll_toMSG(lon, lat)
             point = np.where((mll['x'] == mcs['x']) & (mll['y'] == mcs['y']))
-            #print(mll['x'].min(), mll['y'].min(), mll['x'].max(), mll['y'].max() )
-            #print(mcs['x'],mcs['y'])
+
             if not all(point):
                 if mcs['x'] > mll['x'].max() or mcs['x'] < mll['x'].min() or mcs['y'] > mll['y'].max() or mcs['y'] < mll['y'].min():
                     continue
@@ -123,17 +122,15 @@ def tm_overlap_blobs():
             # msg indices of complete blob
             my = mll['y'][isblob]
             mx = mll['x'][isblob]
-            mpair = (mx + my) * (mx + my + 1) / 2 + my
-
-            blatmin, blatmax = blats.min(), blats.max()
-            blonmin, blonmax = blons.min(), blons.max()
 
             ll_trmm = tm_utils.ll_toMSG(td['lon'].values, td['lat'].values)
 
             tx = ll_trmm['x']
             ty = ll_trmm['y']
 
-            tpair = (tx + ty) * (tx + ty + 1) / 2 + ty
+            mpair = tm_utils.unique_of_pair(mx, my)
+            tpair = tm_utils.unique_of_pair(tx, ty)
+            #Do we need to do it that way?
             inter = np.in1d(tpair, mpair)  # returns false and true, whole grid
             inter_rev = np.in1d(mpair, tpair.flat[inter])  # Attention: this leaves out meteosat cells where no closest TRMM cell (since TRMM is coarser!)
 
