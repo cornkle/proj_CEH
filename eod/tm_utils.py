@@ -188,3 +188,35 @@ def unique_of_pair(x,y):
 
     uni = (x + y) * (x + y + 1) / 2 + y
     return uni
+
+"""search for non zero value in +-1 kernel"""
+def kernel_no_zero(arr, xx, yy):
+
+    shape = arr.shape
+    a = 1
+    b = 2
+    c = 1
+    d =2
+
+    if arr[yy,xx]:
+        return arr[yy, xx]
+
+    if (yy==0): a = 0
+    if (yy==shape[0]): b=0
+    if (xx==0): c=0
+    if (xx == shape[1]): d = 0
+
+    if arr[yy - a:yy + b, xx - c:xx + d].any():
+        sub = arr[yy - a:yy + b, xx - c:xx + d]
+        nb = sub[sub > 0][0]
+    else:
+        nb = False
+
+    return nb
+
+"""Cuts out a kernel box surrounding the index xx, yy with pixel distance r.
+    r is at least 1
+"""
+def cut_kernel(arr, xx, yy, r):
+
+    return arr[yy - r:yy + r+1, xx - r:xx + r+1]

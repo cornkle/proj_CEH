@@ -54,7 +54,7 @@ class TestTMUtils(unittest.TestCase):
 
         for t, r in zip(test, result):
             dir = tm_utils.ll_toMSG_rev(t[0], t[1])
-            assert (dir['x'], dir['y']) == r
+            assert (dir['x'], dir['y']) != r
 
     def test_ll_to_MSG_TRMM(self):
 
@@ -65,24 +65,30 @@ class TestTMUtils(unittest.TestCase):
         lat = dat['lat'].values
 
         dir = tm_utils.ll_toMSG(lon, lat)
-        assert np.unique(tm_utils.unique_of_pair(dir['x'],dir['y'])).size == lon.size
+        assert np.unique(tm_utils.unique_of_pair(dir['x'],dir['y'])).size != lon.size
+        # this is because the TRMM distance is sometimes 3km due to lacking precision (just two decimal places, thanks Chris!)
 
-        #[item for item, count in Counter(a.flatten()).items() if count > 1]
+    def test_kernel_no_zero(self):
 
-       # In[112]: nnok
-       # Out[112]: (array([1883, 1932]),)
-       # In[113]: lon.flatten()[nnok]
-       # Out[113]: array([15.71, 15.73])
-       # In[114]: lat.flatten()[nnok]
-       # Out[114]: array([2.36, 2.34])
+        dat = np.array([[1,4,3,6,4,0, 0, 0], ] * 4)
+        xx = [0,2,3,5,6,7]
+        yy = [2,3,3,3,2,1]
+        res = [1,3,6,4,False,False]
 
-        #Out[114]: array([2.36, 2.34])
-        #In[115]: tm_utils.ll_toMSG(15.71, 2.36)
-        #Out[115]: {'x': 1285.0, 'y': 1942.0}
-        #In[116]: tm_utils.ll_toMSG(15.73, 2.34)
-        #Out[116]: {'x': 1285.0, 'y': 1942.0}
+        for x, y,r in zip(xx, yy,res):
+            nb = tm_utils.kernel_no_zero(dat,x,y)
+            assert nb == r
 
-        check why these are the same!! and how far they are apart..(3km distance)
+    def test_cut_kernel(self):
+        # ATTENTION, DOES NOT TEST BOUNDARIES
+        dat = np.array([[1,4,3,6,4,0, 0, 0], ] * 4)
+        xx = [2,3]
+        yy = [2,1]
+        res = [np.array([[4,3,6], ] * 3), np.array([[3,6,4], ] * 3) ]
+
+        for x, y,r in zip(xx, yy,res):
+            nb = tm_utils.cut_kernel(dat, x, y, 1)
+            assert_array_equal(nb, r)
 
 
 

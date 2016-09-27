@@ -90,7 +90,7 @@ def readMCS_label():
             zg = []
             
             for ss in [8]:
-                maxoutt = (outt == ndimage.minimum_filter(outt,ss, mode='constant',cval=np.amax(outt)+1))
+                maxoutt = (outt == ndimage.minimum_filter(outt,ss, mode='constant',cval=np.amin(outt)+1))
                 maxoutt = maxoutt.astype(int)
                 ypks,xpks=np.where((maxoutt==1) & (outt < -50))
                 zpks=[ss]*len(ypks)
