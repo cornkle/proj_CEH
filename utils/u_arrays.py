@@ -6,6 +6,7 @@ Created on Tue Mar 15 17:27:16 2016
 """
 
 import os, fnmatch
+import math
 
 # Recursively locates PATTERN under ROOT_PATH for finding the absolute path to files
 def rlocate(pattern, root_path):
@@ -32,7 +33,9 @@ def locate(pattern, root_path):
         if file.endswith(pattern):
             strg.append(os.path.join(root_path, file))
     return strg    
-        
+
+def distance(a, b):
+    return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
             
             
             
