@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage.measurements import label
 import datetime as dt
-from eod import read_eod as re
+from eod import msg, trmm
 import xarray as xr
 import os
 
@@ -17,20 +17,20 @@ YRANGE = range(2004, 2015)
 
 def saveMCS_WA15():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
+    msg_folder = '/users/global/cornkle/data/OBS/meteosat_SA15'
 
     # make a salem grid
     proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
 
-    t = re.trmm(trmm_folder, yrange=YRANGE, area=[-15, 15, 10, 20])
-    m = re.msg(msg_folder)
+    t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 15, 10, 20])
+    m = msg.ReadMsg(msg_folder)
 
     cnt = 0
 
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
     for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
 
-        tdic = t.getDData(_y, _m, _d, _h, _mi, cut=[9, 21])
+        tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[9, 21])
 
         # define the "0 lag" frist
         arr = np.array([15, 30, 45, 60, 0])
@@ -43,8 +43,8 @@ def saveMCS_WA15():
 
         dt0 = dm[ind]
         ndate = date + dt.timedelta(minutes=int(dt0))
-        mdic = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                         llbox=[tdic['lon'].min(), tdic['lon'].max(), tdic['lat'].min(), tdic['lat'].max()])
+        m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+        mdic = m.get_data(llbox=[tdic['lon'].min(), tdic['lon'].max(), tdic['lat'].min(), tdic['lat'].max()])
         if not mdic:
             print('Date missing')
             continue
@@ -71,7 +71,7 @@ def saveMCS_WA15():
             latmax, latmin = mdic['lat'][inds].max(), mdic['lat'][inds].min()
             lonmax, lonmin = mdic['lon'][inds].max(), mdic['lon'][inds].min()
             mmeans = np.percentile(mdic['t'][inds], 90)
-            td = t.getDData(_y, _m, _d, _h, _mi, cut=[latmin - 0.2, latmax + 0.2])
+            td = t.get_ddata(_y, _m, _d, _h, _mi, cut=[latmin - 1, latmax + 1])
 
             # ensure minimum trmm rainfall in area
             if len(np.where(td['p'] > 0)[0]) < 100:  # at least 100 pixel with rainfall
@@ -81,40 +81,39 @@ def saveMCS_WA15():
             dt0 = dm[ind]
             ndate = date + dt.timedelta(minutes=int(dt0))
             # print('Date1', ndate)
-            ml0 = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                            llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
+            ml0 = m.get_data(llbox=[lonmin - 1, lonmax + 1, latmin - 1, latmax + 1])
             if not ml0:
                 continue
 
             dt1 = dm[ind] - 15
             ndate = date + dt.timedelta(minutes=int(dt1))
             #   print('Date2', ndate)
-            ml1 = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                            llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
+            m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+            ml1 = m.get_data(llbox=[lonmin - 1, lonmax + 1, latmin - 1, latmax + 1])
             if not ml1:
                 continue
 
             dt2 = dm[ind] - 30
             ndate = date + dt.timedelta(minutes=int(dt2))
             #   print('Date2', ndate)
-            ml2 = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                            llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
+            m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+            ml2 = m.get_data(llbox=[lonmin - 1, lonmax + 1, latmin - 1, latmax + 1])
             if not ml1:
                 continue
 
             dt3 = dm[ind] - 45
             ndate = date + dt.timedelta(minutes=int(dt3))
             #   print('Date2', ndate)
-            ml3 = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                            llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
+            m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+            ml3 = m.get_data(llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
             if not ml1:
                 continue
 
             dtx = dm[ind] + 45
             ndate = date + dt.timedelta(minutes=int(dtx))
             #   print('Date2', ndate)
-            mlx = m.getData(y=ndate.year, m=ndate.month, d=ndate.day, h=ndate.hour, mi=ndate.minute,
-                            llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
+            m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+            mlx = m.get_data(llbox=[lonmin - 0.3, lonmax + 0.3, latmin - 0.25, latmax + 0.25])
             if not ml1:
                 continue
 
@@ -239,7 +238,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/SA15_big/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:

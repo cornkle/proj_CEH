@@ -29,7 +29,7 @@ MTRESH = 0
 # Output: Filelist of TRMM files over West Africa
 #
 # Keywords:
-# area: box [lon,lon,lat,lat], list
+# area: box [llon,llat,ulon,ulat], list
         filter for TRMM to have at least 5000 pixels in box
   hod:  list of hours, hours of day to be searched for, default range(24)
   yrange: list of years, default 2004-2012
@@ -164,19 +164,23 @@ class ReadWA(object):
         nb = rr.size
         single = int(nb / 4)  # variables lon lat rainrate flag
 
-        lons = rr[0:single]
-        lats = rr[single:2 * single]
-        rainrs = rr[2 * single:3 * single]
+        lont = rr[0:single] / 100.
+        latt = rr[single:2 * single] / 100.
+        rain = rr[2 * single:3 * single] / 10.
         flags = rr[3 * single:4 * single]
 
-        y = int(lons.size / x)
-        lons = np.resize(lons, (y, x))
-        lats = np.resize(lats, (y, x))
-        rainrs = np.resize(rainrs, (y, x))
+        latpath = tfile.replace('.gra', '_lat_f4.gra')
+        if os.path.isfile(latpath):
+            latt = np.fromfile(latpath, dtype=np.float32)
+            lonpath = tfile.replace('.gra', '_lon_f4.gra')
+            lont = np.fromfile(lonpath, dtype=np.float32)
+
+
+        y = int(lont.size / x)
+        lont = np.resize(lont, (y, x))
+        latt = np.resize(latt, (y, x))
+        rain = np.resize(rain, (y, x))
         flags = np.resize(flags, (y, x))
-        lont = lons / 100.
-        latt = lats / 100.
-        rain = rainrs / 10.
 
         laty = latt[:, 0]
 

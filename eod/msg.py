@@ -10,6 +10,17 @@ from utils import u_lists as ul
 import itertools
 
 
+
+
+
+
+
+"""
+MSG folder:
+meteosat_WA30: 2004 - 2014, JJAS, 4-21N, 18W - 32E, 580 x 1640 pixel, ~ 3-4km res, ev. 30 mins -> downloading 15mins!
+meteosat_SA15: 2006 - 2010, JJAS, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
+"""
+
 class ReadMsg(object):
     def __init__(self, msg_folder):
 
@@ -100,6 +111,8 @@ class ReadMsg(object):
                                                    'lon': (('y', 'x'), blon)},
                           dims=['time', 'y', 'x']).isel(time=0)
 
+        ds = xr.Dataset({'t': da})
+
         if netcdf_path:
             savefile = netcdf_path
 
@@ -108,14 +121,14 @@ class ReadMsg(object):
             except OSError:
                 pass
             try:
-                da.to_dataset(name='t').to_netcdf(path=savefile, mode='w')
+                ds.to_netcdf(path=savefile, mode='w')
             except OSError:
                 print('File cannot be saved. Maybe directory wrong. Check your permissions')
                 raise
 
             print('Saved ' + savefile)
 
-        return da
+        return ds
 
 
     def get_blob(self, llbox=None):

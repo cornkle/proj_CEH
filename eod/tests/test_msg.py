@@ -37,7 +37,7 @@ class TestMsgRead(unittest.TestCase):
         obj.set_date(2009, 8, 1, 1, 30)
         d = obj.get_data()
 
-        assert d.values.shape == (580,1640)
+        assert d['t'].values.shape == (580,1640)
         assert d['time.month'].values == 8
         assert d['time.day'].values == 1
         assert d['time.minute'].values == 30

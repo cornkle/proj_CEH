@@ -13,20 +13,23 @@ import datetime as dt
 from eod import trmm, msg
 import xarray as xr
 import os
+import ipdb
+#import multiprocessing
 
 HOD = range(24)  # hours of day
-YRANGE = range(1998, 2014)
+YRANGE = range(2006, 2007) # 1998, 2014
 
 
 # BOX=[XL, XR, YL, YU]
-def saveTRMM():
+def netcdf():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    box = [-10, 10, 15, 20]
+    box = [-10, 10, 10, 20]
+
     # make grid
     # define projection
     proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
     # get lower left x,y fr 10W, 4N
-    x, y = pyproj.transform(salem.wgs84, proj, [box[0], box[1]], [box[2], box[3]])
+    x, y = pyproj.transform(salem.wgs84, proj, [box[0], box[2]], [box[1], box[3]])
     dx = 5000  # 5km grid
     nx, r = divmod(x[1] - x[0], dx)
     ny, r = divmod(y[1] - y[0], dx)
@@ -73,6 +76,10 @@ def saveTRMM():
             outt[abs(grad[1]) > 300] = np.nan
             outt[abs(grad[0]) > 300] = np.nan
 
+        if np.nanmin(outt)<0:
+            ipdb.set_trace()
+            print('Makes no sense!')
+
             # add MSG
         # define the "0 lag" frist
         msg_folder = '/users/global/cornkle/data/OBS/meteosat_SA15'
@@ -83,17 +90,22 @@ def saveTRMM():
 
         dt0 = dm[ind]
         ndate = date + dt.timedelta(minutes=int(dt0))
+
         m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
-        ml0 = m.get_data(llbox=box)
-        if not ml0:
+
+        if not m.dpath:
             print('Date missing')
             out = np.empty_like(outt)
             out.fill(np.nan)
+
         else:
+            ml0 = m.get_data(llbox=box)
+
             xm, ym = grid.transform(ml0['lon'].values.flatten(), ml0['lat'].values.flatten(), crs=salem.wgs84)
             mpoints = np.array((ym, xm)).T
             out = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
             out = out.reshape((grid.ny, grid.nx))
+
 
         da = xr.Dataset({'p': (['x', 'y'], outt),
                          't': (['x', 'y'], out)
@@ -114,5 +126,3 @@ def saveTRMM():
 
     print('Saved ' + str(cnt) + ' TRMM swaths as netcdf.')
 
-
-saveTRMM()

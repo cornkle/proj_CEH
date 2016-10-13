@@ -65,8 +65,9 @@ class TestTMUtils(unittest.TestCase):
         lat = dat['lat'].values
 
         dir = tm_utils.ll_toMSG(lon, lat)
-        assert np.unique(tm_utils.unique_of_pair(dir['x'],dir['y'])).size != lon.size
-        # this is because the TRMM distance is sometimes 3km due to lacking precision (just two decimal places, thanks Chris!)
+        assert np.unique(tm_utils.unique_of_pair(dir['x'],dir['y'])).size == lon.size
+        # old: this is because the TRMM distance is sometimes 3km due to lacking precision (just two decimal places, thanks Chris!)
+        # new lat lon with more precision: works!
 
     def test_kernel_no_zero(self):
 
