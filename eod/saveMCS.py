@@ -110,48 +110,29 @@ def saveMCS_WA15():
             if not ml0:
                 continue
 
-                # create grid surrounding the blob
-            # Transform lon, lats to the mercator projection
-            x, y = pyproj.transform(salem.wgs84, proj, ml0['lon'].values, ml0['lat'].values)
-            # take the min and max
-            xmax, xmin = np.max(x), np.min(x)
-            ymax, ymin = np.max(y), np.min(y)
-            # Count the number of pixels
-            dx = 5000
-            nx, r = divmod(xmax - xmin, dx)
-            ny, r = divmod(ymax - ymin, dx)
-            # Here one could add + 1 to be sure that the last pixel is always included
-            grid = salem.Grid(nxny=(nx, ny), dxdy=(dx, dx), ll_corner=(xmin, ymin), proj=proj)
-
-            # interpolate TRM and MSG to salem grid
-            xi, yi = grid.ij_coordinates
+            #make salem grid
+            grid = u_grid.make(ml0['lon'].values, ml0['lat'].values,proj,5000)
             lon, lat = grid.ll_coordinates
 
-            # Transform lons, lats to grid
-            xm, ym = grid.transform(ml0['lon'].values.flatten(), ml0['lat'].values.flatten(), crs=salem.wgs84)
-            xt, yt = grid.transform(td['lon'].values.flatten(), td['lat'].values.flatten(), crs=salem.wgs84)
+            # interpolate TRM and MSG to salem grid
+            inter, mpoints = u_grid.griddata_input(ml0['lon'].values, ml0['lat'].values,grid)
+            inter, tpoints = u_grid.griddata_input(td['lon'].values, td['lat'].values, grid)
 
-            # Convert for griddata input
-            mpoints = np.array((ym, xm)).T
-            tpoints = np.array((yt, xt)).T
-            inter = np.array((np.ravel(yi), np.ravel(xi))).T
-
-            # Interpolate using delaunay triangularization
+            # Interpolate TRMM using delaunay triangularization
             dummyt = griddata(tpoints, td['p'].values.flatten(), inter, method='linear')
             outt = dummyt.reshape((grid.ny, grid.nx))
             if len(np.where(outt > 0.1)[0]) < 2:  # at least 2 pixel with rainfall
                 print('Kickout: TRMM wavelet min pixel pcp < 2')
                 continue
 
-            # Interpolate using nearest
+            # Interpolate TRMM flags using nearest
             dummyf = griddata(tpoints, td['flags'].values.flatten(), inter, method='nearest')
             outf = dummyf.reshape((grid.ny, grid.nx))
-            #ipdb.set_trace()
             outf=outf.astype(np.float)
             isnot = np.isnan(outt)
             outf[isnot]=np.nan
 
-                ##remove edges of interpolated TRMM
+            ##remove edges of interpolated TRMM
             for nb in range(5):
                 boole = np.isnan(outt)
                 outt[boole] = -1000
@@ -162,11 +143,11 @@ def saveMCS_WA15():
                 outf[abs(grad[1]) > 300] = np.nan
                 outf[abs(grad[0]) > 300] = np.nan
 
+            #get convective rainfall only
             outff = tm_utils.getTRMMconv(outf)
-
             outk = outt.copy()*0
             outk[np.where(outff)]=outt[np.where(outff)]
-
+            #
             # f = plt.figure()
             # ax = f.add_subplot(1, 3, 1)
             # plt.imshow(outt, cmap='jet')
@@ -178,17 +159,17 @@ def saveMCS_WA15():
             # plt.imshow(outk, cmap='jet')
             #
             # plt.show()
+            #
+            # return
 
-            #if cnt > 5:
-            #    return
+            if cnt > 5:
+               return
 
-            # Interpolate using delaunay triangularization
+            # Interpolate MSG using delaunay triangularization
             dummy = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
             dummy = dummy.reshape((grid.ny, grid.nx))
             outl = np.full_like(dummy, np.nan)
             xl, yl = grid.transform(lon1[inds], lat1[inds], crs=salem.wgs84, nearest=True, maskout=True)
-
-            print('Lag0')
             outl[yl.compressed(), xl.compressed()] = dummy[yl.compressed(), xl.compressed()]
 
             tmask = np.isfinite(outt)
@@ -204,54 +185,11 @@ def saveMCS_WA15():
 
             print('Hit:', gi)
 
-            # lag -1
-
-            # # Interpolate using delaunay triangularization
-            # dummy1 = griddata(mpoints, ml1['t'].values.flatten(), inter, method='linear')
-            # dummy1 = dummy1.reshape((grid.ny, grid.nx))
-            # outl1 = np.full_like(dummy1, np.nan)
-            # print('Lag1')
-            # outl1[yl.compressed(), xl.compressed()] = dummy1[yl.compressed(), xl.compressed()]
-            #
-            # # lag -2
-            #
-            # # Interpolate using delaunay triangularization
-            # dummy2 = griddata(mpoints, ml2['t'].values.flatten(), inter, method='linear')
-            # dummy2 = dummy2.reshape((grid.ny, grid.nx))
-            # outl2 = np.full_like(dummy2, np.nan)
-            # print('Lag2')
-            # outl2[yl.compressed(), xl.compressed()] = dummy2[yl.compressed(), xl.compressed()]
-
-            # lag -3
-
-            # # Interpolate using delaunay triangularization
-            # dummy3 = griddata(mpoints, ml3['t'].flatten(), inter, method='linear')
-            # dummy3 = dummy3.reshape((grid.ny, grid.nx))
-            # outl3 = np.full_like(dummy3, np.nan)
-            # print('Lag3')
-            # outl3[yl.compressed(), xl.compressed()] = dummy3[yl.compressed(), xl.compressed()]
-            #
-            # # lag x
-            #
-            # # Interpolate using delaunay triangularization
-            # dummyx = griddata(mpoints, mlx['t'].flatten(), inter, method='linear')
-            # dummyx = dummyx.reshape((grid.ny, grid.nx))
-            # outlx = np.full_like(dummyx, np.nan)
-            # print('Lagx')
-            # outlx[yl.compressed(), xl.compressed()] = dummyx[yl.compressed(), xl.compressed()]
 
             da = xr.Dataset({'p': (['x', 'y'], outt),
                              'pconv': (['x', 'y'], outk),
                              't_lag0': (['x', 'y'], dummy),
                              'tc_lag0': (['x', 'y'], outl),
-                             # 't_lag1': (['x', 'y'], dummy1),
-                             # 'tc_lag1': (['x', 'y'], outl1),
-                             # 't_lag2': (['x', 'y'], dummy2),
-                             # 'tc_lag2': (['x', 'y'], outl2),
-                             # 't_lag3': (['x', 'y'], dummy3),
-                             # 'tc_lag3': (['x', 'y'], outl3),
-                             # 't_lagx': (['x', 'y'], dummyx),
-                             # 'tc_lagx': (['x', 'y'], outlx),
                              },
                             coords={'lon': (['x', 'y'], lon),
                                     'lat': (['x', 'y'], lat),
