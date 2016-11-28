@@ -71,74 +71,6 @@ def ll_toMSG(lons, lats, cfac=CFAC, lfac=LFAC, coff=COFF, loff=LOFF):
     return dic
 
 
-def ll_toMSG_rev(lon, lat, rflon=0):
-    #    """
-    #    input
-    #    vlon: longitude
-    #    vlat: latitude
-    #    rflon: satellite longitude, default=0degrees
-    #    output xr: x position
-    #    yr: y position
-    #    """
-    # geo2file_geos(lon, lat)
-
-    # Setup constants
-    re = 6378.160  # equatorial radius
-    h = 42164.0 - re  # Reference altitude
-    rp = 6356.5838
-    lpsi2 = 1  # spin direction
-    resol = 3712.0  # pixel/line number for MSG
-    deltax = 17.83 / resol  # E-W scanning step   scan amplitude is 17.83 deg. for MSG
-    deltay = 17.83 / resol  #
-
-    dtor = math.radians(1.0)
-    xlat = dtor * lat
-    xlon = dtor * lon
-    cosxlat = math.cos(xlat)
-    sinxlat = math.sin(xlat)
-    cosxlon = math.cos(xlon)
-
-    rom = (re * rp) / math.sqrt(rp * rp * cosxlat * cosxlat + re * re * sinxlat * sinxlat)
-    y = math.sqrt(h * h + rom * rom - 2.0 * h * rom * cosxlat * cosxlon)
-    r1 = y * y + rom * rom
-    r2 = h * h
-
-    if (r1 > r2):
-        dic = {'x': -1, 'y': -1}
-        return dic
-
-    rs = re + h
-    reph = re
-    rpph = rp
-    coslo = math.cos(rflon * dtor)
-    sinlo = math.sin(rflon * dtor)
-    teta = math.atan((rpph / reph) * math.tan(xlat))
-    xt = reph * math.cos(teta) * cosxlon
-    yt = reph * math.cos(teta) * math.sin(xlon)
-    zt = rpph * math.sin(teta)
-    px = math.atan((coslo * (yt - rs * sinlo) - (xt - rs * coslo) * sinlo) / (
-    sinlo * (yt - rs * sinlo) + (xt - rs * coslo) * coslo))
-    py = math.atan(zt * ((math.tan(px) * sinlo - coslo) / (xt - rs * coslo)) * math.cos(px))
-    px = px / dtor
-    py = py / dtor
-    xr = px / (deltax * lpsi2)
-    yr = py / (deltay * lpsi2)
-    if (xr >= 0.):
-        xr = int(px / (deltax * lpsi2)) + 0.5
-    else:
-        xr = int(px / (deltax * lpsi2)) - 0.5
-    if (yr >= 0.):
-        yr = int(py / (deltax * lpsi2)) + 0.5
-    else:
-        yr = int(py / (deltax * lpsi2)) - 0.5
-    xr = xr + 0.5 * resol + 0.5
-    yr = yr + 0.5 * resol + 0.5
-
-    dic = {'x': xr, 'y': yr}
-
-    return dic
-
-
 def getTRMMconv(flags):
     bla = flags.astype(int)
     npfalse = []
@@ -146,7 +78,7 @@ def getTRMMconv(flags):
     for b, i in zip(np.nditer(bla), range(bla.size)):
         bb = '{0:016b}'.format(int(b))
         npfalse.append(int(bb[-6]))
-
+    npfalse = np.reshape(np.array(npfalse), bla.shape)
     return npfalse
 
 
@@ -157,7 +89,7 @@ def getTRMMstrat(flags):
     for b, i in zip(np.nditer(bla), range(bla.size)):
         bb = '{0:016b}'.format(int(b))
         npfalse.append(int(bb[-5]))
-
+    npfalse = np.reshape(np.array(npfalse), bla.shape)
     return npfalse
 
 """
@@ -182,12 +114,7 @@ def minute_delta(tmin, msg_interval):
 
     return dt0
 
-"""create one unique integer from two positive integers
- Cantor pairing function"""
-def unique_of_pair(x,y):
 
-    uni = (x + y) * (x + y + 1) / 2 + y
-    return uni
 
 """search for non zero value in +-1 kernel"""
 def kernel_no_zero(arr, xx, yy):

@@ -70,6 +70,7 @@ class ReadWA(object):
                 continue
 
             rfiles.extend(files)
+
         rfiles.sort(key=ul.natural_keys)
 
         if not rfiles:

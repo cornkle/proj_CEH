@@ -15,19 +15,17 @@ from eod import tm_utils
 import multiprocessing
 import ipdb
 import pandas as pd
-import pickle as pkl
 
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    #files = files[0:1000]
+    #files = files[0:100]
     print('Nb files', len(files))
     tt = 'WA15'
 
     comp_collect = {}
-    precip = {}
 
     res = pool.map(file_loop, files)
     pool.close()
@@ -75,7 +73,6 @@ def composite():
 
     for v in res:
         comp_collect[v[0]]={'big': [], 'fin' : [], 'mean':[], 'isnz':[]}
-        precip[v[0]]=[]
 
 
     dic = {'scale' : [], 'sum' : [], 'sumvalid' : [], 'shape' : [],  'tmin' :[],  'sumnz':[], 'hour':[],
@@ -85,9 +82,6 @@ def composite():
     print(keys)
 
     for v in res:
-
-        print(v[0])
-     #   ipdb.set_trace()
         comp_collect[v[0]]['big'].append(v[1])
         comp_collect[v[0]]['fin'].append(v[2])
         comp_collect[v[0]]['mean'].append(v[4])
@@ -107,9 +101,6 @@ def composite():
         dic['max_sc'].append(v[15])
         dic['tmean'].append(v[16])
 
-        precip[v[0]].extend(v[17])
-
-
 
     for k in keys:
         a = np.asarray(comp_collect[k]['big'])
@@ -122,17 +113,14 @@ def composite():
         comp_collect[k]['isnz'] = e
 
 
-    f = plt.figure(figsize=(15, 10), dpi=300)
+    f = plt.figure()
     siz = 3
 
     keys = comp_collect.keys()
     print(keys)
 
     df = pd.DataFrame(dic)
-    #df.to_pickle(out+'3dmax_gt15000_fakeprecip_-70.pkl')
-
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_15km.p',
-                           'wb'))
+   # df.to_pickle(out+'3dmax_gt15000.pkl')
 
     #return comp_collect
 
@@ -150,7 +138,7 @@ def composite():
         blab = (np.nansum(big, 0) / np.nansum(nz, 0)) *100
 
         ax = f.add_subplot(3, num, 1 + ind)
-        plt.imshow(bla,  cmap='viridis') #vmin=0, vmax=6,
+        plt.imshow(bla, vmin=0, vmax=5, cmap='viridis')
         plt.title(str(k) + ' km', fontsize=9)
         plt.plot(20, 20, 'ro', markersize=siz)
         cbar = plt.colorbar()
@@ -169,7 +157,7 @@ def composite():
         plt.plot(20, 20, 'ro', markersize=siz)
         cbar = plt.colorbar()
         cbar.set_label('P(>30mm) %')
-   # plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/composite3d.png')
+    plt.show()
 
     col = ['r', 'b', 'g', 'y', 'black']
 
@@ -249,14 +237,13 @@ def composite():
 
 def file_loop(f):
     ret = []
-
     max_sc = 202
     print('Doing file: ' + f)
 
     dic = xr.open_dataset(f)
 
     outt = dic['tc_lag0'].values
-    outp = dic['p'].values  #*0+1   ## ATTENTION CHANGED RAINFALL
+    outp = dic['p'].values
 
     tmean = np.nanmean(outt)
 
@@ -297,39 +284,32 @@ def file_loop(f):
 
     arr = np.array(wav['scales'], dtype=str)
 
-    scale_ind = range(arr.size)
+    scale_ind = range(arr.size)  # [0, 12, 21, -1, -13]
 
     for nb in scale_ind:
-
-
 
         ar = []
         msum = []
         msum_valid=[]
         msum_nz = []
         msum_30 = []
-        pval=[]
 
         ttmin = []
 
         orig = float(arr[nb])
         scale = int(np.round(orig))
 
-       # outp = dic['p'].values.copy() * 0 + scale
-
         wl100 = wav['t'][-13, :, :]   # just using points in the middle
 
-        wl = wav['t']#[nb, :, :]
+        wl = wav['t'][nb, :, :]
 
         maxoutt = (
-        wl == ndimage.maximum_filter(wl, (5,5,5) , mode='constant', cval=np.amax(wl) + 1))  #(np.round(orig / 5))
-        maxoutt=maxoutt[nb, :, :]
-        wlperc = wav['t'][nb, :, :]
+        wl == ndimage.maximum_filter(wl, (5,5) , mode='constant', cval=np.amax(wl) + 1))  #(np.round(orig / 5))
 
         yp, xp = np.where(outp > 30)
 
         try:
-            yy, xx = np.where((maxoutt == 1) & (outt <= -40))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+            yy, xx = np.where((maxoutt == 1) & (outt <= -40) & (wl > np.percentile(wl[wl>=0.1], 80) ) & (wl100 > 5) )# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
         except IndexError:
             continue
         #print(scale, yy,xx)
@@ -374,7 +354,7 @@ def file_loop(f):
             if kernel.shape != (r * 2 + 1, r * 2 + 1):
                 continue
 
-            if np.nansum(kernel) < 1:
+            if np.nansum(kernel) < 1: #== 0:
                 continue
 
             ar.append(kernel)
@@ -384,7 +364,7 @@ def file_loop(f):
         for y, x in zip(yy, xx):
 
             ss = orig
-            ss = 15   # just looking at a fixed radius surrounding points defined by wavelet
+            #ss = 15   # just looking at a fixed radius surrounding points defined by wavelet
             iscale = (np.ceil(ss / 2. / 5.)).astype(int)
             tmin = outt[y, x]
 
@@ -394,8 +374,23 @@ def file_loop(f):
 
             psum_valid = np.sum(np.isfinite(outp[ycirc, xcirc]))
 
-            if (psum_valid < 3):   # or (tmin > -70):
+            if psum_valid < 3:
                 continue
+            #
+            # #only take circles that are 80% overlap
+            # if psum_valid < len(outp[ycirc, xcirc])*0.8:
+            #     continue
+
+            # if (scale == 21) or  (scale == 202):
+            #     bla = np.zeros_like(outp)
+            #
+            #     bla[ycirc, xcirc]=100
+            #     bla[np.isnan(outp)]=0
+            #     plt.figure()
+            #     plt.title(str(scale))
+            #     plt.imshow(bla)
+            #     plt.show()
+
 
             xxx.append(x)
             yyy.append(y)
@@ -410,10 +405,9 @@ def file_loop(f):
             msum_nz.append(psum_valid_nozero)
             ttmin.append(tmin)
             msum_30.append(psum_30)
-            pval.extend(outp[ycirc, xcirc])
 
 
-        # if (scale == 57) or (scale == 80) or (scale == 107) or (scale == 21):
+        # if (scale == 21) or (scale == 64) or (scale == 202) or (scale == 101):
         #     f = plt.figure()
         #     siz = 5
         #     ax = f.add_subplot(1, 3, 1)
@@ -436,8 +430,7 @@ def file_loop(f):
         #     plt.show()
 
         ar = np.array(ar)
-        pvalues = np.array(pval)
-        msum = np.sum(msum)
+        msum = np.sum(np.array(msum))
         msum_valid = np.sum(np.array(msum_valid))
         msum_nz = np.sum(np.array(msum_nz))
         msum_30 = np.sum(np.array(msum_30))
@@ -452,21 +445,18 @@ def file_loop(f):
         isnz = np.nansum(isnozero, 0)
 
 
+
         #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
 
-        ret.append((scale, isbig, isfin, ar.shape[0],nmean, isnz, msum, msum_valid, tmin, msum_nz, dic['time.hour'].values.tolist(), clat, clon, area, msum_30, max_sc, tmean, pvalues))
+        ret.append((scale, isbig, isfin, ar.shape[0],nmean, isnz, msum, msum_valid, tmin, msum_nz, dic['time.hour'].values.tolist(), clat, clon, area, msum_30, max_sc, tmean))
 
         dic.close()
 
+    # print(max_sc)
+    # print(area)
     return ret
 
 
 if __name__ == "__main__":
     composite()
-
-
-
-
-
-
 

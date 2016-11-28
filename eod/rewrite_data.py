@@ -97,4 +97,41 @@ def rewriteMsgLonLat_Sahel():
     lon.shape = llShape
 
     llsavefile = '/users/global/cornkle/data/OBS/meteosat_SA15/MSG_728_350_lat_lon'
-    np.savez(llsavefile,lon=lon,lat=lat)     
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
+#========================================================================================
+def rewriteMsgLonLat_IODC_TIR():
+    llFile = '/users/global/cornkle/Emma/TIR/lat_lon_nx326_ny201.gra'
+
+    llShape = (201,326)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lon = ll[0:201*326]
+    lat = ll[201*326:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = '/users/global/cornkle/Emma/TIR/lat_lon_nx326_ny201'
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteMsgLonLat(file, nx, ny):
+    llFile = file
+
+    llShape = (ny,nx)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lon = ll[0:ny*nx]
+    lat = ll[ny*nx:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = file.replace('.gra', '')
+    np.savez(llsavefile,lon=lon,lat=lat)

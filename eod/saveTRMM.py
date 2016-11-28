@@ -17,13 +17,13 @@ import ipdb
 #import multiprocessing
 
 HOD = range(24)  # hours of day
-YRANGE = range(2006, 2007) # 1998, 2014
+YRANGE = range(2004, 2014) # 1998, 2014
 
 
 # BOX=[XL, XR, YL, YU]
 def netcdf():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    box = [-10, 10, 10, 20]
+    box = [-15, 4, 33, 25]
 
     # make grid
     # define projection
@@ -77,38 +77,38 @@ def netcdf():
             outt[abs(grad[0]) > 300] = np.nan
 
         if np.nanmin(outt)<0:
-            ipdb.set_trace()
+            continue
             print('Makes no sense!')
 
-            # add MSG
-        # define the "0 lag" frist
-        msg_folder = '/users/global/cornkle/data/OBS/meteosat_SA15'
-        m = msg.ReadMsg(msg_folder)
-        arr = np.array([15, 30, 45, 60, 0])
-        dm = arr - _mi
-        ind = (np.abs(dm)).argmin()
-
-        dt0 = dm[ind]
-        ndate = date + dt.timedelta(minutes=int(dt0))
-
-        m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
-
-        if not m.dpath:
-            print('Date missing')
-            out = np.empty_like(outt)
-            out.fill(np.nan)
-
-        else:
-            ml0 = m.get_data(llbox=box)
-
-            xm, ym = grid.transform(ml0['lon'].values.flatten(), ml0['lat'].values.flatten(), crs=salem.wgs84)
-            mpoints = np.array((ym, xm)).T
-            out = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
-            out = out.reshape((grid.ny, grid.nx))
+        #     # add MSG
+        # # define the "0 lag" frist
+        # msg_folder = '/users/global/cornkle/data/OBS/meteosat_SA15'
+        # m = msg.ReadMsg(msg_folder)
+        # arr = np.array([15, 30, 45, 60, 0])
+        # dm = arr - _mi
+        # ind = (np.abs(dm)).argmin()
+        #
+        # dt0 = dm[ind]
+        # ndate = date + dt.timedelta(minutes=int(dt0))
+        #
+        # m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+        #
+        # if not m.dpath:
+        #     print('Date missing')
+        #     out = np.empty_like(outt)
+        #     out.fill(np.nan)
+        #
+        # else:
+        #     ml0 = m.get_data(llbox=box)
+        #
+        #     xm, ym = grid.transform(ml0['lon'].values.flatten(), ml0['lat'].values.flatten(), crs=salem.wgs84)
+        #     mpoints = np.array((ym, xm)).T
+        #     out = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
+        #     out = out.reshape((grid.ny, grid.nx))
 
 
         da = xr.Dataset({'p': (['x', 'y'], outt),
-                         't': (['x', 'y'], out)
+                         # 't': (['x', 'y'], out)
                          },
                         coords={'lon': (['x', 'y'], lon),
                                 'lat': (['x', 'y'], lat),
