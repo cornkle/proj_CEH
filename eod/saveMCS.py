@@ -22,9 +22,6 @@ def saveMCS_WA15():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
 
-    # make a salem grid
-    proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
-
     t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 4, 20, 25])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
     m = msg.ReadMsg(msg_folder)
 
@@ -37,7 +34,10 @@ def saveMCS_WA15():
 
         # define the "0 lag" frist
         arr = np.array([15, 30, 45, 60, 0])
+        #dm = arr - _mi
         dm = arr - _mi
+        dm = dm[dm<0]
+
         ind = (np.abs(dm)).argmin()
 
         # set zero shift time for msg
@@ -111,7 +111,7 @@ def saveMCS_WA15():
                 continue
 
             #make salem grid
-            grid = u_grid.make(ml0['lon'].values, ml0['lat'].values,proj,5000)
+            grid = u_grid.make(ml0['lon'].values, ml0['lat'].values,5000)
             lon, lat = grid.ll_coordinates
 
             # interpolate TRM and MSG to salem grid
@@ -147,7 +147,7 @@ def saveMCS_WA15():
             outff = tm_utils.getTRMMconv(outf)
             outk = outt.copy()*0
             outk[np.where(outff)]=outt[np.where(outff)]
-            #
+
             # f = plt.figure()
             # ax = f.add_subplot(1, 3, 1)
             # plt.imshow(outt, cmap='jet')
@@ -162,8 +162,8 @@ def saveMCS_WA15():
             #
             # return
 
-            if cnt > 5:
-               return
+            # if cnt > 5:
+            #    return
 
             # Interpolate MSG using delaunay triangularization
             dummy = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
@@ -195,14 +195,13 @@ def saveMCS_WA15():
                                     'lat': (['x', 'y'], lat),
                                     'time': date})
             da.attrs['lag0'] = dt0
-            #da.attrs['lag1'] = dt1
             da.attrs['meanT'] = np.mean(outl[mmask])
             da.attrs['T90perc'] = mmeans
             da.attrs['meanT_cut'] = np.mean(outl[tmask][mask2])
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_lag1/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:

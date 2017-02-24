@@ -12,7 +12,6 @@ import cartopy.crs as ccrs
 
 
 
-
 YRANGE=range(2004,2014)
 #AREA=[-16,4,16,20]
 AREA=None
@@ -234,12 +233,11 @@ def tm_overlap_blobs():
             mdic['mon'].append(_m)  # month for image
             mdic['lat'].append(lat)
             mdic['lon'].append(lon)
-            mdic['tpixel_nzero'].append(np.count_nonzero(bprcp))  # nb pixel of MCS for PCP > 0
+            mdic['tpixel_nzero'].append(nz_bprcp)  # nb pixel of MCS for PCP > 0
             mdic['tpixel'].append(bprcp.size)  # nb pixel of MCS including 0
             mdic['tpixel_conv'].append(sum(mask))  # number convective pixel
             mdic['tpixel_strat'].append(sum(smask))  # number stratiform pixel
-            mdic['tpixel_zero'].append(np.size(bprcp) - np.count_nonzero(bprcp))  # number zero pixel
-            mdic['tpixel_derived'].append(sum(mask) + sum(smask) + (np.size(bprcp) - np.count_nonzero(bprcp)))
+            mdic['tpixel_zero'].append(np.size(bprcp) - np.size(nz_bprcp))  # number zero pixel
             mdic['twhole'].append(bt)
             mdic['area'].append(isblob[0].size)
 

@@ -46,6 +46,8 @@ def perSys():
             mdic['latmin'].append(v[16])
             mdic['latmax'].append(v[17])
             mdic['isnz'].append(v[18])
+            mdic['clon'].append(v[19])
+            mdic['p'].append(v[20])
         except TypeError:
             continue
 
@@ -73,8 +75,6 @@ def perSys():
                            'wb'))
 
 
-
-
 def file_loop(f):
     print('Doing file: ' + f)
     dic = xr.open_dataset(f)
@@ -91,7 +91,7 @@ def file_loop(f):
     tt = np.min(outt[(np.isfinite(outp))&(np.isfinite(outt))])
     pp = np.max(outp[(np.isfinite(outp))&(np.isfinite(outt))])
     try:
-        pperc = outp[(outt<-40) & (outp>0.1)]
+        pperc = outp[(outt<=-0) & (outp>0.1)]
     except IndexError:
         pperc = np.nan
     tmean = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
@@ -103,7 +103,7 @@ def file_loop(f):
     ao40 = np.sum(outt<=-40)
     po30 = np.sum(outp[(np.isfinite(outp))&(np.isfinite(outt))]>30)
     isfin = np.size(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    isnz = np.size(outp[(outp>0) & (np.isfinite(outt))])
+    isnz = np.size(outp[(outp>0.1) & (np.isfinite(outt))])
 
     lon30 = lon[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
     lat30 = lat[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
@@ -113,49 +113,7 @@ def file_loop(f):
     latmin = lat.min()
     latmax = lat.max()
 
-
-
-    dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz)
-
-
-def file_loop_wavelet(f):
-    print('Doing file: ' + f)
-    dic = xr.open_dataset(f)
-    res = []
-    outt = dic['tc_lag0'].values
-    outp = dic['p'].values
-    lon = dic['lon'].values
-    lat = dic['lat'].values
-    h = dic['time.hour'].values
-    m = dic['time.month'].values
-    clat = np.min(dic.lat)+((np.max(dic.lat)-np.min(dic.lat))*0.5)
-
-    tt = np.min(outt[(np.isfinite(outp))&(np.isfinite(outt))])
-    pp = np.max(outp[(np.isfinite(outp))&(np.isfinite(outt))])
-    try:
-        pperc = outp[(outt<-40) & (outp>0.1)]
-    except IndexError:
-        pperc = np.nan
-    tmean = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
-    area = np.sum(outt<=-40)
-
-    if (area*25 < 15000) or (pp<0.1) or (pp>200):
-        return
-
-    ao40 = np.sum(outt<=-40)
-    po30 = np.sum(outp[(np.isfinite(outp))&(np.isfinite(outt))]>30)
-    isfin = np.size(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-
-    lon30 = lon[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
-    lat30 = lat[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
-    lonisfin = lon[(np.isfinite(outp)) & (np.isfinite(outt))]
-    latisfin = lat[(np.isfinite(outp)) & (np.isfinite(outt))]
-
-    latmin = lat.min()
-    latmax = lat.max()
-
-
+    p = outp[(np.isfinite(outp))&(np.isfinite(outt))]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax)
+    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p)

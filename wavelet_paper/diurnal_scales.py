@@ -4,7 +4,7 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 import ipdb
 
-from utils import u_graphics as ug
+from utils import u_statistics as ug
 
 import pandas as pd
 import numpy as np
@@ -195,13 +195,13 @@ def run_tmin():
     plt.plot(hour, mean40, color='orange', label='all scales mean')
     plt.legend()
 
-
 def run_pcp():
     df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.pkl')
 
     hour = np.arange(0, 23, 1)
     center = (np.arange(23)) + 0.5
-
+    scales = np.percentile(df['scale'], np.arange(0, 101, 5))
+    #print(scales)
     scales = np.arange(15, 211, 25)
 
     arr40 = np.zeros((scales.size - 1, hour.size))
@@ -220,26 +220,22 @@ def run_pcp():
         shape40 = []
         shape70 = []
         for ind, siz in enumerate(hour):
-            sums = np.sum(df['sum30'][
-                              (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-                                  df['clat'] > 10) & (
+            sums = np.sum(df['scale'][
+                              (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz)  & (
                                   df['tmin'] < -40)])
             sumsnz = np.sum(df['sumnz'][
                                 (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-                                    df['clat'] > 4) & (
                                     df['tmin'] < -40)])
 
             diurn40.append(sums)
             shape40.append(sumsnz)
 
             sums = np.sum(df['sum30'][
-                              (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-                                  df['clat'] > 10) & (
-                                  df['tmin'] < -67)])
+                              (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz)  & (
+                                  df['tmin'] < -70)])
             sumsnz = np.sum(df['sumnz'][
                                 (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-                                    df['clat'] > 10) & (
-                                    df['tmin'] < -67)])
+                                    df['tmin'] < -70)])
 
 
             diurn70.append(sums)
@@ -250,13 +246,29 @@ def run_pcp():
         ashape40[iind - 1, :] = shape40
         ashape70[iind - 1, :] = shape70
 
-    arr40=arr40/ashape40
-    arr70=arr70/ashape70
+    allsum70=np.sum(diurn70)
+    allsum40=np.sum(diurn40)
+
+    #arr40=arr40/ashape40
+    #arr70=arr70/ashape70
+
+    mean40 = np.nanmean(arr40, axis=0)
+
+    f = plt.figure()
+    ax = f.add_subplot(111)
+    plt.plot(hour, arr40[1, :], color='b', label='100-125km')
+    plt.plot(hour, arr40[0, :], color='r', label='15-40km')
+    plt.plot(hour, arr40[3, :], color='black', label='15-40km')
+    plt.plot(hour, arr40[5, :], color='purple', label='15-40km')
+    # plt.plot(hour, stddev70, color='y', label='standarddev')
+    plt.plot(hour, mean40, color='orange', label='all scales mean')
+    plt.legend()
+
 
     #arr40 = np.transpose(arr40.T / np.sum(arr40, axis=1))
     #arr70 = np.transpose(arr70.T / np.sum(arr70, axis=1))
-   # arr40 = np.transpose(arr40.T - np.nanmean(arr40, axis=1))
-  #  arr70 = np.transpose(arr70.T - np.nanmean(arr70, axis=1))
+    arr40 = np.transpose(arr40.T - np.nanmean(arr40, axis=1))
+    arr70 = np.transpose(arr70.T - np.nanmean(arr70, axis=1))
     mean40 = np.nanmean(arr40, axis=0)
     mean70 = np.nanmean(arr70, axis=0)
     stddev40 = np.std(arr40, axis=1)
@@ -265,17 +277,17 @@ def run_pcp():
     std40 = np.transpose(np.abs(arr40 - mean40).T > stddev40 * 2)
     std70 = np.transpose(np.abs(arr70 - mean70).T > stddev70 * 2)
 
-    f = plt.figure(figsize=(15, 10), dpi=300)
+    f = plt.figure()#figsize=(15, 10), dpi=300)
 
     ax = f.add_subplot(221)
-    plt.contourf(center, scales[0:-1] + 12.5, (arr40), cmap='viridis', levels=np.arange(-1, 1.1, 0.1))
+    plt.contourf(center, scales[0:-1] + 12.5, (arr40), cmap='RdBu', levels=np.arange(-3, 3.5, 0.5))
     plt.title('Normalised diurnal cycle of mean precip in scale/2 radius < -40degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
     plt.colorbar(label='%')
 
     ax = f.add_subplot(222)
-    plt.contourf(center, scales[0:-1] + 12.5, (arr70), cmap='viridis', levels=np.arange(-1, 1.1, 0.1))
+    plt.contourf(center, scales[0:-1] + 12.5, (arr70), cmap='RdBu', levels=np.arange(-3, 3.5, 0.5))
     plt.title('Normalised diurnal cycle of mean precip in scale/2 radius < -70degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
@@ -283,7 +295,7 @@ def run_pcp():
 
     ax = f.add_subplot(223)
     plt.contourf(center, scales[0:-1] + 12.5, (arr40 - mean40), cmap='RdBu',
-                 levels=np.arange(-1, 1.1, 0.1), extend='both')
+                 levels=np.arange(-3, 3.5, 0.5), extend='both')
     plt.title('Deviation from mean diurnal cycle < -40degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
@@ -291,15 +303,15 @@ def run_pcp():
     #  plt.contourf(center, scales[0:-1] + 25, std40, hatches=['..'], colors='none', levels=[0.5, 1.5])
 
     ax = f.add_subplot(224)
-    plt.contourf(center, scales[0:-1] + 12.5, (arr70 - mean70), cmap='RdBu', levels=np.arange(-1, 1.1, 0.1),
+    plt.contourf(center, scales[0:-1] + 12.5, (arr70 - mean70), cmap='RdBu', levels=np.arange(-3, 3.5, 0.5),
                  extend='both')
     plt.title('Deviation from mean diurnal cycle < -70degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
     plt.colorbar(label='%')
     #  plt.contourf(center, scales[0:-1] + 25, std70, hatches=['..'], colors='none', levels=[0.5, 1.5])
-    plt.tight_layout()
-    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/diurnal/pcpsum_contour_fakeprecip.png')
+  #  plt.tight_layout()
+ #   plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/diurnal/pcpsum_contour_fakeprecip.png')
 
     f = plt.figure()
     ax = f.add_subplot(111)
@@ -312,11 +324,6 @@ def run_pcp():
     # plt.colorbar()
 
     #
-    f = plt.figure()
-    norm = ug.MidPointNorm(midpoint=0)
-    ax = f.add_subplot(111)
-    plt.imshow(arr70 - mean70, cmap='RdBu', norm=norm)
-    plt.colorbar()
 
     f = plt.figure()
     ax = f.add_subplot(111)
@@ -324,7 +331,7 @@ def run_pcp():
     plt.plot(hour, arr40[0, :], color='r', label='15-40km')
     plt.plot(hour, arr40[2, :], color='black', label='15-40km')
     # plt.plot(hour, stddev70, color='y', label='standarddev')
-    plt.plot(hour, mean70, color='orange', label='all scales mean')
+    plt.plot(hour, mean40, color='orange', label='all scales mean')
     plt.legend()
 
     f = plt.figure()

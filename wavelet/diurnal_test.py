@@ -6,7 +6,7 @@ sns.set_style("ticks")
 import ipdb
 import math
 from mpl_toolkits.mplot3d import Axes3D
-from utils import u_graphics as ug
+from utils import u_statistics as ug
 
 import pandas as pd
 import numpy as np

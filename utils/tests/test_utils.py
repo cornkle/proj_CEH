@@ -21,3 +21,19 @@ class TestUtils(unittest.TestCase):
         point = np.array((7, 2))
 
         assert ua.closest_point(point, data) == res
+
+    def test_unique_of_tuple(self):
+
+        x = np.array([5, 6, 3, 0, 1, 3, 0, 5])
+        y = np.array([8, 6, 2, 0, 0, 2, 1, 8])
+
+        xrand = np.arange(100)
+        yrand = np.arange(100)
+        np.random.shuffle(xrand)
+        np.random.shuffle(yrand)
+
+        uni = ua.unique_of_pair(x,y)
+        unir = ua.unique_of_pair(xrand,yrand)
+
+        assert np.unique(uni).size == x.size-2
+        assert np.unique(unir).size == xrand.size

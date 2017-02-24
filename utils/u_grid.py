@@ -3,16 +3,18 @@ import pyproj
 import numpy as np
 from scipy.interpolate import griddata
 
+proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
+
 """Define a grid with salem
 lon: list or numpy array of longitudes. Has to contain at least min max longitudes of the grid
 lat: list or numpy array of latitudes. Has to contain at least min max latitudes of the grid
-proj: projection from pyproj to create the grid for example:
+proj: projection from pyproj to create the grid. If not set default is mercator:
       proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
 dx: number of meters per pixel, must be integer, e.g. 5000 for 5km pixels
 """
 
 
-def make(lon, lat, proj, dx):
+def make(lon, lat, dx, proj=proj):
     # Transform lon, lats to the mercator projection
     x, y = pyproj.transform(salem.wgs84, proj, lon, lat)
     # take the min and max
@@ -26,6 +28,18 @@ def make(lon, lat, proj, dx):
     return grid
 
 
+"""Transforms latitudes and longitudes to salem grid coordinates and creates griddata input
+Returns:
+points: An (y,x) tuple of lons, lats transformed to floating coordinates in grid coordinate system
+inter: An (y,x) tuple of the grid integer coordinates
+
+Can be used as input for the scipy.interpolate.griddata function with
+inter= points at which to interpolate data (xi)
+points= data point coordinates
+
+"""
+
+
 def griddata_input(lon, lat, grid):
     xi, yi = grid.ij_coordinates
 
@@ -36,3 +50,26 @@ def griddata_input(lon, lat, grid):
     inter = np.array((np.ravel(yi), np.ravel(xi))).T
 
     return inter, points
+
+
+"""
+Quick linear regrid function for irregular data that takes lon, lat, data of the same dimensions and interpolates
+the data to the salem grid
+
+lon: numpy array of longitudes
+lat: numpy array of latitudes
+data: numpy array of data values
+grid: salem grid
+
+returns: the regridded data, linearly interpolated.
+"""
+
+
+def quick_regrid(lon, lat, data, grid):
+    inter, points = griddata_input(lon, lat, grid)
+
+    # Interpolate using delaunay triangularization
+    data = griddata(points, data.flatten(), inter, method='linear')
+    data = data.reshape((grid.ny, grid.nx))
+
+    return data

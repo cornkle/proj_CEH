@@ -12,9 +12,6 @@ import itertools
 
 
 
-
-
-
 """
 MSG folder:
 meteosat_WA30: 2004 - 2014, JJAS, 4-21N, 18W - 32E, 580 x 1640 pixel, ~ 3-4km res, ev. 30 mins -> downloading 15mins!

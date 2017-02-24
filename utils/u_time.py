@@ -8,14 +8,30 @@ Created on Wed Mar 16 10:04:08 2016
 from datetime import datetime, timedelta
 import numpy as np
 
-# Transforms seconds of day to hours, minutes, seconds
+"""
+Transforms a number representing the seconds in the day to a hour, minutes, seconds structure
+
+Input:
+isec: the seconds
+
+Returns:
+datetime structure
+"""
+
+
 def sec_to_time(isec):
     sec = timedelta(seconds=int(isec))
-    d = datetime(1,1,1) + sec
+    d = datetime(1, 1, 1) + sec
 
-    #print("DAYS:HOURS:MIN:SEC")
-    #print("%d:%d:%d:%d" % (d.day-1, d.hour, d.minute, d.second))
+    # print("DAYS:HOURS:MIN:SEC")
+    # print("%d:%d:%d:%d" % (d.day-1, d.hour, d.minute, d.second))
     return d
+
+
+"""
+Class for handling lists of years, months, days etc
+Creates an object with date attributes. Can add dates, get a date at certain index, get the string of date or get index of certain date
+"""
 
 
 class date_list(object):
@@ -43,7 +59,6 @@ class date_list(object):
             x.add(self.y[ind], self.m[ind], self.d[ind], self.h[ind], self.mi[ind], self.s[ind])
         else:
             for i in ind:
-
                 x.add(self.y[i], self.m[i], self.d[i], self.h[i], self.mi[i], self.s[i])
 
         return x
