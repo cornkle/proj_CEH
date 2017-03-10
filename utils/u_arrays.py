@@ -8,13 +8,20 @@ Created on Tue Mar 15 17:27:16 2016
 import os, fnmatch
 import numpy as np
 from math import sqrt
-
-def locate(pattern, root_path):
+import ipdb
+def locate(pattern, root_path, exclude=None):
     strg = []
     llist = os.listdir(root_path)
     llist.sort()
     for file in llist:
         if file.endswith(pattern):
+            filepath = os.path.join(root_path, file)
+
+            try:
+                if exclude in filepath:
+                    continue
+            except TypeError:
+                pass
             strg.append(os.path.join(root_path, file))
     return strg
 

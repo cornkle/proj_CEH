@@ -10,68 +10,95 @@ from utils import u_statistics as ug
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import statsmodels.stats.weightstats as stats
 import pickle as pkl
-from scipy import stats
 
-
-df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_30km.pkl')
+df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p')
 
 ids = np.array(df['id'])
 scales_all = np.array(df['scale'])
 
-p30 = np.array(df['pmax'])
+p30 = np.array(df['circle_g30'])
+p30 = np.array(df['circle_sum'])
+nz = np.array(df['circle_nz'])
+t = np.array(df['bulk_tmean_p'])
+tmin = np.array(df['circle_Tcentre'])
 
 max = []
 id = []
 uids = np.unique(ids)
 uscales = np.unique(scales_all)
 for i in uids:
+    if np.min(t[(ids==i)]) > -50:
+        continue
+
     try:
-        maxi = np.max(p30[(ids==i) & (p30 >=5)])
+        maxi = np.nansum(p30[(ids==i)])/np.nansum(nz[(ids==i)])
+    # maxi = np.nansum(p30[(ids == i)]) / np.nansum(nz[(ids == i)])
+    #     if np.nansum(nz[(ids==i)]) < 5:
+    #         continue
 
     except ValueError:
         continue
     max.append(maxi)
     id.append(i)
 
-
 id_sort = np.array(id)[np.argsort(max)]
 
-weak = id_sort[0:200]
-strong = id_sort[-200:]
+weak = id_sort[0:500]
+strong = id_sort[-500:]
+
 
 weak_scales = []
 strong_scales = []
-w_std =[]
-s_std = []
+mean_scales = []
+wupper =[]
+wlower = []
+supper = []
+slower = []
+
 for s in uscales:
     sumup_weak = []
     sumup_strong = []
+    sumup_mean = []
     for i in weak:
-        sumup_weak.append(np.sum((df['id'] == i) & (df['scale'] == s)))
-        print(df['scale'][(df['id'] == i)])
+
+        sumup_weak.append(tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
+
 
     for i in strong:
-        print(df['scale'][(df['id'] == i)])
-        sumup_strong.append( np.sum((df['id'] == i) & (df['scale'] == s)))
+       # print(scales_all[(ids == i)])
+        sumup_strong.append( tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
 
-    ipdb.set_trace()
-    weak_scales.append(np.sum(sumup_weak))
-    strong_scales.append(np.sum(sumup_strong))
+    for i in uids:
+       # print(scales_all[(ids == i)])
+        sumup_mean.append( tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
+
+    weak_scales.append(np.nanmean(np.concatenate(sumup_weak)))
+    strong_scales.append(np.nanmean(np.concatenate(sumup_strong)))
+    mean_scales.append(np.nanmean(np.concatenate(sumup_mean)))
+
+    wupper.append(stats.zconfint(np.concatenate(sumup_weak))[1])
+    wlower.append(stats.zconfint(np.concatenate(sumup_weak))[0])
+    supper.append(stats.zconfint(np.concatenate(sumup_strong))[1])
+    slower.append(stats.zconfint(np.concatenate(sumup_strong))[0])
 
 
-    w_std.append(np.std(sumup_weak))
-    s_std.append(np.std(sumup_strong))
-
-
+ipdb.set_trace()
 f = plt.figure()
-plt.plot(uscales, weak_scales)
-plt.errorbar(uscales, weak_scales, xerr = w_std*2)
-plt.plot(uscales, strong_scales, color='r')
-plt.errorbar(uscales, strong_scales, xerr = s_std*2)
-print(np.sum(weak_scales/np.sum(weak_scales)))
+plt.plot(uscales, weak_scales, label = 'Lowest Probability')
+plt.fill_between(uscales, wlower, wupper, alpha=0.3)
+#plt.errorbar(uscales, weak_scales, xerr = w_std*2)
+plt.plot(uscales, strong_scales, color='r', label = 'Highest probability')
+plt.fill_between(uscales, slower, supper, color='r', alpha=0.3)
+plt.plot(uscales, mean_scales, color='g', label = 'Average distribution')
+plt.xlabel('Scales (km)')
+plt.ylabel('Tmean(power max)')
+plt.title('MCS > 15000km2, sub-cloud features')
+#plt.errorbar(uscales, strong_scales, xerr = s_std*2)
 
-# f = plt.figure()
+plt.legend()
+#f = plt.figure()
 # ax1 = f.add_subplot(121)
 # ax2 = f.add_subplot(122)
 # #ax3 = f.add_subplot(223)

@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_blobs.p','rb'))
 
 
 siz = 3
@@ -42,30 +42,41 @@ for id, r in enumerate(ranges):
     nnz = []
 
     for k in klist:
-        big = np.asarray(comp_collect[k]['big'])
-        fin = np.asarray(comp_collect[k]['fin'])
-        arr = np.asarray(comp_collect[k]['mean'])
-        nz = np.asarray(comp_collect[k]['isnz'])
-        tarr = np.asarray(comp_collect[k]['tmean'])
 
-        pos = np.where(tarr[:,21,21] <= -60)
+        p = np.array(comp_collect[k]['p'])
+        t = np.array(comp_collect[k]['t'])
+
+        pos = np.where(t[:, 21, 21] <= -50)
         pos = pos[0]
 
-        bbig.append(big[pos,:,:])
-        ffin.append(fin[pos,:,:])
-        aarr.append(arr[pos,:,:])
-        taarr.append(tarr[pos,:,:])
-        nnz.append(nz[pos,:,:])
+        big = (p>30)[pos,:,:]
+        fin = (np.isfinite(p))[pos,:,:]
+        arr = p[pos,:,:]
+        nz = (p>0.1)[pos,:,:]
+        tarr = t[pos,:,:]
 
-    bbig = np.concatenate(bbig, axis=0)
-    ffin = np.concatenate(ffin, axis=0)
-    aarr = np.concatenate(aarr, axis=0)
-    taarr = np.concatenate(taarr, axis=0)
-    nnz = np.concatenate(nnz, axis=0)
+        bbig.append(big)
+        ffin.append(fin)
+        aarr.append(arr)
+        taarr.append(tarr)
+        nnz.append(nz)
+
+
+    try:
+
+        bbig = np.concatenate(bbig, axis=0)
+        ffin = np.concatenate(ffin, axis=0)
+        aarr = np.concatenate(aarr, axis=0)
+        taarr = np.concatenate(taarr, axis=0)
+        nnz = np.concatenate(nnz, axis=0)
+
+    except ValueError:
+        ipdb.set_trace()
+
 
     bla = np.nansum(aarr, 0) / np.nansum(nnz, 0)
     bla1 = np.nansum(ffin, 0)
-    blab = (np.nansum(bbig, 0) / np.nansum(nnz, 0)) * 100
+    blab = np.nansum(bbig, 0) / np.nansum(nnz,0) * 100
 
     tbla = np.nanmedian(taarr, 0)
 
@@ -81,7 +92,8 @@ f = plt.figure(figsize=(15, 10), dpi=400)
 ll = [20, 40, 60, 100, 150]  # keys
 for ind, k in enumerate(ll):
 
-    pos=np.where(np.array(outrange) == k)[0]
+    pos=outrange.index(k)
+
     outbla = out[pos]
     fos = 9
 
@@ -121,7 +133,7 @@ for ind, k in enumerate(ll):
     cbar = plt.colorbar(mp1)
     cbar.set_label('TIR ($\circ$C)', fontsize=fos)
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_blob.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

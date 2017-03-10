@@ -45,7 +45,7 @@ print('Number MCSs:', p.size)
 
 # In[6]:
 
-bins=list(range(-80, -9, 1))   # compute probability per temperature range (1degC) 
+bins=list(range(-90, -9, 5))   # compute probability per temperature range (1degC)
 ppo30=np.where(p > 30)  
 to30=t[ppo30]   
 
@@ -81,6 +81,10 @@ rarea = area.copy()[inds]
 rt = t.copy()[inds]
 rp = p.copy()[inds]
 
+print('Percentile',np.percentile(p[p>=0], 95))
+print(np.sum((rp>=30) & (rt<-60))/np.sum(rp>=30))
+
+
 
 # In[11]:
 
@@ -92,7 +96,7 @@ xy = np.vstack([p,t])
 z = gaussian_kde(xy)(xy)
 test = rarea # z / (z.max() - z.min()) #sarea #z / (z.max() - z.min())
 mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r') # viridis_r
-ax1.set_title('~10400 contiguous cold clouds (< -10$^{\degree}C$, > 324 km$^2$ )')
+ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 324 km$^2$ )')
 ax1.set_ylabel('Max. precipitation ($mm\ h^{-1}$)')
 ax1.set_xlabel('Min. Temperature ($^{\degree}C$)')
 ax1.hlines(31, -90, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='red')

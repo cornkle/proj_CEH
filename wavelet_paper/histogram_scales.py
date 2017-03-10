@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/precip_3dmax_gt15000_-70.p', 'rb'))
+dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/precip_3dmax_gt15000_shuffle.p', 'rb'))
 keys=[]
 for k in dic.keys():
     keys.append(k)

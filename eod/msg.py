@@ -8,6 +8,7 @@ from utils import u_lists as ul
 # import datetime as dt
 # import glob
 import itertools
+import ipdb
 
 
 
@@ -21,8 +22,12 @@ meteosat_SA15: 2006 - 2010, JJAS, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, e
 class ReadMsg(object):
     def __init__(self, msg_folder):
 
+
+        yrange = range(2004, 2016)  # 1998, 2014
+        mrange = range(1,13)
+
         try:
-            lpath = uarr.locate('lon.npz', msg_folder)
+            lpath = uarr.locate('lon.npz', msg_folder, exclude = None)
         except:
             print('Not a directory or no msg lat/lon found')
             quit()
@@ -35,6 +40,19 @@ class ReadMsg(object):
             print('No msg_raw_binary')
             quit()
 
+        rfiles = []
+        for yr, mo in itertools.product(yrange, mrange):  # rain_f4 files only available for 6 to 10
+
+            filepath = os.path.join(mpath, str(yr), str(mo).zfill(2))
+            try:
+                files = uarr.locate('.gra', filepath, exclude = '_182')
+            except OSError:
+                continue
+
+            rfiles.extend(files)
+
+        rfiles.sort(key=ul.natural_keys)
+
         msg_latlon = np.load(lpath[0])
         mlon = msg_latlon['lon']
         mlat = msg_latlon['lat']
@@ -46,6 +64,7 @@ class ReadMsg(object):
 
         self.years = os.listdir(mpath)
         self.root = msg_folder
+        self.fpath = rfiles
 
     def set_date(self, yr, mon, day, hr, mins):
 
@@ -81,13 +100,14 @@ class ReadMsg(object):
     def get_data(self, llbox=None, netcdf_path=None):
 
         if not self.dpath:
-            print('No data for date or date not set. Please set set_date first')
+            print('I found no msg files in my dpath')
             return False
 
         rrShape = (self.ny, self.nx)  # msg shape
         rrMDI = np.uint8(255)
         rr = np.fromfile(self.dpath, dtype=rrMDI.dtype)
         rr.shape = rrShape
+
         rr = rr.astype(np.int32) - 173
 
         if llbox:
@@ -102,6 +122,59 @@ class ReadMsg(object):
             rr = rr
 
         date = self.date  # or np.atleast_1d(dt.datetime())
+
+        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
+                                                   'lat': (('y', 'x'), blat),
+                                                   'lon': (('y', 'x'), blon)},
+                          dims=['time', 'y', 'x']).isel(time=0)
+
+        ds = xr.Dataset({'t': da})
+
+        if netcdf_path:
+            savefile = netcdf_path
+
+            try:
+                os.remove(savefile)
+            except OSError:
+                pass
+            try:
+                ds.to_netcdf(path=savefile, mode='w')
+            except OSError:
+                print('File cannot be saved. Maybe directory wrong. Check your permissions')
+                raise
+
+            print('Saved ' + savefile)
+
+        return ds
+
+    def read_data(self, file, llbox=None, netcdf_path=None):
+
+        if not self.fpath:
+            print('I found no msg files in my fpath')
+            return False
+
+        rrShape = (self.ny, self.nx)  # msg shape
+        rrMDI = np.uint8(255)
+
+        rr = np.fromfile(file, dtype=rrMDI.dtype)
+        rr.shape = rrShape
+        rr = rr.astype(np.int32) - 173
+
+        if llbox:
+            i, j = np.where(
+                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+            blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
+            blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
+            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+        else:
+            blat = self.lat
+            blon = self.lon
+            rr = rr
+
+        str = file.split(os.sep)[-1]
+        curr_date = [
+            pd.datetime(np.int(str[0:4]), np.int(str[4:6]), np.int(str[6:8]), np.int(str[8:10]), np.int(str[10:12]))]
+        date = curr_date  # or np.atleast_1d(dt.datetime())
 
         da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
                                                    'lat': (('y', 'x'), blat),

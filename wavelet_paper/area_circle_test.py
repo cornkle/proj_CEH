@@ -19,13 +19,14 @@ def calc_grid_area(diameter, grid_length):
     print('Diameter:', diameter)
     print("Grid area: ", area_grid)
     print("True area: ", area_true)
+    print("Pixel across: ", len(np.unique(x)))
 
     return (area_grid, area_true)
 
 
 
 def plot_error():
-    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.pkl')
+    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p')
 
     scales = np.unique(df['scale'])
 
@@ -52,6 +53,7 @@ def plot_error():
     plt.plot(area_true, area_true, c='r')
     plt.show()
 
-
+if __name__ == "__main__":
+    plot_error()
 
 
