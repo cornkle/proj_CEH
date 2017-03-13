@@ -28,7 +28,7 @@ def composite():
     pool = multiprocessing.Pool(processes=7)
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    files = files[0:100]
+    #files = files[0:100]
     print('Nb files', len(files))
     tt = 'WA15'
 
@@ -47,19 +47,18 @@ def composite():
 
     for v in res:
 
-        comp_collect[v[2]]={'p': [], 't' : [], 'scale':[], 'hour':[], 'id' : []}
-        precip[v[2]]=[]
+        precip[v[0]]=[]
 
-     # ret.append((kernel, kernelt, scale, id, dic['time.hour'].values.tolist(),
-     #                    clat, clon, lat_min, lat_max, lon_min, lon_max, area,
-     #                    bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
-     #                    len(ycirc), circle_Tcenter, circle_p, circle_valid, circle_sum,
-     #                    circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
+    # ret.append((sc, id, dic['time.hour'].values.tolist(),
+    #             clat, clon, lat_min, lat_max, lon_min, lon_max, area,
+    #             bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
+    #             circle_Tcenter, circle_p, circle_valid, circle_sum,
+    #             circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
     dic = OrderedDict([('scale', []), ('id' , []), ('hour' , []),
            ('clat',[]), ('clon',[]),('lat_min',[]), ('lat_max' , []), ('lon_min' , []), ('lon_max' , []), ('area' , []),
            ('bulk_pmax' , []), ('bulk_pmean' ,[]), ('bulk_tmean',[]), ('bulk_tmean_p',[]), ('bulk_tmin_p',[]), ('bulk_g30',[]),
-           ('circle_pix' , []), ('circle_Tcentre', []), ('circle_p' , []), ('circle_val' , []), ('circle_sum' , []),
+           ('circle_Tcentre', []), ('circle_p' , []), ('circle_val' , []), ('circle_sum' , []),
            ('circle_nz' , []), ('circle_g30' , []), ('circle_max' , []), ('circle_p99' , []), ('circle_p95' , []), ('circle_p90' , [])])
 
     keys = comp_collect.keys()
@@ -67,25 +66,18 @@ def composite():
 
     for v in res:
 
-        print(v[2])
-
-        comp_collect[v[2]]['p'].append(v[0])
-        comp_collect[v[2]]['t'].append(v[1])
-        comp_collect[v[2]]['hour'].append(v[4])
-        comp_collect[v[2]]['id'].append(v[3])
+        print(v[0])
 
         for cnt, kk in enumerate(dic.keys()):
 
-            dic[kk].append(v[cnt+2])  # omit kernel and kernelt
+            dic[kk].append(v[cnt])  # omit kernel and kernelt
 
-        precip[v[2]].extend(v[20])
+        precip[v[0]].extend(v[17])
 
 
     pkl.dump(dic, open(out+'3dmax_gt15000_blobs.p','wb'))
 
     pkl.dump(precip, open(out+'precip_3dmax_gt15000_blobs.p','wb'))
-
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_blobs.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -166,115 +158,76 @@ def file_loop(fi):
 
     wlperc = wav['t'].copy()
     figure = np.zeros_like(outt)
-
-    for s in range(wlperc.shape[0]):
-        wlperc[s,:,:][wlperc[s,:,:] < np.percentile(wlperc[s,:,:][wlperc[s,:,:]>=0.05], 70)] = 0
-
-    labels, numL = label(wlperc)
+    #
+    # for s in range(wlperc.shape[0]):
+    #     wlperc[s,:,:][wlperc[s,:,:] < np.percentile(wlperc[s,:,:][wlperc[s,:,:]>=0.05], 70)] = 0
+    #
+    # labels, numL = label(wlperc)
+    # for s in [0,1]:
+    #
+    #      f = plt.figure()
+    #      plt.imshow(labels[s,:,:])
+    #
+    # return
 
     yp, xp = np.where(outp > 30)
 
-    size = np.array(np.arange(10,200, 10))
+    size = [15,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220]
 
     for sc in wav['scales'][::-1]:
         print(sc)
 
         mimin = np.argmin(np.abs(size-sc))
 
-        id = wav['scales'].tolist().index(sc)
+        idd = wav['scales'].tolist().index(sc)
+        wll = wlperc[idd,:,:].copy()
+        wll[wll < np.percentile(wll[wll >= 0.05], 75)] = 0
 
-        figure[np.nonzero(labels[id,:,:])] = size[mimin]
-    figure[figure==0]=np.nan
-    f = plt.figure()
-    f.add_subplot(131)
-    plt.imshow(outt)
-    plt.imshow(figure, cmap='viridis')
-    f.add_subplot(132)
-    plt.imshow(figure, cmap='viridis')
-    plt.plot(xp, yp, 'yo', markersize=3)
-    f.add_subplot(133)
-    plt.imshow(outt)
-    plt.show()
+        labels, numL = label(wll)
 
-    return
+        figure[np.nonzero(labels)] = size[mimin]
 
-    for nb in scale_ind:
+    # figure[figure==0]=np.nan
+    # f = plt.figure()
+    # f.add_subplot(131)
+    # plt.imshow(outt)
+    # plt.imshow(figure, cmap='viridis')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # f.add_subplot(133)
+    # plt.imshow(outt)
+    # plt.show()
 
 
-        orig = float(arr[nb])
-        scale = int(np.round(orig))
+    for sc in np.unique(figure):
 
-        maxoutt=maxout[nb, :, :]
-
-        yp, xp = np.where(outp > 30)
-
-        try:
-            yy, xx = np.where((maxoutt == 1) & (outt <= -40))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
-        except IndexError:
+        if sc == 0:
             continue
 
-        #print(scale, yy,xx)
-        # #Example why we miss loads of extreme rain:
-        # # Doing file: /users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/2004-06-07_10:15:00_11.nc
-        if (len(yy) != 0): # & (scale == 15): # (len(yy) != 0)
-            inds = np.ceil(orig /5/2)
-            f = plt.figure(figsize=(10,3))
-            siz = 3
-            ax = f.add_subplot(1, 3, 1)
-            plt.imshow(wav['t'][nb, :, :], cmap='jet')
-            plt.plot(xp, yp, 'yo', markersize=siz, label='Intense rain')
-            plt.plot(xx, yy, 'ro', markersize=siz, label='Wavelet max')
-            ax.set_title(str(scale)+'km: wavelet power', fontsize=10)
-            plt.legend(fontsize=10)
+        perblob = figure.copy()
+        perblob[perblob!=sc] = 0
+        labels_blob, numL = label(perblob)
 
-            ax = f.add_subplot(1, 3, 2)
-            plt.imshow(outt, cmap='jet')
-            #plt.plot(xp, yp, 'yo', markersize=siz)
-            plt.plot(xx, yy, 'ro', markersize=siz+1)
-            plt.colorbar()
-         #   plt.plot(txx, tyy, 'go', markersize=siz)
-            ax.set_title( 'MSG cloud top temperature', fontsize=10)#
+        for blob in np.unique(labels_blob):
 
-            ax = f.add_subplot(1, 3, 3)
-            plt.imshow(outp, cmap='jet')
-            #plt.plot(xp, yp, 'yo', markersize=siz)
-            plt.plot(xx, yy, 'ro', markersize=siz)
-            plt.plot(xx+inds, yy, 'go', markersize=siz)
-            plt.plot(xx - inds, yy, 'go', markersize=siz)
-            plt.plot(xx, yy+inds, 'go', markersize=siz)
-            plt.plot(xx, yy - inds, 'go', markersize=siz)
-            ax.set_title('TRMM rainfall (cropped)', fontsize=10)
-            plt.colorbar()
-            plt.tight_layout()
-           # plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/chris_presi/wav_example'+str(scale)+'_'+str(area)+'.png')
-          #  plt.close('all')
-        #     #plt.show()
-
-        for y, x in zip(yy, xx):
-
-            if figure[nb, y,x] == 0:
+            if blob == 0:
                 continue
 
-            r = 20
-            kernel = tm_utils.cut_kernel(outp, x, y, r)
-            kernelt = tm_utils.cut_kernel(outt, x, y, r)
+            pos = np.where(labels_blob == blob) #(figure == sc)
 
-            if kernel.shape != (r * 2 + 1, r * 2 + 1):
-                kernel = np.zeros((41,41))+ np.nan
+            circle_Tcenter = np.nanmin(outt[pos])
 
-            if np.nansum(kernel) < 1:
-                continue
-
-            circle_Tcenter = outt[y, x]
-
-
-            ycirc, xcirc = np.where(figure[nb, :, :] == figure[nb, y, x])
-
-            circle_p = outp[ycirc, xcirc]
+            circle_p = outp[pos]
+            circle_t = outt[pos]
 
             circle_valid = np.sum(np.isfinite(circle_p))
 
             if ((circle_valid) < 3 ):   # or (tmin > -70):
+                continue
+
+            ## some rain
+            if np.nansum(circle_p) < 0.1:
                 continue
 
             circle_sum = np.nansum(circle_p)
@@ -298,45 +251,63 @@ def file_loop(fi):
             except IndexError:
                 circle_p90 = np.nan
 
+
+
+
             #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
 
-            ret.append((kernel, kernelt, scale, id, dic['time.hour'].values.tolist(),
+            ret.append((sc, id, dic['time.hour'].values.tolist(),
                         clat, clon, lat_min, lat_max, lon_min, lon_max, area,
                         bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
-                        len(ycirc), circle_Tcenter, circle_p, circle_valid, circle_sum,
+                        circle_Tcenter, circle_p, circle_valid, circle_sum,
                         circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
 
-    f = plt.figure()
-    fcnt = 0
-    vv = 7
-    for s in scale_ind:
-
-        pos = np.where((maxout[s, :, :] == 1) & (outt <= -40))
-
-        if len(pos[0]) == 0:
-            continue
-        fcnt+=1
-        ax = f.add_subplot(vv,vv,fcnt)
-        ax.imshow(wl[s,:,:])
-
-       # plt.plot(xp, yp, 'yo', markersize=3)
-
-        ax.set_title(str(wav['scales'][s]))
-
-    ax = f.add_subplot(vv, vv, fcnt+1)
-    plt.imshow(figure)
-    plt.plot(xp, yp, 'yo', markersize=3)
-    ax = f.add_subplot(vv, vv, fcnt + 2)
-    plt.imshow(outt)
-    ax = f.add_subplot(vv, vv, fcnt + 3)
-    plt.imshow(outp)
-    plt.plot(xp, yp, 'yo', markersize=3)
-    ax = f.add_subplot(vv, vv, fcnt + 4)
-    plt.imshow(figure)
+    # figure[figure==0]=np.nan
+    # f = plt.figure()
+    # f.add_subplot(133)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.imshow(figure, cmap='viridis')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.colorbar()
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # f.add_subplot(131)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # plt.show()
 
 
-    plt.show()
+    # f = plt.figure()
+    # fcnt = 0
+    # vv = 4
+    # for s in scale_ind:
+    #
+    #     pos = np.where((maxout[s, :, :] == 1) & (outt <= -40))
+    #
+    #     if len(pos[0]) == 0:
+    #         continue
+    #     fcnt+=1
+    #     ax = f.add_subplot(vv,vv,fcnt)
+    #     ax.imshow(wl[s,:,:])
+    #
+    #    # plt.plot(xp, yp, 'yo', markersize=3)
+    #
+    #     ax.set_title(str(wav['scales'][s]))
+    #
+    # ax = f.add_subplot(vv, vv, fcnt+1)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # ax = f.add_subplot(vv, vv, fcnt + 2)
+    # plt.imshow(outt)
+    # ax = f.add_subplot(vv, vv, fcnt + 3)
+    # plt.imshow(outp)
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # ax = f.add_subplot(vv, vv, fcnt + 4)
+    # plt.imshow(figure, cmap='viridis')
+    #
+    #
+    # plt.show()
 
     dic.close()
 

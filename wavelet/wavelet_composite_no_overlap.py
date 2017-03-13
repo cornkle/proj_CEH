@@ -84,7 +84,7 @@ def composite():
 
     pkl.dump(precip, open(out+'precip_3dmax_gt15000_30km_no.p','wb'))
 
-    #pkl.dump(comp_collect, open(out + 'comp_collect_composite.p', 'wb'))
+    #pkl.dump(comp_collect, open(out + 'comp_collect_composite_no.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -155,7 +155,7 @@ def file_loop(fi):
     wl = wav['t']  # [nb, :, :]
 
     maxout = (
-        wl == ndimage.maximum_filter(wl, (6, 6 ,6), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+        wl == ndimage.maximum_filter(wl, (5, 5 ,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
     arr = np.array(wav['scales'], dtype=str)
 
@@ -185,7 +185,7 @@ def file_loop(fi):
             iscale = (np.ceil(ss / 2. / 5.)).astype(int)
 
 
-            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outp)
+            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale+1, outp)
 
             figure[ycirc, xcirc] = orig
             xxx.append(x)
@@ -198,6 +198,7 @@ def file_loop(fi):
 
         sc = figure[y,x]
         scale = int(np.round(sc))
+        scale = 30
 
         #print('Scale in fig: ', sc)
 
@@ -215,7 +216,7 @@ def file_loop(fi):
 
         iscale = (np.ceil(sc / 2. / 5.)).astype(int)
 
-        ycircf, xcircf = ua.draw_cut_circle(x, y, iscale, outp)
+        ycircf, xcircf = ua.draw_cut_circle(x, y, iscale+1, outp)
 
         pos = np.where(figure[ycircf, xcircf] == sc)
         #
@@ -230,6 +231,10 @@ def file_loop(fi):
         circle_valid = np.sum(np.isfinite(circle_p))
 
         if ((circle_valid) < 3 ):   # or (tmin > -70):
+            continue
+
+        ## some rain
+        if np.nansum(circle_p) < 0.1:
             continue
 
         circle_sum = np.nansum(circle_p)
@@ -262,7 +267,7 @@ def file_loop(fi):
                     circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
     #
-    #f = plt.figure()
+    # f = plt.figure()
     # fcnt = 0
     # vv = 6
     # for s in scale_ind:
@@ -273,23 +278,27 @@ def file_loop(fi):
     #         continue
     #     fcnt+=1
     #     ax = f.add_subplot(vv,vv,fcnt)
-    #     ax.plot(xp, yp, 'yo', markersize=3)
+    #     #ax.plot(xp, yp, 'yo', markersize=3)
     #     ax.imshow(wl[s,:,:])
     #
     #    # plt.plot(xp, yp, 'yo', markersize=3)
     #
     #     ax.set_title(str(wav['scales'][s]))
-
-    #ax = f.add_subplot(131)
-    #plt.imshow(figure)
-    #plt.plot(xp, yp, 'yo', markersize=3)
-    #ax = f.add_subplot(132)
-    #plt.imshow(outt)
-    #ax = f.add_subplot(133)
-    #plt.imshow(figure)
-
-
-    #plt.show()
+    #
+    # figure[figure == 0] = np.nan
+    # f = plt.figure()
+    # f.add_subplot(133)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.imshow(figure, cmap='viridis')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # plt.colorbar()
+    # f.add_subplot(131)
+    # plt.imshow(outt, cmap='inferno')
+    #
+    #
+    # plt.show()
 
     dic.close()
 

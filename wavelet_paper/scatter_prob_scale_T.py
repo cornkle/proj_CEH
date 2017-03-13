@@ -144,12 +144,24 @@ def tmin():
 
     pp = np.array(pp)
 
-    print(np.sum(pp>=30))
-    print(np.sum(pbulk_g30[uinds]))
+    pp15 = []
+    for p, s in zip(psum, scales):
+        if s <= 40:
+            pp15.extend(p)
+
+    pp = np.array(pp)
+    pp15= np.array(pp15)
+
+    print('Nb 30mm pixel in scales', np.sum(pp>=30))
+    print('Nb 30mm pixel all', np.sum(pbulk_g30[uinds]))
+    print('Nb 30mm pixel 15km', np.sum(pp15>=30))
+    print('Nb 30mm pixel 15km fraction', np.sum(pp15>=30) / np.sum(pp>=30))
+    print('Nb 30mm pixel 15km fraction all', np.sum(pp15 >= 30) / np.sum(pbulk_g30[uinds]))
+    print('Nb 30mm pixel fraction all', np.sum(pp >= 30) / np.sum(pbulk_g30[uinds]))
 
     bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [15, 29, 50, 205]
+    ranges = [10, 29, 50, 205]
     outrange = [ 29, 50,  205]
     # #
     # ranges = [15, 30, 60, 202]
@@ -177,7 +189,7 @@ def tmin():
         t = tmin[(scales <= r) & (scales > ranges[id - 1])]
         p = pmax[(scales <= r) & (scales > ranges[id - 1])]
 
-        to30 = t[p>=40]
+        to30 = t[p>=30]
 
         # bins = np.percentile(t, np.arange(0,101,5))
         # center = (bins[:-1] + bins[1:]) / 2
@@ -198,11 +210,14 @@ def tmin():
         lower, upper = stats.proportion_confint(H1, H)
 
         ax1.plot(center, histo, color=c, linewidth=1.5, label=str(start)+'-'+str(r) + ' km',marker='o' )
+        ax1.title('Probability Precip>30mm')
         ax1.fill_between(center, lower*100, upper*100, color=c, alpha=0.3)
         ax2.plot(center, H, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
+        ax3.title('Number of rainfall pixel >30mm (nP)')
         #ax2.set_ylim(0,160)
-        ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
 
+        ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
+        ax3.title('Number of rainfall pixel >30mm (nP)')
     tmean=[]
     tmin = []
     tcmean = []
@@ -219,7 +234,7 @@ def tmin():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T_nO.png')
+    plt.savefig(path + 'wavelet_scale_p_T_no.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

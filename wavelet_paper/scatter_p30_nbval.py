@@ -14,14 +14,15 @@ import pickle as pkl
 from scipy import stats
 
 
-df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_fake.pkl')
+
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 scales = np.unique(df['scale'])
 scales_all = np.array(df['scale'])
-nbval = np.array(df['sumnz'])
-p30 = np.array(df['sum'])
-area = np.array(df['sumvalid'])
-tmin = np.array(df['tmin'])
+nbval = np.array(df['circle_nz'])
+p30 = np.array(df['circle_sum'])
+area = np.array(df['circle_val'])
+tmin = np.array(df['circle_Tcentre'])
 
 
 sum_avg_grad = np.sum(p30)/np.sum(nbval)
@@ -78,4 +79,4 @@ ax1.legend(fontsize = 9)
 ax2.legend(fontsize = 9)
 
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/scatter_scales_fake.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/scatter_scales_blobs.png')
