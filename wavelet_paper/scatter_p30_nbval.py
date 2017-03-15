@@ -15,6 +15,7 @@ from scipy import stats
 
 
 
+
 df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 scales = np.unique(df['scale'])

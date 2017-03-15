@@ -82,11 +82,11 @@ def composite():
 
         precip[v[2]].extend(v[19])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_blobs_range.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_T.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_blobs_range.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_T.p', 'wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_blobs_range.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_T.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -137,36 +137,12 @@ def file_loop(fi):
 
     outt[np.isnan(outt)] = 150
     outt[outt >= -40] = 150
-    grad = np.gradient(outt)
+
     outt[outt==150] = np.nan
 
+    #bins = np.array(list(range(-95, -38, 2)))
+    bins = np.array(list(range(-95, -39, 2)))
 
-
-    o2 = outt.copy()
-    o2[np.isnan(o2)] = perc
-    nok = np.where(abs(grad[0]) > 80)
-    d = 2
-    i = nok[0]
-    j = nok[1]
-
-    for ii, jj in zip(i, j):
-        kern = o2[ii - d:ii + d + 1, jj - d:jj + d + 1]
-        o2[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
-
-    wav = util.waveletT(o2, 5)
-    wl = wav['t']  # [nb, :, :]
-
-    # maxout = (
-    #     wl == ndimage.maximum_filter(wl, (6, 6, 5), mode='constant',
-    #                                  cval=np.amax(wl) + 1))  # (np.round(orig / 5))
-
-    #(3, 3 ,len(wav['scales'])-1)
-    arr = np.array(wav['scales'], dtype=str)
-
-    scale_ind = range(arr.size)
-
-    wlperc = wav['t'].copy()
-    figure = np.zeros_like(outt)
     #
     # for s in range(wlperc.shape[0]):
     #     wlperc[s,:,:][wlperc[s,:,:] < np.percentile(wlperc[s,:,:][wlperc[s,:,:]>=0.05], 70)] = 0
@@ -181,51 +157,30 @@ def file_loop(fi):
 
     yp, xp = np.where(outp > 30)
 
-    size = [15,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220]
+    for id, sc in enumerate(bins):
 
-    for sc in wav['scales'][::-1]:
-        print(sc)
-
-        mimin = np.argmin(np.abs(size-sc))
-
-
-        idd = wav['scales'].tolist().index(sc)
-        wll = wlperc[idd,:,:].copy()
-      #  wll[wll < np.percentile(wll[wll >= 0.01], 90)] = 0
-        wll[wll < np.percentile(np.arange(wll.min(), wll.max()+0.1,0.1), 5)] = 0
-       # wll[wll < np.percentile(wll[wll >= 0.1], 50)] = 0
-
-
-        labels, numL = label(wll)
-
-        figure[np.nonzero(labels)] = size[mimin]
-
-    # figure[figure==0]=np.nan
-    # f = plt.figure()
-    # f.add_subplot(131)
-    # plt.imshow(outt)
-    # plt.imshow(figure, cmap='viridis')
-    # f.add_subplot(132)
-    # plt.imshow(figure, cmap='viridis')
-    # plt.plot(xp, yp, 'yo', markersize=3)
-    # f.add_subplot(133)
-    # plt.imshow(outt)
-    # plt.show()
-
-
-    for sc in np.unique(figure):
-
-        if sc == 0:
+        if id == 0:
             continue
+        figure = np.zeros_like(outt)
+        filter = np.where((outt>=bins[id-1]) & (outt<sc))
 
-        perblob = figure.copy()
-        perblob[perblob!=sc] = 0
-        labels_blob, numL = label(perblob)
+
+        figure[filter] = outt[filter]
+        labels_blob, numL = label(figure)
+
+        # f = plt.figure()
+        # plt.imshow(labels_blob)
+        # plt.plot(xp, yp, 'yo', markersize=3)
+        # plt.title(str(sc-1))
+
+        if np.nansum(labels_blob) == 0:
+            continue
 
         for blob in np.unique(labels_blob):
 
             if blob == 0:
                 continue
+
 
             pos = np.where(labels_blob == blob) #(figure == sc)
 
@@ -248,7 +203,7 @@ def file_loop(fi):
 
             circle_Tcenter = np.nanmin(outt[pos])
 
-            y, x = np.where((outt == circle_Tcenter) & (labels_blob == blob) & (figure == sc))
+            y, x = np.where((outt == circle_Tcenter) & (labels_blob == blob))
 
             # figure[figure==0]=np.nan
             # f = plt.figure()
@@ -296,7 +251,7 @@ def file_loop(fi):
 
             #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
 
-            ret.append((kernel, kernelt, sc, id, dic['time.hour'].values.tolist(),
+            ret.append((kernel, kernelt, sc-1, id, dic['time.hour'].values.tolist(),
                         clat, clon, lat_min, lat_max, lon_min, lon_max, area,
                         bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
                         circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,

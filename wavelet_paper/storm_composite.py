@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import statsmodels.stats.weightstats as stats
 import pickle as pkl
 
-df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p')
+df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p')
 
 ids = np.array(df['id'])
 scales_all = np.array(df['scale'])
@@ -84,14 +84,14 @@ for s in uscales:
     slower.append(stats.zconfint(np.concatenate(sumup_strong))[0])
 
 
-ipdb.set_trace()
+
 f = plt.figure()
-plt.plot(uscales, weak_scales, label = 'Lowest Probability')
-plt.fill_between(uscales, wlower, wupper, alpha=0.3)
+plt.plot(uscales, np.array(weak_scales)-np.array(mean_scales), label = 'Lowest Probability')
+#plt.fill_between(uscales, wlower, wupper, alpha=0.3)
 #plt.errorbar(uscales, weak_scales, xerr = w_std*2)
-plt.plot(uscales, strong_scales, color='r', label = 'Highest probability')
-plt.fill_between(uscales, slower, supper, color='r', alpha=0.3)
-plt.plot(uscales, mean_scales, color='g', label = 'Average distribution')
+plt.plot(uscales, np.array(strong_scales)-np.array(mean_scales), color='r', label = 'Highest probability')
+#plt.fill_between(uscales, slower, supper, color='r', alpha=0.3)
+#plt.plot(uscales, mean_scales, color='g', label = 'Average distribution')
 plt.xlabel('Scales (km)')
 plt.ylabel('Tmean(power max)')
 plt.title('MCS > 15000km2, sub-cloud features')

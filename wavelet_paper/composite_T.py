@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite_blobs.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_T.p','rb'))
 
 
 siz = 3
@@ -23,9 +23,8 @@ keys = comp_collect.keys()
 print(keys)
 keys = sorted(keys)
 keys = np.array(keys)
-
-ranges = [15, 20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
-outrange = [20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
+ranges = np.array(list(range(-95, -39, 5)))
+outrange = ranges[1::].tolist()
 
 out = []
 
@@ -89,7 +88,7 @@ for id, r in enumerate(ranges):
 
 
 f = plt.figure(figsize=(15, 10), dpi=400)
-ll = [20, 40, 60, 100, 150]  # keys
+ll = [-90, -70, -60, -50, -40]  # keys
 for ind, k in enumerate(ll):
 
     pos=outrange.index(k)
@@ -133,7 +132,7 @@ for ind, k in enumerate(ll):
     cbar = plt.colorbar(mp1)
     cbar.set_label('TIR ($\circ$C)', fontsize=fos)
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_blob.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_T.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

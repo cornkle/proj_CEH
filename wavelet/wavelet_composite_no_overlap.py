@@ -49,16 +49,16 @@ def composite():
         comp_collect[v[2]]={'p': [], 't' : [], 'scale':[], 'hour':[], 'id' : []}
         precip[v[2]]=[]
 
-     # ret.append((kernel, kernelt, scale, id, dic['time.hour'].values.tolist(),
-     #                    clat, clon, lat_min, lat_max, lon_min, lon_max, area,
-     #                    bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
-     #                    len(ycirc), circle_Tcenter, circle_p, circle_valid, circle_sum,
-     #                    circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
+    # ret.append((kernel, kernelt, sc, id, dic['time.hour'].values.tolist(),
+    #             clat, clon, lat_min, lat_max, lon_min, lon_max, area,
+    #             bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
+    #             circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
+    #             circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
     dic = OrderedDict([('scale', []), ('id' , []), ('hour' , []),
            ('clat',[]), ('clon',[]),('lat_min',[]), ('lat_max' , []), ('lon_min' , []), ('lon_max' , []), ('area' , []),
            ('bulk_pmax' , []), ('bulk_pmean' ,[]), ('bulk_tmean',[]), ('bulk_tmean_p',[]), ('bulk_tmin_p',[]), ('bulk_g30',[]),
-           ('circle_pix' , []), ('circle_Tcentre', []), ('circle_p' , []), ('circle_val' , []), ('circle_sum' , []),
+           ('circle_pix' , []), ('circle_Tcentre', []), ('circle_p' , []), ('circle_t' , []), ('circle_val' , []), ('circle_sum' , []),
            ('circle_nz' , []), ('circle_g30' , []), ('circle_max' , []), ('circle_p99' , []), ('circle_p95' , []), ('circle_p90' , [])])
 
     keys = comp_collect.keys()
@@ -181,7 +181,7 @@ def file_loop(fi):
         for y, x in zip(yy, xx):
 
             ss = orig
-            ss = 30   # just looking at a fixed radius surrounding points defined by wavelet
+            #ss = 30   # just looking at a fixed radius surrounding points defined by wavelet
             iscale = (np.ceil(ss / 2. / 5.)).astype(int)
 
 
@@ -197,10 +197,10 @@ def file_loop(fi):
     for y, x in zip(yyy, xxx):
 
         sc = figure[y,x]
-        scale = int(np.round(sc))
-        scale = 30
 
-        #print('Scale in fig: ', sc)
+        int_sc = int(sc)
+        radius = sc
+        #radius = 30   # just looking at a fixed radius surrounding points defined by wavelet
 
         r = 20
         kernel = tm_utils.cut_kernel(outp, x, y, r)
@@ -214,7 +214,7 @@ def file_loop(fi):
 
         circle_Tcenter = outt[y, x]
 
-        iscale = (np.ceil(sc / 2. / 5.)).astype(int)
+        iscale = (np.ceil(radius / 2. / 5.)).astype(int)
 
         ycircf, xcircf = ua.draw_cut_circle(x, y, iscale+1, outp)
 
@@ -228,6 +228,7 @@ def file_loop(fi):
 
 
         circle_p = outp[ycircf[pos], xcircf[pos]]
+        circle_t = outt[ycircf[pos], xcircf[pos]]
         circle_valid = np.sum(np.isfinite(circle_p))
 
         if ((circle_valid) < 3 ):   # or (tmin > -70):
@@ -260,10 +261,10 @@ def file_loop(fi):
 
         #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
 
-        ret.append((kernel, kernelt, scale, id, dic['time.hour'].values.tolist(),
+        ret.append((kernel, kernelt, int_sc, id, dic['time.hour'].values.tolist(),
                     clat, clon, lat_min, lat_max, lon_min, lon_max, area,
                     bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
-                    len(ycirc), circle_Tcenter, circle_p, circle_valid, circle_sum,
+                    len(ycircf), circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
                     circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
     #
@@ -285,20 +286,20 @@ def file_loop(fi):
     #
     #     ax.set_title(str(wav['scales'][s]))
     #
-    # figure[figure == 0] = np.nan
-    # f = plt.figure()
-    # f.add_subplot(133)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.imshow(figure, cmap='viridis')
-    # f.add_subplot(132)
-    # plt.imshow(figure, cmap='viridis')
-    # plt.plot(xp, yp, 'yo', markersize=3)
-    # plt.colorbar()
-    # f.add_subplot(131)
-    # plt.imshow(outt, cmap='inferno')
-    #
-    #
-    # plt.show()
+    figure[figure == 0] = np.nan
+    f = plt.figure()
+    f.add_subplot(133)
+    plt.imshow(outt, cmap='inferno')
+    plt.imshow(figure, cmap='viridis')
+    f.add_subplot(132)
+    plt.imshow(figure, cmap='viridis')
+    plt.plot(xp, yp, 'yo', markersize=3)
+    plt.colorbar()
+    f.add_subplot(131)
+    plt.imshow(outt, cmap='inferno')
+
+
+    plt.show()
 
     dic.close()
 

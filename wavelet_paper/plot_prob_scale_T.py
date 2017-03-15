@@ -16,9 +16,9 @@ import pickle as pkl
 def probability():
 
 
-    df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
+    df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
 
-    df2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
+    df2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
 
     ids = np.array(df['id'])
     scales = np.array(df['scale'])
@@ -44,10 +44,10 @@ def probability():
 
     f = plt.figure(figsize=(15, 8), dpi=400)
 
-    ax1 = f.add_subplot(221)
-    ax2 = f.add_subplot(222)
-    ax3 = f.add_subplot(223)
-    ax4 = f.add_subplot(224)
+   # ax1 = f.add_subplot(221)
+   # ax2 = f.add_subplot(222)
+    ax3 = f.add_subplot(121)
+    ax4 = f.add_subplot(122)
     colors = cm.viridis_r(np.linspace(0, 1, len(ranges)))
     for id, r in enumerate(ranges):
         if id == 0:
@@ -89,27 +89,27 @@ def probability():
 
             dic2[r].append(cnt / np.nansum(ffilter) )
 
-            dic3[r].append(np.nansum(ppf2>30)/np.nansum(ppf2>=0))
+            dic3[r].append(np.nansum(ppf2>30)/np.nansum(ppf2>=0.))
              # dic[r].append(np.nanmax(ppf))
 
-            dic4[r].append(np.percentile(ppf2[ppf2 >= 0], 95))
+            dic4[r].append(np.percentile(ppf2[ppf2 >= 0.1], 99))
 
 
-        ax1.plot(scaler[0:-1], (dic[r]), color=colors[id], label=str(ranges[id-1])+' to '+str(r) + ' C')
-        ax2.plot(scaler[0:-1], (dic2[r]), color=colors[id], label=str(ranges[id - 1]) + ' to ' + str(r) + ' C')
+        # ax1.plot(scaler[0:-1], (dic[r]), color=colors[id], label=str(ranges[id-1])+' to '+str(r) + ' C')
+        # ax2.plot(scaler[0:-1], (dic2[r]), color=colors[id], label=str(ranges[id - 1]) + ' to ' + str(r) + ' C')
         ax3.plot(scaler[0:-1], (dic3[r]), color=colors[id], label=str(ranges[id - 1]) + ' to ' + str(r) + ' C')
         ax4.plot(scaler[0:-1], (dic4[r]), color=colors[id], label=str(ranges[id - 1]) + ' to ' + str(r) + ' C')
 
-    ax1.set_xlabel('Scale (km)')
-    ax1.set_ylabel('Probability')
-    #ax1.title("Nb of circles with Rain_max > 30 / nb of circles (per scale/Trange)")
-
-    ax2.set_xlabel('Scale (km)')
-    ax2.set_ylabel('95th Percentile')
+    # ax1.set_xlabel('Scale (km)')
+    # ax1.set_ylabel('Probability')
+    # #ax1.title("Nb of circles with Rain_max > 30 / nb of circles (per scale/Trange)")
+    #
+    # ax2.set_xlabel('Scale (km)')
+    # ax2.set_ylabel('95th Percentile')
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/test_prob_blobs.png')
+    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/prob_blobs_range.png')
     plt.close('all')
 
 
