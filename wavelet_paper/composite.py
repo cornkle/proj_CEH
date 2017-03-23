@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite_blobs.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_noC.p','rb'))
 
 
 siz = 3
@@ -133,7 +133,7 @@ for ind, k in enumerate(ll):
     cbar = plt.colorbar(mp1)
     cbar.set_label('TIR ($\circ$C)', fontsize=fos)
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_blob.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noC.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

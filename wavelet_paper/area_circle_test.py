@@ -9,7 +9,7 @@ import pandas as pd
 def calc_grid_area(diameter, grid_length):
 
     arr = np.zeros((100,100))
-    x, y = ua.draw_circle(50,50,(np.ceil(diameter / 2. /grid_length)).astype(int))
+    x, y = ua.draw_circle(50,50,(np.round(np.ceil(diameter / 2. /grid_length))).astype(int)) #(np.ceil(diameter / 2. /grid_length)).astype(int))
 
     arr[x,y]  = 1
     area_grid = np.sum(arr)* grid_length**2

@@ -5,9 +5,6 @@ sns.set_style("ticks")
 import ipdb
 import matplotlib.cm as cm
 
-from utils import u_statistics as ug
-
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
@@ -239,7 +236,7 @@ def val_vs_extreme_2d():
 def probability():
 
 
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -258,12 +255,13 @@ def probability():
     pbulk_max = np.array(dic['bulk_pmax'])
     pbulk_mean = np.array(dic['bulk_pmean'])
     pbulk_g30 = np.array(dic['bulk_g30'])
+    clat = np.array(dic['clat'])
 
     pp = np.concatenate(psum)
     tt = np.concatenate(tmin)
     pall_g30 = np.sum(pp>30)
 
-    pp15= np.concatenate(psum[scales<=40])
+    pp15= np.concatenate(psum[(scales<=40)])
     pt15 = (pp[tt <= -65])
 
     print('Nb 30mm identified', pall_g30)
@@ -353,9 +351,9 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T_blobs_range_40.png')
+    plt.savefig(path + 'wavelet_scale_p_T_c40.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
 if __name__ == "__main__":
-    val_vs_extreme_2d()
+    probability()

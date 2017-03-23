@@ -303,19 +303,19 @@ def file_loop(fi):
                         circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
 
-    # figure[figure==0]=np.nan
-    # f = plt.figure()
-    # f.add_subplot(133)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.imshow(figure, cmap='viridis')
-    # f.add_subplot(132)
-    # plt.imshow(figure, cmap='viridis')
-    # plt.colorbar()
-    # plt.plot(xp, yp, 'yo', markersize=3)
-    # f.add_subplot(131)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.plot(xp, yp, 'yo', markersize=3)
-    # plt.show()
+    figure[figure==0]=np.nan
+    f = plt.figure()
+    f.add_subplot(133)
+    plt.imshow(outt, cmap='inferno')
+    plt.imshow(figure, cmap='viridis')
+    f.add_subplot(132)
+    plt.imshow(figure, cmap='viridis')
+    plt.colorbar()
+    plt.plot(xp, yp, 'yo', markersize=3)
+    f.add_subplot(131)
+    plt.imshow(outt, cmap='inferno')
+    plt.plot(xp, yp, 'yo', markersize=3)
+    plt.show()
     #
     #
     # f = plt.figure()

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
 import multiprocessing
-import ipdb
+import pdb
 from collections import OrderedDict
 from scipy.ndimage.measurements import label
 import pandas as pd
@@ -49,7 +49,7 @@ def composite():
         comp_collect[v[2]] = {'p': [], 't': [], 'scale': [], 'hour': [], 'id': []}
         precip[v[2]] = []
 
-        # ret.append((kernel, kernelt, sc, id, dic['time.hour'].values.tolist(),
+        # ret.append((kernel, kernelt, sc - 1, id, dic['time.hour'].values.tolist(),
         #             clat, clon, lat_min, lat_max, lon_min, lon_max, area,
         #             bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
         #             circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
@@ -139,9 +139,9 @@ def file_loop(fi):
     outt[outt >= -40] = 150
 
     outt[outt==150] = np.nan
+    outint = np.round(outt).astype(int)
 
     #bins = np.array(list(range(-95, -38, 2)))
-    bins = np.array(list(range(-95, -39, 2)))
 
     #
     # for s in range(wlperc.shape[0]):
@@ -157,24 +157,34 @@ def file_loop(fi):
 
     yp, xp = np.where(outp > 30)
 
-    for id, sc in enumerate(bins):
+        figure = np.zeros_like(outint)
+        filter = np.where((outint>=bins[id-1]) & (outint<sc))
 
-        if id == 0:
-            continue
-        figure = np.zeros_like(outt)
-        filter = np.where((outt>=bins[id-1]) & (outt<sc))
+        #print(bins[id-1], sc)
 
-
-        figure[filter] = outt[filter]
+        figure[filter] = outint[filter]
         labels_blob, numL = label(figure)
 
+        if np.nansum(labels_blob) == 0:
+            continue
+
+        #
         # f = plt.figure()
         # plt.imshow(labels_blob)
         # plt.plot(xp, yp, 'yo', markersize=3)
         # plt.title(str(sc-1))
+        #
+        # f = plt.figure()
+        # plt.imshow(outint)
+        # plt.plot(xp, yp, 'yo', markersize=3)
+        # plt.title(str(sc-1))
+        #
+        # f = plt.figure()
+        # plt.imshow(figure)
+        # plt.plot(xp, yp, 'yo', markersize=3)
+        # plt.title(str(sc-1))
 
-        if np.nansum(labels_blob) == 0:
-            continue
+
 
         for blob in np.unique(labels_blob):
 
@@ -193,13 +203,13 @@ def file_loop(fi):
             if (np.sum(np.isfinite(circle_t)) <= 0 ):
                 continue
 
-            if  ((circle_valid) < 3 ):
+            if  ((circle_valid) <= 0 ):
                 continue
 
             circle_sum = np.nansum(circle_p)
-            ## some rain at least
-            if circle_sum < 0.1:
-                continue
+            # ## some rain at least
+            # if circle_sum < 0.1:
+            #     continue
 
             circle_Tcenter = np.nanmin(outt[pos])
 

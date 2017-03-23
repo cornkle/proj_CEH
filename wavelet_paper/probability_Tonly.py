@@ -2,7 +2,7 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
+import pdb
 import matplotlib.cm as cm
 
 from utils import u_statistics as ug
@@ -16,23 +16,51 @@ import statsmodels.stats.proportion as stats
 
 
 dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))
-dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
+dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
 
 ids = np.array(dic['id'])
 scales = np.array(dic['scale'])
+clat = np.array(dic['clat'])
 
 uids, uinds = np.unique(dic['id'], return_index=True)
+uids2, uinds2 = np.unique(dic2['id'], return_index=True)
 
 udscale = np.unique(scales)
+pbulk_g30 = np.nansum(np.array(dic['bulk_g30'])[uinds])
+pbulk_g302 = np.nansum(np.array(dic2['bulk_g30'])[uinds2])
 
 print(np.percentile(scales, np.arange(0, 101, 20)))
 
-psum = np.concatenate(dic['circle_p'])
-tmin = np.concatenate(dic['circle_t'])
-
 scales2 = np.array(dic2['scale'])
-psum2 = np.concatenate(np.array(dic2['circle_p'])[scales2<=40])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[scales2<=40])
+clat2 = np.array(dic2['clat'])
+
+
+
+psum = np.concatenate(np.array(dic['circle_p'])[ (clat>=0)])
+tmin = np.concatenate(np.array(dic['circle_t'])[(clat>=0)])
+
+psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=200) &  (clat2>=0)])
+tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=200) & (clat2>=0)])
+
+
+pall_g30 = np.sum(psum >= 30)
+pall_g302 = np.sum(np.concatenate(np.array(dic2['circle_p'])[(clat2>=0)]) >= 30)
+
+
+pt15 = np.sum((tmin <= -65) & (psum>=30) )
+pp15 = np.sum(psum2>=30)
+
+
+print('Nb 30mm bulk T', pbulk_g30)
+print('Nb 30mm bulk T', pbulk_g302)
+print('Nb 30mm identified T', pall_g30)
+print('Nb 30mm identified S', pall_g302)
+
+print('Nb 30mm identified to bulk T', pall_g30 / pbulk_g30)
+print('Nb 30mm identified to bulk S', pall_g302 / pbulk_g302)
+print('Nb 30mm identified T65', pt15 / pall_g30)
+print('Nb 30mm identified S40', pp15 / pall_g302)
+
 
 bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
 print(bins)
@@ -50,9 +78,11 @@ ax2 = fig.add_subplot(222)
 ax3 = fig.add_subplot(223)
 ax4 = fig.add_subplot(224)
 
+pdb.set_trace()
+
 print('Tbins', bins)
-H1, bins1 = np.histogram(tmin[psum>=30], bins=bins, range=(-95, -40))
-H, bins = np.histogram(tmin[psum>=0], bins=bins, range=(-95, -40))
+H1, bins1 = np.histogram(tmin[(psum>=30) ], bins=bins, range=(-95, -40))
+H, bins = np.histogram(tmin[(psum>=0) ], bins=bins, range=(-95, -40))
 
 H = H.astype(float)
 H1 = H1.astype(float)

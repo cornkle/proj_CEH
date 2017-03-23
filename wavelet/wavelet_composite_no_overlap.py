@@ -16,6 +16,7 @@ import matplotlib
 from eod import tm_utils
 import multiprocessing
 import ipdb
+import pdb
 from collections import OrderedDict
 import pandas as pd
 import pickle as pkl
@@ -80,11 +81,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_30km_no.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_noC.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_30km_no.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_noC.p','wb'))
 
-    #pkl.dump(comp_collect, open(out + 'comp_collect_composite_no.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_noC.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -152,10 +153,7 @@ def file_loop(fi):
         o2[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
 
     wav = util.waveletT(o2, 5)
-    wl = wav['t']  # [nb, :, :]
 
-    maxout = (
-        wl == ndimage.maximum_filter(wl, (5, 5 ,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
     arr = np.array(wav['scales'], dtype=str)
 
@@ -164,19 +162,37 @@ def file_loop(fi):
     yp, xp = np.where(outp > 30)
 
     figure = np.zeros_like(outt)
+    #
+    # wl = wav['t']
+    #
+    # # maxout = (
+    # #     wl == ndimage.maximum_filter(wl, (2, 5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+    #
+    #
+    #   # & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+    #
 
     yyy=[]
     xxx=[]
+    scal=[]
     for nb in scale_ind[::-1]:
 
         orig = float(arr[nb])
         scale = int(np.round(orig))
 
+        wl = wav['t'][nb, :, :]
+
+        maxout = (
+            wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+
         try:
-            yy, xx = np.where((maxout[nb, :,:] == 1) & (outt <= -40))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+            yy, xx = np.where((maxout == 1) & (outt <= -40) & (wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
         except IndexError:
             continue
-        print(scale, yy,xx)
+
+        # yy, xx = np.where((maxout[nb,:,:] == 1) & (outt <= -40) & (wll > orig**.5))
+
+
 
         for y, x in zip(yy, xx):
 
@@ -187,18 +203,26 @@ def file_loop(fi):
 
             ycirc, xcirc = ua.draw_cut_circle(x, y, iscale+1, outp)
 
-            figure[ycirc, xcirc] = orig
+            figure[ycirc, xcirc] = np.round(orig)
             xxx.append(x)
             yyy.append(y)
+            scal.append(orig)
+    # f=plt.figure()
+    # plt.imshow(figure)
 
-
+    figure[np.isnan(outt)]=0
    # figure2 = np.zeros_like(outt)
 
-    for y, x in zip(yyy, xxx):
 
-        sc = figure[y,x]
+    for y, x, sc in zip(yyy, xxx, scal):
 
-        int_sc = int(sc)
+        if sc == 0:
+
+            continue
+
+        #print(sc, y, x)
+
+        int_sc = np.round(sc)
         radius = sc
         #radius = 30   # just looking at a fixed radius surrounding points defined by wavelet
 
@@ -218,7 +242,10 @@ def file_loop(fi):
 
         ycircf, xcircf = ua.draw_cut_circle(x, y, iscale+1, outp)
 
-        pos = np.where(figure[ycircf, xcircf] == sc)
+
+        pos = np.where(figure[ycircf, xcircf] == int_sc)
+
+        figure[ycircf[pos], xcircf[pos]] = 1000
         #
         # if int(sc) == 169:
         #
@@ -231,16 +258,19 @@ def file_loop(fi):
         circle_t = outt[ycircf[pos], xcircf[pos]]
         circle_valid = np.sum(np.isfinite(circle_p))
 
+
         if ((circle_valid) < 3 ):   # or (tmin > -70):
             continue
 
-        ## some rain
-        if np.nansum(circle_p) < 0.1:
-            continue
+        # ## some rain
+        # if np.nansum(circle_p) < 0.1:
+        #     continue
 
         circle_sum = np.nansum(circle_p)
         circle_nz = np.nansum(circle_p>0.1)
         circle_g30 = np.nansum(circle_p >= 30)
+
+        #print('circle_g30', circle_g30)
 
         try:
             circle_max = np.nanmax(circle_p)
@@ -260,6 +290,8 @@ def file_loop(fi):
             circle_p90 = np.nan
 
         #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
+
+        #print('GOING BACK')
 
         ret.append((kernel, kernelt, int_sc, id, dic['time.hour'].values.tolist(),
                     clat, clon, lat_min, lat_max, lon_min, lon_max, area,
@@ -286,20 +318,21 @@ def file_loop(fi):
     #
     #     ax.set_title(str(wav['scales'][s]))
     #
-    figure[figure == 0] = np.nan
-    f = plt.figure()
-    f.add_subplot(133)
-    plt.imshow(outt, cmap='inferno')
-    plt.imshow(figure, cmap='viridis')
-    f.add_subplot(132)
-    plt.imshow(figure, cmap='viridis')
-    plt.plot(xp, yp, 'yo', markersize=3)
-    plt.colorbar()
-    f.add_subplot(131)
-    plt.imshow(outt, cmap='inferno')
-
-
-    plt.show()
+    # figure[figure == 0] = np.nan
+    # f = plt.figure()
+    # f.add_subplot(133)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.imshow(figure, cmap='viridis')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.plot(xp, yp, 'ro', markersize=3)
+    # plt.colorbar()
+    # f.add_subplot(131)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.plot(xp, yp, 'ro', markersize=3)
+    #
+    #
+    # plt.show()
 
     dic.close()
 

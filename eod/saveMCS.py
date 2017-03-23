@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from utils import u_grid
 
 HOD = range(24)  # hours of day
-YRANGE = range(2004, 2014)
+YRANGE = range(2004, 2015)
 
 
 def saveMCS_WA15():
@@ -201,7 +201,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_lag1/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:
