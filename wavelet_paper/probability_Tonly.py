@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
-
+import sys
 
 
 dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))
@@ -31,17 +31,22 @@ pbulk_g302 = np.nansum(np.array(dic2['bulk_g30'])[uinds2])
 
 print(np.percentile(scales, np.arange(0, 101, 20)))
 
+ids2 = np.array(dic2['id'])
 scales2 = np.array(dic2['scale'])
 clat2 = np.array(dic2['clat'])
 
 
+psum = np.concatenate(np.array(dic['circle_p']))
+tmin = np.concatenate(np.array(dic['circle_t']))
 
-psum = np.concatenate(np.array(dic['circle_p'])[ (clat>=0)])
-tmin = np.concatenate(np.array(dic['circle_t'])[(clat>=0)])
+psum2 = np.concatenate(np.array(dic2['circle_p'])[scales2<=40])
+tmin2 = np.concatenate(np.array(dic2['circle_t'])[scales2<=40])
 
-psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=200) &  (clat2>=0)])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=200) & (clat2>=0)])
+print('T', np.sum((psum>=30) ))
+print('S', np.sum((psum2>=30) ))
 
+print('Tid', np.unique(ids).shape)
+print('Sid', np.unique(ids2).shape)
 
 pall_g30 = np.sum(psum >= 30)
 pall_g302 = np.sum(np.concatenate(np.array(dic2['circle_p'])[(clat2>=0)]) >= 30)
@@ -52,7 +57,7 @@ pp15 = np.sum(psum2>=30)
 
 
 print('Nb 30mm bulk T', pbulk_g30)
-print('Nb 30mm bulk T', pbulk_g302)
+print('Nb 30mm bulk S', pbulk_g302)
 print('Nb 30mm identified T', pall_g30)
 print('Nb 30mm identified S', pall_g302)
 
@@ -60,7 +65,6 @@ print('Nb 30mm identified to bulk T', pall_g30 / pbulk_g30)
 print('Nb 30mm identified to bulk S', pall_g302 / pbulk_g302)
 print('Nb 30mm identified T65', pt15 / pall_g30)
 print('Nb 30mm identified S40', pp15 / pall_g302)
-
 
 bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
 print(bins)
@@ -78,7 +82,6 @@ ax2 = fig.add_subplot(222)
 ax3 = fig.add_subplot(223)
 ax4 = fig.add_subplot(224)
 
-pdb.set_trace()
 
 print('Tbins', bins)
 H1, bins1 = np.histogram(tmin[(psum>=30) ], bins=bins, range=(-95, -40))
@@ -102,6 +105,7 @@ histo2 = H12 / H2 * 100.
 
 lower, upper = stats.proportion_confint(H1, H)
 lower2, upper2 = stats.proportion_confint(H12, H2)
+
 
 ax1.plot(center, histo,  linewidth=1.5 , marker='o', label='temperature only')
 ax1.plot(center, histo2,  linewidth=1.5 , marker='o', color='r', label='scale < 40km')
@@ -156,6 +160,6 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 
 plt.tight_layout()
-plt.savefig(path + 'wavelet_scale_p_Tonly.png')
+plt.savefig(path + 'wavelet_scale_p_Tonly_noC.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 plt.close('all')

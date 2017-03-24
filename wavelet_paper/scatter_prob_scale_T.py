@@ -230,7 +230,7 @@ def val_vs_extreme_2d():
     # plt.colorbar(label='Extreme pix / valid pix (%)')
 
     plt.tight_layout()
-    plt.savefig(path + 'extreme_fraction_sc_T.png')
+    plt.savefig(path + 'extreme_fraction_sc_T_blob2.png')
     # #plt.close('all')
 
 def probability():
@@ -351,7 +351,7 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T_c40.png')
+    plt.savefig(path + 'wavelet_scale_p_T_blobn.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

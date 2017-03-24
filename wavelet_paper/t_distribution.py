@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
 
 ids = np.array(df['id'])
 scales = np.array(df['scale'])

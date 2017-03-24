@@ -2,7 +2,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
+import pdb
 import seaborn as sns
 import pickle as pkl
 #pal = sns.color_palette('Blues')
@@ -24,7 +24,7 @@ print(keys)
 keys = sorted(keys)
 keys = np.array(keys)
 
-ranges = [15, 20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
+ranges = [14, 20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
 outrange = [20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
 
 out = []
@@ -34,6 +34,9 @@ for id, r in enumerate(ranges):
         continue
 
     klist = keys[(keys <= r) & (keys>ranges[id-1])]
+
+    print(r, len(klist))
+    print(klist)
 
     bbig = []
     ffin = []
@@ -46,7 +49,7 @@ for id, r in enumerate(ranges):
         p = np.array(comp_collect[k]['p'])
         t = np.array(comp_collect[k]['t'])
 
-        pos = np.where(t[:, 21, 21] <= -50)
+        pos = np.where(t[:, 21, 21] <= -40)
         pos = pos[0]
 
         big = (p>30)[pos,:,:]
@@ -71,7 +74,8 @@ for id, r in enumerate(ranges):
         nnz = np.concatenate(nnz, axis=0)
 
     except ValueError:
-        ipdb.set_trace()
+        print('return')
+
 
 
     bla = np.nansum(aarr, 0) / np.nansum(nnz, 0)

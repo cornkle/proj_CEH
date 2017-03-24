@@ -146,4 +146,4 @@ def kernel_no_zero(arr, xx, yy):
 """
 def cut_kernel(arr, xx, yy, r):
 
-    return arr[yy - r:yy + r+1, xx - r:xx + r+1]
+    return arr[yy - r:yy + r+1, xx - r:xx + r+1].copy()

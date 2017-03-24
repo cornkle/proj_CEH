@@ -2,7 +2,7 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
+import pdb
 
 from utils import u_statistics as ug
 
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 def run_scales():
-    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt300.pkl')
+    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p')
 
     hour = np.arange(0, 23, 1)
     center = (np.arange(23)) + 0.5
@@ -26,20 +26,27 @@ def run_scales():
     print(hour)
     print(scales)
 
+    sc = np.array(df['scale'])
+    lat = np.array(df['clat'])
+    hour = np.array(df['hour'])
+    tmin = np.array(df['circle_Tcentre'])
+    area = np.array(df['area'])
+
+
     for iind, s in enumerate(scales):
         if iind == 0:
             continue
         diurn40 = []
         diurn70 = []
         for ind, siz in enumerate(hour):
-            sums = df['scale'][
-                (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (df['clat'] > 4) & (
-                df['tmin'] < -40)].size
+            sums = sc[
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 4) & (
+                    tmin < -40)].size
             diurn40.append(sums)
 
-            sums = df['scale'][
-                (df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (df['clat'] > 4) & (
-                    df['tmin'] < -70)].size
+            sums = sc[
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 4) & (
+                    tmin < -70)].size
             diurn70.append(sums)
         print(s,diurn70)
         arr40[iind - 1, :] = diurn40
@@ -47,13 +54,13 @@ def run_scales():
     nb = []
     narea = []
     for ind, siz in enumerate(hour):
-        sums = np.unique(df['area'][(df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-        df['clat'] > 4) & (df['tmin'] < -40)]).size
-        ar = np.sum(df['area'][(df['scale'] >= scales[iind - 1]) & (df['scale'] < s) & (df['hour'] == siz) & (
-        df['clat'] > 4) & (df['tmin'] < -40)])
+        sums = np.unique(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
+            lat > 4) & (tmin < -40)]).size
+        ar = np.sum(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
+            lat > 4) & (tmin < -40)])
         nb.append(sums)
         narea.append(ar)
-
+    pdb.set_trace()
     arr40 = np.transpose(arr40.T / np.sum(arr40, axis=1))
     arr70 = np.transpose(arr70.T / np.sum(arr70, axis=1))
     mean40 = np.mean(arr40, axis=0)
