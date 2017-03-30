@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite_noC.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_no.p','rb'))
 
 
 siz = 3
@@ -49,7 +49,7 @@ for id, r in enumerate(ranges):
         p = np.array(comp_collect[k]['p'])
         t = np.array(comp_collect[k]['t'])
 
-        pos = np.where(t[:, 21, 21] <= -40)
+        pos = np.where(t[:, 21, 21] <= -50)
         pos = pos[0]
 
         big = (p>30)[pos,:,:]
@@ -102,7 +102,7 @@ for ind, k in enumerate(ll):
     fos = 9
 
     ax3 = f.add_subplot(4, 5, 11 + ind)
-    mp3 = ax3.imshow(outbla[0], cmap='viridis', vmin=3, vmax=7)  # vmin=0, vmax=6,
+    mp3 = ax3.imshow(outbla[0], cmap='viridis', vmin=3, vmax=8)  # vmin=0, vmax=6,
     plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax3.plot(20, 20, 'ro', markersize=siz)
     ax3.set_xticklabels(np.arange(-3, 3.1, 1))
@@ -120,7 +120,7 @@ for ind, k in enumerate(ll):
     cbar.set_label('Number of valid pixels', fontsize=fos)
 
     ax4 = f.add_subplot(4, 5, 16 + ind)
-    mp4 = ax4.imshow(outbla[2], vmin=0, vmax=3, cmap='viridis')
+    mp4 = ax4.imshow(outbla[2], vmin=0, vmax=4, cmap='viridis')
     plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax4.plot(20, 20, 'ro', markersize=siz)
     ax4.set_xticklabels(np.arange(-3, 3.1, 1))
@@ -137,7 +137,7 @@ for ind, k in enumerate(ll):
     cbar = plt.colorbar(mp1)
     cbar.set_label('TIR ($\circ$C)', fontsize=fos)
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noC.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_no.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

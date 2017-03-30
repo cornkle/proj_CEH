@@ -81,11 +81,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_no0.5.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_no.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_no0.5.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_no.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_no0.5.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_no.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -169,8 +169,8 @@ def file_loop(fi):
 
     wll = wav['t']#[nb, :, :]
 
-    # maxoutt = (
-    #     wll == ndimage.maximum_filter(wll, (1,5, 5), mode='reflect', cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+    maxoutt = (
+        wll == ndimage.maximum_filter(wll, (5,5, 5), mode='reflect', cval=np.amax(wll) + 1))  # (np.round(orig / 5))
 
     yyy=[]
     xxx=[]
@@ -183,13 +183,13 @@ def file_loop(fi):
         print(np.round(orig))
 
         wl = wll[nb, :, :]
-        #maxout = maxoutt[nb, :, :]
+        maxout = maxoutt[nb, :, :]
 
-        maxout = (
-            wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+        # maxout = (
+        #     wl == ndimage.maximum_filter(wl, (5,5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
         try:
-            yy, xx = np.where((maxout == 1) & (outt <= -40)  & (wl > orig**.5)) #(wl >= np.percentile(wl[wl >= 0.5], 90)))# & (wl > orig**.5))#& (wl >= np.percentile(wl[wl >= 0.5], 90))) #)& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+            yy, xx = np.where((maxout == 1) & (outt <= -40) & (wl >= np.percentile(wl[wl >= 0.5], 90))) #)& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
         except IndexError:
             continue
 
@@ -324,22 +324,22 @@ def file_loop(fi):
     #
     #     ax.set_title(str(wav['scales'][s]))
     #
-    # figure[figure == 0] = np.nan
-    # f = plt.figure()
-    # f.add_subplot(133)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.imshow(figure, cmap='viridis')
-    # f.add_subplot(132)
-    # plt.imshow(figure, cmap='viridis')
-    # plt.plot(xp, yp, 'ro', markersize=3)
-    # plt.colorbar()
-    # f.add_subplot(131)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.plot(xp, yp, 'ro', markersize=3)
-    # plt.plot(xxx, yyy, 'yo', markersize=3)
-    #
-    #
-    # plt.show()
+    figure[figure == 0] = np.nan
+    f = plt.figure()
+    f.add_subplot(133)
+    plt.imshow(outt, cmap='inferno')
+    plt.imshow(figure, cmap='viridis')
+    f.add_subplot(132)
+    plt.imshow(figure, cmap='viridis')
+    plt.plot(xp, yp, 'ro', markersize=3)
+    plt.colorbar()
+    f.add_subplot(131)
+    plt.imshow(outt, cmap='inferno')
+    plt.plot(xp, yp, 'ro', markersize=3)
+    plt.plot(xxx, yyy, 'yo', markersize=3)
+
+
+    plt.show()
 
     dic.close()
 

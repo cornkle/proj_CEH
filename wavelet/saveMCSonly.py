@@ -28,7 +28,7 @@ def run():
     m = msg.ReadMsg(msg_folder)
     files  = m.fpath
 
-    #files = files[0:5]
+    #files = files[0:1000]
 
     # make salem grid
     grid = u_grid.make(m.lon, m.lat, 5000)
@@ -45,21 +45,22 @@ def run():
     for f in files_str:
         passit.append((grid,m, f))
 
-    #res = pool.map(file_loop, passit)
+    res = pool.map(file_loop, passit)
 
 
+    #
+    # for l in passit:
+    #
+    #     test = file_loop(l)
 
-    for l in passit:
+    pool.close()
 
-        test = file_loop(l)
-
-    #pool.close()
-
-    return
+    #return
 
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
+    #da = da.sum(dim='time')
 
     savefile = '/users/global/cornkle/MCSfiles/blob_map_June.nc'
 
@@ -78,8 +79,6 @@ def file_loop(passit):
 
     grid = passit[0]
 
-    lon, lat = grid.ll_coordinates
-
     m = passit[1]
     files = passit[2]
 
@@ -87,9 +86,11 @@ def file_loop(passit):
 
     strr = files.split(os.sep)[-1]
 
-    if (np.int(strr[4:6]) != 6):  #(np.int(strr[8:10]) != 18)
+    if (np.int(strr[8:10]) > 5) & (np.int(strr[8:10]) < 15): #(np.int(strr[4:6]) != 6) &
         #print('Skip')
         return
+
+    lon, lat = grid.ll_coordinates
 
     ds = xr.Dataset()
 
@@ -113,14 +114,16 @@ def file_loop(passit):
         outt = dummyt.reshape((grid.ny, grid.nx))
 
         out = np.zeros_like(outt, dtype=np.int)
-        torig = outt.copy()
 
         outt[outt >= -40] = 150
         outt[np.isnan(outt)] = 150
 
         grad = np.gradient(outt)
-        outt[outt == 150] = -55
+        outt[outt == 150] = np.nan
 
+        nogood = np.isnan(outt)
+
+        outt[np.isnan(outt)] = -55
         nok = np.where(abs(grad[0]) > 80)
         d = 2
         i = nok[0]
@@ -131,47 +134,70 @@ def file_loop(passit):
             outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
 
         wav = util.waveletT(outt, 5)
+
+        outt[nogood] = np.nan
+
         arr = np.array(wav['scales'], dtype=str)
-        origs = np.array(wav['scales'], dtype=np.float)
-        scales = np.array(np.round(origs), dtype = np.int)
-        wl = wav['t']  # [nb, :, :]
-
-        maxout = (
-            wl == ndimage.maximum_filter(wl, (10, 10, len(arr)-1 ), mode='constant',
-                                         cval=np.amax(wl) + 1))
-
-
 
         scale_ind = range(arr.size)
 
-        for nb in scale_ind:
+        figure = np.zeros_like(outt)
 
-            orig = origs[nb]
-            scale = scales[nb]
+        wll = wav['t']  # [nb, :, :]
 
-            maxoutt = maxout[nb, :, :]
+        maxoutt = (
+            wll == ndimage.maximum_filter(wll, (5, 5, 5), mode='reflect',
+                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+
+        yyy = []
+        xxx = []
+        scal = []
+        for nb in scale_ind[::-1]:
+
+            orig = float(arr[nb])
+
+            if orig > 30:
+                continue
+
+            scale = int(np.round(orig))
+
+            print(np.round(orig))
+
+            wl = wll[nb, :, :]
+            maxout = maxoutt[nb, :, :]
+
+            # maxout = (
+            #     wl == ndimage.maximum_filter(wl, (5,5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxoutt == 1) & (torig <= -50))
+                yy, xx = np.where((maxout == 1) & (outt <= -67) & (wl >= np.percentile(wl[wl >= 0.5],
+                                                                                       90)))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
-            #print(scale, yy, xx)
-
 
             for y, x in zip(yy, xx):
 
                 ss = orig
-                #ss = 15  # just looking at a fixed radius surrounding points defined by wavelet
                 iscale = (np.ceil(ss / 2. / 5.)).astype(int)
 
-                ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, out)
+                ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                out[ycirc, xcirc] = scale
+                figure[ycirc, xcirc] = 1
+                xxx.append(x)
+                yyy.append(y)
+                scal.append(orig)
 
-        plt.imshow(out)
-        plt.show()
+        figure[np.isnan(outt)] = 0
+        #
+        # plt.figure()
+        # plt.imshow(figure)
+        # plt.show()
 
-        ipdb.set_trace()
+        print(np.sum(figure))
+
+        if np.sum(figure) < 10:
+            return
+
         hour = mdic['time.hour']
         minute = mdic['time.minute' ]
         day = mdic['time.day']
@@ -180,7 +206,7 @@ def file_loop(passit):
 
     date = dt.datetime(year, month, day, hour, minute)
 
-    da = xr.DataArray(out, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
+    da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 
 
     print('Did ', file)

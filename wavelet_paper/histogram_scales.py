@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 p = np.array(df['circle_p'])
 ids = np.array(df['id'])
@@ -80,4 +80,4 @@ for k, c in zip(outrange[::-1], colors):
 
 plt.legend()
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale_blobs.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale.png')

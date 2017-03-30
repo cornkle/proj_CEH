@@ -84,7 +84,7 @@ def partial_corr():
 def scatter_sc_t():
 
 
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -136,7 +136,7 @@ def scatter_sc_t():
 
 
 def val_vs_extreme_2d():
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -217,6 +217,7 @@ def val_vs_extreme_2d():
     plt.contour(bins, udscale, collect, cmap='Reds')
     plt.colorbar(label='Extreme rainfall fraction (%)')
     plt.contour(bins, udscale, collect2, cmap='Blues')
+
     plt.colorbar(label='Valid number of pixels (%)')
     plt.xlabel('Temperature ($^{\circ}$C)')
     plt.ylabel('Scale (km)')
@@ -230,13 +231,13 @@ def val_vs_extreme_2d():
     # plt.colorbar(label='Extreme pix / valid pix (%)')
 
     plt.tight_layout()
-    plt.savefig(path + 'extreme_fraction_sc_T_blob2.png')
+    plt.savefig(path + 'extreme_fraction_sc_T_noC.png')
     # #plt.close('all')
 
 def probability():
 
 
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -257,6 +258,7 @@ def probability():
     pbulk_g30 = np.array(dic['bulk_g30'])
     clat = np.array(dic['clat'])
 
+
     pp = np.concatenate(psum)
     tt = np.concatenate(tmin)
     pall_g30 = np.sum(pp>30)
@@ -276,8 +278,8 @@ def probability():
 
     bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [10, 40, 60, 205]
-    outrange = [ 40, 60,  205]
+    ranges = [10, 30, 70, 205]
+    outrange = [ 30, 70,  205]
     # #
     # ranges = [15, 30, 60, 202]
     # outrange = [    30, 60, 202]
@@ -342,8 +344,107 @@ def probability():
 
         pos = np.where(ids == iid)
 
+    ax1.set_xlabel('Min. Temperature (5 $^{\degree}C$ bins)')
+    ax1.set_ylabel('Probability (% | Max. precip $>$ 30 $mm\ h^{-1}$)')
+    plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(path + 'wavelet_scale_p_T.png')
+   # plt.savefig(path + 'wavelet_scale_p_T.pdf')
+    plt.close('all')
+
+def probability_perCircle():
 
 
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
+
+
+    ids = np.array(dic['id'])
+    scales = np.array(dic['scale'])
+
+    uids, uinds = np.unique(dic['id'], return_index=True)
+
+    udscale = np.unique(scales)
+
+    print(np.percentile(scales, np.arange(0,101,20)))
+
+    psum = np.array(dic['circle_g30'])
+    tmin = np.array(dic['circle_Tcentre'])
+    tbulk_min = np.array(dic['bulk_tmin_p'])
+    tbulk_mean = np.array(dic['bulk_tmean_p'])
+    pbulk_max = np.array(dic['bulk_pmax'])
+    pbulk_mean = np.array(dic['bulk_pmean'])
+    pbulk_g30 = np.array(dic['bulk_g30'])
+    clat = np.array(dic['clat'])
+
+    bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
+    print(bins)
+    ranges = [10, 30, 70, 205]
+    outrange = [ 30, 70,  205]
+    # #
+    # ranges = [15, 30, 60, 202]
+    # outrange = [    30, 60, 202]
+
+    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    fig = plt.figure(figsize=(15, 5), dpi=400)
+    cc = 0.8
+    width = 0.7 * (bins[1] - bins[0])
+
+    center = (bins[:-1] + bins[1:]) / 2
+
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    colors = cm.viridis_r(np.linspace(0, 1, len(outrange)))
+
+    for id, r in enumerate(ranges):
+        if id == 0:
+            continue
+
+        c = colors[id-1]
+        start = ranges[id-1]
+
+        t = tmin[(scales <= r) & (scales > ranges[id - 1])]
+        p = psum[(scales <= r) & (scales > ranges[id - 1])]
+        # t = tmin[(scales <= r) & (scales > ranges[id - 1])]
+        # p = pmax[(scales <= r) & (scales > ranges[id - 1])]
+
+        to30 = t[p>0]
+
+        # bins = np.percentile(t, np.arange(0,101,5))
+        # center = (bins[:-1] + bins[1:]) / 2
+
+        print('Tbins', bins)
+        H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -40))
+        H, bins = np.histogram(t, bins=bins, range=(-95, -40))
+        H = H.astype(float)
+        H1 = H1.astype(float)
+
+        #ipdb.set_trace()
+
+        H[H < 10] = np.nan
+
+        histo = H1 / H * 100.
+
+
+        lower, upper = stats.proportion_confint(H1, H)
+
+        ax1.plot(center, histo, color=c, linewidth=1.5, label=str(start)+'-'+str(r) + ' km',marker='o' )
+        ax1.set_title('Probability Precip>30mm')
+        ax1.fill_between(center, lower*100, upper*100, color=c, alpha=0.3)
+        ax2.plot(center, H, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
+        ax3.set_title('Number of rainfall pixel >30mm (nP)')
+        #ax2.set_ylim(0,160)
+
+        ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
+        ax3.set_title('Number of rainfall pixel >30mm (nP)')
+    tmean=[]
+    tmin = []
+    tcmean = []
+    for iid in uids:
+
+        pos = np.where(ids == iid)
 
     ax1.set_xlabel('Min. Temperature (5 $^{\degree}C$ bins)')
     ax1.set_ylabel('Probability (% | Max. precip $>$ 30 $mm\ h^{-1}$)')
@@ -351,7 +452,7 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T_blobn.png')
+    plt.savefig(path + 'wavelet_scale_p_T_no.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

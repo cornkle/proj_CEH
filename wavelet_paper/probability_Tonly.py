@@ -16,11 +16,13 @@ import sys
 
 
 dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))
-dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noC.p', 'rb'))
+dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 ids = np.array(dic['id'])
 scales = np.array(dic['scale'])
 clat = np.array(dic['clat'])
+hour = np.array(dic['hour'])
+hour2 = np.array(dic2['hour'])
 
 uids, uinds = np.unique(dic['id'], return_index=True)
 uids2, uinds2 = np.unique(dic2['id'], return_index=True)
@@ -36,11 +38,11 @@ scales2 = np.array(dic2['scale'])
 clat2 = np.array(dic2['clat'])
 
 
-psum = np.concatenate(np.array(dic['circle_p']))
+psum = np.concatenate(np.array(dic['circle_p'])) #[(hour>15) & (hour<23)]
 tmin = np.concatenate(np.array(dic['circle_t']))
 
-psum2 = np.concatenate(np.array(dic2['circle_p'])[scales2<=40])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[scales2<=40])
+psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=20)  ])
+tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=20)  ])
 
 print('T', np.sum((psum>=30) ))
 print('S', np.sum((psum2>=30) ))
@@ -160,6 +162,6 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 
 plt.tight_layout()
-plt.savefig(path + 'wavelet_scale_p_Tonly_noC.png')
+plt.savefig(path + 'wavelet_scale_p_no.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 plt.close('all')

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
 import multiprocessing
-import ipdb
+import pdb
 from collections import OrderedDict
 from scipy.ndimage.measurements import label
 import pandas as pd
@@ -82,11 +82,11 @@ def composite():
 
         precip[v[2]].extend(v[19])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_blobs_range.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_blobs.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_blobs_range.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_blobs.p', 'wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_blobs_range.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_blobs.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -104,19 +104,30 @@ def file_loop(fi):
 
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
-    #*0+1   ## ATTENTION CHANGED RAINFALL
 
-    bulk_tmean = np.nanmean(outt)
+    outt[np.isnan(outt)] = 150
+    outt[outt >= -40] = 150
+    grad = np.gradient(outt)
+    outt[outt == 150] = np.nan
+    outp[np.isnan(outt)] = np.nan
 
-    outp[np.isnan(outt)]=np.nan
 
     area = np.sum(outt <= -40)
-    lat = dic['lat'].values
-    bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))]>=30)
+    try:
+        bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    except ValueError:
+        return ret
+
+    # 2004-07-17_04:09:00_80.nc (127) is a huge circular storm. good example for organisation
+    #area gt 3000km2 cause that's 30km radius if circular
+    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax < 1) or (bulk_pmax > 200): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
+        print(area*25)
+        print('throw out')
+        return
+
+    print('Area', area*25)
+
+    perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -126,20 +137,12 @@ def file_loop(fi):
     lon_min = np.min(dic.lon.values)
     lon_max = np.max(dic.lon.values)
 
-
-    #area gt 3000km2 cause that's 30km radius if circular
-    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax < 1) or (bulk_pmax > 200): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
-        print(area*25)
-        print('throw out')
-        return
-
-    perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
-
-    outt[np.isnan(outt)] = 150
-    outt[outt >= -40] = 150
-    grad = np.gradient(outt)
-    outt[outt==150] = np.nan
-
+    bulk_tmean = np.nanmean(outt)
+    lat = dic['lat'].values
+    bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
+    bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
+    bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))] >= 30)
 
 
     o2 = outt.copy()
@@ -192,14 +195,17 @@ def file_loop(fi):
         idd = wav['scales'].tolist().index(sc)
         wll = wlperc[idd,:,:].copy()
       #  wll[wll < np.percentile(wll[wll >= 0.01], 90)] = 0
-        wll[wll < np.percentile(np.arange(wll.min(), wll.max()+0.1,0.1), 5)] = 0
-       # wll[wll < np.percentile(wll[wll >= 0.1], 50)] = 0
+      #  wll[wll < np.percentile(np.arange(wll.min(), wll.max()+0.1,0.1), 5)] = 0
+        wll[wll < np.percentile(wll[wll >= 0.05], 75)] = 0
+      #  wll[(wll < sc**.5)] = 0
 
 
         labels, numL = label(wll)
 
         figure[np.nonzero(labels)] = size[mimin]
+    figure[np.isnan(outt)]=0
 
+    # pdb.set_trace()
     # figure[figure==0]=np.nan
     # f = plt.figure()
     # f.add_subplot(131)
@@ -228,6 +234,9 @@ def file_loop(fi):
                 continue
 
             pos = np.where(labels_blob == blob) #(figure == sc)
+
+            if len(pos[0]) < 5:
+                continue
 
             circle_p = outp[pos]
             circle_t = outt[pos]
@@ -316,7 +325,7 @@ def file_loop(fi):
     plt.imshow(outt, cmap='inferno')
     plt.plot(xp, yp, 'yo', markersize=3)
     plt.show()
-    #
+    # #
     #
     # f = plt.figure()
     # fcnt = 0
