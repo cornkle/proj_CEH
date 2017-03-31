@@ -16,9 +16,9 @@ import pickle as pkl
 def probability():
 
 
-    df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
+    df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_0.5.p', 'rb'))
 
-    df2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs_range.p', 'rb'))
+    df2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_0.5.p', 'rb'))
 
     ids = np.array(df['id'])
     scales = np.array(df['scale'])
@@ -109,7 +109,7 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/prob_blobs_range.png')
+    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/prob_scatter_0.5.png')
     plt.close('all')
 
 

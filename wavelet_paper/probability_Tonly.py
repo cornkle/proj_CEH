@@ -16,7 +16,7 @@ import sys
 
 
 dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))
-dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
 
 ids = np.array(dic['id'])
 scales = np.array(dic['scale'])
@@ -41,8 +41,8 @@ clat2 = np.array(dic2['clat'])
 psum = np.concatenate(np.array(dic['circle_p'])) #[(hour>15) & (hour<23)]
 tmin = np.concatenate(np.array(dic['circle_t']))
 
-psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=20)  ])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=20)  ])
+psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=210)   ])
+tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=210)   ])
 
 print('T', np.sum((psum>=30) ))
 print('S', np.sum((psum2>=30) ))
@@ -162,6 +162,6 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 
 plt.tight_layout()
-plt.savefig(path + 'wavelet_scale_p_no.png')
+plt.savefig(path + 'wavelet_scale_p.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 plt.close('all')

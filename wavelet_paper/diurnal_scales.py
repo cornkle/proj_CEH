@@ -12,12 +12,12 @@ import matplotlib.pyplot as plt
 
 
 def run_scales():
-    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p')
+    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p')
 
     hours = np.arange(0, 23, 1)
     center = (np.arange(23)) + 0.5
 
-    scales = np.arange(15, 211, 25)
+    scales = np.arange(15, 211, 15)
 
 
     print(scales)
@@ -41,12 +41,12 @@ def run_scales():
         diurn70 = []
         for ind, siz in enumerate(hours):
             sums = sc[
-                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 7) & (
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
                     tmin < -50)].size
             diurn40.append(sums)
 
             sums = sc[
-                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 7) & (
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
                     tmin < -70)].size
             diurn70.append(sums)
         print(s,diurn70)
@@ -202,12 +202,12 @@ def run_tmin():
     plt.legend()
 
 def run_pcp():
-    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p')
+    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no0.5.p')
 
     hours = np.arange(0, 23, 1)
-    center = (np.arange(23)) + 0.5
+    center = (np.arange(0, 23, 1)) + 0.5
 
-    scales = np.arange(15, 110, 10)
+    scales = np.arange(15, 210, 25)
 
     print(scales)
 
@@ -216,7 +216,8 @@ def run_pcp():
     hour = np.array(df['hour'])
     tmin = np.array(df['circle_Tcentre'])
     area = np.array(df['area'])
-    p = np.array(df['circle_g30'])
+    p = np.array(df['circle_sum'])
+
 
     arr40 = np.zeros((scales.size - 1, hours.size))
     arr70 = np.zeros((scales.size - 1, hours.size))
@@ -228,16 +229,20 @@ def run_pcp():
         if iind == 0:
             continue
         diurn40 = []
+
         diurn70 = []
+
         for ind, siz in enumerate(hours):
             sums = np.nansum(p[
-                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 4) & (
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
                     tmin < -50)])
+
             diurn40.append(sums)
 
             sums = np.nansum(p[
-                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 4) & (
+                (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
                     tmin < -70)])
+
             diurn70.append(sums)
         print(s, diurn70)
 

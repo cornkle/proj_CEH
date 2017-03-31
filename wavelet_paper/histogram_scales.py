@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_0.5.p', 'rb'))
 
 p = np.array(df['circle_p'])
 ids = np.array(df['id'])
@@ -67,7 +67,10 @@ for k, c in zip(outrange[::-1], colors):
 
     p = dic[k][dic[k] > 0.1]
 
+    mean = np.percentile(p, 99)
+
     plt.scatter(np.zeros(len(p))+k, p)
+    plt.scatter(k, mean, color='black')
     plt.xlabel('Scale')
     plt.ylabel('Rain intensity (mm h-1)')
 #     weights = np.ones_like(dic[k]) / float(len(dic[k]))
@@ -80,4 +83,4 @@ for k, c in zip(outrange[::-1], colors):
 
 plt.legend()
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale_0.5.png')

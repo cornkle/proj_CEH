@@ -16,7 +16,7 @@ from scipy import stats
 
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no0.5.p', 'rb'))
 
 scales = np.unique(df['scale'])
 scales_all = np.array(df['scale'])
@@ -80,4 +80,4 @@ ax1.legend(fontsize = 9)
 ax2.legend(fontsize = 9)
 
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/scatter_scaless.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/scatter_scales_no0.5.png')

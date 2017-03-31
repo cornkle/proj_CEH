@@ -237,7 +237,7 @@ def val_vs_extreme_2d():
 def probability():
 
 
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -278,8 +278,8 @@ def probability():
 
     bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [10, 30, 70, 205]
-    outrange = [ 30, 70,  205]
+    ranges = [10, 30, 60, 110, 205]
+    outrange = [ 30, 60, 110,  205]
     # #
     # ranges = [15, 30, 60, 202]
     # outrange = [    30, 60, 202]

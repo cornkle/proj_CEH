@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
+df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
 ids = np.array(df['id'])
 scales = np.array(df['scale'])
@@ -100,5 +100,5 @@ for id,k in enumerate(outrange):
 
 
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/t_histogram.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/t_histogram_no.png')
 plt.close('all')
