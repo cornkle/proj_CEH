@@ -7,16 +7,21 @@ import numpy as np
 
 
 file = '/users/global/cornkle/MCSfiles/blob_map_June.nc'
+file2 = '/users/global/cornkle/MCSfiles/blob_map_June_02.nc'
 fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
 
 ds = xr.open_dataarray(file)
 top = xr.open_dataarray(fpath)
+ds2 = xr.open_dataarray(file2)
 map = ds.salem.get_map(cmap='viridis')
 
 grid = ds.salem.grid
 
 print(ds.time.values[0], ds.time.values[-1])
 ds = ds.sum(dim='time')
+ds2 = ds2.sum(dim='time')
+
+tot = ds+ds2
 
 # read the ocean shapefile (data from http://www.naturalearthdata.com)
 oceans = salem.read_shapefile(salem.get_demo_file('ne_50m_ocean.shp'),
@@ -29,7 +34,7 @@ mask_default = grid.region_of_interest(shape=oceans)
 mask_default_lakes = grid.region_of_interest(shape=lakes)
 
 
-map.set_data(ds)
+map.set_data(tot)
 #map.set_contour(z)
 map.set_shapefile(oceans=True)
 map.set_shapefile(rivers=True)
