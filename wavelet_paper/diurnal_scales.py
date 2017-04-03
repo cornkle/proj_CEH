@@ -364,8 +364,9 @@ def run_pcp():
     plt.show()
 
 def run_pcp_T():
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = 'D://data/wavelet/saves/pandas/'
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+   # path = 'D://data/wavelet/saves/pandas/'
 
     df = pkl.load(open(path + '3dmax_gt15000_no.p', 'rb'))
     hours = np.arange(0, 23, 1)
@@ -477,7 +478,7 @@ def run_pcp_T():
     plt.colorbar(label='%')
     #  plt.contourf(center, scales[0:-1] + 25, std70, hatches=['..'], colors='none', levels=[0.5, 1.5])
     plt.tight_layout()
-    # plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/diurnal/scale_contour.png')
+    # plt.savefig(fpath+'/scale_contour.png')
 
 
 

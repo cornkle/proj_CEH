@@ -28,7 +28,7 @@ def run():
     m = msg.ReadMsg(msg_folder)
     files  = m.fpath
 
-    #files = files[0:1000]
+    files = files[15000:30000]
 
     # make salem grid
     grid = u_grid.make(m.lon, m.lat, 5000)
@@ -62,7 +62,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_June.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_June_02.nc'
 
     try:
         os.remove(savefile)
@@ -86,7 +86,7 @@ def file_loop(passit):
 
     strr = files.split(os.sep)[-1]
 
-    if (np.int(strr[8:10]) > 5) & (np.int(strr[8:10]) < 15): #(np.int(strr[4:6]) != 6) &
+    if (np.int(strr[8:10]) > 3) & (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) &
         #print('Skip')
         return
 
@@ -156,7 +156,7 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig > 30:
+            if orig < 100:
                 continue
 
             scale = int(np.round(orig))

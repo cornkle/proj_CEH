@@ -14,10 +14,11 @@ import pickle as pkl
 import statsmodels.stats.proportion as stats
 import sys
 
-path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-path = 'D://data/wavelet/saves/pandas/'
+fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+#path = 'D://data/wavelet/saves/pandas/'
+path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
 dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
-dic2 = pkl.load(open(path+'3dmax_gt15000.p', 'rb'))
+dic2 = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
 
 ids = np.array(dic['id'])
 scales = np.array(dic['scale'])
@@ -39,11 +40,11 @@ scales2 = np.array(dic2['scale'])
 clat2 = np.array(dic2['clat'])
 
 
-psum = np.concatenate(np.array(dic['circle_p'])[(clat>10)]) #[(hour>15) & (hour<23)]
-tmin = np.concatenate(np.array(dic['circle_t'])[(clat>10)])
+psum = np.concatenate(np.array(dic['circle_p'])) #[(hour>15) & (hour<23)]
+tmin = np.concatenate(np.array(dic['circle_t']))
 
-psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=15) &  (clat2>10)])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=15) &  (clat2>10)  ])
+psum2 = np.concatenate(np.array(dic2['circle_p']))
+tmin2 = np.concatenate(np.array(dic2['circle_t']))
 
 print('T', np.sum((psum>=30) ))
 print('S', np.sum((psum2>=30) ))
@@ -163,6 +164,6 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 
 plt.tight_layout()
-plt.savefig(path + 'wavelet_scale_p_20_time.png')
+plt.savefig(fpath + 'wavelet_scale_p_no.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 plt.close('all')

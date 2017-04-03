@@ -2,7 +2,7 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
+import pdb
 import matplotlib.cm as cm
 
 from utils import u_statistics as ug
@@ -15,10 +15,11 @@ import pickle as pkl
 
 #df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
 
-path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-path = 'D://data/wavelet/saves/pandas/'
+fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+# path = 'D://data/wavelet/saves/pandas/'
 
-df = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
+df = pkl.load(open(path+'3dmax_gt15000_0.5.p', 'rb'))
 
 ids = np.array(df['id'])
 scales = np.array(df['scale'])
@@ -26,6 +27,7 @@ scales = np.array(df['scale'])
 udscale = np.sort(np.unique(scales))
 tmin = np.array(df['circle_Tcentre'])
 tmin = np.array(df['circle_t'])
+lat = np.array(df['clat'])
 
 for id, tt in enumerate(tmin):
     tmin[id] = np.nanmean(tt)
@@ -36,12 +38,15 @@ ranges = [10, 30, 50, 70,180]
 outrange = [ 30, 50, 70,  180]
 
 dic = {}
+dic_l = {}
 for id, r in enumerate(ranges):
     if id == 0:
         continue
 
+    llat = lat[(scales <= r) & (scales > ranges[id - 1])]
     t = tmin[(scales <= r) & (scales>ranges[id-1])]
     dic[r] = t
+    dic_l[r] = llat
 
 
 
@@ -61,11 +66,12 @@ colors = cm.viridis_r(np.linspace(0,1,len(outrange)))
 #     plt.title('Sub-system temperature minima, >15000km2')
 
 
-ax = f.add_subplot(121)
+ax = f.add_subplot(131)
 
 for id,k in enumerate(outrange):  #
     c = colors[id]
     weights = np.ones_like(dic[k]) / float(len(dic[k]))
+    pdb.set_trace()
     hist, h = np.histogram(dic[k], bins=np.arange(-90,-44,3), weights=weights, range=(-90,-45)) # weights=weights,
     print(np.sum(hist))
     print(k)
@@ -90,7 +96,7 @@ arr = np.sum(np.vstack(arr_list), 0)
 
 arr[arr==0] = np.nan
 
-ax = f.add_subplot(122)
+ax = f.add_subplot(132)
 for id,k in enumerate(outrange):
     a = arr_list[id]
     hhist = a / arr
@@ -103,7 +109,26 @@ for id,k in enumerate(outrange):
     plt.annotate('b)', xy=(0.55, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
 
+ax = f.add_subplot(133)
+weights = np.ones_like(lat) / float(len(lat))
+histm, h = np.histogram(lat, bins=np.arange(4, 20, 3), weights=weights, range=(4, 20))  # weights=weights,
+
+for id,k in enumerate(outrange):
+    c = colors[id]
+    weights = np.ones_like(dic_l[k]) / float(len(dic_l[k]))
+    hist, h = np.histogram(dic_l[k], bins=np.arange(4, 20, 3), weights=weights, range=(4, 20))  # weights=weights,
+
+    print(np.sum(hist))
+    print(k)
+    ax.plot(h[1::] - 0.5, hist-histm, color=c, lw=2, label=str(ranges[id]) + '-' + str(k) + ' km', marker='o')
+    plt.legend(fontsize=8)
+    plt.ylabel('Normalised frequency')
+    plt.xlabel('Latitude')
+    plt.annotate('a)', xy=(0.08, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')  # transform=ax.transAxes,
+    # plt.title('Sub-system temperature minima, >15000km2')
+
 
 plt.tight_layout()
-plt.savefig(path+'t_histogram_no.png')
+plt.savefig(fpath+'t_histogram.png')
 plt.close('all')
