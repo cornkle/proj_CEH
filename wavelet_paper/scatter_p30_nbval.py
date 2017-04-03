@@ -2,7 +2,7 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
+import pdb
 import matplotlib.cm as cm
 
 from utils import u_statistics as ug
@@ -14,20 +14,18 @@ import pickle as pkl
 from scipy import stats
 
 
+path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+path = 'D://data/wavelet/saves/pandas/'
 
-
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no0.5.p', 'rb'))
+df = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
 
 scales = np.unique(df['scale'])
+scales = scales[scales<=180]
 scales_all = np.array(df['scale'])
-nbval = np.array(df['circle_nz'])
-p30 = np.array(df['circle_sum'])
-area = np.array(df['circle_val'])
+p = np.array(df['circle_p'])
+
 tmin = np.array(df['circle_Tcentre'])
-
-
-sum_avg_grad = np.sum(p30)/np.sum(nbval)
-print(sum_avg_grad)
 
 f = plt.figure(figsize=(15, 8), dpi=400)
 ax1 = f.add_subplot(121)
@@ -40,23 +38,22 @@ x = []
 y = []
 for k,c in zip(scales[::-1], colors): #
 
-    pos = np.where((scales_all == k))# )
+    pos = np.where((scales_all == k) & (tmin <= -70))# )
 
-    pval = np.mean(nbval[pos])
-    pp30 = np.mean(p30[pos])
-    psum30 = np.sum(p30[pos])
-    psumval = np.sum(nbval[pos])
-
-    aarea = area[pos]
+    pp30 = np.nansum(np.concatenate(p[pos])>=30)/p[pos].size
+    pval = np.nansum(np.concatenate(p[pos])>=0.1)/p[pos].size
+    pp30m = np.nansum(np.concatenate(p[pos]) >= 30)
+    pvalm = np.nansum(np.concatenate(p[pos]) >= 0.1)
 
     ax1.scatter(pval, pp30, color=c, label=str(k))
+
    # ax1.set_xlim((0,10000))
-   # ax1.set_ylim((0,1000))
+   # ax1.set_ylim((0,120))
 
     ax1.set_ylabel('average nb pix > 30 mm h-1')
     ax1.set_xlabel('average nb pix > 0.1 mm h-1')
 
-    ax2.scatter(k, pp30/pval, color=c, label=str(k))
+    ax2.scatter(k, pp30m/pvalm, color=c, label=str(k))
     ax1.set_ylabel('nb pix > 30 mm h-1')
     ax1.set_xlabel('nb pix > 0.1 mm h-1')
 
@@ -80,4 +77,4 @@ ax1.legend(fontsize = 9)
 ax2.legend(fontsize = 9)
 
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/scatter_scales_no0.5.png')
+plt.savefig(path+'scatter_scales_sum_no_nz.png')

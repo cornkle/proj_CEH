@@ -13,22 +13,27 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+#df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+
+path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+path = 'D://data/wavelet/saves/pandas/'
+
+df = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
 
 ids = np.array(df['id'])
 scales = np.array(df['scale'])
 
 udscale = np.sort(np.unique(scales))
 tmin = np.array(df['circle_Tcentre'])
-#tmin = np.array(df['circle_t'])
+tmin = np.array(df['circle_t'])
 
-# for id, tt in enumerate(tmin):
-#     tmin[id] = np.nanmean(tt)
+for id, tt in enumerate(tmin):
+    tmin[id] = np.nanmean(tt)
 
 # ranges = [15, 20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
 # outrange = [20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
-ranges = [15, 40,  70, 150, 200]
-outrange = [ 40,  70,  150, 200]
+ranges = [10, 30, 50, 70,180]
+outrange = [ 30, 50, 70,  180]
 
 dic = {}
 for id, r in enumerate(ranges):
@@ -67,7 +72,7 @@ for id,k in enumerate(outrange):  #
     ax.plot(h[1::]-0.5, hist, color=c, lw=2, label=str(ranges[id])+'-'+str(k) + ' km', marker='o')
     plt.legend(fontsize=8)
     plt.ylabel('Normalised frequency')
-    plt.xlabel('T$_{PM}$')
+    plt.xlabel('T$_{Mean}$')
     plt.annotate('a)', xy=(0.08,0.94),xytext=(0,4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points') #transform=ax.transAxes,
     #plt.title('Sub-system temperature minima, >15000km2')
@@ -93,12 +98,12 @@ for id,k in enumerate(outrange):
     ax.plot(h[1::]-0.5, hhist*100, color=c, lw=2, label=str(ranges[id])+'-'+str(k) + ' km', marker='o')
     plt.legend(fontsize=8)
     plt.ylabel('Fraction (%)')
-    plt.xlabel('T$_{PM}$')
+    plt.xlabel('T$_{Mean}$')
    # plt.title('Sub-system temperature minima, >15000km2')
     plt.annotate('b)', xy=(0.55, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
 
 
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/t_histogram_no.png')
+plt.savefig(path+'t_histogram_no.png')
 plt.close('all')

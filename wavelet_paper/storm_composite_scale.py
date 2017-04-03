@@ -65,25 +65,25 @@ for s in uscales:
     sumup_mean = []
     for i in weak:
 
-        sumup_weak.append(tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
+        sumup_weak.append( len(scales_all[(ids == i) & (scales_all == s) & (tmin <=-50)]))
 
 
     for i in strong:
        # print(scales_all[(ids == i)])
-        sumup_strong.append( tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
+        sumup_strong.append(  len(scales_all[(ids == i) & (scales_all == s) & (tmin <=-50)]))
 
     for i in uids:
        # print(scales_all[(ids == i)])
-        sumup_mean.append( tmin[(ids == i) & (scales_all == s) & (tmin <=-50)])
+        sumup_mean.append( len(scales_all[(ids == i) & (scales_all == s) & (tmin <=-50)]))
 
-    weak_scales.append(np.nanmean(np.concatenate(sumup_weak)))
-    strong_scales.append(np.nanmean(np.concatenate(sumup_strong)))
-    mean_scales.append(np.nanmean(np.concatenate(sumup_mean)))
+    weak_scales.append(np.mean((sumup_weak)))
+    strong_scales.append(np.mean((sumup_strong)))
+    mean_scales.append(np.mean((sumup_mean)))
 
-    wupper.append(stats.zconfint(np.concatenate(sumup_weak))[1])
-    wlower.append(stats.zconfint(np.concatenate(sumup_weak))[0])
-    supper.append(stats.zconfint(np.concatenate(sumup_strong))[1])
-    slower.append(stats.zconfint(np.concatenate(sumup_strong))[0])
+    # wupper.append(stats.zconfint(np.concatenate(sumup_weak))[1])
+    # wlower.append(stats.zconfint(np.concatenate(sumup_weak))[0])
+    # supper.append(stats.zconfint(np.concatenate(sumup_strong))[1])
+    # slower.append(stats.zconfint(np.concatenate(sumup_strong))[0])
 
 
 
@@ -108,5 +108,3 @@ plt.show()
 # #ax4 = f.add_subplot(224)
 #
 # ax1.scatter(scales_all, p30)
-
-

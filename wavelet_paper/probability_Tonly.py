@@ -14,9 +14,10 @@ import pickle as pkl
 import statsmodels.stats.proportion as stats
 import sys
 
-
-dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))
-dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
+path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+path = 'D://data/wavelet/saves/pandas/'
+dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
+dic2 = pkl.load(open(path+'3dmax_gt15000.p', 'rb'))
 
 ids = np.array(dic['id'])
 scales = np.array(dic['scale'])
@@ -38,11 +39,11 @@ scales2 = np.array(dic2['scale'])
 clat2 = np.array(dic2['clat'])
 
 
-psum = np.concatenate(np.array(dic['circle_p'])) #[(hour>15) & (hour<23)]
-tmin = np.concatenate(np.array(dic['circle_t']))
+psum = np.concatenate(np.array(dic['circle_p'])[(clat>10)]) #[(hour>15) & (hour<23)]
+tmin = np.concatenate(np.array(dic['circle_t'])[(clat>10)])
 
-psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=210)   ])
-tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=210)   ])
+psum2 = np.concatenate(np.array(dic2['circle_p'])[(scales2<=15) &  (clat2>10)])
+tmin2 = np.concatenate(np.array(dic2['circle_t'])[(scales2<=15) &  (clat2>10)  ])
 
 print('T', np.sum((psum>=30) ))
 print('S', np.sum((psum2>=30) ))
@@ -72,7 +73,7 @@ bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature
 print(bins)
 
 
-path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+
 fig = plt.figure(figsize=(15, 10), dpi=400)
 cc = 0.8
 width = 0.7 * (bins[1] - bins[0])
@@ -162,6 +163,6 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 
 plt.tight_layout()
-plt.savefig(path + 'wavelet_scale_p.png')
+plt.savefig(path + 'wavelet_scale_p_20_time.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 plt.close('all')
