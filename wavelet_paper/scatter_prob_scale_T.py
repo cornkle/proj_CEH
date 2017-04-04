@@ -243,7 +243,7 @@ def probability():
     path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
+    dic = pkl.load(open(path + '3dmax_gt15000_no.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -281,10 +281,10 @@ def probability():
     print ('Nb 30mm pixel identified lt -65 to to identified', np.sum(pt15>=30) / pall_g30)
 
 
-    bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
+    bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [10, 20, 50, 90, 150]
-    outrange = [ 20, 50, 90,  150]
+    ranges = [10, 30, 60, 90, 180]
+    outrange = [ 30, 60, 90,  180]
     # #
     # ranges = [15, 30, 60, 202]
     # outrange = [    30, 60, 202]
@@ -300,6 +300,10 @@ def probability():
     ax2 = fig.add_subplot(132)
     ax3 = fig.add_subplot(133)
     colors = cm.viridis_r(np.linspace(0, 1, len(outrange)))
+
+    hh = []
+    low = []
+    up = []
 
     for id, r in enumerate(ranges):
         if id == 0:
@@ -319,8 +323,8 @@ def probability():
         # center = (bins[:-1] + bins[1:]) / 2
 
         print('Tbins', bins)
-        H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -40))
-        H, bins = np.histogram(t, bins=bins, range=(-95, -40))
+        H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -45))
+        H, bins = np.histogram(t, bins=bins, range=(-95, -45))
         H = H.astype(float)
         H1 = H1.astype(float)
 
@@ -340,12 +344,10 @@ def probability():
 
         ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
         ax3.set_title('Number of rainfall pixel >30mm (nP)')
-    tmean=[]
-    tmin = []
-    tcmean = []
-    for iid in uids:
 
-        pos = np.where(ids == iid)
+        hh.append(histo)
+        low.append(lower)
+        up.append(upper)
 
     ax1.set_xlabel('Min. Temperature (5 $^{\degree}C$ bins)')
     ax1.set_ylabel('Probability (% | Max. precip $>$ 30 $mm\ h^{-1}$)')
@@ -356,11 +358,15 @@ def probability():
     plt.savefig(path + 'wavelet_scale_p_T.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
+
+    return center, hh, low, up
 #
 def probability_perCircle():
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    path = 'D://data/wavelet/saves/pandas/'
 
-
-    dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_no.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000_no0.5.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -373,18 +379,22 @@ def probability_perCircle():
     print(np.percentile(scales, np.arange(0,101,20)))
 
     psum = np.array(dic['circle_max'])
-    tmin = np.array(dic['circle_Tcentre'])
+    tmin = np.array(dic['circle_t'])
+
+    for id , t in enumerate(tmin):
+        tmin[id] = np.nanmin(t)
 
 
-    bins = np.array(list(range(-95, -39, 5)))  # compute probability per temperature range (1degC)
+
+    bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [10, 20, 50, 90, 150]
-    outrange = [ 20, 50, 90,  150]
+    ranges = [10, 30, 60, 90, 180]
+    outrange = [ 30, 60, 90,  180]
     # #
     # ranges = [15, 30, 60, 202]
     # outrange = [    30, 60, 202]
 
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+
     fig = plt.figure(figsize=(15, 5), dpi=400)
     cc = 0.8
     width = 0.7 * (bins[1] - bins[0])
@@ -395,7 +405,9 @@ def probability_perCircle():
     ax2 = fig.add_subplot(132)
     ax3 = fig.add_subplot(133)
     colors = cm.viridis_r(np.linspace(0, 1, len(outrange)))
-
+    hh = []
+    low=[]
+    up=[]
     for id, r in enumerate(ranges):
         if id == 0:
             continue
@@ -416,8 +428,8 @@ def probability_perCircle():
         # center = (bins[:-1] + bins[1:]) / 2
 
         print('Tbins', bins)
-        H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -40))
-        H, bins = np.histogram(t, bins=bins, range=(-95, -40))
+        H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -45))
+        H, bins = np.histogram(t, bins=bins, range=(-95, -45))
         H = H.astype(float)
         H1 = H1.astype(float)
 
@@ -439,6 +451,10 @@ def probability_perCircle():
 
         ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
         ax3.set_title('Number of rainfall pixel >30mm (nP)')
+
+        hh.append(histo)
+        low.append(lower)
+        up.append(upper)
     tmean=[]
     tmin = []
     tcmean = []
@@ -456,5 +472,58 @@ def probability_perCircle():
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
+    return center, hh, low, up
+
+
+def plot():
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    path = 'D://data/wavelet/saves/pandas/'
+    fpath = 'D://data/wavelet/saves/pandas/'
+
+    x,y, l, u = probability()
+
+    xx,yy,ll,uu = probability_perCircle()
+
+    ranges = ['15-30', '30-60', '60-90', '90-180']
+
+    f = plt.figure(figsize=(12, 5), dpi=400)
+
+    ax1 = f.add_subplot(121)
+    ax2 = f.add_subplot(122)
+
+    colors = cm.viridis_r(np.linspace(0, 1, len(ranges)))
+
+    for yl, c,  rang, rl, ru in zip(y,colors, ranges,l, u):
+
+        ax1.plot(xx, yl, color=c, linewidth=1.5, label=rang+ ' km', marker='o')
+        ax1.fill_between(xx, rl * 100, ru * 100, color=c, alpha=0.3)
+
+    for yl, c,  rang, rl, ru in zip(yy,colors, ranges,ll, uu):
+        ax2.plot(xx, yl, color=c, linewidth=1.5, label=rang+ ' km', marker='o')
+        ax2.fill_between(xx, rl * 100, ru * 100, color=c, alpha=0.3)
+
+
+    ax1.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
+    ax1.set_ylabel('Pixel probability (%)') #| Pixel precip $>$ 30 $mm\ h^{-1}$)')
+    ax1.set_ylim(-1,45)
+    ax1.minorticks_on()
+    plt.legend()
+
+    ax2.set_xlabel('SCF min. temperature (5 $^{\degree}C$ bins)')
+    ax2.set_ylabel('SCF probability (%)')# | Max. precip $>$ 30 $mm\ h^{-1}$)')
+    ax2.set_ylim(-1, 86)
+    ax2.minorticks_on()
+
+    plt.text(0.03, 0.93, 'a)', transform=ax1.transAxes, fontsize=16)
+    plt.text(0.03, 0.93, 'b)', transform=ax2.transAxes, fontsize=16)
+
+
+    plt.tight_layout()
+    plt.savefig(fpath + 'wavelet_scale_p_T_paper.png')
+    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
+    plt.close('all')
+
+
 if __name__ == "__main__":
-    probability_perCircle()
+    plot()
