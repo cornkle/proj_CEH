@@ -27,18 +27,22 @@ def saveMCS_WA15():
 
     cnt = 0
 
+    # define the "0 lag" frist
+    arr = np.array([15, 30, 45, 60, 0])
+
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
     for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
 
         tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[3, 26])
 
-        # define the "0 lag" frist
-        arr = np.array([15, 30, 45, 60, 0])
+
         #dm = arr - _mi
         dm = arr - _mi
         dm = dm[dm<0]
-
-        ind = (np.abs(dm)).argmin()
+        try:
+            ind = (np.abs(dm)).argmin()
+        except ValueError:
+            continue
 
         # set zero shift time for msg
         date = dt.datetime(_y, _m, _d, _h, _mi)
@@ -51,7 +55,11 @@ def saveMCS_WA15():
         # check whether date is completely missing or just 30mins interval exists
         if not mdic:
             dm = np.delete(dm, np.argmin(np.abs(dm)), axis=0)
-            if np.min(np.abs(dm))> 15:
+            try:
+                dummy = np.min(np.abs(dm))> 15
+            except ValueError:
+                continue
+            if dummy:
                 print('Date missing')
                 continue
             ind = (np.abs(dm)).argmin()
@@ -96,9 +104,9 @@ def saveMCS_WA15():
             td = t.get_ddata(_y, _m, _d, _h, _mi, cut=[latmin - 1, latmax + 1])
 
             # ensure minimum trmm rainfall in area
-            if len(np.where(td['p'].values > 0.1)[0]) < 1:  # at least 1 pixel with rainfall
-                print('Kickout: TRMM min pixel < 1')
-                continue
+            # if len(np.where(td['p'].values > 0.1)[0]) < 1:  # at least 1 pixel with rainfall
+            #     print('Kickout: TRMM min pixel < 1')
+            #     continue
 
             dt0 = dm[ind]
             ndate = date + dt.timedelta(minutes=int(dt0))
@@ -119,10 +127,17 @@ def saveMCS_WA15():
             inter, tpoints = u_grid.griddata_input(td['lon'].values, td['lat'].values, grid)
 
             # Interpolate TRMM using delaunay triangularization
-            dummyt = griddata(tpoints, td['p'].values.flatten(), inter, method='linear')
+            try:
+                dummyt = griddata(tpoints, td['p'].values.flatten(), inter, method='linear')
+            except ValueError:
+                continue
             outt = dummyt.reshape((grid.ny, grid.nx))
-            if len(np.where(outt > 0.1)[0]) < 2:  # at least 2 pixel with rainfall
-                print('Kickout: TRMM wavelet min pixel pcp < 2')
+            # if len(np.where(outt > 0.1)[0]) < 2:  # at least 2 pixel with rainfall
+            #     print('Kickout: TRMM wavelet min pixel pcp < 2')
+            #     continue
+
+            if np.sum(np.isfinite(outt)) < 5:  # at least 2 valid pixel
+                print('Kickout: TRMM wavelet min pixel  < 2')
                 continue
 
             # Interpolate TRMM flags using nearest
@@ -176,10 +191,10 @@ def saveMCS_WA15():
             mmask = np.isfinite(outl)
             mask2 = np.isfinite(outl[tmask])
 
-            if (sum(mmask.flatten())*25 < 15000) or (outt.max()<0.1 or (outt.max()>200) or (sum(mmask.flatten())*25 > 1500000)):
+            if (sum(mmask.flatten())*25 < 350) or (outt.max()>200) or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
                 continue
 
-            if sum(mask2.flatten()) < 3:  # sum(mmask.flatten())*0.3:
+            if sum(mask2.flatten()) < 5:  # sum(mmask.flatten())*0.3:
                 print('Kickout: TRMM MSG overlap less than 3pix of cloud area')
                 continue
 
@@ -201,7 +216,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_zR/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:

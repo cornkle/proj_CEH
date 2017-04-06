@@ -17,10 +17,10 @@ from wavelet_paper import latitude_var as lv
 
 def comp_t():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = 'D://data/wavelet/saves/pandas/'
-    #path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
-    dic2 = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
+   # path = 'D://data/wavelet/saves/pandas/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
+    dic2 = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -174,13 +174,13 @@ def comp_t():
 
 
 def plot():
-    #fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    fpath = 'D://data/wavelet/saves/pandas/'
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+   # fpath = 'D://data/wavelet/saves/pandas/'
     #path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
 
     center, hist, hist2, up, low, up2, low2 = comp_t()
 
-    cent, prob1, prob2, lower, upper, lower2, upper2 = lv.comp_lat()
+    cent, prob1, prob2, lower, upper, lower2, upper2, area = lv.comp_lat()
 
     f = plt.figure(figsize=(12, 5), dpi=400)
 
@@ -194,10 +194,10 @@ def plot():
     ax1.set_ylabel('Pixel probability (%)') # | Pixel precip $>$ 30 $mm\ h^{-1}$)')
     ax1.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
     ax1.set_ylim(-1, 46)
-    ax11 = ax1.twinx()
-    ax11.plot(center, (hist2-hist)/hist*100, linestyle='', marker='o', color='grey', label='Percentage change', mec='black', mew=0.5)
-    ax11.set_ylim(-1, 250)
-    ax11.minorticks_on()
+    #ax11 = ax1.twinx()
+   # ax11.plot(center, (hist2-hist)/hist*100, linestyle='', marker='o', color='grey', label='Percentage change', mec='black', mew=0.5)
+   # ax11.set_ylim(-1, 250)
+   # ax11.minorticks_on()
     #ax11.set_ylabel('Percentage change (%)')
 
     ax1.fill_between(center, low * 100, up * 100, alpha=0.3)
@@ -206,15 +206,16 @@ def plot():
     prob1 = np.array(prob1)
     prob2 = np.array(prob2)
 
-    ax2.plot(cent, prob1* 100,  linewidth=1.5 , marker='o', label='Temperature only | -85$^{\degree}C$')
-    ax2.plot(cent, prob2* 100,  linewidth=1.5 , marker='o', color='r', label='Scale$\leq$30km | -85$^{\degree}C$')
+    ax2.plot(cent, prob1* 100,  linewidth=1.5 , marker='o', label='Temperature only | -80$^{\degree}C$')
+    ax2.plot(cent, prob2* 100,  linewidth=1.5 , marker='o', color='r', label='Scale$\leq$30km | -80$^{\degree}C$')
     ax2.legend()
     ax2.minorticks_on()
     ax2.set_ylabel('  ')# | Pixel precip $>$ 30 $mm\ h^{-1}$)')
     ax2.set_xlabel('Latitude ($^{\degree}N$)')
+    ax2.set_ylabel('Pixel probability (%)')
     ax22 = ax2.twinx()
-    ax22.plot(cent, (prob2 - prob1) / prob1 * 100, linestyle='', marker='o', color='grey', mec='black', mew=0.5)
-    ax22.set_ylabel('Percentage change (%)')
+    ax22.plot(cent, np.array(area)/1000, linestyle='', marker='o', color='grey') #(prob2 - prob1) / prob1 * 100
+    ax22.set_ylabel('Average MCS area ($10^{3}km^{2}$)')
     ax22.minorticks_on()
     ax2.fill_between(cent, np.array(lower) * 100, np.array(upper) * 100, alpha=0.3)
     ax2.fill_between(cent, np.array(lower2) * 100, np.array(upper2) * 100, alpha=0.3, color='r')
@@ -225,7 +226,7 @@ def plot():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(fpath + 'tonly_paper.png')
+    plt.savefig(fpath + 'tonly_paperR.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

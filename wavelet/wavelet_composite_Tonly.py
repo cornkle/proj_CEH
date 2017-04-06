@@ -26,7 +26,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')   # /WA30/
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:100]
     print('Nb files', len(files))
@@ -82,9 +82,9 @@ def composite():
 
         precip[v[2]].extend(v[19])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_T.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_TR.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_T.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_TR.p', 'wb'))
 
     #pkl.dump(comp_collect, open(out + 'comp_collect_composite_T.p', 'wb'))
 
@@ -130,9 +130,9 @@ def file_loop(fi):
         return ret
 
     # area gt 3000km2 cause that's 30km radius if circular
-    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax < 1) or (
+    if (area * 25 < 15000) or (area * 25 > 800000) or (
         bulk_pmax > 200) or (
-        bulk_pmin < 0):  # or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
+        bulk_pmin < 0):  # or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)): or (bulk_pmax < 1)
         print(area * 25)
         print('throw out')
         return ret
@@ -194,9 +194,9 @@ def file_loop(fi):
                 continue
 
             circle_sum = np.nansum(circle_p)
-            # ## some rain at least
-            if circle_sum < 0.1:
-                continue
+            # # ## some rain at least
+            # if circle_sum < 0.1:
+            #     continue
 
             circle_Tcenter = np.nanmin(outt[pos])
 

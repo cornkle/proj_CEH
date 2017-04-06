@@ -26,7 +26,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')   # /WA30/
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:400]
     print('Nb files', len(files))
@@ -81,11 +81,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_no.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_noR.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_no.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_noR.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_no.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_noR.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -119,7 +119,7 @@ def file_loop(fi):
         return ret
 
     #area gt 3000km2 cause that's 30km radius if circular
-    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax < 1) or (bulk_pmax > 200): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
+    if (area * 25 < 15000) or (area * 25 > 800000)  or (bulk_pmax > 200): # or (bulk_pmax < 1) #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
         print(area*25)
         print('throw out')
         return
@@ -231,8 +231,8 @@ def file_loop(fi):
 
         #pdb.set_trace()
 
-        if np.nansum(kernel) < 1:
-            continue
+        # if np.nansum(kernel) < 1:
+        #     continue
 
         # npos = np.where(kernelf != int_sc)
         # kernel[npos] = np.nan
@@ -268,9 +268,9 @@ def file_loop(fi):
         if ((circle_valid) < 3 ):   # or (tmin > -70):
             continue
 
-        ## some rain
-        if np.nansum(circle_p) < 0.1:
-            continue
+        # ## some rain
+        # if np.nansum(circle_p) < 0.1:
+        #     continue
 
         circle_sum = np.nansum(circle_p)
         circle_nz = np.nansum(circle_p>0.1)

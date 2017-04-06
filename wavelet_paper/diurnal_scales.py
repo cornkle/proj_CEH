@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 def run_scales():
     #  df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p')
 
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = 'D://data/wavelet/saves/pandas/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+  #  path = 'D://data/wavelet/saves/pandas/'
 
     df = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
 
@@ -368,7 +368,7 @@ def run_pcp_T():
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
    # path = 'D://data/wavelet/saves/pandas/'
 
-    df = pkl.load(open(path + '3dmax_gt15000_no.p', 'rb'))
+    df = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
     hours = np.arange(0, 23, 1)
     center = (np.arange(0, 23, 1)) + 0.5
 

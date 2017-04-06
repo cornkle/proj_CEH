@@ -196,10 +196,11 @@ test = z / (z.max() - z.min())
 mappable = ax1.scatter(log, drain, c=test, edgecolor='', cmap='viridis_r')
 c = 0.8
 ax1.set_ylabel('Daily rain ($mm$)')
-ax1.set_xlabel('log(Cold cloud area)($km^{2}$) -40$^{\degree}C$')
+ax1.set_xlabel('log(Cold cloud area [$km^{2}$]) | -40$^{\degree}C$')
 ax1.vlines(np.log10(25000), np.min(drain), np.max(drain), linestyles='dashed', label='25,000 $km^{2}$', linewidth=c)
 ax1.text(4.5, 123, '25,000 $km^{2}$',  fontsize=10, rotation=90)
-
+ax1.set_ylim(0, 175)
+ax1.set_xlim(0, 7)
 ax1ytick = list(range(0,180,20))
 ax1ytick = ax1ytick + []
 ax1.set_yticklabels(ax1ytick)
@@ -218,7 +219,7 @@ ax11.set_ylim((0,40))
 ax11.set_xlim((0,7))
 
 ax11.set_xticklabels([])
-ax11.bar(axtick, atprob, atickwidth, color='darkseagreen')
+ax11.bar(axtick, atprob, atickwidth, color='darkseagreen', align='edge', edgecolor='black')
 ax11.set_ylabel('Contribution (%)')
 # plt.text(0.65, 0.8, '> 25,000 $km^{2}$: 96%', transform=ax11.transAxes, fontsize=10)
 
@@ -240,9 +241,11 @@ ax2.hlines(np.mean(thresh), np.min(Tmin25), np.max(Tmin25), linestyles='dashed',
 # ax2.vlines(np.mean(-80), np.min(drain25), 120, linestyles='dashed', label='threshold', linewidth=c)
 
 ax2ytick = list(range(0,180,20))
+
 ax2ytick = ax1ytick + []
 ax2.set_yticklabels(ax1ytick)
-
+ax2.set_ylim(0, 175)
+ax2.set_xlim((-100,-30))
 #ax1.set_title('$98^{th}$ perc Pcp  vs meanT per MCS')
 #cbar = fig.colorbar(mappable)
 #cbar.set_label('Normalised probability density')
@@ -256,7 +259,7 @@ ax2.text(-42, 41, '38 $mm$',  fontsize=10)
 
 ax22.set_ylim((0,40))
 ax22.set_xlim((-100,-30))
-ax22.bar(xtick, tprob, xtickwidth, color='darkseagreen')
+ax22.bar(xtick, tprob, xtickwidth, color='darkseagreen', align='edge', edgecolor='black')
 ax22.set_xticklabels([])
 # plt.text(0.7, 0.8, '< -70$^{\degree}C$: 87%', transform=ax22.transAxes, fontsize=10)
 ax22.set_ylabel('Contribution (%)')
@@ -277,6 +280,7 @@ ax3.set_xlabel('Temperature ($^{\degree}C$)')
 ax3.hlines(30, np.min(tm), np.max(tm), linestyles='dashed', label='threshold', linewidth=c)
 ax3.text(-80, 32, '30 $mm$',  fontsize=10)
 ax3.set_ylim((0,80))
+ax3.set_xlim((-85, -40))
 ax3ytick = list(range(0,80,10))
 ax3ytick = ax3ytick + []
 ax3.set_yticklabels(ax3ytick)
@@ -292,14 +296,14 @@ ax33.set_ylim((0,40))
 ax33.set_xlim((-85, -40))
 #ax33.get_xaxis().set_visible(False)
 ax33.set_xticklabels([])
-ax33.bar(txtick, ttprob, tickwidth, color='darkseagreen')
+ax33.bar(txtick, ttprob, tickwidth, color='darkseagreen', align='edge', ec='black')
 ax33.set_ylabel('Contribution (%)')
 
 
 # plt.text(0.7, 0.8, '< -55$^{\degree}C$: 80%', transform=ax33.transAxes, fontsize=10)
 #plt.tight_layout()
-#plt.savefig(path+'station_TRMM_scatter_notext.png')
-#plt.savefig(path+'station_TRMM_scatter_notext.eps')
+plt.savefig(path+'Sup_Fig2.png')
+plt.savefig(path+'Sup_Fig2.eps')
 
 plt.close('all')
 

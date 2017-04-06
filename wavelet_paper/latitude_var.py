@@ -17,12 +17,12 @@ import scipy.stats as ss
 
 
 def comp_lat():
-    #fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    fpath = 'D://data/wavelet/saves/pandas/'
-    path = 'D://data/wavelet/saves/pandas/'
-    #path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
-    dic2 = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+  #  fpath = 'D://data/wavelet/saves/pandas/'
+  #  path = 'D://data/wavelet/saves/pandas/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
+    dic2 = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
 
     hour = np.array(dic['hour'])
@@ -34,8 +34,6 @@ def comp_lat():
     lat = np.array(dic['clat'])#[(hour>17) & (hour<=23)]
 
     pmean = np.array(dic['bulk_pmean'])
-
-
 
     # psum = np.array(dic['circle_p'])[(hour>17) & (hour<=23)] #[(hour>15) & (hour<23)]
     # tmin = np.array(dic['circle_t'])[(hour>17) & (hour<=23)]
@@ -65,7 +63,7 @@ def comp_lat():
     areas = []
 
     ids = np.array(dic['id'])
-    area = np.array(dic['bulk_tmin_p'])
+    area = np.array(dic['area'])
     ids2 = np.array(dic2['id'])
     area2 = np.array(dic2['area'])
     ni2, uni2 = np.unique(ids2, return_index = True)
@@ -82,12 +80,12 @@ def comp_lat():
 
         p_at_lat = np.concatenate(psum[(lat<b) & (lat>=bins[id-1])])
         t_at_lat = np.concatenate(tmin[(lat < b) & (lat >= bins[id - 1])])
-        p_t = p_at_lat[t_at_lat<=-85]
+        p_t = p_at_lat[t_at_lat<=-80]
 
 
         p_at_lat2 = np.concatenate(psum2[(lat2<b) & (lat2>=bins[id-1])])
         t_at_lat2 = np.concatenate(tmin2[(lat2 < b) & (lat2 >= bins[id - 1])])
-        p_t2 = p_at_lat2[t_at_lat2<=-85]
+        p_t2 = p_at_lat2[t_at_lat2<=-80]
 
 
         lower, upper = stats.proportion_confint(np.sum(p_t>=30), p_t.size)
@@ -108,7 +106,7 @@ def comp_lat():
         low2.append(lower2)
         up.append(upper)
         up2.append(upper2)
-        areas.append(a_lat)
+        areas.append(a_lat*25)
 
     f = plt.figure()
     ax1 = f.add_subplot(111)
@@ -129,4 +127,4 @@ def comp_lat():
     #plt.savefig(fpath + 'lat_prob.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     #plt.close('all')
-    return centre, prob1, prob2, low, up, low2, up2
+    return centre, prob1, prob2, low, up, low2, up2, areas

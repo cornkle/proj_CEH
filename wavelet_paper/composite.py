@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite_no.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_noR.p','rb'))
 
 
 siz = 3
@@ -24,14 +24,18 @@ print(keys)
 keys = sorted(keys)
 keys = np.array(keys)
 
-ranges = [14, 20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
-outrange = [20, 30, 40, 50, 60, 70, 80, 100, 120, 150, 205 ]
+ranges = [15, 30,  60, 90, 120, 150, 180, 205 ]
+outrange = [30,  60, 90, 120, 150, 180, 205 ]
 
 out = []
 
 for id, r in enumerate(ranges):
     if id == 0:
         continue
+    precede=ranges[id-1]
+    if precede == 15:
+        precede = precede -1
+
 
     klist = keys[(keys <= r) & (keys>ranges[id-1])]
 
@@ -49,7 +53,7 @@ for id, r in enumerate(ranges):
         p = np.array(comp_collect[k]['p'])
         t = np.array(comp_collect[k]['t'])
 
-        pos = np.where(t[:, 21, 21] <= -50)
+        pos = np.where(t[:, 21, 21] <= -45)
         pos = pos[0]
 
         big = (p>30)[pos,:,:]
@@ -92,52 +96,66 @@ for id, r in enumerate(ranges):
 ######### 2d plots
 
 
-f = plt.figure(figsize=(15, 10), dpi=400)
-ll = [20, 40, 60, 100, 150]  # keys
+f = plt.figure(figsize=(15, 8), dpi=400)
+ll = [30, 60, 90, 120, 180]  # keys
 for ind, k in enumerate(ll):
 
     pos=outrange.index(k)
 
     outbla = out[pos]
-    fos = 9
+    fos = 12
 
-    ax3 = f.add_subplot(4, 5, 11 + ind)
-    mp3 = ax3.imshow(outbla[0], cmap='viridis', vmin=3, vmax=8)  # vmin=0, vmax=6,
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
-    ax3.plot(20, 20, 'ro', markersize=siz)
-    ax3.set_xticklabels(np.arange(-3, 3.1, 1))
-    ax3.set_yticklabels(np.arange(-3, 3.1, 1))
-    cbar = plt.colorbar(mp3)
-    cbar.set_label('Average rain (mm h$^{-1}$)', fontsize=fos)
+    # ax3 = f.add_subplot(4, 5, 11 + ind)
+    # mp3 = ax3.imshow(outbla[0], cmap='viridis', vmin=3, vmax=8)  # vmin=0, vmax=6,
+    # plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
+    # ax3.plot(20, 20, 'ro', markersize=siz)
+    # ax3.set_xticklabels(np.arange(-3, 3.1, 1))
+    # ax3.set_yticklabels(np.arange(-3, 3.1, 1))
+    # cbar = plt.colorbar(mp3)
+    # cbar.set_label('Average rain (mm h$^{-1}$)', fontsize=fos)
 
-    ax2 = f.add_subplot(4, 5, 6 + ind)
+    ax2 = f.add_subplot(3, 5, 6 + ind)
     mp2 = ax2.imshow(outbla[1], cmap='viridis')
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
+    #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax2.plot(20, 20, 'ro', markersize=siz)
-    ax2.set_xticklabels(np.arange(-3, 3.1, 1))
-    ax2.set_yticklabels(np.arange(-3, 3.1, 1))
+    ax2.set_xticklabels('')
+    ax2.set_yticklabels('')
+    if ind == 0:
+        ax2.set_yticklabels(np.arange(-3, 4, 1))
+        ax2.set_ylabel('10$^2$ km')
     cbar = plt.colorbar(mp2)
-    cbar.set_label('Number of valid pixels', fontsize=fos)
+    if ind == 4:
+        cbar.set_label('Number of valid pixels', fontsize=fos)
 
-    ax4 = f.add_subplot(4, 5, 16 + ind)
+    ax4 = f.add_subplot(3, 5, 11 + ind)
     mp4 = ax4.imshow(outbla[2], vmin=0, vmax=4, cmap='viridis')
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
+    #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax4.plot(20, 20, 'ro', markersize=siz)
-    ax4.set_xticklabels(np.arange(-3, 3.1, 1))
-    ax4.set_yticklabels(np.arange(-3, 3.1, 1))
+    ax4.set_xticklabels(np.arange(-3, 4, 1))
+    ax4.set_xlabel('10$^2$ km')
     cbar = plt.colorbar(mp4)
-    cbar.set_label('P(>30mm h$^{-1}$) %', fontsize=fos)
+    if ind == 4:
+        cbar.set_label('Pixel probability (%)', fontsize=fos)
+    ax4.set_yticklabels('')
+    if ind == 0:
+        ax4.set_yticklabels(np.arange(-3, 4, 1))
+        ax4.set_ylabel('10$^2$ km')
 
-    ax1 = f.add_subplot(4, 5, 1 + ind)
+    ax1 = f.add_subplot(3, 5, 1 + ind)
     mp1 = ax1.imshow(outbla[3], vmin=-70, vmax=-55, cmap='inferno')
-    ax1.set_xticklabels(np.arange(-3,3.1,1))
-    ax1.set_yticklabels(np.arange(-3, 3.1, 1))
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
+    ax1.set_xticklabels('')
+
+    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=12)
     ax1.plot(20, 20, 'ro', markersize=siz)
     cbar = plt.colorbar(mp1)
-    cbar.set_label('TIR ($\circ$C)', fontsize=fos)
+    if ind == 4:
+        cbar.set_label('Cloud top temperature ($\circ$C)', fontsize=fos)
+    ax1.set_yticklabels('')
+    if ind == 0:
+        ax1.set_yticklabels(np.arange(-3, 4, 1))
+        ax1.set_ylabel('10$^2$ km')
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_no.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noR.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

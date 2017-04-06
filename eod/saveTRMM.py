@@ -24,7 +24,7 @@ YRANGE = range(2004,2015)#range(2004, 2014) # 1998, 2014
 # BOX=[XL, XR, YL, YU]
 def netcdf():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    box = [-15, 4, 33, 25]
+    box = [-17, 4, 33, 30]
 
     # make grid
     # define projection

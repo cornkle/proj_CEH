@@ -240,10 +240,10 @@ def val_vs_extreme_2d():
 
 def probability():
 
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000_no.p', 'rb'))
+  #  path = 'D://data/wavelet/saves/pandas/'
+    dic = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -355,7 +355,7 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
@@ -364,9 +364,9 @@ def probability():
 def probability_perCircle():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    path = 'D://data/wavelet/saves/pandas/'
+    #path = 'D://data/wavelet/saves/pandas/'
 
-    dic = pkl.load(open(path+'3dmax_gt15000_no0.5.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -468,7 +468,7 @@ def probability_perCircle():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(path + 'wavelet_scale_p_T_perC_no.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_perC_no.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
@@ -478,8 +478,8 @@ def probability_perCircle():
 def plot():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    path = 'D://data/wavelet/saves/pandas/'
-    fpath = 'D://data/wavelet/saves/pandas/'
+ #   path = 'D://data/wavelet/saves/pandas/'
+ #   fpath = 'D://data/wavelet/saves/pandas/'
 
     x,y, l, u = probability()
 
@@ -520,7 +520,7 @@ def plot():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T_paper.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_papernoR.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
