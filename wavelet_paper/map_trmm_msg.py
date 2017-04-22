@@ -102,6 +102,7 @@ def plot_data():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 
     data = xr.open_dataset('/users/global/cornkle/C_paper/wavelet/saves/maps/trmm_msg_map.nc')
+    data=data.sel(lon=slice(-17.5,30), lat=slice(4.,20))
     map = data.salem.get_map(cmap='inferno')
 
     outb = np.array(data['tblob'], dtype=float)
@@ -113,20 +114,22 @@ def plot_data():
     map.set_data(data['tir'])
     map.set_shapefile(countries=True, linewidth=0.1 )
 
-    f= plt.figure(figsize=(12, 8.5), dpi=300)
+    f= plt.figure(figsize=(9, 6), dpi=300)
     ax1 = f.add_subplot(211)
     ax2 = f.add_subplot(212)
+    map.set_lonlat_contours(add_xtick_labels=False)
     map.visualize(ax=ax1, cbar_title='Cloud top temperature ($^{\circ}$C)',)
 
 
     map.set_plot_params(cmap='hot', vmax=91)
+    map.set_lonlat_contours(add_xtick_labels=True)
     map.set_data(outboth)
     map.set_contour(data['trmm'], cmap='winter')
     map.visualize(ax=ax2, cbar_title='Cloud ID | < -40$^{\circ}$C')
 
     plt.annotate('a)', xy=(0.02, 0.96), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
-    plt.annotate('b)', xy=(0.02, 0.47), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    plt.annotate('b)', xy=(0.02, 0.5), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
 
     plt.tight_layout()

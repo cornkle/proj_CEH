@@ -4,6 +4,8 @@ import xarray as xr
 import matplotlib.pyplot  as plt
 import pdb
 from scipy import ndimage
+from utils import u_arrays as ua
+import multiprocessing
 
 
 def read_grads(file):
@@ -59,19 +61,15 @@ def read_grads(file):
     pass
 
 
-def run():
-    array = xr.open_dataset('/users/global/cornkle/data/Amazon/fract_cover.nc')
+def run(array):
 
-    forest = array['nclass'][0,1,:,:].values
+    forest = array['nclass'][0, 1, :, :].values
 
-
-
-
-    sum = np.sum(array['nclass'][0,:,:,:].values, 0)
+    sum = np.sum(array['nclass'][0, :, :, :].values, 0)
 
     mask = sum == 0
 
-    forest[mask]= 100
+    forest[mask] = 100
 
 
 
@@ -84,58 +82,104 @@ def run():
 
     for id, s in enumerate(scales):
         wl[id, :,:][wl[id,:,:] <= s**.5] =0
-    #
-    # maxout = (
-    #     wl == ndimage.maximum_filter(wl, (3, 3,3), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
-    #
-    #
-    # zz, yy, xx = np.where((maxout == 1))
-    #
-    # print(zz,yy,xx)
-    #
-    # dummy = np.zeros_like(forest)
-    #
-    # for z, y, x in zip(zz,yy,xx):
-    #
-    #     dummy[y,x] = np.round(scales[z])
-    #
-    # f = plt.figure()
-    # plt.imshow(dummy)
-    #
 
-    scale_ind = range(len(scales))
-
-    fcnt = 0
-    vv = 5
-    f = plt.figure()
-    for s in scale_ind:
-
-        fcnt+=1
-        ax = f.add_subplot(vv,vv,fcnt)
-
-        wll = wl[s,:,:]
-
-        m1 = ax.contour(array['lon'], array['lat'],  wll/np.max(wll)*100, levels=np.arange(0,101,10), cmap='viridis' )
-        plt.colorbar(m1)
-        ax.set_title(str(wav['scales'][s])+' m')
-
-    ax = f.add_subplot(vv,vv,fcnt+1)
-    m = ax.contourf(array['lon'], array['lat'] ,forest, levels=np.arange(0,101,10) )
-    plt.colorbar(m)
-    #
-    # ax = f.add_subplot(vv, vv, fcnt + 2)
-    # m = ax.pcolormesh(array['lon'], array['lat'], dummy)
-    # plt.colorbar(m)
-    for s in scale_ind:
-        f = plt.figure()
-        plt.contourf(array['lon'], array['lat'],forest)
-        plt.contour(array['lon'], array['lat'],wl[s,:,:], cmap='inferno')
-        plt.title(str(np.round(wav['scales'][s])))
+    return wl, scales, forest
 
 
-    f = plt.figure()
-    plt.contourf(array['lon'], array['lat'], forest)
+def save():
+
+    files = ua.locate(".nc", '/users/global/cornkle/data/Amazon')
+   # files = files[6:7]
+
+    years = len(files)
+    yy = np.arange(1984, 2009, 4)
+
+    scale_id = 7
+
+    ylist = []
+    vlist = []
+
+    for i, f in enumerate(files):
+        y = yy[i]
+
+        print('Doing ' +f)
+
+        array = xr.open_dataset(f)
+
+        wl, scales, forest = run(array)
+
+        print(scales)
+
+        wwl = wl[scale_id]
+
+        yarr = xr.DataArray(wwl[np.newaxis,...], coords=[array.time, array.lat, array.lon], dims=['time', 'lat', 'lon'])
+        veg = xr.DataArray(forest[np.newaxis,...], coords=[array.time, array.lat, array.lon], dims=['time', 'lat', 'lon'])
+
+        ylist.append(yarr)
+        vlist.append(veg)
+
+    yarr = xr.concat(ylist, dim='time')
+    veg = xr.concat(vlist, dim='time')
 
 
-    print('Wavelet finished')
-    return wav
+    sc = int(scales[scale_id]/1000.)
+
+    xarr = xr.Dataset()
+    xarr['vegfra']=veg
+    xarr['wav']=yarr
+
+    xarr.to_netcdf('/users/global/cornkle/amazon/nc/rhod_'+str(sc)+'kmt.nc')
+    print('Saved '+'/users/global/cornkle/amazon/nc/rhod_'+str(sc)+'kmt.nc')
+
+
+def plot():
+    sc = 3
+    f = '/users/global/cornkle/amazon/nc/rhod_'+str(sc)+'kmneg.nc'
+    array = xr.open_dataset(f)
+
+    g = array['vegfra'].plot.contourf('lon', 'lat', col='time', col_wrap=4, robust=True)
+
+    for i, ax in enumerate(g.axes.flat):
+        try:
+            ax.contour(array.lon, array.lat, array['wav'][i,:,:], cmap='Blues')
+        except (IndexError, ValueError):
+            continue
+
+
+    plt.savefig('/users/global/cornkle/amazon/rhod_'+str(sc)+'kmneg.png', dpi=400)
+
+
+    # for i, f in enumerate(files):
+    #     y = yy[i]
+    #
+    #     print('Doing ' +f)
+    #
+    #     array = xr.open_dataset(f)
+    #
+    #     wl, scales, forest = run(array)
+    #
+    #     print(scales)
+    #
+    #     scale_ind = range(len(scales))
+    #
+    #     ax = fig.add_subplot(4,2, i+1)
+    #
+    #     wll = wl[scale_id,:,:]
+    #
+    #     m = ax.contourf(array['lon'], array['lat'], forest, levels=np.arange(0, 101, 10), cmap='viridis')
+    #     m1 = ax.contour(array['lon'], array['lat'],  wll/np.max(wll)*100, levels=np.arange(0,101,10), cmap='Blues' )
+    #     plt.colorbar(m)
+    #     ax.set_title(str(scales[scale_id])+' m '+str(y) )
+    #
+    #     xr.Dataset.close(array)
+    #
+    #
+    # plt.savefig('/users/global/cornkle/rhod_30km.png', dpi=400)
+    # plt.show()
+
+
+
+
+
+if __name__ == "__main__":
+    plot()

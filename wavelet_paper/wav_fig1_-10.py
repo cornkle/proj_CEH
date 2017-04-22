@@ -35,6 +35,8 @@ t = _t[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
 area = _area[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
 po30 = _po30[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
 
+print(np.min(area), np.max(area))
+
 
 # In[5]:
 
@@ -45,7 +47,7 @@ print('Number MCSs:', p.size)
 
 # In[6]:
 
-bins=list(range(-90, -9, 5))   # compute probability per temperature range (1degC)
+bins=np.arange(-90, -9, 1)   # compute probability per temperature range (1degC)
 ppo30=np.where(p > 30)  
 to30=t[ppo30]   
 
@@ -81,39 +83,47 @@ rarea = area.copy()[inds]
 rt = t.copy()[inds]
 rp = p.copy()[inds]
 
-print('Percentile',np.percentile(p[p>=0], 95))
-print(np.sum((rp>=30) & (rt<-60))/np.sum(rp>=30))
+# print('Percentile',np.percentile(p[p>=0], 95))
+# print(np.sum((rp>=30) & (rt<-60))/np.sum(rp>=30))
 
 
 
 # In[11]:
 
 path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-fig = plt.figure(figsize=(15, 5), dpi=400)
+fig = plt.figure(figsize=(10, 3.5), dpi=300)
 cc=0.8
 ax1 = fig.add_subplot(121)
 xy = np.vstack([p,t])
 z = gaussian_kde(xy)(xy)
-test = rarea # z / (z.max() - z.min()) #sarea #z / (z.max() - z.min())
-mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r') # viridis_r
-ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 324 km$^2$ )')
-ax1.set_ylabel('Max. precipitation ($mm\ h^{-1}$)')
-ax1.set_xlabel('Min. Temperature ($^{\degree}C$)')
-ax1.hlines(31, -90, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='red')
-plt.text(-40, 34, '99$^{th}$ perc: 30 $mm\ h^{-1}$',  fontsize=12)
+test = rarea/1000 # z / (z.max() - z.min()) #sarea #z / (z.max() - z.min())
+mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r', s=20) # viridis_r
+#ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 325 km$^2$ )')
+ax1.set_ylabel('Max. precipitation (mm h$^{-1}$)')
+ax1.set_xlabel('Min. temperature ($^{\degree}C$)')
+ax1.hlines(31, -95, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
+plt.text(-35, 18, '30 mm h$^{-1}$',  fontsize=12)
 
 cbar = fig.colorbar(mappable)
-cbar.set_label('Area (km$^2$)')
-plt.text(0.03, 0.9, 'a', transform=ax1.transAxes, fontsize=20)
+cbar.set_label('Area (10$^3$ km$^2$)')
+#plt.text(0.03, 0.9, 'a', transform=ax1.transAxes, fontsize=20)
 ######################
 
 ax1 = fig.add_subplot(122)
-ax1.scatter(center, histo, marker="o",color='#5ea1d4', s=60, zorder=2, edgecolor = 'black', linewidth=1)
-ax1.set_xlabel('Min. Temperature (1 $^{\degree}C$ bins)')
-ax1.set_ylabel('Probability (% | Max. precip $>$ 30 $mm\ h^{-1}$)') 
-plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
+ax1.scatter(center, histo, marker="o",color='#5ea1d4', s=30, zorder=2, edgecolor = 'black', linewidth=1)
+ax1.set_xlabel('Min. temperature (1 $^{\degree}C$ bins)')
+ax1.set_ylabel('Probability (% | Extreme rain)')
+#plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
+
+fsiz = 14
+x = 0.02
+plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
 
 plt.tight_layout()
 plt.savefig(path+'scatter-10_gt324.png')
 plt.savefig(path+'scatter-10_gt324.pdf')
+plt.close('all')
 

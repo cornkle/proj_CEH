@@ -84,7 +84,7 @@ for id, r in enumerate(ranges):
 
     bla = np.nansum(aarr, 0) / np.nansum(nnz, 0)
     bla1 = np.nansum(ffin, 0)
-    blab = np.nansum(bbig, 0) / np.nansum(nnz,0) * 100
+    blab = np.nansum(bbig, 0) / np.nansum(ffin,0) * 100
 
     tbla = np.nanmedian(taarr, 0)
 
@@ -96,14 +96,20 @@ for id, r in enumerate(ranges):
 ######### 2d plots
 
 
-f = plt.figure(figsize=(15, 8), dpi=400)
+f = plt.figure(figsize=(12, 5), dpi=400)
 ll = [30, 60, 90, 120, 180]  # keys
+
 for ind, k in enumerate(ll):
 
     pos=outrange.index(k)
 
     outbla = out[pos]
+
+    x = np.linspace(-2, 2, outbla[1].shape[0])
     fos = 12
+
+    print(x)
+    print(np.arange(-2,3, 1))
 
     # ax3 = f.add_subplot(4, 5, 11 + ind)
     # mp3 = ax3.imshow(outbla[0], cmap='viridis', vmin=3, vmax=8)  # vmin=0, vmax=6,
@@ -114,47 +120,56 @@ for ind, k in enumerate(ll):
     # cbar = plt.colorbar(mp3)
     # cbar.set_label('Average rain (mm h$^{-1}$)', fontsize=fos)
 
-    ax2 = f.add_subplot(3, 5, 6 + ind)
-    mp2 = ax2.imshow(outbla[1], cmap='viridis')
+    ax2 = f.add_subplot(2, 5, 6 + ind)
+    mp2 = ax2.imshow(outbla[2], aspect=1, cmap='viridis') #x,x,
     #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax2.plot(20, 20, 'ro', markersize=siz)
     ax2.set_xticklabels('')
     ax2.set_yticklabels('')
     if ind == 0:
-        ax2.set_yticklabels(np.arange(-3, 4, 1))
+        ax2.set_yticklabels(np.arange(-3,4, 1))
         ax2.set_ylabel('10$^2$ km')
-    cbar = plt.colorbar(mp2)
-    if ind == 4:
-        cbar.set_label('Number of valid pixels', fontsize=fos)
 
-    ax4 = f.add_subplot(3, 5, 11 + ind)
-    mp4 = ax4.imshow(outbla[2], vmin=0, vmax=4, cmap='viridis')
-    #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
-    ax4.plot(20, 20, 'ro', markersize=siz)
-    ax4.set_xticklabels(np.arange(-3, 4, 1))
-    ax4.set_xlabel('10$^2$ km')
-    cbar = plt.colorbar(mp4)
-    if ind == 4:
-        cbar.set_label('Pixel probability (%)', fontsize=fos)
-    ax4.set_yticklabels('')
-    if ind == 0:
-        ax4.set_yticklabels(np.arange(-3, 4, 1))
-        ax4.set_ylabel('10$^2$ km')
+    ax2.set_xticklabels(np.arange(-3,4, 1))
+    ax2.set_xlabel('10$^2$ km')
 
-    ax1 = f.add_subplot(3, 5, 1 + ind)
-    mp1 = ax1.imshow(outbla[3], vmin=-70, vmax=-55, cmap='inferno')
+
+    # ax4 = f.add_subplot(2, 5, 6 + ind)
+    # mp4 = ax4.imshow(outbla[2], vmin=0, vmax=4, cmap='viridis')
+    # #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
+    # ax4.plot(20, 20, 'ro', markersize=siz)
+    # ax4.set_xticklabels('')
+    # ax4.set_yticklabels('')
+    # if ind == 0:
+    #     ax4.set_yticklabels(np.arange(-3, 4, 1))
+    #     ax4.set_ylabel('10$^2$ km')
+    # cbar = plt.colorbar(mp4)
+    # if ind == 4:
+    #     cbar.set_label('Pixel probability (%)', fontsize=fos)
+
+    ax1 = f.add_subplot(2, 5, 1 + ind)
+    mp1 = ax1.imshow(outbla[3], vmin=-70, vmax=-55, cmap='inferno', aspect=1)
     ax1.set_xticklabels('')
 
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=12)
+    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=13)
     ax1.plot(20, 20, 'ro', markersize=siz)
-    cbar = plt.colorbar(mp1)
-    if ind == 4:
-        cbar.set_label('Cloud top temperature ($\circ$C)', fontsize=fos)
+
     ax1.set_yticklabels('')
     if ind == 0:
         ax1.set_yticklabels(np.arange(-3, 4, 1))
         ax1.set_ylabel('10$^2$ km')
 plt.tight_layout()
+
+f.subplots_adjust(right=0.91)
+cax = f.add_axes([0.92,0.545,0.025,0.37])
+cbar = f.colorbar(mp1, cax)
+cbar.ax.tick_params(labelsize=12)
+cbar.set_label('Cloud top temperature ($\circ$C)', fontsize=12)
+cax = f.add_axes([0.92,0.12,0.025,0.37])
+cbar = f.colorbar(mp2, cax)
+cbar.ax.tick_params(labelsize=12)
+cbar.set_label('Pixel probability (%)', fontsize=12)
+
 plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noR.png')
 plt.close('all')
 

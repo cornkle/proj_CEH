@@ -243,7 +243,7 @@ def probability():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+    dic = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -366,7 +366,7 @@ def probability_perCircle():
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #path = 'D://data/wavelet/saves/pandas/'
 
-    dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -520,7 +520,7 @@ def plot():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T_papernoR.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_paper_abs.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

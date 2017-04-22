@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 # In[173]:
 
-dic = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_zR.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
 
 # In[174]:
@@ -89,44 +89,45 @@ np.sum(po30[area>25000])
 
 # In[180]:
 
-path = '/users/global/cornkle/C_paper/wavelet/figs/'
-fig = plt.figure(figsize=(15, 5), dpi=400)
+path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+fig = plt.figure(figsize=(5, 4), dpi=300)
 cc=0.8
 
-ax1 = fig.add_subplot(121)
-mappable = ax1.scatter(acenter, ahisto, c=aH, marker="o",color='#5ea1d4', s=60, zorder=2,edgecolor = 'black', linewidth=1, cmap='viridis_r')
-cbar = fig.colorbar(mappable)
-cbar.set_label('Nb clouds')
-#ax1.bar(abins[0:-1], ahisto, width=awidth, color='#5ea1d4')
-
-ax1.set_xlabel('Area bins (km$^2$) ')
-#ax1.vlines(25000, 0, 100, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='red')
-ax1.set_ylabel('Probability (%) | Max. Precip $>$ 30 $mm\ h^{-1}$') 
-plt.text(0.03, 0.9, 'a', transform=ax1.transAxes, fontsize=24)
+# ax1 = fig.add_subplot(121)
+# mappable = ax1.scatter(acenter, ahisto, c=aH, marker="o",color='#5ea1d4', s=60, zorder=2,edgecolor = 'black', linewidth=1, cmap='viridis_r')
+# cbar = fig.colorbar(mappable)
+# cbar.set_label('Nb clouds')
+# #ax1.bar(abins[0:-1], ahisto, width=awidth, color='#5ea1d4')
+#
+# ax1.set_xlabel('Area bins (km$^2$) ')
+# #ax1.vlines(25000, 0, 100, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='red')
+# ax1.set_ylabel('Probability (%) | Max. Precip $>$ 30 $mm\ h^{-1}$')
+# plt.text(0.03, 0.9, 'a', transform=ax1.transAxes, fontsize=24)
 ######################
 
-ax1 = fig.add_subplot(122)
+ax1 = fig.add_subplot(111)
 
-ax1.scatter(np.log10(abins), pprobs, marker="o",color='#5ea1d4', s=60, zorder=2, edgecolor = 'black', linewidth=1, label='Rain pixels $>$ 30 $mm\ h^{-1}$')
-ax1.set_xlabel('log10(Area threshold) (km$^2$)')
-ax1.set_ylabel('Proportion (%)') 
+ax1.scatter(np.log10(abins), pprobs, marker="o",color='#5ea1d4', s=60, zorder=2, edgecolor = 'black', linewidth=1, label='Rain pixels $>$30 mm h$^{-1}$')
+ax1.set_xlabel('log10(Area threshold [km$^2$])')
+ax1.set_ylabel('Fraction (%)')
 
 #ax1.set_xticklabels(abins)
 #ax2 = ax1.twinx()
 ax1.scatter(np.log10(abins), nnb, marker="o",color='red', s=60, zorder=2, edgecolor = 'black', linewidth=1, label='Cold clouds')
 #ax2.set_ylabel('Included nb of cold clouds $>$ 30 $mm\ h^{-1}$ (%)') 
-plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=24)
-ax1.vlines(np.log10(15000), 3.5, 99, linestyles='dashed',  linewidth=1.5, color='black')
-ax1.hlines(36.8, 2.5, 5, linestyles='dashed',  linewidth=1.5, color='black')
-ax1.hlines(92.95,2.5, 5, linestyles='dashed',  linewidth=1.5, color='black')
-plt.text(4.5, 40, '36.8 %', fontsize=10)
-plt.text(4.5, 95, '93 %', fontsize=10)
-plt.text(4.25, 15, '15000 km$^2$', fontsize=10, rotation=90)
+#plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=24)
+ax1.vlines(np.log10(15000), 20, 99, linestyles='dashed',  linewidth=1.5, color='black')
+ax1.hlines(32.77, 2.5, 5, linestyles='dashed',  linewidth=1.5, color='black')
+ax1.hlines(91.72,2.5, 5, linestyles='dashed',  linewidth=1.5, color='black')
+plt.text(4.6, 35, '33 %', fontsize=10)
+plt.text(4.6, 94, '91 %', fontsize=10)
+plt.text(4.25, 55, '15000 km$^2$', fontsize=10, rotation=90)
 ax1.legend(loc='lower left')
 
 
 plt.tight_layout()
 plt.savefig(path+'area-40.png')
+plt.close('all')
 
 
 # In[190]:

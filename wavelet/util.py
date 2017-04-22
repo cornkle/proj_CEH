@@ -96,8 +96,34 @@ def waveletSurface(t, dt):
     #tir = tir - np.mean(tir)
     mother2d = w2d.Mexican_hat()
 
-    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.75, s0=1500. / mother2d.flambda(), J=20)  # s0=30./
-    powerTIR[np.real(powerTIR >= 0)] = 0.01
+    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.75, s0=1500. / mother2d.flambda(), J=10)  # s0=30./
+    #powerTIR[np.real(powerTIR >= 0)] = 0.01
+    powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+    period2d = 1. / freqs2d
+    scales2d.shape = (len(scales2d), 1, 1)
+    powerTIR = powerTIR / (scales2d * scales2d)
+
+    dic['power'] = powerTIR
+    dic['scales'] = (period2d / 2.)
+
+
+
+    return dic
+
+def waveletSurfaceneg(t, dt):
+
+    dic = {}
+
+    # 2D continuous wavelet analysis:
+    # TIR
+    tir = t*(-1)
+    tir[tir < 0] = -100
+    tir[np.isnan(tir)]= -100
+    #tir = tir - np.mean(tir)
+    mother2d = w2d.Mexican_hat()
+
+    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.75, s0=1500. / mother2d.flambda(), J=10)  # s0=30./
+    powerTIR[np.real(powerTIR <= 0)] = 0.01
     powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
     period2d = 1. / freqs2d
     scales2d.shape = (len(scales2d), 1, 1)

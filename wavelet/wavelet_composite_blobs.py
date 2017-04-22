@@ -327,7 +327,8 @@ def file_loop(fi):
     plt.show()
     # #
     #
-    # f = plt.figure()
+    #f = plt.figure()
+
     # fcnt = 0
     # vv = 4
     # for s in scale_ind:

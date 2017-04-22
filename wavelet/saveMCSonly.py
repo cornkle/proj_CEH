@@ -17,6 +17,8 @@ from scipy import ndimage
 from utils import u_arrays as ua
 import multiprocessing
 import datetime as dt
+import cartopy
+import cartopy.crs as ccrs
 
 def run():
     #  (1174, 378)
@@ -62,13 +64,18 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_noscthresh.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_90km_3UTC.nc'
 
     try:
         os.remove(savefile)
     except OSError:
         pass
     da.to_netcdf(path=savefile, mode='w')
+
+    das = da.sum(dim='time')
+
+    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_90km_sum_3UTC.nc')
+
     print('Saved ' + savefile)
 
 
@@ -86,7 +93,7 @@ def file_loop(passit):
 
     strr = files.split(os.sep)[-1]
 
-    if (np.int(strr[8:10]) != 18): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) &
+    if (np.int(strr[8:10]) != 3): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) &
         print('Skip')
         return
 
@@ -145,9 +152,9 @@ def file_loop(passit):
 
         wll = wav['t']  # [nb, :, :]
 
-        maxoutt = (
-            wll == ndimage.maximum_filter(wll, (5, 5, 5), mode='reflect',
-                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+        # maxoutt = (
+        #     wll == ndimage.maximum_filter(wll, (5, 5), mode='reflect',
+        #                                   cval=np.amax(wll) + 1))  # (np.round(orig / 5))
 
         yyy = []
         xxx = []
@@ -156,18 +163,18 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            # if orig < 90:
-            #     continue
+            if orig <90:#> 30:
+                 continue
 
             scale = int(np.round(orig))
 
             print(np.round(orig))
 
             wl = wll[nb, :, :]
-            maxout = maxoutt[nb, :, :]
+           # maxout = maxoutt[nb, :, :]
 
-            # maxout = (
-            #     wl == ndimage.maximum_filter(wl, (5,5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+            maxout = (
+                wl == ndimage.maximum_filter(wl, (5,5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
                 yy, xx = np.where((maxout == 1) & (outt <= -67) & (wl >= np.percentile(wl[wl >= 0.5],
@@ -188,10 +195,23 @@ def file_loop(passit):
                 scal.append(orig)
 
         figure[np.isnan(outt)] = 0
-        #
-        # plt.figure()
-        # plt.imshow(figure)
-        # plt.show()
+
+       # # figure[figure == 0] = np.nan
+       #  f = plt.figure()
+       #  f.add_subplot(133)
+       #  plt.imshow(outt, cmap='inferno')
+       #  plt.imshow(figure, cmap='viridis')
+       #  ax = f.add_subplot(132, projection=ccrs.PlateCarree())
+       #  plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
+       #  ax.coastlines()
+       #  ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
+       #
+       #  plt.colorbar()
+       #  f.add_subplot(131)
+       #  plt.imshow(outt, cmap='inferno')
+       #
+       #  plt.plot(xxx, yyy, 'yo', markersize=3)
+       #  plt.show()
 
         print(np.sum(figure))
 

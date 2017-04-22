@@ -31,7 +31,7 @@ def run_scales():
     lat = np.array(df['clat'])
     hour = np.array(df['hour'])
     tmin = np.array(df['circle_Tcentre'])
-    area = np.array(df['area'])
+    area = np.array(df['id'])
 
     arr40 = np.zeros((scales.size - 1, hours.size))
     arr70 = np.zeros((scales.size - 1, hours.size))
@@ -52,7 +52,7 @@ def run_scales():
 
             sums = sc[
                 (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
-                    tmin < -70)].size
+                    tmin < -75)].size
             diurn70.append(sums)
         print(s, diurn70)
 
@@ -63,10 +63,9 @@ def run_scales():
     for ind, siz in enumerate(hours):
         sums = np.unique(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
             lat > 4) & (tmin < -50)]).size
-        ar = np.sum(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
-            lat > 4) & (tmin < -50)])
+
         nb.append(sums)
-        narea.append(ar)
+
 
     arr40 = np.transpose(arr40.T / np.sum(arr40, axis=1)) * 100
     arr70 = np.transpose(arr70.T / np.sum(arr70, axis=1)) * 100
@@ -145,7 +144,6 @@ def run_scales():
     # plt.plot(hour, stddev70, color='y', label='standarddev')
     plt.plot(hours, mean70, color='orange', label='all scales mean')
     plt.plot(hours, nb, color='g', label='storm number')
-    plt.plot(hours, narea, color='c', label='area')
     plt.legend()
 
     f = plt.figure()
@@ -221,8 +219,9 @@ def run_tmin():
 
 
 def run_pcp():
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = 'D://data/wavelet/saves/pandas/'
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+  #  path = 'D://data/wavelet/saves/pandas/'
 
     df = pkl.load(open(path + '3dmax_gt15000_no0.5.p', 'rb'))
     hours = np.arange(0, 23, 1)
@@ -369,10 +368,11 @@ def run_pcp_T():
    # path = 'D://data/wavelet/saves/pandas/'
 
     df = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
-    hours = np.arange(0, 23, 1)
-    center = (np.arange(0, 23, 1)) + 0.5
+    hours = list(zip(np.arange(0, 23, 2), np.arange(1, 24, 2)))
+    center = (np.arange(0, 23, 2)) + 0.5
 
-    scales = np.arange(10, 180, 10)
+    scales = np.arange(15, 121, 10)
+    scales = np.array([15,20,30,40,50,70,120])
 
     print(scales)
 
@@ -380,12 +380,16 @@ def run_pcp_T():
     lat = np.array(df['clat'])
     hour = np.array(df['hour'])
     tmin = np.array(df['circle_Tcentre'])
-    area = np.array(df['area'])
+    area = np.array(df['id'])
     p = np.array(df['circle_sum'])
 
-    arr40 = np.zeros((scales.size - 1, hours.size))
-    arr70 = np.zeros((scales.size - 1, hours.size))
-    arr2 = np.zeros((scales.size - 1, hours.size))
+    #scales = np.unique(np.percentile(sc, np.arange(0,100,10)))
+    scenter = scales[0:-1] + ((scales[1::] - scales[0:-1]) / 2)
+    print(scales)
+
+    arr40 = np.zeros((scales.size - 1, len(hours)))
+    arr70 = np.zeros((scales.size - 1, len(hours)))
+    arr2 = np.zeros((scales.size - 1, len(hours)))
     print(center)
     print(hours)
 
@@ -397,16 +401,17 @@ def run_pcp_T():
         diurn70 = []
 
         for ind, siz in enumerate(hours):
+
             sums = np.nanmean(tmin[
-                                  (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
+                                  (sc >= scales[iind - 1]) & (sc < s) & ((hour == siz[0]) ^ (hour == siz[1])) & (
                                       lat > 5) & (
-                                      tmin <= -40)])
-            if np.isnan(sums):
-                sums = -40
+                                      tmin <= -50)])
+
+            # if np.isnan(sums):
+            #     sums = -40
             diurn40.append(sums)
 
-            sums = np.nansum(p[
-                                 (sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (lat > 5) & (
+            sums = np.nansum([ (sc >= scales[iind - 1]) & (sc < s) & ((hour == siz[0]) ^ (hour == siz[1])) & (lat > 5) & (
                                      tmin < -70)])
 
             diurn70.append(sums)
@@ -414,32 +419,29 @@ def run_pcp_T():
 
         arr40[iind - 1, :] = diurn40
         arr70[iind - 1, :] = diurn70
+
     nb = []
-    narea = []
+
     for ind, siz in enumerate(hours):
-        sums = np.unique(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
-            lat > 4) & (tmin < -50)]).size
-        ar = np.sum(area[(sc >= scales[iind - 1]) & (sc < s) & (hour == siz) & (
-            lat > 4) & (tmin < -50)])
+        sums = np.unique(area[((hour == siz[0]) ^ (hour == siz[1])) & (lat > 5) & (tmin < -70)]).size
+
         nb.append(sums)
-        narea.append(ar)
 
-        # pos = np.isnan(arr40)
-
-        # arr40[:, pos[1]]=np.nan
 
     arr40 = np.transpose(arr40.T - np.mean(arr40, axis=1))
     mean40 = np.mean(arr40, axis=0)
     arr70 = np.transpose(arr70.T / np.sum(arr70, axis=1))
     mean70 = np.mean(arr70, axis=0)
 
-    nb = nb / np.sum(nb)
-    narea = narea / np.sum(narea)
+    number = np.array(nb)/np.sum(nb)
 
     f = plt.figure(figsize=(15, 10), dpi=300)
 
     ax = f.add_subplot(221)
-    plt.contourf(center, scales[0:-1] + 25, (arr40), cmap='RdBu_r', vmin=-5, vmax=5, levels=np.arange(-5,5.1,0.5))
+
+    plt.contourf(center, scenter , (arr40), cmap='RdBu_r')
+    #pdb.set_trace()
+
     plt.title('Normalised diurnal cycle of number of power maxima  < -40degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
@@ -448,7 +450,7 @@ def run_pcp_T():
     plt.colorbar(label='%')
 
     ax = f.add_subplot(222)
-    plt.contourf(center, scales[0:-1] + 25, (arr70) * 100, cmap='viridis', levels=np.arange(0,12.1,0.5))
+    plt.contourf(center, scales[0:-1] + 5, (arr70)*100 , cmap='viridis', levels=np.arange(0, 15, 0.5))
     plt.title('Normalised diurnal cycle of power maxima  < -70degC')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
@@ -457,7 +459,7 @@ def run_pcp_T():
     plt.colorbar(label='%')
 
     ax = f.add_subplot(223)
-    plt.contourf(center, scales[0:-1] + 25, (arr40 - mean40) , cmap='RdBu_r',
+    plt.contourf(center, scales[0:-1] + 5, (arr40 - mean40) , cmap='RdBu_r',
                  levels=np.arange(-3, 3.5, 0.5), extend='both')
     plt.title('Deviation from mean diurnal cycle < -40degC')
     plt.xlabel('Hours of day')
@@ -468,7 +470,7 @@ def run_pcp_T():
     #  plt.contourf(center, scales[0:-1] + 25, std40, hatches=['..'], colors='none', levels=[0.5, 1.5])
 
     ax = f.add_subplot(224)
-    plt.contourf(center, scales[0:-1] + 25, (arr70 - mean70) * 100, cmap='RdBu', levels=np.arange(-3, 3.5, 0.5),
+    plt.contourf(center, scales[0:-1] + 5, (arr70 - mean70) * 100, cmap='RdBu', levels=np.arange(-3, 3.5, 0.5),
                  extend='both')
     plt.title('Deviation from mean diurnal cycle < -70degC')
     plt.xlabel('Hours of day')
@@ -478,8 +480,18 @@ def run_pcp_T():
     plt.colorbar(label='%')
     #  plt.contourf(center, scales[0:-1] + 25, std70, hatches=['..'], colors='none', levels=[0.5, 1.5])
     plt.tight_layout()
-    # plt.savefig(fpath+'/scale_contour.png')
+    plt.savefig(fpath+'/scale_contour.png')
+    plt.close('all')
+
+    f = plt.figure()
 
 
+    ax = f.add_subplot(111)
+    plt.plot(center, arr70[-1, :], color='b', label='100-125km')
+    plt.plot(center, arr70[0, :], color='r', label='25-30km')
+    # plt.plot(hour, stddev70, color='y', label='standarddev')
+    plt.plot(center, mean70, color='orange', label='all scales mean')
+    plt.plot(center, number, color='g', label='storm number')
+    plt.legend()
 
     plt.show()

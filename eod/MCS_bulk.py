@@ -13,7 +13,7 @@ import cartopy
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_zR/')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -71,7 +71,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p',
+    pkl.dump(mdic, open('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_zR.p',
                            'wb'))
 
 
