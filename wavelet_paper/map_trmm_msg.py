@@ -118,7 +118,7 @@ def plot_data():
     ax1 = f.add_subplot(211)
     ax2 = f.add_subplot(212)
     map.set_lonlat_contours(add_xtick_labels=False)
-    map.visualize(ax=ax1, cbar_title='Cloud top temperature ($^{\circ}$C)',)
+    map.visualize(ax=ax1, cbar_title='Infrared temperature ($^{\circ}$C)',)
 
 
     map.set_plot_params(cmap='hot', vmax=91)

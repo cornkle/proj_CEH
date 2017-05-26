@@ -8,7 +8,7 @@ Created on Tue Mar 15 17:27:16 2016
 import os, fnmatch
 import numpy as np
 from math import sqrt
-import ipdb
+import pdb
 def locate(pattern, root_path, exclude=None):
     strg = []
     llist = os.listdir(root_path)
@@ -61,6 +61,30 @@ def draw_circle(x, y, radius):
     indloc = (distloc <= radius).nonzero()
     ycirc = indloc[0] - radius + y
     xcirc = indloc[1] - radius + x
+
+    return (ycirc, xcirc)
+
+
+"""
+Find all indices within the local circle of radius
+Input:
+x: x index of center point
+y: y index of center point
+radius: radius in pixels, floats are handled including the farthest point
+Returns a tuple of (y index, x index)
+"""
+def draw_ellipse(x, y, short, long):
+
+
+    xloc = np.arange(x-np.round(short), x+np.round(short)+1)
+    yloc = np.arange(y-np.round(long), y+np.round(long)+1)[:,None]
+    #xloc, yloc = np.meshgrid(xloc1, yloc1)
+    distloc = ((xloc - x)/short)**2 + ((yloc - y)/long)**2 <=1
+
+    pos = np.where(distloc)
+
+    ycirc = pos[0]+y
+    xcirc = pos[1]+x
 
     return (ycirc, xcirc)
 

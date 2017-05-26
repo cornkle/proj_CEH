@@ -24,6 +24,7 @@ def comp_lat():
     dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
     dic2 = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
+    thresh = 10
 
     hour = np.array(dic['hour'])
     hour2 = np.array(dic2['hour'])
@@ -32,6 +33,7 @@ def comp_lat():
     psum = np.array(dic['circle_p'])#[(hour>17) & (hour<=23)] #[(hour>15) & (hour<23)]
     tmin = np.array(dic['circle_t'])#[(hour>17) & (hour<=23)]
     lat = np.array(dic['clat'])#[(hour>17) & (hour<=23)]
+    lon = np.array(dic['clon'])
 
     pmean = np.array(dic['bulk_pmean'])
 
@@ -40,13 +42,14 @@ def comp_lat():
     # lat = np.array(dic['clat'])[(hour>17) & (hour<=23)]
 
     scales2 = np.array(dic2['scale'])
-    psum2 = np.array(dic2['circle_p'])[(scales2<=30) ]
-    tmin2 = np.array(dic2['circle_t'])[(scales2<=30) ]
-    lat2 = np.array(dic2['clat'])[(scales2<=30) ]
+    psum2 = np.array(dic2['circle_p'])[(scales2<=35) ]
+    tmin2 = np.array(dic2['circle_t'])[(scales2<=35) ]
+    lat2 = np.array(dic2['clat'])[(scales2<=35) ]
+    lon2 = np.array(dic2['clon'])[(scales2 <= 35)]
 
     lat22 = np.array(dic2['clat'])
 
-    bins = np.arange(5, 20, 1)  # compute probability per temperature range (1degC)
+    bins = np.arange(5, 19, 1)  # compute probability per temperature range (1degC)
     print(bins)
     centre = bins[1::]-1.5
     print(centre)
@@ -78,30 +81,30 @@ def comp_lat():
         if id == 0:
             continue
 
-        p_at_lat = np.concatenate(psum[(lat<b) & (lat>=bins[id-1])])
-        t_at_lat = np.concatenate(tmin[(lat < b) & (lat >= bins[id - 1])])
-        p_t = p_at_lat[t_at_lat<=-80]
+        p_at_lat = np.concatenate(psum[(lat<b) & (lat>=bins[id-1]) & (lon<=30)])
+        t_at_lat = np.concatenate(tmin[(lat < b) & (lat >= bins[id - 1])& (lon<=30)])
+        p_t = p_at_lat[t_at_lat<=-78]
 
 
-        p_at_lat2 = np.concatenate(psum2[(lat2<b) & (lat2>=bins[id-1])])
-        t_at_lat2 = np.concatenate(tmin2[(lat2 < b) & (lat2 >= bins[id - 1])])
-        p_t2 = p_at_lat2[t_at_lat2<=-80]
+        p_at_lat2 = np.concatenate(psum2[(lat2<b) & (lat2>=bins[id-1])& (lon2<=30)])
+        t_at_lat2 = np.concatenate(tmin2[(lat2 < b) & (lat2 >= bins[id - 1])& (lon2<=30)])
+        p_t2 = p_at_lat2[t_at_lat2<=-78]
 
 
-        lower, upper = stats.proportion_confint(np.sum(p_t>=30), p_t.size)
-        lower2, upper2 = stats.proportion_confint(np.sum(p_t2 >= 30), p_t2.size)
+        lower, upper = stats.proportion_confint(np.sum(p_t>=thresh), np.sum(np.isfinite(p_t)))
+        lower2, upper2 = stats.proportion_confint(np.sum(p_t2 >= thresh), np.sum(np.isfinite(p_t2)))
 
         print(b, bins[id-1])
 
-        ar = area[(lat<b) & (lat>=bins[id-1])]
-        ii = ids[(lat<b) & (lat>=bins[id-1])]
+        ar = area[(lat<b) & (lat>=bins[id-1])& (lon<=30)]
+        ii = ids[(lat<b) & (lat>=bins[id-1])& (lon<=30)]
         iuni, induni = np.unique(ii, return_index = True)
         a_lat = np.mean(np.array(ar[induni]))
         std = ss.sem(np.array(ar[induni]))
 
         std_error.append(std)
-        prob1.append(np.sum(p_t>=30) / p_t.size)
-        prob2.append(np.sum(p_t2 >= 30) / p_t2.size)
+        prob1.append(np.sum(p_t>=thresh) / np.sum(p_t>=0))
+        prob2.append(np.sum(p_t2 >= thresh) / np.sum(p_t2>=0))
         low.append(lower)
         low2.append(lower2)
         up.append(upper)
@@ -111,8 +114,8 @@ def comp_lat():
     f = plt.figure()
     ax1 = f.add_subplot(111)
 
-    ax1.plot(centre, np.array(prob1)* 100,  linewidth=1.5 , marker='o', label='temperature only')
-    ax1.plot(centre, np.array(prob2)* 100,  linewidth=1.5 , marker='o', color='r', label='scale < 40km')
+    ax1.plot(centre, np.array(prob1)* 100,  linewidth=1.5 , marker='o', label='Temperature only')
+    ax1.plot(centre, np.array(prob2)* 100,  linewidth=1.5 , marker='o', color='r', label='Scales < 35km')
     ax1.legend()
     ax1.set_title('Probability Precip>30mm')
     ax1.fill_between(centre, np.array(low) * 100, np.array(up) * 100, alpha=0.3)

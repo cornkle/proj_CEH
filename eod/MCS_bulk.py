@@ -13,7 +13,7 @@ import cartopy
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_zR/')
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -48,6 +48,7 @@ def perSys():
             mdic['isnz'].append(v[18])
             mdic['clon'].append(v[19])
             mdic['p'].append(v[20])
+            mdic['pc'].append(v[21])
         except TypeError:
             continue
 
@@ -71,7 +72,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_zR.p',
+    pkl.dump(mdic, open('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p',
                            'wb'))
 
 
@@ -81,6 +82,7 @@ def file_loop(f):
     res = []
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
+    outpc = dic['pconv'].values
     lon = dic['lon'].values
     lat = dic['lat'].values
     h = dic['time.hour'].values
@@ -90,20 +92,27 @@ def file_loop(f):
 
     tt = np.min(outt[(np.isfinite(outp))&(np.isfinite(outt))])
     pp = np.max(outp[(np.isfinite(outp))&(np.isfinite(outt))])
+    ppmin = np.min(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+
+    isfin = np.sum((np.isfinite(outp)) & (np.isfinite(outt)))
+
+    if isfin < 3:
+        return
+
     try:
-        pperc = outp[(outt<=-0) & (outp>0.1)]
+        pperc = outp[(outt<=-40) & (outp>0.1)]
     except IndexError:
         pperc = np.nan
     tmean = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     area = np.sum(outt<=-40)
 
-    if (area*25 < 350)  or (pp>200): #(pp<0.1)
+    if (area*25 < 15000)  or (pp>200) or (ppmin<0) or (area*25>800000): #(pp<0.1)
         return
 
     ao40 = np.sum(outt<=-40)
     po30 = np.sum(outp[(np.isfinite(outp))&(np.isfinite(outt))]>30)
-    isfin = np.size(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    isnz = np.size(outp[(outp>0.1) & (np.isfinite(outt))])
+    isfin = np.sum((np.isfinite(outp)) & (np.isfinite(outt)))
+    isnz = np.sum((outp>0.1) & (np.isfinite(outt)))
 
     lon30 = lon[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
     lat30 = lat[(np.isfinite(outp) & (np.isfinite(outt)) & (outp > 30))]
@@ -114,6 +123,7 @@ def file_loop(f):
     latmax = lat.max()
 
     p = outp[(np.isfinite(outp))&(np.isfinite(outt))]
+    pc = outpc[(np.isfinite(outpc)) & (np.isfinite(outt))]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p)
+    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, pc)

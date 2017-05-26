@@ -26,7 +26,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')   # /WA30/
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:100]
     print('Nb files', len(files))
@@ -49,7 +49,7 @@ def composite():
         comp_collect[v[2]] = {'p': [], 't': [], 'scale': [], 'hour': [], 'id': []}
         precip[v[2]] = []
 
-        # ret.append((kernel, kernelt, sc, id, dic['time.hour'].values.tolist(),
+        # ret.append((kernel, kernelt, sc - 1, id, dic['time.hour'].values.tolist(),
         #             clat, clon, lat_min, lat_max, lon_min, lon_max, area,
         #             bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
         #             circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
@@ -82,11 +82,11 @@ def composite():
 
         precip[v[2]].extend(v[19])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_blobs_noR.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_TR_perc.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_blobs_noR.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_TR_perc.p', 'wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_blobs_noR.p', 'wb'))
+    #pkl.dump(comp_collect, open(out + 'comp_collect_composite_T.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -105,35 +105,6 @@ def file_loop(fi):
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
 
-    outt[np.isnan(outt)] = 150
-    outt[outt >= -40] = 150
-    grad = np.gradient(outt)
-    outt[outt == 150] = np.nan
-    outp[np.isnan(outt)] = np.nan
-
-
-    area = np.sum(outt <= -40)
-    try:
-        bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    except ValueError:
-        return ret
-
-    try:
-        bulk_pmin = np.min(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    except ValueError:
-        return ret
-
-    # 2004-07-17_04:09:00_80.nc (127) is a huge circular storm. good example for organisation
-    #area gt 3000km2 cause that's 30km radius if circular
-    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax > 200) or (bulk_pmin < 0): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
-        print(area*25)
-        print('throw out')
-        return
-
-    print('Area', area*25)
-
-    perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
-
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
 
@@ -142,102 +113,61 @@ def file_loop(fi):
     lon_min = np.min(dic.lon.values)
     lon_max = np.max(dic.lon.values)
 
-    bulk_tmean = np.nanmean(outt)
+    outt[np.isnan(outt)] = 150
+    outt[outt >= -40] = 150
+
+    outt[outt==150] = np.nan
+    outp[np.isnan(outt)] = np.nan
+
+    area = np.sum(outt <= -40)
+    try:
+        bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    except ValueError:
+        return ret
+    try:
+        bulk_pmin = np.min(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    except ValueError:
+        return ret
+
+    # area gt 3000km2 cause that's 30km radius if circular
+    if (area * 25 < 15000) or (area * 25 > 800000) or (
+        bulk_pmax > 200) or (
+        bulk_pmin < 0):  # or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)): or (bulk_pmax < 1)
+        print(area * 25)
+        print('throw out')
+        return ret
+
+    bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))] >= 30)
     lat = dic['lat'].values
     bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))] >= 30)
+    bulk_tmean = np.nanmean(outt)
 
+    perc = np.percentile(outt[np.isfinite(outt)], 80)
+    pos = np.where(outt >= perc)
+    outt[pos] = np.nan
+    outp[pos] = np.nan
+    outint = np.round(outt).astype(int)
 
-    o2 = outt.copy()
-    o2[np.isnan(o2)] = perc
-    nok = np.where(abs(grad[0]) > 80)
-    d = 2
-    i = nok[0]
-    j = nok[1]
-
-    for ii, jj in zip(i, j):
-        kern = o2[ii - d:ii + d + 1, jj - d:jj + d + 1]
-        o2[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
-
-    wav = util.waveletT(o2, 5)
-    wl = wav['t']  # [nb, :, :]
-
-    # maxout = (
-    #     wl == ndimage.maximum_filter(wl, (6, 6, 5), mode='constant',
-    #                                  cval=np.amax(wl) + 1))  # (np.round(orig / 5))
-
-    #(3, 3 ,len(wav['scales'])-1)
-    arr = np.array(wav['scales'], dtype=str)
-
-    scale_ind = range(arr.size)
-
-    wlperc = wav['t'].copy()
-    figure = np.zeros_like(outt)
-    #
-    # for s in range(wlperc.shape[0]):
-    #     wlperc[s,:,:][wlperc[s,:,:] < np.percentile(wlperc[s,:,:][wlperc[s,:,:]>=0.05], 70)] = 0
-    #
-    # labels, numL = label(wlperc)
-    # for s in [0,1]:
-    #
-    #      f = plt.figure()
-    #      plt.imshow(labels[s,:,:])
-    #
-    # return
+    bins = np.arange(-95,-38,4)
+    cent = (np.arange(-95,-38,4)-2)[1::]
 
     yp, xp = np.where(outp > 30)
 
-    size = [15,20,30,40,50,60,70,80,90,100,120,140,160,180,200,220]
+    figure = np.zeros_like(outt)
+    for idd, sc in enumerate(bins):
 
-    for sc in wav['scales'][::-1]:
-        print(sc)
+        if idd == 0:
+            continue
 
-        mimin = np.argmin(np.abs(size-sc))
+        filter = np.where((outt>=bins[idd-1]) & (outt<sc))
 
-
-        idd = wav['scales'].tolist().index(sc)
-        wll = wlperc[idd,:,:].copy()
-      #  wll[wll < np.percentile(wll[wll >= 0.01], 90)] = 0
-      #  wll[wll < np.percentile(np.arange(wll.min(), wll.max()+0.1,0.1), 5)] = 0
-      #  wll[wll < np.percentile(wll[wll >= 0.05], 75)] = 0
-        wll[(wll < sc**.5)] = 0
-
-
-        labels, numL = label(wll)
-
-        for ll in np.unique(labels):
-            if ll==0:
-                continue
-            pos =  np.where(labels==ll)
-            if np.max(wll[pos]) < np.percentile(wll[wll >= 1], 50):
-                continue
-
-            figure[pos] = size[mimin]
-
-
-        #figure[np.nonzero(labels)] = size[mimin]
-    figure[np.isnan(outt)]=0
-
-    # pdb.set_trace()
-    figure[figure==0]=np.nan
-    f = plt.figure()
-    ax1=f.add_subplot(131)
-    plt.imshow(outt)
-    plt.imshow(figure, cmap='viridis')
-
-    ax2 = f.add_subplot(132)
-    plt.imshow(figure, cmap='viridis')
-    plt.plot(xp, yp, 'yo', markersize=3)
-    ax3 = f.add_subplot(133)
-    plt.imshow(outt)
-    ax1.invert_yaxis()
-    ax2.invert_yaxis()
-    ax3.invert_yaxis()
-
-    plt.show()
-    return
+        figure[filter] = cent[idd-1]
+    #
+    # f = plt.figure()
+    # plt.imshow(figure)
+    # plt.plot(xp, yp, 'yo', markersize=3)
 
     for sc in np.unique(figure):
 
@@ -253,10 +183,7 @@ def file_loop(fi):
             if blob == 0:
                 continue
 
-            pos = np.where(labels_blob == blob) #(figure == sc)
-
-            # if len(pos[0]) < 5:
-            #     continue
+            pos = np.where((labels_blob == blob)) #(figure == sc)
 
             circle_p = outp[pos]
             circle_t = outt[pos]
@@ -264,46 +191,46 @@ def file_loop(fi):
 
             # if no valid temperature pixels (noise from wavelet outside of storm) or very little valid TRMM pixels
             # (very small overlap of TRMM and MSG), continue!
-            if (np.sum(np.isfinite(circle_t)) <= 0 ):
+            if (np.sum(np.isfinite(circle_t)) <= 3 ):
                 continue
 
-            if  ((circle_valid) < 3 ):
+            if  ((circle_valid) <= 3 ):
                 continue
 
             circle_sum = np.nansum(circle_p)
-            ## some rain at least
+            # # ## some rain at least
             # if circle_sum < 0.1:
             #     continue
 
             circle_Tcenter = np.nanmin(outt[pos])
 
-            y, x = np.where((outt == circle_Tcenter) & (labels_blob == blob) & (figure == sc))
-
-            # figure[figure==0]=np.nan
-            # f = plt.figure()
-            # f.add_subplot(131)
-            # plt.imshow(outt)
-            # plt.imshow(figure, cmap='viridis')
-            # f.add_subplot(132)
-            # plt.imshow(figure, cmap='viridis')
-            # plt.plot(xp, yp, 'yo', markersize=3)
-            # plt.plot(pos[1], pos[0], 'ro', markersize=3)
-            # f.add_subplot(133)
-            # plt.imshow(outt)
-            # plt.show()
-
-            r = 20
-            kernel = tm_utils.cut_kernel(outp, x[0], y[0], r)
-            kernelt = tm_utils.cut_kernel(outt, x[0], y[0], r)
-
-            if kernel.shape != (r * 2 + 1, r * 2 + 1):
-                kernel = np.zeros((41, 41)) + np.nan
-            if kernelt.shape != (r * 2 + 1, r * 2 + 1):
-                kernelt = np.zeros((41, 41)) + np.nan
-
+            # y, x = np.where((outt == circle_Tcenter) & (labels_blob == blob))
+            #
+            # # figure[figure==0]=np.nan
+            # # f = plt.figure()
+            # # f.add_subplot(131)
+            # # plt.imshow(outt)
+            # # plt.imshow(figure, cmap='viridis')
+            # # f.add_subplot(132)
+            # # plt.imshow(figure, cmap='viridis')
+            # # plt.plot(xp, yp, 'yo', markersize=3)
+            # # plt.plot(pos[1], pos[0], 'ro', markersize=3)
+            # # f.add_subplot(133)
+            # # plt.imshow(outt)
+            # # plt.show()
+            #
+            # r = 20
+            # kernel = tm_utils.cut_kernel(outp, x[0], y[0], r)
+            # kernelt = tm_utils.cut_kernel(outt, x[0], y[0], r)
+            #
+            # if kernel.shape != (r * 2 + 1, r * 2 + 1):
+            #     kernel = np.zeros((41, 41)) + np.nan
             #
             # if np.nansum(kernel) < 1:
             #     continue
+
+            kernel = 0
+            kernelt = 0
 
             circle_nz = np.nansum(circle_p>0.1)
             circle_g30 = np.nansum(circle_p >= 30)
@@ -325,33 +252,31 @@ def file_loop(fi):
             except IndexError:
                 circle_p90 = np.nan
 
-
             #### HOW TO GIVE BACK THE MAX SCALE PER SYSTEM??
 
-            ret.append((kernel, kernelt, sc, id, dic['time.hour'].values.tolist(),
+            ret.append((kernel, kernelt, sc-1, id, dic['time.hour'].values.tolist(),
                         clat, clon, lat_min, lat_max, lon_min, lon_max, area,
                         bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
                         circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
                         circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
 
 
-    figure[figure==0]=np.nan
-    f = plt.figure()
-    f.add_subplot(133)
-    plt.imshow(outt, cmap='inferno')
-    plt.imshow(figure, cmap='viridis')
-    f.add_subplot(132)
-    plt.imshow(figure, cmap='viridis')
-    plt.colorbar()
-    plt.plot(xp, yp, 'yo', markersize=3)
-    f.add_subplot(131)
-    plt.imshow(outt, cmap='inferno')
-    plt.plot(xp, yp, 'yo', markersize=3)
-    plt.show()
-    # #
+    # figure[figure==0]=np.nan
+    # f = plt.figure()
+    # f.add_subplot(133)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.imshow(figure, cmap='viridis')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.colorbar()
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # f.add_subplot(131)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.plot(xp, yp, 'yo', markersize=3)
+    # plt.show()
     #
-    #f = plt.figure()
-
+    #
+    # f = plt.figure()
     # fcnt = 0
     # vv = 4
     # for s in scale_ind:

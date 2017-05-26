@@ -7,13 +7,16 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
+from scipy import stats
+import matplotlib.cm as cm
 
 
 
 # In[173]:
 
 dic = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_zR.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
-
+dic2 = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
 
 # In[174]:
 
@@ -24,7 +27,12 @@ _area = np.array(dic['area'])*25
 _isfin = np.array(dic['isfin'])
 _po30 = np.array(dic['po30'])
 _perc = np.array(dic['pperc'])
+_pp = np.array(dic['p'])
 print('Number MCSs:', _p.size)
+
+_p2=np.array(dic2['pmax']) # 98th perc per MCS
+_area2 = np.array(dic2['area'])*25
+_pp2 = np.array(dic2['p'])
 
 
 # In[175]:
@@ -32,11 +40,14 @@ print('Number MCSs:', _p.size)
 pthresh = 500
 athresh = 5000000
 p = _p[(_p<=pthresh)&(_area<=athresh)]
+pp = _pp[(_p<=pthresh)&(_area<=athresh)]
 t = _t[(_p<=pthresh)&(_area<=athresh)]
 clat = _clat[(_p<=pthresh)&(_area<=athresh)]
 area = _area[(_p<=pthresh)&(_area<=athresh)]
 isfin = _isfin[(_p<=pthresh)&(_area<=athresh)]
 po30 = _po30[(_p<=pthresh)&(_area<=athresh)]
+
+p2 = _p2[(_p2<=pthresh)&(_area2<=athresh)]
 
 
 # In[176]:
@@ -46,11 +57,17 @@ print('Percentile: ', np.percentile(_perc[_perc>=1], 99))
 print(area.min(), area.max())
 print(p.min(), p.max())
 
+arsum = np.sum(area)/10
+sarea = np.sort(area)
+
 
 # In[177]:
 
 bins=list(range(0, 900000,5000))   # compute probability per temperature range (1degC) 
 bins=[300,1000,2000,5000,10000,15000,25000,50000,100000,250000,500000]
+#bins=np.percentile(area,np.arange(0,101,10))
+bins=[10000,50000,100000,150000,230000,300000,500000]
+
 apo30=np.where(p > 30)  
 area30=area[apo30]   
 
@@ -69,13 +86,50 @@ awidth = (abins[1:] - abins[:-1])
 probs=[]
 nb = []
 cnt = []
-for binn in abins:       
+for binn in abins:
         prob = np.sum(po30[(area>=binn)])
         nbb = np.sum(area>=binn)
         ccnt = np.sum(isfin[(area>=binn)])
         probs.append(prob)
         nb.append(nbb)
         cnt.append(ccnt)
+
+maxlist =[]
+stddev=[]
+maxlistt = []
+sttddev=[]
+arrain = []
+for idd, binn in enumerate(bins):
+    if idd==0:
+        continue
+    #pval = np.concatenate(pp[(area>bins[idd-1]) & (area<=binn)])
+    pvals=np.concatenate(pp[(area > bins[idd - 1]) & (area <= binn)])
+    pval = np.mean((p[(area > bins[idd - 1]) & (area <= binn)]))
+
+    print(np.sum(area[(area > bins[idd - 1]) & (area <= binn)]))
+
+    weights = np.ones_like(pvals[pvals>=0.1]) / float(len(pvals[pvals>=0.1]))
+    hist, hplot = np.histogram(pvals[pvals>=0.1], bins=np.arange(30, 150 + 1, 5), range=(30, 150), weights=weights)
+
+    tval = t[(area > bins[idd - 1]) & (area <= binn)]
+    imax = np.mean(pval[pval>1])
+    std = np.std(pval[pval>1])
+    iimax = np.mean(tval[tval<-50])
+    tstd = np.std(tval[tval<-50])
+    maxlist.append(imax)
+    stddev.append(std)
+    sttddev.append(tstd)
+    maxlistt.append(iimax)
+    arrain.append(hist)
+
+
+thre=0.5
+weights = np.ones_like(p[p>=thre]) / float(len(p[p>=thre]))
+hist, h = np.histogram(p[p>=thre], bins=np.arange(1,100+1,1), range=(1,100))
+
+weights = np.ones_like(p2[p2>=thre]) / float(len(p2[p2>=thre]))
+hist2, h = np.histogram(p2[p2>=thre], bins=np.arange(1,100+1,1),  range=(1,100))
+
 
 
 # In[179]:
@@ -126,7 +180,49 @@ ax1.legend(loc='lower left')
 
 
 plt.tight_layout()
-plt.savefig(path+'area-40.png')
+plt.savefig(path+'area-40_test.png')
+plt.close('all')
+
+fig = plt.figure(figsize=(8, 5), dpi=300)
+
+ax2 = fig.add_subplot(221)
+
+ax2.scatter(acenter, maxlist)
+ax2.set_xlabel('log10(Area threshold [km$^2$])')
+ax2.set_ylabel('Average maximum rainfall')
+gradient, intercept, r_value, p_value, std_err = stats.linregress(np.log10(acenter),maxlist)
+print('rval', r_value)
+
+#ax2.plot(np.log10(acenter), gradient*np.log10(acenter)+intercept)
+#ax2.text(3, 50, str(np.round(gradient,decimals=2))+'x + '+str(np.round(intercept,decimals=2)))
+#ax2.errorbar(np.log10(acenter), maxlist, yerr=stddev)
+
+
+# line, = ax2.semilogy(hist, color='r', lw=2, label='Small')
+# line, = ax2.semilogy(hist2, color='b', lw=2, label='Big')
+
+ax1 = fig.add_subplot(222)
+
+ax1.scatter(acenter, maxlistt, color='r')
+#ax1.errorbar(acenter, maxlistt, yerr=sttddev, color='r')
+gradient, intercept, r_value, p_value, std_err = stats.linregress(np.log10(acenter),maxlistt)
+print('rval', r_value)
+#ax1.plot(np.log10(acenter), gradient*np.log10(acenter)+intercept)
+#ax1.text(3, -75, str(np.round(gradient,decimals=2))+'x + '+str(np.round(intercept,decimals=2)))
+ax1.set_xlabel('log10(Area threshold [km$^2$])')
+ax1.set_ylabel('Average minimum temperature')
+ax2.set_title('~ 13000 Cold clouds < -40degC, > 320km2')
+
+ax3 = fig.add_subplot(223)
+colors = cm.viridis(np.linspace(0,1,len(arrain)))
+for hh, c , b in zip(arrain, colors, bins):
+    ax3.semilogy(hplot[0:-1], hh, color=c , label=str(b))
+
+ax3.legend()
+
+
+plt.tight_layout()
+plt.savefig(path+'area_p_t.png')
 plt.close('all')
 
 

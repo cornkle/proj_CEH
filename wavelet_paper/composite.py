@@ -53,10 +53,10 @@ for id, r in enumerate(ranges):
         p = np.array(comp_collect[k]['p'])
         t = np.array(comp_collect[k]['t'])
 
-        pos = np.where(t[:, 21, 21] <= -45)
+        pos = np.where(t[:, 21, 21] <= -50)
         pos = pos[0]
 
-        big = (p>30)[pos,:,:]
+        big = (p>10)[pos,:,:]  # MUST BE 30 for extreme rainfall
         fin = (np.isfinite(p))[pos,:,:]
         arr = p[pos,:,:]
         nz = (p>0.1)[pos,:,:]
@@ -170,7 +170,7 @@ cbar = f.colorbar(mp2, cax)
 cbar.ax.tick_params(labelsize=12)
 cbar.set_label('Pixel probability (%)', fontsize=12)
 
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noR.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_noR2.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

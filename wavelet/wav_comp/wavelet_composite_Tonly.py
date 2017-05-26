@@ -84,13 +84,13 @@ def composite():
         precip[v[2]].extend(v[19])
         ids.append(v[3])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_T.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_Tsimple.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_T.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_Tsimple.p', 'wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_T.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_Tsimple.p', 'wb'))
 
-    pkl.dump(np.unique(ids), open(out + 'ids_T.p', 'wb'))
+    pkl.dump(np.unique(ids), open(out + 'ids_Tsimple.p', 'wb'))
 
     # df = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p', 'rb'))
     #
@@ -133,27 +133,34 @@ def file_loop(fi):
     outt[outt >= -40] = 150
 
     outt[outt==150] = np.nan
+    outt = np.round(outt)
     outp[np.isnan(outt)] = np.nan
 
     area = np.sum(outt <= -40)
     lat = dic['lat'].values
 
-    if np.sum(outp>0) < 10:
-        ret = []
+    # if np.sum(outp>0) < 10:
+    #     ret = []
+    #     return ret
+    try:
+        bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    except ValueError:
         return ret
-    if np.nanmin(outp) < 0:
-        ret = []
+
+    try:
+        bulk_pmin = np.min(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+    except ValueError:
         return ret
 
     bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
-    bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
+
     bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))] >= 30)
 
 
     #area gt 3000km2 cause that's 30km radius if circular
-    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax < 5) or (bulk_pmax > 200): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
+    if (area * 25 < 15000) or (area * 25 > 800000) or (bulk_pmax > 200) or (bulk_pmin < 0): #or (np.sum(np.isfinite(outp)) < (np.sum(np.isfinite(outt))*0.1)):
         print(area*25)
         print('throw out')
         ret = []
@@ -173,7 +180,7 @@ def file_loop(fi):
         ret = []
         return ret
 
-    if  ((circle_valid) <= 10 ):
+    if  ((circle_valid) <= 3 ):
         ret = []
         return ret
 
@@ -186,14 +193,8 @@ def file_loop(fi):
 
     y, x = np.unravel_index(np.nanargmin(outt), np.shape(outt))
 
-
-    r = 20
-    kernel = tm_utils.cut_kernel(outp, x, y, r)
-    kernelt = tm_utils.cut_kernel(outt, x, y, r)
-
-
-    if kernel.shape != (r * 2 + 1, r * 2 + 1):
-        kernel = np.zeros((41, 41)) + np.nan
+    kernel = np.zeros((41, 41)) + np.nan
+    kernelt = np.zeros((41, 41)) + np.nan
 
     # if np.nansum(kernel) < 1:
     #     ret = []

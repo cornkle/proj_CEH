@@ -140,10 +140,10 @@ def scatter_sc_t():
 
 
 def val_vs_extreme_2d():
-    path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000.p', 'rb'))
+   # path = 'D://data/wavelet/saves/pandas/'
+    dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -217,7 +217,7 @@ def val_vs_extreme_2d():
     ax = fig.add_subplot(111)
     Zm = np.ma.masked_invalid(collect)
     da = xr.DataArray(Zm, coords=[udscale, bins], dims=['y', 'x'])
-    da.plot.pcolormesh(cmap='viridis', vmax=60, levels=np.arange(0,61,5))
+    da.plot.pcolormesh(cmap='viridis', vmax=30, levels=np.arange(0,30,1))
   #  plt.contour(bins, udscale, collect, cmap='Reds')
    # plt.colorbar(label='Extreme rainfall fraction (%)')
    # plt.contour(bins, udscale, collect2, cmap='Blues')
@@ -235,15 +235,18 @@ def val_vs_extreme_2d():
     # plt.colorbar(label='Extreme pix / valid pix (%)')
 
    # plt.tight_layout()
-    plt.savefig(path + 'extreme_fraction_sc_T.png')
+    plt.savefig(fpath + 'extreme_fraction_sc_T.png')
     # #plt.close('all')
 
-def probability():
+def probability(precip=None,thresh=None):
+
+    if thresh == None:
+        thresh = 30
 
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000.p', 'rb'))
+    dic = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -253,8 +256,10 @@ def probability():
     udscale = np.unique(scales)
 
     print(np.percentile(scales, np.arange(0,101,20)))
-
-    psum = np.array(dic['circle_p'])
+    if precip == None:
+        precip = 'circle_p'
+    psum = np.array(dic[precip])
+    print(psum[0:10])
     tmin = np.array(dic['circle_t'])
     tbulk_min = np.array(dic['bulk_tmin_p'])
     tbulk_mean = np.array(dic['bulk_tmean_p'])
@@ -262,29 +267,53 @@ def probability():
     pbulk_mean = np.array(dic['bulk_pmean'])
     pbulk_g30 = np.array(dic['bulk_g30'])
     clat = np.array(dic['clat'])
+    pcsum=np.array(dic['circle_p'])
 
 
     pp = np.concatenate(psum)
     tt = np.concatenate(tmin)
-    pall_g30 = np.sum(pp>30)
+    pall_g30 = np.sum(pp>thresh)
 
-    pp15= np.concatenate(psum[(scales<=40)])
+    pp15= np.concatenate(psum[(scales<=35)])
     pt15 = (pp[tt <= -65])
-
+    print('Percentage >30 from pp>=8', pall_g30/np.sum(pp>=8))
     print('Nb 30mm identified', pall_g30)
     print('Nb 30mm bulk', np.sum(pbulk_g30[uinds]))
     print('Nb 30mm identified to bulk', pall_g30 / np.sum(pbulk_g30[uinds]))
-    print('Nb 30mm identified lt 40km', np.sum(pp15>=30))
-    print('Nb 30mm identified lt 40km to identified', np.sum(pp15>=30) / pall_g30)
-    print('Nb 30mm pixel identified lt 40km to bulk', np.sum(pp15 >= 30) / np.sum(pbulk_g30[uinds]))
+    print('Nb 30mm identified lt 40km', np.sum(pp15>=thresh))
+    print('Nb 30mm identified lt 40km to identified', np.sum(pp15>=thresh) / pall_g30)
+    print('Nb 30mm pixel identified lt 40km to bulk', np.sum(pp15 >= thresh) / np.sum(pbulk_g30[uinds]))
 
-    print ('Nb 30mm pixel identified lt -65 to to identified', np.sum(pt15>=30) / pall_g30)
+    print ('Nb 30mm pixel identified lt -65 to to identified', np.sum(pt15>=thresh) / pall_g30)
 
+    tconv = np.concatenate(tmin)
+    pconv = np.concatenate(psum)
+    pconv2 = np.concatenate(pcsum)
+
+    print(precip, np.nanmean(pconv[pconv>8]))
+
+    print('Convective fraction <-80, all scales', np.sum((tconv <= -80) & (pconv >= 8)) / np.sum((tconv <= -80) & (pconv2>=0)))
+
+    tconv = np.concatenate(tmin[(scales<=30)])
+    pconv = np.concatenate(psum[(scales <= 30)])
+    pconv2 = np.concatenate(pcsum[(scales <= 30)])
+
+    print('Convective fraction <-80', np.sum((tconv<=-80) & (pconv>=8)) / np.sum((tconv<=-80) & (pconv2>=0)))
+
+    tconv = np.concatenate(psum)
+    pconv = np.concatenate(psum[(scales <= 30)])
+
+    print('Convective fraction rel to <35km', np.sum( (pconv >= 8)) / np.sum((tconv >=8)))
+
+    tconv = np.concatenate(pcsum)
+    pconv = np.concatenate(psum)
+
+    print('Convective fraction rel to all SCF', np.sum((pconv >= 8)) / np.sum((tconv >= 0.1)))
 
     bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
-    ranges = [10, 30, 60, 90, 180]
-    outrange = [ 30, 60, 90,  180]
+    ranges = [10, 35, 90, 180]
+    outrange = [ 35,  90,  180]
     # #
     # ranges = [15, 30, 60, 202]
     # outrange = [    30, 60, 202]
@@ -301,7 +330,8 @@ def probability():
     ax3 = fig.add_subplot(133)
     colors = cm.viridis_r(np.linspace(0, 1, len(outrange)))
 
-    hh = []
+    hh1 = []
+    hh2 = []
     low = []
     up = []
 
@@ -317,18 +347,17 @@ def probability():
         # t = tmin[(scales <= r) & (scales > ranges[id - 1])]
         # p = pmax[(scales <= r) & (scales > ranges[id - 1])]
 
-        to30 = t[p>=30]
+        to30 = t[p>=thresh]
 
         # bins = np.percentile(t, np.arange(0,101,5))
         # center = (bins[:-1] + bins[1:]) / 2
 
-        print('Tbins', bins)
         H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -45))
         H, bins = np.histogram(t, bins=bins, range=(-95, -45))
         H = H.astype(float)
         H1 = H1.astype(float)
 
-        H[H < 10] = np.nan
+        H[H < 30] = np.nan
 
         histo = H1 / H * 100.
 
@@ -345,7 +374,8 @@ def probability():
         ax3.plot(center, H1, color=c, linewidth=1.5, label=str(start) + '-' + str(r) + ' km',marker='o')
         ax3.set_title('Number of rainfall pixel >30mm (nP)')
 
-        hh.append(histo)
+        hh1.append(H1)
+        hh2.append(H)
         low.append(lower)
         up.append(upper)
 
@@ -359,14 +389,14 @@ def probability():
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
-    return center, hh, low, up
+    return center, np.array(hh1), np.array(hh2), low, up
 #
 def probability_perCircle():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #path = 'D://data/wavelet/saves/pandas/'
 
-    dic = pkl.load(open(path+'3dmax_gt15000.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 
 
     ids = np.array(dic['id'])
@@ -435,7 +465,7 @@ def probability_perCircle():
 
         #ipdb.set_trace()
 
-        H[H < 10] = np.nan
+        H[H < 20] = np.nan
 
         histo = H1 / H * 100.
 
@@ -474,6 +504,88 @@ def probability_perCircle():
 
     return center, hh, low, up
 
+def p_mean():
+    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    #  path = 'D://data/wavelet/saves/pandas/'
+    dic = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+
+    ids = np.array(dic['id'])
+    scales = np.array(dic['scale'])
+
+    uids, uinds = np.unique(dic['id'], return_index=True)
+
+    udscale = np.unique(scales)
+
+    print(np.percentile(scales, np.arange(0, 101, 20)))
+
+    psum = np.array(dic['circle_p'])
+    tmin = np.array(dic['circle_t'])
+    tbulk_min = np.array(dic['bulk_tmin_p'])
+    tbulk_mean = np.array(dic['bulk_tmean_p'])
+    pbulk_max = np.array(dic['bulk_pmax'])
+    pbulk_mean = np.array(dic['bulk_pmean'])
+    pbulk_g30 = np.array(dic['bulk_g30'])
+    clat = np.array(dic['clat'])
+
+    bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
+    print(bins)
+    ranges = [10, 30, 60, 90, 180]
+    outrange = [30, 60, 90, 180]
+    # #
+    # ranges = [15, 30, 60, 202]
+    # outrange = [    30, 60, 202]
+
+
+    fig = plt.figure(figsize=(15, 5), dpi=400)
+    cc = 0.8
+    width = 0.7 * (bins[1] - bins[0])
+
+    center = (bins[:-1] + bins[1:]) / 2
+
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
+    colors = cm.viridis_r(np.linspace(0, 1, len(outrange)))
+
+    hh = []
+
+    for id, r in enumerate(ranges):
+        if id == 0:
+            continue
+
+        c = colors[id - 1]
+        start = ranges[id - 1]
+
+        t = np.concatenate(tmin[(scales <= r) & (scales > ranges[id - 1])])
+        p = np.concatenate(psum[(scales <= r) & (scales > ranges[id - 1])])
+        # t = tmin[(scales <= r) & (scales > ranges[id - 1])]
+        # p = pmax[(scales <= r) & (scales > ranges[id - 1])]
+        plist = []
+        for idt, tp in enumerate(bins):
+            if idt == 0:
+                continue
+
+            isp = p[(t <= tp) & (t > bins[idt - 1]) & (p > 0.1)]
+
+            if len(isp) < 20:
+                pmedian = np.nan
+                plist.append(pmedian)
+                continue
+
+            try:
+                pmedian = np.nanmean(isp)
+            except IndexError:
+                pmedian = np.nan
+
+            plist.append(pmedian)
+
+        hh.append(np.array(plist))
+
+
+    return center, hh
+
+
 
 def plot():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
@@ -481,49 +593,72 @@ def plot():
  #   path = 'D://data/wavelet/saves/pandas/'
  #   fpath = 'D://data/wavelet/saves/pandas/'
 
-    x,y, l, u = probability()
+    x,y1, y2, l, u = probability()
 
-    xx,yy,ll,uu = probability_perCircle()
+    xx,yy1, yy2, ll, uu = probability('circle_pc', 10)
 
-    ranges = ['15-30', '30-60', '60-90', '90-180']
+    ranges = ['15-35', '35-90', '90-180']
 
-    f = plt.figure(figsize=(12, 5), dpi=400)
+    f = plt.figure(figsize=(11, 4), dpi=300)
 
     ax1 = f.add_subplot(121)
     ax2 = f.add_subplot(122)
 
     colors = cm.viridis_r(np.linspace(0, 1, len(ranges)))
 
-    for yl, c,  rang, rl, ru in zip(y,colors, ranges,l, u):
+    y = y1/y2*100
+    yy = yy1 / y2 * 100
+    for yl, c,  rang, rl, ru in zip(yy,colors, ranges,ll, uu):
+        rl = rl * 100
+        ru = ru * 100
 
         ax1.plot(xx, yl, color=c, linewidth=1.5, label=rang+ ' km', marker='o')
-        ax1.fill_between(xx, rl * 100, ru * 100, color=c, alpha=0.3)
+        ax1.fill_between(xx, rl, ru, color=c, alpha=0.3)
 
-    for yl, c,  rang, rl, ru in zip(yy,colors, ranges,ll, uu):
-        ax2.plot(xx, yl, color=c, linewidth=1.5, label=rang+ ' km', marker='o')
-        ax2.fill_between(xx, rl * 100, ru * 100, color=c, alpha=0.3)
 
+    for yl, c,  rang, rl, ru in zip(y,colors, ranges,l, u):
+        rl = rl*100
+        ru = ru*100
+
+        ax2.plot(xx, yl, color=c, linewidth=1.5,marker='o')
+        ax2.fill_between(xx, rl , ru, color=c, alpha=0.3)
 
     ax1.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
     ax1.set_ylabel('Pixel probability (%)') #| Pixel precip $>$ 30 $mm\ h^{-1}$)')
-    ax1.set_ylim(-1,45)
+    ax1.set_ylim(-1,80)
+    ax1.legend()
     ax1.minorticks_on()
-    plt.legend()
 
-    ax2.set_xlabel('SCF min. temperature (5 $^{\degree}C$ bins)')
-    ax2.set_ylabel('SCF probability (%)')# | Max. precip $>$ 30 $mm\ h^{-1}$)')
-    ax2.set_ylim(-1, 86)
+    ax2.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
+    ax2.set_ylabel('Pixel probability (%)')# | Max. precip $>$ 30 $mm\ h^{-1}$)')
+    ax2.set_ylim(-1, 45)
     ax2.minorticks_on()
+    #
+    # for yl, c,  rang, rl, ru in zip(y1,colors, ranges,ll, uu):
+    #     ax3.plot(xx, yl, color=c, linewidth=1.5,marker='o')
+    #
+    #
+    # for yl, c,  rang, rl, ru in zip(y2,colors, ranges,ll, uu):
+    #     ax4.plot(xx, yl, color=c, linewidth=1.5,marker='o')
 
-    plt.text(0.03, 0.93, 'a)', transform=ax1.transAxes, fontsize=16)
-    plt.text(0.03, 0.93, 'b)', transform=ax2.transAxes, fontsize=16)
+
+    # plt.text(0.03, 0.93, 'a)', transform=ax1.transAxes, fontsize=16)
+    # plt.text(0.03, 0.93, 'b)', transform=ax2.transAxes, fontsize=16)
+
+    fsiz = 14
+    x = 0.02
+    plt.annotate('a)', xy=(0.03, 0.945), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('b)', xy=(0.51, 0.945), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T_paper_abs.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_paper.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
+    print('Proportion big scale small scale: ', y[0]/y[1])
 
 if __name__ == "__main__":
     plot()

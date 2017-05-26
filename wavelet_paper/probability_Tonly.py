@@ -42,11 +42,13 @@ def comp_t():
     clat2 = np.array(dic2['clat'])
 
 
-    psum = np.concatenate(np.array(dic['circle_p'])) #[(hour>15) & (hour<23)]
+    psum = np.concatenate(np.array(dic['circle_pc'])) #[(hour>15) & (hour<23)]
+    psumm = np.concatenate(np.array(dic['circle_p']))  # [(hour>15) & (hour<23)]
     tmin = np.concatenate(np.array(dic['circle_t']))
 
-    psum2 = np.concatenate(np.array(dic2['circle_p'])[scales2<=30])
-    tmin2 = np.concatenate(np.array(dic2['circle_t'])[scales2<=30])
+    psum2 = np.concatenate(np.array(dic2['circle_pc'])[scales2<=35])
+    psumm2 = np.concatenate(np.array(dic2['circle_p'])[scales2 <= 35])
+    tmin2 = np.concatenate(np.array(dic2['circle_t'])[scales2<=35])
 
     print('T', np.sum((psum>=30) ))
     print('S', np.sum((psum2>=30) ))
@@ -72,6 +74,13 @@ def comp_t():
     print('Nb 30mm identified T65', pt15 / pall_g30)
     print('Nb 30mm identified S40', pp15 / pall_g302)
 
+    print('-80 conv rain T', np.sum((tmin <= -80) & (psum>=8) )/np.sum((tmin <= -80) & (psum>=0)))
+    print('-80 conv rain S', np.sum((tmin2 <= -80) & (psum2>=8) )/np.sum((tmin2 <= -80)& (psum2>=0)))
+
+    pdb.set_trace()
+
+    print('Number of points', np.sum(np.isfinite(tmin2)))
+
     bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
 
@@ -90,8 +99,8 @@ def comp_t():
 
 
     print('Tbins', bins)
-    H1, bins1 = np.histogram(tmin[(psum>=30) ], bins=bins, range=(-95, -45))
-    H, bins = np.histogram(tmin[(psum>=0) ], bins=bins, range=(-95, -45))
+    H1, bins1 = np.histogram(tmin[(psum>=8) ], bins=bins, range=(-95, -45))
+    H, bins = np.histogram(tmin[psumm>=0], bins=bins, range=(-95, -45))
 
     H = H.astype(float)
     H1 = H1.astype(float)
@@ -101,7 +110,7 @@ def comp_t():
     histo = H1 / H * 100.
 
     H12, bins12 = np.histogram(tmin2[psum2>=30], bins=bins, range=(-95, -45))
-    H2, bins2 = np.histogram(tmin2[psum2>=0], bins=bins, range=(-95, -45))
+    H2, bins2 = np.histogram(tmin2[psumm2>=0], bins=bins, range=(-95, -45))
     H2 = H2.astype(float)
     H12 = H12.astype(float)
 
@@ -113,8 +122,8 @@ def comp_t():
     lower2, upper2 = stats.proportion_confint(H12, H2)
 
 
-    ax1.plot(center, histo,  linewidth=1.5 , marker='o', label='temperature only')
-    ax1.plot(center, histo2,  linewidth=1.5 , marker='o', color='r', label='scale < 40km')
+    ax1.plot(center, histo,  linewidth=1.5 , marker='o', label='Temperature only')
+    ax1.plot(center, histo2,  linewidth=1.5 , marker='o', color='r', label='Scales < 35km')
     ax1.legend()
     ax1.set_title('Probability Precip>30mm')
     ax1.fill_between(center, lower * 100, upper * 100, alpha=0.3)
@@ -166,8 +175,8 @@ def comp_t():
 
 
     plt.tight_layout()
-    #plt.savefig(fpath + 'wavelet_scale_p_no.png')
-    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
+    plt.savefig(fpath + 'wavelet_scale_p_no.png')
+
     plt.close('all')
 
     return center, histo, histo2, upper, lower, upper2, lower2
@@ -182,18 +191,19 @@ def plot():
 
     cent, prob1, prob2, lower, upper, lower2, upper2, area = lv.comp_lat()
 
+
     f = plt.figure(figsize=(12, 5), dpi=400)
 
     ax1 = f.add_subplot(121)
     ax2 = f.add_subplot(122)
 
     ax1.plot(center, hist,  linewidth=1.5 , marker='o', label='Temperature only')
-    ax1.plot(center, hist2,  linewidth=1.5 , marker='o', color='r', label='Scale$\leq$30km')
+    ax1.plot(center, hist2,  linewidth=1.5 , marker='o', color='r', label='Scales$\leq$35km')
     ax1.legend()
     ax1.minorticks_on()
     ax1.set_ylabel('Pixel probability (%)') # | Pixel precip $>$ 30 $mm\ h^{-1}$)')
     ax1.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
-    ax1.set_ylim(-1, 46)
+    ax1.set_ylim(-1, 85)
     #ax11 = ax1.twinx()
    # ax11.plot(center, (hist2-hist)/hist*100, linestyle='', marker='o', color='grey', label='Percentage change', mec='black', mew=0.5)
    # ax11.set_ylim(-1, 250)
@@ -207,7 +217,7 @@ def plot():
     prob2 = np.array(prob2)
 
     ax2.plot(cent, prob1* 100,  linewidth=1.5 , marker='o', label='Temperature only | -80$^{\degree}C$')
-    ax2.plot(cent, prob2* 100,  linewidth=1.5 , marker='o', color='r', label='Scale$\leq$30km | -80$^{\degree}C$')
+    ax2.plot(cent, prob2* 100,  linewidth=1.5 , marker='o', color='r', label='Scale$\leq$35km | -80$^{\degree}C$')
     ax2.legend()
     ax2.minorticks_on()
     ax2.set_ylabel('  ')# | Pixel precip $>$ 30 $mm\ h^{-1}$)')

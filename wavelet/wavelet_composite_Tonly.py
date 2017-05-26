@@ -63,7 +63,7 @@ def composite():
                        ('circle_Tcentre', []), ('circle_p', []), ('circle_t', []),
                        ('circle_val', []), ('circle_sum', []),
                        ('circle_nz', []), ('circle_g30', []), ('circle_max', []), ('circle_p99', []),
-                       ('circle_p95', []), ('circle_p90', [])])
+                       ('circle_p95', []), ('circle_p90', []), ('circle_pc', [])])
 
     keys = comp_collect.keys()
     print(keys)
@@ -104,6 +104,7 @@ def file_loop(fi):
 
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
+    outpc = dic['pconv'].values
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -118,6 +119,7 @@ def file_loop(fi):
 
     outt[outt==150] = np.nan
     outp[np.isnan(outt)] = np.nan
+    outpc[np.isnan(outt)] = np.nan
 
     area = np.sum(outt <= -40)
     try:
@@ -182,6 +184,7 @@ def file_loop(fi):
             pos = np.where((labels_blob == blob)) #(figure == sc)
 
             circle_p = outp[pos]
+            circle_pc = outpc[pos]
             circle_t = outt[pos]
             circle_valid = np.sum(np.isfinite(circle_p))
 
@@ -254,7 +257,7 @@ def file_loop(fi):
                         clat, clon, lat_min, lat_max, lon_min, lon_max, area,
                         bulk_pmax, bulk_pmean, bulk_tmean, bulk_tmean_p, bulk_tmin_p, bulk_g30,
                         circle_Tcenter, circle_p, circle_t, circle_valid, circle_sum,
-                        circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90))
+                        circle_nz, circle_g30, circle_max, circle_p99, circle_p95, circle_p90, circle_pc))
 
 
     # figure[figure==0]=np.nan

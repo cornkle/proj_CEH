@@ -42,6 +42,7 @@ print(np.min(area), np.max(area))
 
 print(np.sum(po30))
 print(np.percentile(_perc[_perc>0.1], 99))
+print(np.percentile(_perc[_perc>0.1], 50))
 print('Number MCSs:', p.size)
 
 

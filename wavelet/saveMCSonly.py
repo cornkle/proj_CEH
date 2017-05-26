@@ -174,11 +174,10 @@ def file_loop(passit):
            # maxout = maxoutt[nb, :, :]
 
             maxout = (
-                wl == ndimage.maximum_filter(wl, (5,5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+                wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -67) & (wl >= np.percentile(wl[wl >= 0.5],
-                                                                                       90)))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -75) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
 
