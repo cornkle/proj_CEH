@@ -16,7 +16,7 @@ from scipy import stats
 
 path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-path = 'D://data/wavelet/saves/pandas/'
+#path = 'D://data/wavelet/saves/pandas/'
 
 df = pkl.load(open(path+'3dmax_gt15000_no.p', 'rb'))
 
@@ -77,4 +77,4 @@ ax1.legend(fontsize = 9)
 ax2.legend(fontsize = 9)
 
 plt.tight_layout()
-plt.savefig(path+'scatter_scales_sum_no_nz.png')
+#plt.savefig(path+'scatter_scales_sum_no_nz.png')

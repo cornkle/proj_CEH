@@ -83,4 +83,4 @@ for k, c in zip(outrange[::-1], colors):
 
 plt.legend()
 plt.tight_layout()
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale_0.5.png')
+#plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/precip_histogram_scale_0.5.png')

@@ -9,6 +9,8 @@ import os, fnmatch
 import numpy as np
 from math import sqrt
 import pdb
+import glob
+
 def locate(pattern, root_path, exclude=None):
     strg = []
     llist = os.listdir(root_path)
@@ -24,6 +26,7 @@ def locate(pattern, root_path, exclude=None):
                 pass
             strg.append(os.path.join(root_path, file))
     return strg
+
 
 
 def distance(x1, y1, x2, y2):

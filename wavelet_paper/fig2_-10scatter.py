@@ -6,6 +6,7 @@ sns.set_style("ticks")
 from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
 
 # In[2]:
 
@@ -60,6 +61,11 @@ histo=H1/H*100.
 width = 0.7 * (bins[1] - bins[0])
 center = (bins[:-1] + bins[1:]) / 2
 
+print('Bins included, [bin[', bins[0:11])
+print('Fraction of <-80s to be >30', np.sum(H1[0:11])/np.sum(H[0:11]))
+
+print('Bins included, [bin[', bins[-31::])
+print('Fraction of >-40s to be >30', np.sum(H1[-31::])/np.sum(H[-31::]))
 
 # In[7]:
 

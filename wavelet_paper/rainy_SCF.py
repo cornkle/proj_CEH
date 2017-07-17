@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
 import sys
-from wavelet_paper import latitude_var as lv
+from wavelet_paper import fig9_latitude_var as lv
 
 
 fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
@@ -24,8 +24,6 @@ dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
 bulk = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
 
 print('Sys check', len(bulk['pmax'])), len(np.unique(dic['id']))
-
-print('Non rainy bulk:',np.sum((np.array(dic['pmax'])>0))/np.sum((np.array(dic['pmax'])>=0)) )
 
 
 psum = np.array(dic['circle_max'])
@@ -90,6 +88,7 @@ plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
 
 plt.legend()
 plt.tight_layout()
-plt.savefig(fpath + 'rainy_SCF.png')
+
+#plt.savefig(fpath + 'rainy_SCF.png')
 # plt.savefig(path + 'wavelet_scale_p_T.pdf')
-plt.close('all')
+#plt.close('all')

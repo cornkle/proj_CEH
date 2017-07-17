@@ -7,8 +7,8 @@ import numpy as np
 from functools import partial
 from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
 
-file = '/users/global/cornkle/MCSfiles/blob_maps_-75/blob_map_90km_18UTC.nc'
-file2 = '/users/global/cornkle/MCSfiles/blob_maps_-75/blob_map_30km_18UTC.nc'
+file = '/users/global/cornkle/MCSfiles/blob_map_90km_18UTC.nc'
+file2 = '/users/global/cornkle/MCSfiles/blob_map_30km_18UTC.nc'
 
 fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
 lst = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/MOD11C1_M_LSTDA_2015-06-01_rgb_3600x1800.tif'
@@ -20,8 +20,8 @@ ds2 = xr.open_dataarray(file2)
 
 years = np.unique(ds['time.year'])
 
-ds = ds.sel(lon=slice(-12,10), lat=slice(11,16))  # lake chad lon=slice(10,20), lat=slice(10,15)
-ds2 = ds2.sel(lon=slice(-12,10), lat=slice(11,16))   # volta lon=slice(-10,8), lat=slice(4,10)
+ds = ds.sel(lon=slice(-12,10), lat=slice(12,18))  # lake chad lon=slice(10,20), lat=slice(10,15)
+ds2 = ds2.sel(lon=slice(-12,10), lat=slice(12,18))   # volta lon=slice(-10,8), lat=slice(4,10)
 #
 
 print(np.unique(ds['time.year']))
@@ -31,7 +31,8 @@ dsum2 = ds2.groupby('time.year').sum(['time', 'lon', 'lat'])
 f = plt.figure()
 
 #plt.plot(years,dsum, label='90k')
-plt.plot(years,dsum2/np.sum(dsum2)-dsum/np.sum(dsum), label='30k')
+plt.plot(years,dsum2/np.nansum(dsum2), label='90k')
+plt.plot(years,dsum/np.nansum(dsum), label='30k')
 
 plt.legend()
 

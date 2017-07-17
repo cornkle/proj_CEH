@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
 
 
-import salem
-import pyproj
 import numpy as np
-from scipy.interpolate import griddata
 from wavelet import util
 from eod import msg
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
 from utils import u_grid
 from scipy.interpolate import griddata
 from scipy import ndimage
 from utils import u_arrays as ua
 import multiprocessing
 import datetime as dt
-import cartopy
-import cartopy.crs as ccrs
+
 
 def run():
     #  (1174, 378)
@@ -30,7 +24,7 @@ def run():
     m = msg.ReadMsg(msg_folder)
     files  = m.fpath
 
-    files = files
+    #files = files[32500:33000]
 
     # make salem grid
     grid = u_grid.make(m.lon, m.lat, 5000)
@@ -64,7 +58,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_90km_3UTC.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_35km_-70_0-3UTC.nc'
 
     try:
         os.remove(savefile)
@@ -74,7 +68,7 @@ def run():
 
     das = da.sum(dim='time')
 
-    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_90km_sum_3UTC.nc')
+    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-70_sum_0-3UTC.nc')
 
     print('Saved ' + savefile)
 
@@ -93,7 +87,7 @@ def file_loop(passit):
 
     strr = files.split(os.sep)[-1]
 
-    if (np.int(strr[8:10]) != 3): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) &
+    if ((np.int(strr[8:10]) > 3)): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
         print('Skip')
         return
 
@@ -106,12 +100,14 @@ def file_loop(passit):
         file = files+min+'.gra'
 
         print('Doing file: ' + file)
-
-        mdic = m.read_data(file)
+        try:
+            mdic = m.read_data(file)
+        except FileNotFoundError:
+            return
 
         if not mdic:
             print('File missing')
-            continue
+            return
 
         # interpolate MSG to salem grid
         inter, mpoints = u_grid.griddata_input(mdic['lon'].values, mdic['lat'].values, grid)
@@ -163,7 +159,7 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig <90:#> 30:
+            if orig >35:#> 30:
                  continue
 
             scale = int(np.round(orig))
@@ -177,7 +173,7 @@ def file_loop(passit):
                 wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -75) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -69) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
 
@@ -227,6 +223,7 @@ def file_loop(passit):
 
     da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 
+    #da.to_netcdf('/users/global/cornkle/MCSfiles/blob_maps_0-4UTC_-65/'+str(date)+'.nc')
 
     print('Did ', file)
 

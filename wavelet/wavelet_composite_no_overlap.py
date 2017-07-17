@@ -14,17 +14,14 @@ import scipy.ndimage.filters as filters
 import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
-from utils import u_plot
 import matplotlib as mpl
 import multiprocessing
-import skimage
-import ipdb
 import pdb
 from collections import OrderedDict
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
-import pandas as pd
 import pickle as pkl
+from utils import u_plot
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
@@ -138,6 +135,7 @@ def file_loop(fi):
         return
 
     perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
+   # perc = -10
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -181,7 +179,6 @@ def file_loop(fi):
 
     figure = np.zeros_like(outt)
 
-
     wll = wav['t']#[nb, :, :]
     maxs = np.zeros_like(wll)
 
@@ -205,7 +202,7 @@ def file_loop(fi):
             wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
         try:
-            yy, xx = np.where((maxout == 1) & (outt <= -40)  & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) )) #(wl >= np.percentile(wl[wl >= 0.5], 90)))# & (wl > orig**.5))#& (wl >= np.percentile(wl[wl >= 0.5], 90))) #)& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+            yy, xx = np.where((maxout == 1) & (outt <= -40)  & (wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5))# & (wl > orig**.5) )) #(wl >= np.percentile(wl[wl >= 0.5], 90)))# & (wl > orig**.5))#& (wl >= np.percentile(wl[wl >= 0.5], 90))) #)& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
         except IndexError:
             continue
 
@@ -226,12 +223,19 @@ def file_loop(fi):
             scal.append(orig)
 
     figure[np.isnan(outt)]=0
+    #figure[np.isnan(outp)] = 0
 
     circle_val_all = np.sum(figure>0)
 
-
+    xx=[]
+    yy=[]
     for y, x, sc in zip(yyy, xxx, scal):
 
+        if figure[y,x] == 0:
+            continue
+
+        xx.append(x)
+        yy.append(y)
         #print(sc, y, x)
         dummy = figure.copy()
 
@@ -348,41 +352,50 @@ def file_loop(fi):
     # plt.show()
     ##file 130!!! nR
 
-    # spos = np.where(np.array(scal, dtype=int) == 15)
-    # figure[figure == 0] = np.nan
-    # f = plt.figure(figsize = (7,6), dpi=300)
-    # ax2 = f.add_subplot(111)
-    # #plt.imshow(outt, cmap='inferno')
-    # lev = np.arange(-90, -39, 2)
-    # ax2.imshow(outt, cmap='Greys', vmax=-40)
-    # #plt.imshow(figure, cmap='viridis')
-    # lev = arr
-    # mt = ax2.imshow(figure, cmap='viridis')
-    # plt.plot(np.array(xxx)[spos], np.array(yyy)[spos], 'wo', markersize=3, label='Wavelet power maximum')
-    # #plt.plot(xp, yp, 'o', markersize=3)
-    # ax2.invert_yaxis()
-    # ax2.set_xlim(20, 140)
-    # ax2.set_ylim(20, 140)
-    # ax2.set_xticklabels(np.arange(100, 800, 100))
-    # ax2.set_yticklabels(np.arange(100, 800, 100))
-    # ax2.plot(xp , yp , 'o', markersize=3, label='Rain > 30mm h$^{-1}$')
-    # ax2.set_xlabel('Spatial extent (km)')
-    # ax2.set_ylabel('Spatial extent (km)')
-    # # f.add_subplot(132)
-    # # plt.imshow(figure, cmap='viridis')
-    # # plt.plot(xp, yp, 'ro', markersize=3)
-    # plt.colorbar(mt, label = 'Scale (km)')
-    # #plt.legend(loc=4)
-    # # ax1 = f.add_subplot(121)
-    # # plt.imshow(outt, cmap='inferno')
-    # # plt.plot(xp, yp, 'o', markersize=3)
-    # # plt.plot(xxx, yyy, 'wo', markersize=3)
-    # # ax1.invert_yaxis()
-    #
-    # plt.tight_layout()
-    # plt.show()
-    # spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    # plt.savefig(spath + '/method_circles2.png', dpi=300)
+    spos = np.where(np.array(scal, dtype=int) == 15)
+    figure[figure == 0] = np.nan
+    f = plt.figure(figsize = (7,6), dpi=300)
+    ax2 = f.add_subplot(111)
+    # ax2.autoscale = False
+    ttest = outplot.copy()
+    ttest = ttest + 1
+    ttest[np.isnan(ttest)] = 0
+    ax2.contourf(np.arange(wll.shape[2]) ,  np.arange(wll.shape[1]) , outplot, cmap='Blues', zorder=1)
+
+    ax2.imshow(outt, cmap='Greys', vmax=-40, zorder=2)
+    mt = ax2.imshow(figure, cmap='OrRd_r', vmax=180, zorder=3)
+    ax2.contour(np.arange(wll.shape[2]), np.arange(wll.shape[1]), ttest, cmap='Blues', levels=[-0.5, 0.5], zorder=4)
+    plt.plot(np.array(xxx)[spos], np.array(yyy)[spos], 'wo', markersize=3, label='Wavelet power maximum', zorder=5)
+
+
+    scales = np.unique(figure[np.isfinite(figure)])
+
+
+    #plt.plot(xp, yp, 'o', markersize=3)
+    ax2.invert_yaxis()
+    ax2.set_xlim(20, 140)
+    ax2.set_ylim(20, 140)
+    ax2.set_xticklabels(np.arange(100, 800, 100)-100)
+    ax2.set_yticklabels(np.arange(100, 800, 100)-100)
+    ax2.plot(xp , yp , 'o', markersize=3, label='Rain > 30mm h$^{-1}$', zorder=10)
+    ax2.set_xlabel('Location (km)')
+    ax2.set_ylabel('Location (km)')
+    # f.add_subplot(132)
+    # plt.imshow(figure, cmap='viridis')
+    # plt.plot(xp, yp, 'ro', markersize=3)
+
+    plt.colorbar(mt, label = 'Scale (km)')
+    #plt.legend(loc=4)
+    # ax1 = f.add_subplot(121)
+    # plt.imshow(outt, cmap='inferno')
+    # plt.plot(xp, yp, 'o', markersize=3)
+    # plt.plot(xxx, yyy, 'wo', markersize=3)
+    # ax1.invert_yaxis()
+
+    plt.tight_layout()
+    plt.show()
+    spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    plt.savefig(spath + '/method_circles2.png', dpi=300)
     #
     #
     #
@@ -392,81 +405,95 @@ def file_loop(fi):
     #bla = wcno.file_loop(files[130])
 
 
-    # f = plt.figure(figsize = (6.5,11), dpi=300)
-    #
-    # gridspec.GridSpec(4,1)
-    # posi = 71#116 ## 118
-    # ax1 = plt.subplot2grid((4,1),(0,0),rowspan=2)
-    # ax2 = plt.subplot2grid((4,1),(2,0))
-    # ax3 = plt.subplot2grid((4,1),(3,0))
-    #
-    # lev = np.arange(-90,-39,4)
-    # ax1.contourf(np.arange(wll.shape[2]) * 5, np.arange(wll.shape[1]) * 5, outplot, cmap='Blues')
-    # mt = ax1.contourf(np.arange(wll.shape[2])*5,np.arange(wll.shape[1])*5,outt, cmap='Greys', vmax=-40, levels = lev)
-    # ax1.plot(np.arange(wll.shape[2])*5, [posi*5]*len(np.arange(wll.shape[2])*5), linestyle = '--', linewidth=2, color = 'black')
-    # ax1.invert_yaxis()
-    # ax1.set_xlim(100,700)
-    # ax1.set_ylim(100, 700)
-    #
-    # ax1.plot(xp*5, yp*5, 'o', markersize=3, label='Rain > 30mm h$^{-1}$')
-    # ax1.legend(loc=4)
-    # ax1.set_ylabel('Spatial extent (km)')
-    # ax1.set_title(str(dic['time.year'].values)+'-'+str(dic['time.month'].values)+'-'+str(dic['time.day'].values)+' '+str(dic['time.hour'].values)+':'+str(dic['time.minute'].values)+'UTC')
-    #
-    # colors = cm.viridis(np.linspace(0, 1, len([0,1, 2,5,10,20,40,60,80])))
-    #
-    # ax2.plot(np.arange(wll.shape[2])*5, outt[posi,:], color='r')  #118
-    # ax2.set_xlim(100, 700)
-    #
-    # ax2.set_ylabel('Cloud-top temperature ($^{\circ}$C)')
-    # ax22 = ax2.twinx()
-    # ax22.set_xlim(100, 700)
-    # ax22.plot(np.arange(wll.shape[2])*5, outp[posi,:])
-    # ax22.set_ylabel('Rain (mm h$^{-1}$)')
-    # print(np.nanmax(wll[:,posi,:]))
-    # #arrt = np.array(arr, dtype=int)
-    #
-    # mp = ax3.contourf(np.arange(wll.shape[2])*5, arr,wll[:,posi,:], levels=[0,1, 2,5,10,20,40,80,100], colors=colors)
-    # maxs = np.mean(maxs[:,posi-1:posi+2, :], 1) # -1, +2
-    # #ax3.contour(np.arange(wll.shape[2])*5, arr,maxs, cmap='Greys_r')
-    #
-    # ppos = np.where(maxs)
-    #
-    # for p1, p2 in zip(ppos[1], ppos[0]):
-    #     ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arrf[p2], xerr=arrf[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
-    # ax3.set_xlim(100,700)
-    # ax3.set_ylim(15, 180)
-    # ax3.set_xlabel('Spatial extent (km)')
-    # ax3.set_ylabel('Length scale (km)')
-    #
-    # plt.tight_layout()
-    #
-    # f.subplots_adjust(right=0.86)
-    #
-    # cax = f.add_axes([0.87, 0.545, 0.025, 0.415])
-    # cb = plt.colorbar(mt, cax=cax, label='Cloud-top temperature ($^{\circ}$C)')
-    # cb.ax.tick_params(labelsize=12)
-    #
-    # cax = f.add_axes([0.87, 0.065, 0.025, 0.175])
-    # cb = plt.colorbar(mp, cax=cax, label='Wavelet power')
-    # cb.ax.tick_params(labelsize=12)
-    #
-    # fsiz = 14
-    # x = 0.02
-    # plt.annotate('a)', xy=(x, 0.96), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-    #              textcoords='offset points')
-    # plt.annotate('b)', xy=(x, 0.51), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-    #              textcoords='offset points')
-    # plt.annotate('c)', xy=(x, 0.245), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-    #              textcoords='offset points')
-    #
-    # plt.show()
-    # spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    # plt.savefig(spath+'/method2.png', dpi=300)
+    f = plt.figure(figsize = (6.5,11), dpi=300)
+
+    gridspec.GridSpec(4,1)
+    posi = 116#116 ## 118
+    ax1 = plt.subplot2grid((4,1),(0,0),rowspan=2)
+    ax2 = plt.subplot2grid((4,1),(2,0))
+    ax3 = plt.subplot2grid((4,1),(3,0))
+
+    lev = np.arange(-90,-39,4)
+
+    ax1.contourf(np.arange(wll.shape[2]) * 5, np.arange(wll.shape[1]) * 5, outplot, cmap='Blues')
+    mt = ax1.contourf(np.arange(wll.shape[2])*5,np.arange(wll.shape[1])*5,outt, cmap='Greys', vmax=-40, levels = lev)
+    ax1.plot(np.arange(wll.shape[2])*5, [posi*5]*len(np.arange(wll.shape[2])*5), linestyle = '--', linewidth=2, color = 'black')
+
+    ttest = outplot.copy()
+    ttest = ttest+1
+    ttest[np.isnan(ttest)] = 0
+    ax1.contour(np.arange(wll.shape[2]) * 5, np.arange(wll.shape[1]) * 5, ttest, cmap='Blues' , levels=[-0.5,0.5])
+
+    ax1.invert_yaxis()
+    ax1.set_xlim(100,700)
+    ax1.set_ylim(100, 700)
+
+    ax1.set_xticklabels(np.arange(100, 800, 100) - 100)
+    ax1.set_yticklabels(np.arange(100, 800, 100) - 100)
+
+    ax1.plot(xp*5, yp*5, 'o', markersize=3, label='Rain > 30mm h$^{-1}$')
+    ax1.legend(loc=4)
+    ax1.set_ylabel('Location (km)')
+    ax1.set_title(str(dic['time.year'].values)+'-'+str(dic['time.month'].values)+'-'+str(dic['time.day'].values)+' '+str(dic['time.hour'].values)+':'+str(dic['time.minute'].values)+'UTC')
+
+    colors = cm.viridis(np.linspace(0, 1, len([0,1, 2,5,10,20,40,60,80])))
+
+    ax2.plot(np.arange(wll.shape[2])*5, outt[posi,:], color='r')  #118
+    ax2.set_xlim(100, 700)
+    ax2.set_xticklabels(np.arange(100, 800, 100) - 100)
+
+
+    ax2.set_ylabel('Cloud-top temperature ($^{\circ}$C)')
+    ax22 = ax2.twinx()
+    ax22.set_xlim(100, 700)
+    ax22.plot(np.arange(wll.shape[2])*5, outp[posi,:])
+    ax22.set_ylabel('Rain (mm h$^{-1}$)')
+    print(np.nanmax(wll[:,posi,:]))
+    #arrt = np.array(arr, dtype=int)
+
+    mp = ax3.contourf(np.arange(wll.shape[2])*5, arr,wll[:,posi,:], levels=[0,1, 2,5,10,20,40,80,100], colors=colors)
+    maxs = np.mean(maxs[:,posi-1:posi+2, :], 1) # -1, +2
+    #ax3.contour(np.arange(wll.shape[2])*5, arr,maxs, cmap='Greys_r')
+
+    ppos = np.where(maxs)
+
+    for p1, p2 in zip(ppos[1], ppos[0]):
+        ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arrf[p2], xerr=arrf[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
+    ax3.set_xlim(100,700)
+    ax3.set_xticklabels(np.arange(100, 800, 100) - 100)
+
+    ax3.set_ylim(15, 180)
+    ax3.set_xlabel('Location (km)')
+    ax3.set_ylabel('Length scale (km)')
+
+    plt.tight_layout()
+
+    f.subplots_adjust(right=0.86)
+
+    cax = f.add_axes([0.87, 0.545, 0.025, 0.415])
+    cb = plt.colorbar(mt, cax=cax, label='Cloud-top temperature ($^{\circ}$C)')
+    cb.ax.tick_params(labelsize=12)
+
+    cax = f.add_axes([0.87, 0.065, 0.025, 0.175])
+    cb = plt.colorbar(mp, cax=cax, label='Wavelet power')
+    cb.ax.tick_params(labelsize=12)
+
+    fsiz = 14
+    x = 0.02
+    plt.annotate('a)', xy=(x, 0.96), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('b)', xy=(x, 0.51), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('c)', xy=(x, 0.245), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+
+    plt.show()
+    spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    plt.savefig(spath+'/method2.png', dpi=300)
 
     dic.close()
 
-    #plt.close('all')
+    plt.close('all')
 
     return ret
 

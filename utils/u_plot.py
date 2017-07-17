@@ -13,11 +13,13 @@ import numpy as np
 import pdb
 
 
-def quick_map(xar, save = None):
+def quick_map(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
 
-    f = plt.figure(figsize=(15, 7), dpi=400)
+    f = plt.figure(figsize=(10, 6), dpi=300)
+    if not cmap:
+        cmap='viridis'
     ax = plt.axes(projection=ccrs.PlateCarree())
-    xar.plot.contourf('lon', 'lat', projection=ccrs.PlateCarree(), vmax=50)
+    xar.plot.contourf(projection=ccrs.PlateCarree(), vmax=vmax, cmap=cmap)
     ax.coastlines()
     # Gridlines
     xl = ax.gridlines(draw_labels=True);
@@ -25,6 +27,7 @@ def quick_map(xar, save = None):
     xl.ylabels_right = False
     # Countries
     ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
+    plt.title(title)
     if save:
         plt.savefig(save)
     else:

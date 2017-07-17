@@ -163,6 +163,12 @@ def saveMCS_WA15():
             outk = outt.copy()*0
             outk[np.where(outff)]=outt[np.where(outff)]
 
+
+
+
+
+
+
             # f = plt.figure()
             # ax = f.add_subplot(1, 3, 1)
             # plt.imshow(outt, cmap='jet')
@@ -186,6 +192,14 @@ def saveMCS_WA15():
             outl = np.full_like(dummy, np.nan)
             xl, yl = grid.transform(lon1[inds], lat1[inds], crs=salem.wgs84, nearest=True, maskout=True)
             outl[yl.compressed(), xl.compressed()] = dummy[yl.compressed(), xl.compressed()]
+
+            # #### SHIFTING WITH RESPECT TO MIN T / MAX P - search for Pmax within 20km from Tmin, shift TRMM image
+            #
+            # tmin = np.argmin(outl)
+            # pmax =
+            #
+            # dist =
+            #
 
             tmask = np.isfinite(outt)
             mmask = np.isfinite(outl)

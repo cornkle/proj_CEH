@@ -40,5 +40,5 @@ plt.pcolormesh(fname)
 
 
 plt.autoscale(False)
-plt.plot(xx, yy, 'yo')
+plt.plot(xx, yy, 'ro')
 plt.show()

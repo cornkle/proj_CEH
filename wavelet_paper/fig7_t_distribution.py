@@ -69,11 +69,12 @@ colors = cm.viridis_r(np.linspace(0,1,len(outrange)))
 #     plt.xlabel('Tmin per circle')
 #     plt.title('Sub-system temperature minima, >15000km2')
 
-
+linestyles = [':', '--', '-']
 ax = f.add_subplot(121)
 
 for id,k in enumerate(outrange):  #
     c = colors[id]
+    ll = linestyles[id]
     weights = np.ones_like(dic[k]) / float(len(dic[k]))
     start = ranges[id]
     if start == 10:
@@ -82,11 +83,13 @@ for id,k in enumerate(outrange):  #
     hist, h = np.histogram(dic[k], bins=np.arange(-95, -44, 5), weights=weights, range=(-95,-45)) # weights=weights,
     print(np.sum(hist))
     print(k)
-    ax.plot(h[1::]-0.5, hist, color=c, lw=2, label=str(start)+'-'+str(k) + ' km', marker='o')
-    plt.legend(fontsize=9)
+
+    ax.plot(h[1::]-0.5, hist, lw=2, label=str(start)+'-'+str(k) + ' km', marker='o', linestyle=ll, color='k')
+
+    plt.legend(fontsize=9, handlelength=2.5, loc='upper left')
     plt.ylabel('Normalised frequency')
     plt.xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
-    plt.annotate('a)', xy=(0.08,0.94),xytext=(0,4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    plt.annotate('a)', xy=(0.04,0.94),xytext=(0,4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points') #transform=ax.transAxes,
     #plt.title('Sub-system temperature minima, >15000km2')
 
@@ -99,24 +102,29 @@ for id,k in enumerate(outrange):  #
     hist, h = np.histogram(dic[k], bins=np.arange(-95, -44, 5), range=(-95,-45)) # weights=weights,
     arr_list.append(np.array(hist,  dtype=float))
 
+
 arr = np.sum(np.vstack(arr_list), 0)
 
 arr[arr==0] = np.nan
+print('-80C share', np.sum(arr_list[0][0:3])/np.sum(arr[0:3]))
 
 ax = f.add_subplot(122)
 for id,k in enumerate(outrange):
     a = arr_list[id]
     hhist = a / arr
     c = colors[id]
+    ll = linestyles[id]
     start = ranges[id]
     if start == 10:
         start = 15
-    ax.plot(h[1::]-0.5, hhist*100, color=c, lw=2, label=str(start)+'-'+str(k) + ' km', marker='o')
+
+    ax.plot(h[1::]-0.5, hhist*100, lw=2, label=str(start)+'-'+str(k) + ' km', marker='o', linestyle=ll, color='k')
+
    # plt.legend(fontsize=8)
     plt.ylabel('Fraction (%)')
     plt.xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
    # plt.title('Sub-system temperature minima, >15000km2')
-    plt.annotate('b)', xy=(0.55, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    plt.annotate('b)', xy=(0.52, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
 
 # ax = f.add_subplot(133)

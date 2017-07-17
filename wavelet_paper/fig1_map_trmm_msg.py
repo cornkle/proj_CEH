@@ -7,6 +7,7 @@ from utils import u_grid
 from scipy.interpolate import griddata
 import xarray as xr
 from numpy import ma
+from scipy.ndimage.measurements import label
 
 
 def create_map_data():
@@ -102,34 +103,59 @@ def plot_data():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 
     data = xr.open_dataset('/users/global/cornkle/C_paper/wavelet/saves/maps/trmm_msg_map.nc')
-    data=data.sel(lon=slice(-17.5,30), lat=slice(4.,20))
+    data=data.sel(lon=slice(-17,30), lat=slice(4.,20))
     map = data.salem.get_map(cmap='inferno')
 
-    outb = np.array(data['tblob'], dtype=float)
-    outb[outb==0] = np.nan
+    outb = data['tir']
 
-    outboth = data['trmm'].copy().values
-    outboth[outb>0] = outb[outb>0]
 
     map.set_data(data['tir'])
     map.set_shapefile(countries=True, linewidth=0.1 )
 
-    f= plt.figure(figsize=(9, 6), dpi=300)
+    f= plt.figure(figsize=(9, 5.6), dpi=300)
     ax1 = f.add_subplot(211)
     ax2 = f.add_subplot(212)
     map.set_lonlat_contours(add_xtick_labels=False)
     map.visualize(ax=ax1, cbar_title='Infrared temperature ($^{\circ}$C)',)
 
+    outb[outb > -40] = 0
+    labels, numL = label(outb.values)
 
-    map.set_plot_params(cmap='hot', vmax=91)
-    map.set_lonlat_contours(add_xtick_labels=True)
+
+    for i in np.unique(labels):
+        pos = np.where(labels == i)
+        if len(pos[0]) < 65:
+            labels[pos]=0
+
+    labels, numL = label(labels)
+    labels = np.array(labels, dtype=float)
+    labels[labels == 0] = np.nan
+    #
+    # f = plt.figure()
+    # plt.imshow(labels)
+
+    outb = np.array(data['tblob'], dtype=float)
+    outb[outb == 0] = np.nan
+
+    outboth = data['trmm'].copy().values
+    outboth[np.isfinite(labels)] = labels[np.isfinite(labels)]
+
+    map.set_plot_params(cmap='inferno', nlevels=np.nanmax(labels) + 1, vmin=0, vmax=16, extend=None)
     map.set_data(outboth)
-    map.set_contour(data['trmm'], cmap='winter')
-    map.visualize(ax=ax2, cbar_title='Cloud ID | < -40$^{\circ}$C')
+    # map.set_contour(data['trmm'].values, cmap='winter')
+    map.visualize(ax=ax2, addcbar=False)
 
-    plt.annotate('a)', xy=(0.02, 0.96), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    map.set_plot_params(cmap='inferno', nlevels=np.nanmax(labels)+1, vmin =0, vmax = 16, extend=None)
+    map.set_lonlat_contours(add_xtick_labels=True)
+    map.set_data(labels)
+    map.visualize(ax=ax2, cbar_title='Cloud ID')
+    #map.set_plot_params(nlevels=np.nanmax(labels) + 1, vmin=0, vmax=25, extend=None)
+    map.set_contour(data['trmm'].values, cmap='winter')
+    map.visualize(ax=ax2, addcbar=False)
+
+    plt.annotate('a)', xy=(0.01, 0.96), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
-    plt.annotate('b)', xy=(0.02, 0.5), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    plt.annotate('b)', xy=(0.01, 0.5), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
 
     plt.tight_layout()

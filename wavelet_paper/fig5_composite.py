@@ -56,8 +56,8 @@ for id, r in enumerate(ranges):
         pos = np.where(t[:, 21, 21] <= -50)
         pos = pos[0]
 
-        big = (p>10)[pos,:,:]  # MUST BE 30 for extreme rainfall
-        fin = (np.isfinite(p))[pos,:,:]
+        big = (p>30)[pos,:,:]  # MUST BE 30 for extreme rainfall
+        fin = (p>=0)[pos,:,:]
         arr = p[pos,:,:]
         nz = (p>0.1)[pos,:,:]
         tarr = t[pos,:,:]
@@ -98,6 +98,7 @@ for id, r in enumerate(ranges):
 
 f = plt.figure(figsize=(12, 5), dpi=400)
 ll = [30, 60, 90, 120, 180]  # keys
+lll = [15, 30,  60, 90, 120,120]
 
 for ind, k in enumerate(ll):
 
@@ -127,11 +128,12 @@ for ind, k in enumerate(ll):
     ax2.set_xticklabels('')
     ax2.set_yticklabels('')
     if ind == 0:
-        ax2.set_yticklabels(np.arange(-3,4, 1))
+        ax2.set_yticklabels(np.arange(-1.5,1.5, 0.5))
         ax2.set_ylabel('10$^2$ km')
 
-    ax2.set_xticklabels(np.arange(-3,4, 1))
+    ax2.set_xticklabels(np.arange(-1.5,1.5, 0.5))
     ax2.set_xlabel('10$^2$ km')
+    ax2.invert_yaxis()
 
 
     # ax4 = f.add_subplot(2, 5, 6 + ind)
@@ -151,13 +153,14 @@ for ind, k in enumerate(ll):
     mp1 = ax1.imshow(outbla[3], vmin=-70, vmax=-55, cmap='inferno', aspect=1)
     ax1.set_xticklabels('')
 
-    plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=13)
+    plt.title(str(lll[pos])+'-'+str(k) + ' km', fontsize=13)
     ax1.plot(20, 20, 'ro', markersize=siz)
 
     ax1.set_yticklabels('')
     if ind == 0:
-        ax1.set_yticklabels(np.arange(-3, 4, 1))
+        ax1.set_yticklabels(np.arange(-1.5,1.5, 0.5))
         ax1.set_ylabel('10$^2$ km')
+    ax1.invert_yaxis()
 plt.tight_layout()
 
 f.subplots_adjust(right=0.91)

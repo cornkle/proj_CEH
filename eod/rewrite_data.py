@@ -13,6 +13,8 @@ from utils import u_arrays as uarr
 import pandas as pd
 from utils import u_time as ut
 import datetime as dt
+import xarray as xr
+import pdb
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -135,3 +137,60 @@ def rewriteMsgLonLat(file, nx, ny):
 
     llsavefile = file.replace('.gra', '')
     np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteGridsat_toNetcdf(file):
+
+    out = file.replace('gridsat_raw_binary', 'gridsat_netcdf')
+    out = out.replace('.gra', '.nc')
+
+    if os.path.isfile(out):
+        print('File exists, continue: ', out)
+        return
+
+    ll = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon.nc')
+
+    blat = ll['lat']
+    blon = ll['lon']
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+    yr = int(llist[0].split('_')[-1])
+    mon = int(llist[1])
+    day = int(llist[2])
+    hr = int(llist[3])
+
+    date = [pd.datetime(yr, mon, day, hr, 0)]
+
+    rrShape = (ll.shape[1],ll.shape[2])
+
+    rrMDI = np.uint8(255)
+    rr = np.fromfile(file, dtype=rrMDI.dtype)
+    rr.shape = rrShape
+
+    rr = rr.astype(np.int32) - 173
+
+
+    da = xr.DataArray(rr[None, ...], coords={'time':  date,
+                                             'lat':  blat,
+                                             'lon': blon},
+                      dims=['time', 'lat', 'lon'])#.isel(time=0)
+
+
+    ds = xr.Dataset({'t': da})
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return
+
+
+

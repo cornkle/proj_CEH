@@ -109,8 +109,8 @@ def probability():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/prob_scatter_0.5.png')
-    plt.close('all')
+  #  plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/prob_scatter_0.5.png')
+   # plt.close('all')
 
 
 if __name__ == "__main__":

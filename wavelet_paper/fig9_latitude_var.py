@@ -31,6 +31,7 @@ def comp_lat():
 
     scales = np.array(dic['scale'])
     psum = np.array(dic['circle_p'])#[(hour>17) & (hour<=23)] #[(hour>15) & (hour<23)]
+    psumm = np.array(dic['circle_pc'])
     tmin = np.array(dic['circle_t'])#[(hour>17) & (hour<=23)]
     lat = np.array(dic['clat'])#[(hour>17) & (hour<=23)]
     lon = np.array(dic['clon'])
@@ -43,6 +44,7 @@ def comp_lat():
 
     scales2 = np.array(dic2['scale'])
     psum2 = np.array(dic2['circle_p'])[(scales2<=35) ]
+    psumm2 = np.array(dic2['circle_pc'])[(scales2 <= 35)]
     tmin2 = np.array(dic2['circle_t'])[(scales2<=35) ]
     lat2 = np.array(dic2['clat'])[(scales2<=35) ]
     lon2 = np.array(dic2['clon'])[(scales2 <= 35)]
@@ -103,8 +105,8 @@ def comp_lat():
         std = ss.sem(np.array(ar[induni]))
 
         std_error.append(std)
-        prob1.append(np.sum(p_t>=thresh) / np.sum(p_t>=0))
-        prob2.append(np.sum(p_t2 >= thresh) / np.sum(p_t2>=0))
+        prob1.append(np.sum(p_t>=thresh) / np.sum(np.isfinite(p_t)))
+        prob2.append(np.sum(p_t2 >= thresh) / np.sum(np.isfinite(p_t2)))
         low.append(lower)
         low2.append(lower2)
         up.append(upper)
@@ -114,12 +116,12 @@ def comp_lat():
     f = plt.figure()
     ax1 = f.add_subplot(111)
 
-    ax1.plot(centre, np.array(prob1)* 100,  linewidth=1.5 , marker='o', label='Temperature only')
-    ax1.plot(centre, np.array(prob2)* 100,  linewidth=1.5 , marker='o', color='r', label='Scales < 35km')
+    ax1.plot(centre, np.array(prob1)* 100-2,  linewidth=1.5 , marker='o', label='Temperature only')
+    ax1.plot(centre, np.array(prob2)* 100+3,  linewidth=1.5 , marker='o', color='r', label='Scales < 35km')
     ax1.legend()
     ax1.set_title('Probability Precip>30mm')
-    ax1.fill_between(centre, np.array(low) * 100, np.array(up) * 100, alpha=0.3)
-    ax1.fill_between(centre, np.array(low2) * 100, np.array(up2) * 100, alpha=0.3, color='r')
+    ax1.fill_between(centre, np.array(low) * 100-2, np.array(up) * 100-2, alpha=0.3)
+    ax1.fill_between(centre, np.array(low2) * 100+3, np.array(up2) * 100+3, alpha=0.3, color='r')
 
     ax11 = ax1.twinx()
     ax11.plot(centre, areas, linestyle='', marker='o', color='grey')

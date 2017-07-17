@@ -26,7 +26,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')   # /WA30/
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:100]
     print('Nb files', len(files))

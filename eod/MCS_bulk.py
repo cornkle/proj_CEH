@@ -49,6 +49,7 @@ def perSys():
             mdic['clon'].append(v[19])
             mdic['p'].append(v[20])
             mdic['pc'].append(v[21])
+            mdic['year'].append(v[22])
         except TypeError:
             continue
 
@@ -87,6 +88,7 @@ def file_loop(f):
     lat = dic['lat'].values
     h = dic['time.hour'].values
     m = dic['time.month'].values
+    y = dic['time.year'].values
     clat = np.min(dic.lat)+((np.max(dic.lat)-np.min(dic.lat))*0.5)
     clon = np.min(dic.lon) + ((np.max(dic.lon) - np.min(dic.lon)) * 0.5)
 
@@ -124,6 +126,7 @@ def file_loop(f):
 
     p = outp[(np.isfinite(outp))&(np.isfinite(outt))]
     pc = outpc[(np.isfinite(outpc)) & (np.isfinite(outt))]
+    outt = outt[(np.isfinite(outp)) & (np.isfinite(outt))]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, pc)
+    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, pc, y)
