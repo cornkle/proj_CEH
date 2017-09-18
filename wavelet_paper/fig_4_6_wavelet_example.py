@@ -48,6 +48,8 @@ def run(fi):
         return
 
     perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
+    print('perc:',perc)
+    perc=-60
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -149,6 +151,28 @@ def run(fi):
     spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     plt.savefig(spath + '/method_circles2.png', dpi=300)
 
+    f = plt.figure(figsize = (7,6), dpi=300)
+    ax2 = f.add_subplot(111)
+    # ax2.autoscale = False
+    ttest = outplot.copy()
+    ttest = ttest + 1
+    ttest[np.isnan(ttest)] = 0
+    ax2.imshow(outt, cmap='viridis', vmax=-40, zorder=2)
+
+    ax2.invert_yaxis()
+    ax2.set_xlim(20, 140)
+    ax2.set_ylim(20, 140)
+    ax2.set_xticklabels(np.arange(100, 800, 100)-100)
+    ax2.set_yticklabels(np.arange(100, 800, 100)-100)
+    ax2.plot(xp , yp , 'o', markersize=3, label='Rain > 30mm h$^{-1}$', zorder=10)
+    ax2.set_xlabel('Location (km)')
+    ax2.set_ylabel('Location (km)')
+
+    plt.tight_layout()
+    plt.show()
+    spath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    plt.savefig(spath + '/method_temp.png', dpi=300)
+
 
     #bla = wcno.file_loop(files[130])
     f = plt.figure(figsize = (6.5,11), dpi=300)
@@ -242,4 +266,4 @@ def run(fi):
 
 if __name__ == "__main__":
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')
-    run(files[130])
+    run(files[238])

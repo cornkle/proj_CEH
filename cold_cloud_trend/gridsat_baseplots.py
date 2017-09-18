@@ -165,6 +165,57 @@ def month_count():
     plt.savefig('/users/global/cornkle/VERA/plots/leeds_june_2017/trend_mcs.png', dpi=300)
 
 
+def hourly_count():
+    y1 = 1982
+    y2 = 1984  # 2017
+    years = np.arange(y1 + 1, y2)  # 2017)
+
+    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/yearly_files/'
+    fname = 'gridsat_WA_-70_hourly_count.nc'
+
+    if not os.path.isfile(msg_folder + fname):
+        da = xr.open_dataset(msg_folder+'gridsat_WA_' + str(y1) + '.nc')
+
+        da['t'] = da['t'].where(da['t'] <= -70)
+        da['t'].values[da['t'].values <= -70] = 1
+        da = da['t']
+
+        da = da[(da['time.month']>=6) & (da['time.month']<=9)]
+
+        da= da.groupby('time.hour').sum(dim='time.hour')
+
+        for y in years:
+            y = str(y)
+            da1 = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_hours_' + y + '.nc')
+            print('Doing ' + y)
+            da1['t'] = da1['t'].where(da['t'] <= -70)
+            da1['t'].values[da1['t'].values <= -70] = 1
+
+            da1 = da1[(da1['time.month'] >= 6) & (da1['time.month'] <= 9)]
+
+            da1 = da1.groupby('time.hour').sum(dim='time.hour')
+
+            pdb.set_trace()
+
+            da = xr.concat([da, da1], 'time')
+            da1.close()
+
+        enc = {'t': {'complevel': 5, 'zlib': True}}
+        da.to_netcdf(msg_folder + fname, encoding=enc)
+
+
+    else:
+        ds = xr.open_dataset(msg_folder + fname)
+        da = ds['t']
+    da.values[da.values == 0] = np.nan
+    da.sel(lat=slice(11, 20))
+    mean = da['t'].mean(dim=['lat', 'lon'])
+
+    mean.plot()
+
+    plt.savefig('/users/global/cornkle/VERA/plots/leeds_june_2017/trend_mcs.png', dpi=300)
+
+
 def timeline_trend_count():
     msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
     fname = 'gridsat_WA_-70_monthly_count.nc'

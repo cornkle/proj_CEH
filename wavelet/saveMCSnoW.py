@@ -21,9 +21,8 @@ def run():
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
     pool = multiprocessing.Pool(processes=7)
 
-
-
     m = msg.ReadMsg(msg_folder)
+
     files  = m.fpath
 
     #files = files[0:1]
@@ -37,7 +36,6 @@ def run():
         files_str.append(f[0:-6])
 
     files_str = np.unique(files_str)
-
 
     passit = []
     for f in files_str:
@@ -60,7 +58,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_35km_-73_JJAS_16-19UTC.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCS_-73_JJAS_16-19UTC.nc'
 
     try:
         os.remove(savefile)
@@ -70,15 +68,13 @@ def run():
 
     das = da.sum(dim='time')
 
-    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-73_JJAS_sum_16-19UTC.nc')
+    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_MCS_-73_JJAS_sum_16-19UTC.nc')
 
     print('Saved ' + savefile)
 
 
 
 def file_loop(passit):
-
-
 
     grid = passit[0]
 
@@ -137,78 +133,9 @@ def file_loop(passit):
         # da.to_netcdf('/users/global/cornkle/test.nc')
         # return
 
-        out = np.zeros_like(outt, dtype=np.int)
+        figure = np.zeros_like(outt, dtype=np.int)
 
-        outt[outt >= -40] = 150
-        outt[np.isnan(outt)] = 150
-
-        grad = np.gradient(outt)
-        outt[outt == 150] = np.nan
-
-        nogood = np.isnan(outt)
-
-        outt[np.isnan(outt)] = -55
-        nok = np.where(abs(grad[0]) > 80)
-        d = 2
-        i = nok[0]
-        j = nok[1]
-
-        for ii, jj in zip(i, j):
-            kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
-            outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
-
-        wav = util.waveletT(outt, 5)
-
-        outt[nogood] = np.nan
-
-        arr = np.array(wav['scales'], dtype=str)
-
-        scale_ind = range(arr.size)
-
-        figure = np.zeros_like(outt)
-
-        wll = wav['t']  # [nb, :, :]
-
-        # maxoutt = (
-        #     wll == ndimage.maximum_filter(wll, (5, 5), mode='reflect',
-        #                                   cval=np.amax(wll) + 1))  # (np.round(orig / 5))
-
-        yyy = []
-        xxx = []
-        scal = []
-        for nb in scale_ind[::-1]:
-
-            orig = float(arr[nb])
-
-            if orig >35:#> 30:
-                 continue
-
-            scale = int(np.round(orig))
-
-            print(np.round(orig))
-
-            wl = wll[nb, :, :]
-           # maxout = maxoutt[nb, :, :]
-
-            maxout = (
-                wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
-
-            try:
-                yy, xx = np.where((maxout == 1) & (outt <= -73) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
-            except IndexError:
-                continue
-
-            for y, x in zip(yy, xx):
-
-                ss = orig
-                iscale = (np.ceil(ss / 2. / 5.)).astype(int)
-
-                ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
-
-                figure[ycirc, xcirc] = 1
-                xxx.append(x)
-                yyy.append(y)
-                scal.append(orig)
+        figure[outt<=-73] += 1
 
         figure[np.isnan(outt)] = 0
 

@@ -14,6 +14,7 @@ import pandas as pd
 from utils import u_time as ut
 import datetime as dt
 import xarray as xr
+import sys
 import pdb
 
 #========================================================================================
@@ -181,6 +182,61 @@ def rewriteGridsat_toNetcdf(file):
                                              'lon': blon},
                       dims=['time', 'lat', 'lon'])#.isel(time=0)
 
+
+    ds = xr.Dataset({'t': da})
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return
+
+
+def rewriteGridsat_extract18Z(file):
+
+    out = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18/'
+    filename = os.path.basename(file)
+    filename = filename.replace('.gra', '.nc')
+    out=out+filename
+
+    if os.path.isfile(out):
+        print('File exists, continue: ', out)
+        return
+
+    ll = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon_Africa.nc')
+    llnew = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon.nc')
+
+    blat = ll['lat']
+    blon = ll['lon']
+    nlat = llnew['lat']
+    nlon = llnew['lon']
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+    yr = int(llist[0].split('_')[-1])
+    mon = int(llist[1])
+    day = int(llist[2])
+    hr = int(llist[3])
+
+    date = [pd.datetime(yr, mon, day, hr, 0)]
+
+    rrShape = (ll.shape[1],ll.shape[2])
+
+    rrMDI = np.uint8(255)
+    rr = np.fromfile(file, dtype=rrMDI.dtype)
+    rr.shape = rrShape
+
+    rr = rr.astype(np.int32) - 173
+
+
+    da = xr.DataArray(rr[None, ...], coords={'time':  date,
+                                             'lat':  blat,
+                                             'lon': blon},
+                      dims=['time', 'lat', 'lon'])#.isel(time=0)
+
+    da = da.sel(lon=slice(np.min(nlon), np.max(nlon)), lat=slice(np.min(nlat), np.max(nlat)))
 
     ds = xr.Dataset({'t': da})
 

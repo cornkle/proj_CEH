@@ -8,7 +8,7 @@ from utils import u_lists as ul
 # import datetime as dt
 # import glob
 import itertools
-import ipdb
+import pdb
 
 
 
@@ -17,6 +17,8 @@ import ipdb
 MSG folder:
 meteosat_WA30: 2004 - 2014, JJAS, 4-21N, 18W - 32E, 580 x 1640 pixel, ~ 3-4km res, ev. 30 mins -> downloading 15mins!
 meteosat_SA15: 2006 - 2010, JJAS, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
+
+meteosat_tropWA: 2004 - 2015, whole year, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
 """
 
 class ReadMsg(object):

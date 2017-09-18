@@ -81,11 +81,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_noR.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_-60.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_noR.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_-60.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_noR.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_-60.p', 'wb'))
 
 
 def file_loop(fi):
@@ -124,7 +124,7 @@ def file_loop(fi):
         return
 
     perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
-    # perc = -10
+    perc = -60
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -138,7 +138,6 @@ def file_loop(fi):
     lon_max = np.max(dic.lon.values)
 
     bulk_tmean = np.nanmean(outt)
-    lat = dic['lat'].values
     bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
