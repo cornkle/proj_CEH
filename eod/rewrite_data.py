@@ -16,6 +16,7 @@ import datetime as dt
 import xarray as xr
 import sys
 import pdb
+import matplotlib.pyplot as plt
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -138,6 +139,134 @@ def rewriteMsgLonLat(file, nx, ny):
 
     llsavefile = file.replace('.gra', '')
     np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites modis lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteMODISLstLonLat(file, nx, ny):
+    llFile = file
+
+    llShape = (ny,nx)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lat = ll[0:ny*nx]
+    lon = ll[ny*nx:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = file.replace('.gra', '')
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites modis lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteModis_toNetcdf(file):
+
+    out = file.replace('modis_raw_binary', 'modis_netcdf')
+    if '.gz' in out:
+        out = out.replace('.gra.gz', '.nc')
+    else:
+        out = out.replace('.gra', '.nc')
+
+    print('Doing '+file)
+
+    if os.path.isfile(out):
+        print('File exists, continue: ', out)
+        return
+
+    ll = np.load('/users/global/cornkle/data/OBS/modis_LST/lsta_728_348_lat_lon.npz')
+
+    blat = ll['lat']
+    blon = ll['lon']
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+    yr = int(llist[0][-8:-4])
+    mon = int(llist[0][-4:-2])
+    day = int(llist[0][-2::])
+
+    date = [pd.datetime(yr, mon, day, 0, 0)]
+
+    rrShape = (blat.shape[0],blat.shape[1])
+
+    rr = np.fromfile(file, dtype='>f')
+    rr.shape = rrShape
+
+    da = xr.DataArray(rr[None, ...], coords={'time':  date,
+                                             'lat':  blat[:,0],
+                                             'lon': blon[0,:]},
+                      dims=['time', 'lat', 'lon'])#.isel(time=0)
+
+
+    ds = xr.Dataset({'LSTA': da})
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return
+
+#========================================================================================
+# Rewrites modis lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteModisClim_toNetcdf(file):
+
+    out = file.replace('modis_raw_binary', 'modis_netcdf')
+    if '.gz' in out:
+        out = out.replace('.gra.gz', '.nc')
+    else:
+        out = out.replace('.gra', '.nc')
+
+    print('Doing '+file)
+
+    if os.path.isfile(out):
+        print('File exists, continue: ', out)
+        return
+
+    ll = np.load('/users/global/cornkle/data/OBS/modis_LST/lsta_728_348_lat_lon.npz')
+
+    blat = ll['lat']
+    blon = ll['lon']
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+    yr = int(llist[0][-4::])
+
+
+    rr = np.fromfile(file, dtype='>f')
+    single_image = blat.size
+    nb_image = int(rr.size / single_image)
+
+    rr = np.reshape(rr, (nb_image,blat.shape[0],blat.shape[1]))
+    date = pd.date_range(str(yr)+'-01-01 06:30:00', freq='15min', periods=nb_image)
+
+
+    da = xr.DataArray(rr, coords={'time':  date,
+                                             'lat':  blat[:,0],
+                                             'lon': blon[0,:]},
+                      dims=['time', 'lat', 'lon'])#.isel(time=0)
+
+    ds = xr.Dataset({'LST': da})
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return
+
 
 #========================================================================================
 # Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)

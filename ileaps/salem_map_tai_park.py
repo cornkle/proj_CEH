@@ -19,9 +19,9 @@ figpath = '/users/global/cornkle/figs/Ileaps/'
 
 # file2 = path+'blob_map_30km_sum_18UTC.nc'
 # file = path+'blob_map_30km_sum_3UTC.nc'
-file2 = path+'blob_map_35km_-75_sum_16-17UTC.nc'
+file2 = path+'blob_map_35km_-65_15-18UTC.nc'
 
-file=path+'blob_map_35km_-75_sum_0-3UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
+file=path+'blob_map_35km_-65_sum_0-3UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
 
 fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
 #lst = '/users/global/cornkle/data/LandCover/evergreen_trees.tif'
@@ -78,6 +78,8 @@ tnight= xr.open_mfdataset('/users/global/cornkle/data/MODIS/LST_MOD11C3/clim/201
 
 ds = ds.sel(lon=slice(coord[0],coord[1]), lat=slice(coord[2],coord[3]))
 ds2 = ds2.sel(lon=slice(coord[0],coord[1]), lat=slice(coord[2],coord[3]))
+
+ds2 = ds2[ds2['time.hour']>16].sum(dim='time')
 top = top.sel(lon=slice(coord[0],coord[1]), lat=slice(coord[2],coord[3]))
 t = t.sel(lon=slice(coord[0],coord[1]), lat=slice(coord[2],coord[3]))
 tdummy = tday.sel(lon=slice(coord[0],coord[1]), lat=slice(coord[2],coord[3]), month=9)

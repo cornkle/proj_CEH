@@ -7,7 +7,7 @@ Created on Thu Jun  2 14:08:18 2016
 import numpy as np
 from wavelet import twod as w2d 
 from scipy import ndimage
-
+import pdb
 def waveletTP(t, p, dt, max = False):
         
     dic= {}    
@@ -138,6 +138,47 @@ def waveletSurface(t, dt):
 
     dic['power'] = powerTIR
     dic['scales'] = (period2d / 2.)
+
+
+
+    return dic
+
+def waveletLSTA(t, dt, dry=None, wet=None):
+
+    dic = {}
+
+    # 2D continuous wavelet analysis:
+    # TIR
+    # dj: distance between scales
+    # s0: start scale, approx 2*3*pixel scale (3 pix necessary for one wave)
+    # j: number of scales
+    if dry==wet:
+        'Please set either dry or wet keyword. Either none or both given.'
+    if wet:
+        tir = t.copy()
+        tir[np.isnan(tir)] = 0
+        tir = tir*(-1)
+    else:
+        tir = t.copy()
+        tir[np.isnan(tir)] = 0
+    tir[tir < 0] = 0
+    tir[np.isnan(tir)]= 0
+    #tir = tir - np.mean(tir)
+    mother2d = w2d.Mexican_hat()
+
+    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.3, s0=18/mother2d.flambda(), J=20)  # s0=30./
+    #powerTIR[np.real(powerTIR >= 0)] = 0.01
+    powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+    period2d = 1. / freqs2d
+    scales2d.shape = (len(scales2d), 1, 1)
+    powerTIR = powerTIR / (scales2d * scales2d)
+
+    dic['power'] = powerTIR
+    dic['scales'] = (period2d / 2.)
+
+
+    return dic
+
 
 
 

@@ -60,17 +60,17 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_35km_-73_JJAS_16-19UTC.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
 
     try:
         os.remove(savefile)
     except OSError:
         pass
     da.to_netcdf(path=savefile, mode='w')
-
-    das = da.sum(dim='time')
-
-    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-73_JJAS_sum_16-19UTC.nc')
+    #
+    # das = da.sum(dim='time')
+    #
+    # das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-67_JJAS_sum_17-19UTC.nc')
 
     print('Saved ' + savefile)
 
@@ -93,7 +93,7 @@ def file_loop(passit):
         print('Skip month')
         return
 
-    if not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
+    if not ((np.int(strr[8:10]) <= 3)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
         print('Skip hour')
         return
 
@@ -180,8 +180,8 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig >35:#> 30:
-                 continue
+            # if orig >30:#> 30:  #scale filter
+            #      continue
 
             scale = int(np.round(orig))
 
@@ -194,7 +194,7 @@ def file_loop(passit):
                 wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -73) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -67) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
 
@@ -203,9 +203,9 @@ def file_loop(passit):
                 ss = orig
                 iscale = (np.ceil(ss / 2. / 5.)).astype(int)
 
-                ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
+                #ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[ycirc, xcirc] = 1
+                figure[y, x] = scale
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)

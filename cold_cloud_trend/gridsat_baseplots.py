@@ -8,6 +8,7 @@ from utils import u_plot as up
 import cartopy.crs as ccrs
 import os
 import matplotlib as mpl
+from scipy.ndimage.measurements import label
 
 
 def monthly(years):
@@ -342,3 +343,66 @@ def t_ratio():
         ax.gridlines()
         ax.set_extent([-17.5, 30, -6, 20])
         ax.set_aspect('equal', 'box-forced')
+
+
+
+def size_trend():
+
+    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/yearly_files/'
+    data = xr.open_mfdataset(msg_folder + 'gridsat*.nc')
+
+    cut = data.sel(lat=slice(10,17), lon=slice(-17,-10))
+    cut = cut.isel(time= ((cut['time.year']>1984) & (cut['time.month']==8)))
+    cut=cut['t']
+
+    dic= {}
+    for p in np.arange(1985,2017,1):
+        dic[p] = []
+
+    def mcs_find(image, thresh=None):
+        if not thresh:
+            print('Give threshold')
+            return
+
+        image[image > thresh] = 0
+        image[image <= thresh] = 1
+        image[np.isnan(image)] = 0
+
+        if np.sum(image<10):
+            return []
+
+        labels, numL = label(image)
+
+        ret = []
+
+        for l in np.unique(labels):
+            if l == 0:
+                continue
+
+            blob = np.sum(labels == l)
+
+            pdb.set_trace()
+
+            if np.sum(len(blob[0])) < 100:  # at least 1000m2
+                continue
+
+            ret.append(blob*49)
+
+        return ret
+
+    for i in np.arange(cut.shape[0]):
+
+        ret = mcs_find(cut[i,:,:].values, thresh=-40)
+        if ret == []:
+            continue
+        pdb.set_trace()
+        dic[cut['time.year']].append(ret)
+
+    pdb.set_trace()
+
+    for d in dic:
+        d = [item for sublist in d for item in sublist]
+
+
+
+
