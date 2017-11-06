@@ -31,10 +31,11 @@ print('Number MCSs:', _p.size)
 pthresh = 200
 pthresh2 = 0.1
 athresh = 1500000
-p = _p[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
-t = _t[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
-area = _area[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
-po30 = _po30[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)]
+clat = 8
+p = _p[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
+t = _t[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
+area = _area[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
+po30 = _po30[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
 
 print(np.min(area), np.max(area))
 

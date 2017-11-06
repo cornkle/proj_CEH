@@ -9,6 +9,7 @@ import matplotlib.gridspec as gridspec
 from scipy import ndimage
 import pdb
 from wavelet import util
+import time
 
 
 
@@ -17,31 +18,31 @@ def ellipse():
     matplotlib.rc('ytick', labelsize=10)
 
 
-    ellipse = np.zeros((100,100))-70
+    ellipse = np.zeros((100,100))+70
     short = 12
     long = 12
 
     xcirc, ycirc = ua.draw_ellipse(50,50,short, long)
 
 
-    ellipse[ycirc,xcirc] = -80
+    ellipse[ycirc,xcirc] = 80
     #ellipse[np.arange(50,54), [56]*4] = -74
 
-    wav = util.waveletT(ellipse, 5)
-
-    wll = wav['t']
+    wav = util.waveletLSTA(ellipse, 5, method='dry')
+    lab = 'power'
+    wll = wav[lab]
     arr = np.round(wav['scales'])
     maxs = np.zeros_like(wll)
     yl = []
     xl = []
-    for nb in range(wav['t'].shape[0]):
+    for nb in range(wav[lab].shape[0]):
 
         orig = float(wav['scales'][nb])
         scale = int(np.round(orig))
 
         print(np.round(orig))
 
-        wl = wav['t'][nb, :, :]
+        wl = wav[lab][nb, :, :]
         # maxout = maxoutt[nb, :, :]
 
         maxout = (
@@ -84,7 +85,7 @@ def ellipse():
     ax3 = plt.subplot2grid((3,1),(2,0))
     #
     lev = np.arange(-90,-39,4)
-    mt = ax1.contourf(np.arange(wll.shape[2])*5,np.arange(wll.shape[1])*5,ellipse, cmap='Greys', vmax=-40, levels = lev)
+    mt = ax1.contourf(np.arange(wll.shape[2])*5,np.arange(wll.shape[1])*5,ellipse, cmap='Greys')
     ax1.plot(np.arange(wll.shape[2])*5, [posi*5]*len(np.arange(wll.shape[2])*5), linestyle = '--', linewidth=2, color = 'black')
     ax1.invert_yaxis()
     ax1.legend(loc=4)

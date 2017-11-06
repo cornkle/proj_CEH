@@ -38,7 +38,7 @@ def composite():
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(14,20), lon=slice(-10,10))
+    msg = msg.sel(lat=slice(14,20), lon=slice(-10,0))
 
     res = pool.map(file_loop, msg)
     pool.close()

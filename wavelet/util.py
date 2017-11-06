@@ -14,7 +14,7 @@ def waveletTP(t, p, dt, max = False):
         
     #2D continuous wavelet analysis:
     #TIR   
-    tir=t
+    tir=t.copy()
     tir[tir>0] = 0
     tir = tir - np.mean(tir) 
     mother2d = w2d.Mexican_hat()
@@ -57,7 +57,7 @@ def waveletT(t, dt, max=False):
 
     # 2D continuous wavelet analysis:
     # TIR
-    tir = t
+    tir = t.copy()
     tir[tir > 0] = 0
     tir = tir - np.mean(tir)
     mother2d = w2d.Mexican_hat()
@@ -90,7 +90,7 @@ def waveletT8(t, dt, max=False):
 
     # 2D continuous wavelet analysis:
     # TIR
-    tir = t
+    tir = t.copy()
     tir[tir > 0] = 0
     tir = tir - np.mean(tir)
     mother2d = w2d.Mexican_hat()
@@ -123,7 +123,7 @@ def waveletSurface(t, dt):
 
     # 2D continuous wavelet analysis:
     # TIR
-    tir = t
+    tir = t.copy()
     tir[tir < 0] = 100
     tir[np.isnan(tir)]= 100
     #tir = tir - np.mean(tir)
@@ -143,7 +143,7 @@ def waveletSurface(t, dt):
 
     return dic
 
-def waveletLSTA(t, dt, dry=None, wet=None):
+def waveletLSTA(t, dt, method=None):
 
     dic = {}
 
@@ -152,27 +152,39 @@ def waveletLSTA(t, dt, dry=None, wet=None):
     # dj: distance between scales
     # s0: start scale, approx 2*3*pixel scale (3 pix necessary for one wave)
     # j: number of scales
-    if dry==wet:
-        'Please set either dry or wet keyword. Either none or both given.'
-    if wet:
-        tir = t.copy()
-        tir[np.isnan(tir)] = 0
-        tir = tir*(-1)
-    else:
-        tir = t.copy()
-        tir[np.isnan(tir)] = 0
-    tir[tir < 0] = 0
-    tir[np.isnan(tir)]= 0
-    #tir = tir - np.mean(tir)
-    mother2d = w2d.Mexican_hat()
 
-    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.3, s0=18/mother2d.flambda(), J=20)  # s0=30./
-    #powerTIR[np.real(powerTIR >= 0)] = 0.01
-    powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+    # 2D continuous wavelet analysis:
+    # TIR
+    tir = t.copy()
+    mother2d = w2d.Mexican_hat()
+    nanpos = np.where(np.isnan(tir))
+    tir[np.isnan(tir)]=0
+    if method != None:
+        if method == 'dry':
+            tir = tir*-1
+            tir[tir > 0] = 0
+           # tir = tir - np.mean(tir)
+        if method == 'wet':
+            tir[tir > 0] = 0
+           # tir = tir - np.mean(tir)
+
+        powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.3, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+        #powerTIR[np.real(powerTIR >= 0)] = 0.01
+
+        powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+
+    else:
+        #tir = tir - np.mean(tir)
+        powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.3, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+        #powerTIR[np.real(powerTIR >= 0)] = 0.01
+        isneg = powerTIR < 0
+        powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+        powerTIR[isneg] = powerTIR[isneg]*-1
+
     period2d = 1. / freqs2d
     scales2d.shape = (len(scales2d), 1, 1)
     powerTIR = powerTIR / (scales2d * scales2d)
-
+    powerTIR[:,nanpos[0], nanpos[1]] = np.nan
     dic['power'] = powerTIR
     dic['scales'] = (period2d / 2.)
 
@@ -180,17 +192,13 @@ def waveletLSTA(t, dt, dry=None, wet=None):
     return dic
 
 
-
-
-    return dic
-
 def waveletSurfaceneg(t, dt):
 
     dic = {}
-
+    tir = t.copy()
     # 2D continuous wavelet analysis:
     # TIR
-    tir = t*(-1)
+    tir = tir*(-1)
     tir[tir < 0] = -100
     tir[np.isnan(tir)]= -100
     #tir = tir - np.mean(tir)
