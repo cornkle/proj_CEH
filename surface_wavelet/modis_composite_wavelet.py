@@ -40,9 +40,9 @@ def composite():
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 8) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 7) ]
 
-    msg = msg.sel(lat=slice(10,18), lon=slice(-10, 10))
+    msg = msg.sel(lat=slice(10,20), lon=slice(-10, 10))
 
     res = pool.map(file_loop, msg)
     pool.close()
@@ -201,7 +201,7 @@ def file_loop(fi):
 
     wav_input = lsta_day2-lsta_day2.mean()
     #pdb.set_trace()
-    wav = util.waveletLSTA(np.squeeze(wav_input.values), 3,method=None)
+    wav = util.waveletLSTA(np.squeeze(wav_input.values), 3,method='dry')
     wl = wav['power']
 
 

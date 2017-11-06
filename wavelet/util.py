@@ -161,15 +161,16 @@ def waveletLSTA(t, dt, method=None):
     tir[np.isnan(tir)]=0
     if method != None:
         if method == 'dry':
-            tir = tir*-1
-            tir[tir > 0] = 0
-           # tir = tir - np.mean(tir)
-        if method == 'wet':
-            tir[tir > 0] = 0
+            tir[tir < 0] = 0
            # tir = tir - np.mean(tir)
 
-        powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.3, s0=18. / mother2d.flambda(), J=14)  # s0=30./
-        #powerTIR[np.real(powerTIR >= 0)] = 0.01
+        if method == 'wet':
+            tir = tir * -1
+            tir[tir < 0] = 0
+           # tir = tir - np.mean(tir)
+
+        powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+        #powerTIR[np.real(powerTIR <= 0)] = 0.01
 
         powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
 
@@ -184,7 +185,7 @@ def waveletLSTA(t, dt, method=None):
     period2d = 1. / freqs2d
     scales2d.shape = (len(scales2d), 1, 1)
     powerTIR = powerTIR / (scales2d * scales2d)
-    powerTIR[:,nanpos[0], nanpos[1]] = np.nan
+    #powerTIR[:,nanpos[0], nanpos[1]] = np.nan
     dic['power'] = powerTIR
     dic['scales'] = (period2d / 2.)
 
