@@ -261,23 +261,35 @@ def trend_map():
         return xr.DataArray(pf[0])
 
     msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
+    fpath = '/users/global/cornkle/figs/gap_filling_Tgrad/gridsat/'
+
     fname = 'gridsat_WA_-70_monthly_count.nc'
 
-    da = xr.open_dataarray(msg_folder + fname)
-    da = da.sel(lat=slice(10, 15), lon=slice(-17, 20))
+    dam = xr.open_dataarray(msg_folder + fname)
+    dam = dam.sel(lon=slice(-18,51), lat=slice(-37, 36))
+    lons = dam.lon
+    lats = dam.lat
+    months = np.arange(1, 13)
     #da[da == 0] = np.nan
+    for m in months:
+        da = dam[(dam['time.month']==m) & (dam['time.year']>1982)]
+        da = da.groupby('time.day').sum(axis=0)
+        da = da.groupby('time.year').mean(axis=0)  # average daily frequency per year
+        # stack lat and lon into a single dimension called allpoints
+        stacked = da.stack(allpoints=['lat', 'lon'])
+        # apply the function over allpoints to calculate the trend at each point
 
-    da = da[(da['time.month']>=7)&(da['time.month']<=9)]
+        trend = stacked.groupby('allpoints').apply(linear_trend)
+        # unstack back to lat lon coordinates
+        trend_unstacked = trend.unstack('allpoints')
 
-    # stack lat and lon into a single dimension called allpoints
-    stacked = da.stack(allpoints=['lat', 'lon'])
-    # apply the function over allpoints to calculate the trend at each point
-    trend = stacked.groupby('allpoints').apply(linear_trend)
-    # unstack back to lat lon coordinates
-    trend_unstacked = trend.unstack('allpoints')
-    pdb.set_trace()
+        trend_unstacked = trend_unstacked * 10.
+        da2 = xr.DataArray(trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
 
-    up.quick_map(trend_unstacked)
+        fp = fpath + 'ttrend_' + str(m).zfill(2) + '.png'
+
+        up.quick_map_salem(da2, vmin=-0.4, vmax=0.4, cmap='RdBu_r', save=fp)
+
 
 
 def t_ratio():

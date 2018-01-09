@@ -90,7 +90,7 @@ def file_loop(f):
 
         blob = np.where(labels == l)
 
-        if np.sum(len(blob[0]))< 7:  # at least 1000m2
+        if np.sum(len(blob[0]))< 7:  # at least 1000m2 for TRMM on 12km grid
             continue
 
         blon = lon[blob]

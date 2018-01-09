@@ -13,6 +13,8 @@ import multiprocessing
 import pdb
 import pandas as pd
 from scipy import ndimage
+####these functions create plots of the average of the LSTAs and all blobs over the time period
+####AVERAGE PLOTS!
 
 
 def modis():
@@ -34,11 +36,13 @@ def modis():
     f = plt.figure()
     dat.plot()
 
+
 def blobs():
     dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
+    dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
     msg = xr.open_dataarray(dayp)
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 5))
-    msg = msg[ (msg['time.month'] >= 8 ) & (msg['time.hour'] == 18 ) ]
+    msg = msg[ (msg['time.month'] >= 8 ) & (msg['time.hour'] == 3 ) ]
     msg = msg.where((msg.values >= 1) & (msg.values <= 35))
     msg.values[msg.values>=1] = 1
     msg = msg.sum(dim='time')

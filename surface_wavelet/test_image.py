@@ -7,6 +7,8 @@ from scipy import ndimage
 from utils import u_arrays as ua
 import pandas as pd
 import time
+import matplotlib.gridspec as gridspec
+from scipy.interpolate import griddata
 
 
 DATE = {'day' : 22,
@@ -23,83 +25,32 @@ def run_waveletDry():
     lsta = ds['LSTA'][0,:,:]
 
     lsta[lsta<-800] = np.nan
+    points = np.where(np.isfinite(lsta))
+    inter = np.where(np.isnan(lsta))
+
+    # interpolate over sea from land points
+    lsta[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+
     lsta = lsta #- np.nanmean(lsta)
+
+    f = plt.figure()
+    plt.imshow(lsta)
 
     wav = util.waveletLSTA(lsta.values,3, method='dry')
 
     wl = wav['power']
+    f = plt.figure()
+    plt.imshow(np.nansum(wl,axis=0))
+    #wl[:, inter[0], inter[1]] = np.nan
     scales = wav['scales']
+    dom = wav['dominant']
+    dom[inter]=np.nan
     print(scales)
 
   #  for id, s in enumerate(scales):
   #      wl[id, :, :][wl[id, :, :] <= s ** .5] = 0
 
-    return wl, scales, lsta
-
-
-def dominantScaleDry():
-
-
-    out = '/users/global/cornkle/data/OBS/modis_LST/modis_wav/'
-
-    wll, scales, lsta = run_waveletDry()
-
-    figure = wll[0,:,:].copy()*0
-
-    yyy = []
-    xxx = []
-    scal = []
-
-    maxoutt = (
-        wll == ndimage.maximum_filter(wll, (10, 10, 10), mode='reflect', cval=np.amax(wll) + 1))  # (np.round(orig / 5))
-
-    for nb in range(scales.size):
-
-        wl = wll[nb,:,:]
-
-        orig = scales[nb]
-        print(np.round(orig))
-        maxout = maxoutt[nb, :, :]
-
-        try:
-            yy, xx = np.where((maxout == 1) & (np.abs(lsta) >= 1.) & (wl >= np.percentile(wl[wl >= 0.5], 1)) )#& (wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig ** .5))
-        except IndexError:
-
-            continue
-
-        yyy.append(yy)
-        xxx.append(xx)
-
-
-
-        for y, x in zip(yy, xx):
-
-            ss = orig
-            iscale = (np.ceil(ss / 2. / 3.)).astype(int)
-
-            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, wl)
-
-            figure[ycirc, xcirc] = 1#wl[ycirc, xcirc]
-    #
-    # f = plt.figure()
-    # lsta.plot.contourf()
-    # plt.plot((lsta['lon'])[xxx], (lsta['lat'])[yyy], 'bo', markersize=3)
-
-    # da = xr.DataArray(figure, coords={'scale': scales,
-    #                                          'lat': lsta['lat'],
-    #                                          'lon': lsta['lon']},
-    #                   dims=['scale', 'lat', 'lon'])  # .isel(time=0)
-    #
-    # ds = xr.Dataset({'wav': da})
-    #
-    # try:
-    #     ds.to_netcdf(out+'test_wav.nc')
-    # except OSError:
-    #     print('Did not find ' + out)
-    #     print('Out directory not found')
-    # print('Wrote ' + out+'test_wav.nc')
-
-    return xxx, yyy,  figure, lsta, wll, scales
+    return wl, scales, lsta, inter, dom
 
 
 
@@ -113,13 +64,10 @@ def wav_checkDry():
     nightp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_0-3UTC.nc'
     dayp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_15-18UTC.nc'
 
-
-    xxx, yyy, figure, lsta, wll, scales = dominantScaleDry()
+    wll, scales, lsta, inter, dom = run_waveletDry()
 
     day = xr.open_dataarray(dayp)
     night = xr.open_dataarray(nightp)
-
-
 
     latmin, latmax = (np.min(lsta['lat']), np.max(lsta['lat']))
     lonmin, lonmax = (np.min(lsta['lon']), np.max(lsta['lon']))
@@ -134,14 +82,23 @@ def wav_checkDry():
 
     bla=day.where(day>0)
     bla2 = night.where(night>0)
+    posi = 250  # 116 ## 118
+
+    plt.figure()
+    plt.imshow(dom)
+    plt.colorbar()
+    plt.gca().invert_yaxis()
 
     f= plt.figure()
     f.add_subplot(2,2,1)
     plt.contourf(lsta['lon'], lsta['lat'], lsta, vmin=-8, vmax=8, nlevels=7, cmap='RdBu_r')
-
+    plt.axhline(lsta['lat'][posi], linestyle='--', linewidth=2,
+             color='black')
    # plt.contour(lsta['lon'], lsta['lat'], wllmean0, cmap='RdBu')
     plt.colorbar()
+
     plt.contourf(day['lon'], day['lat'], bla, cmap='viridis')
+
 
     plt.title(str(pd.to_datetime(lsta['time'].values))+' DRY anomaly')
 
@@ -172,6 +129,35 @@ def wav_checkDry():
     plt.gca().invert_yaxis()
     plt.colorbar()
     plt.title('Deep conv. frequency, <70C: '+nightstring+' , Reds: wavelet power')
+
+    f = plt.figure(figsize=(6.5, 11), dpi=300)
+    #
+    gridspec.GridSpec(3, 1)
+
+    ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+    ax3 = plt.subplot2grid((3, 1), (2, 0))
+    #
+  #  mt = ax1.contourf(np.arange(wll.shape[2]) * 3, np.arange(wll.shape[1]) * 5, lsta, cmap='Greys')
+    ax1.plot(np.arange(wll.shape[2]) * 3, lsta[posi, :], linewidth=2,
+             color='black')
+    ax1.set_xlim(0, wll.shape[2]*3)
+    mp = ax3.contourf(np.arange(wll.shape[2]) * 3, scales, wll[:, posi, :], cmap='viridis', levels=[0,0.25, 0.5 , 1, 2, 4, 6, 8])
+   # plt.colorbar(mp)
+    # levels=[0,1, 2,5,10,20,40,80,100, 130, 150, 180, 200, 300,400]
+
+    # for p1, p2 in zip(ppos[1], ppos[0]):
+    #    ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arr[p2], xerr=arr[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
+    # ax3.set_xlim(100,700)
+    ax3.set_ylim(15, 180)
+    ax3.set_xlabel('Spatial extent (km)')
+    ax3.set_ylabel('Length scale (km)')
+
+    plt.tight_layout()
+
+    f.subplots_adjust(right=0.86)
+
+
+    plt.show()
 
     print('Elapsed time: ', time.time()-start_time)
 

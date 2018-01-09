@@ -60,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_20-23UTC_centrePoint.nc'
 
     try:
         os.remove(savefile)
@@ -93,7 +93,7 @@ def file_loop(passit):
         print('Skip month')
         return
 
-    if not ((np.int(strr[8:10]) <= 3)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
+    if not ((np.int(strr[8:10]) >= 20)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
         print('Skip hour')
         return
 
@@ -116,12 +116,7 @@ def file_loop(passit):
             print('File missing')
             return
 
-        # interpolate MSG to salem grid
-        inter, mpoints = u_grid.griddata_input(mdic['lon'].values, mdic['lat'].values, grid)
-
-        # Interpolate TRMM using delaunay triangularization
-        dummyt = griddata(mpoints, mdic['t'].values.flatten(), inter, method='linear')
-        outt = dummyt.reshape((grid.ny, grid.nx))
+        outt = u_grid.quick_regrid(mdic['lon'].values, mdic['lat'].values,mdic['t'].values.flatten(), grid)
 
         # hour = mdic['time.hour']
         # minute = mdic['time.minute']
@@ -180,8 +175,8 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            # if orig >30:#> 30:  #scale filter
-            #      continue
+            if orig >30:#> 30:  #scale filter
+                 continue
 
             scale = int(np.round(orig))
 

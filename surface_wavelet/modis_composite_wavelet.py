@@ -12,26 +12,34 @@ import matplotlib
 import multiprocessing
 import pdb
 import pandas as pd
-from scipy import ndimage
 from wavelet import util
-import itertools
+from utils import u_plot
 from scipy.stats import ttest_ind as ttest
+from scipy.interpolate import griddata
+import pickle as pkl
+import collections
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
+def run_hours():
 
-def composite():
+    l = [17,18,19,0,1,2,3]
+    for ll in l:
+        composite(ll)
+
+
+def composite(hour):
     pool = multiprocessing.Pool(processes=8)
 
     nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
     dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
-
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/picks'
     # nightp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_0-3UTC.nc'
     # dayp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_15-18UTC.nc'
 
-    hour = 18
+    hour = hour
 
     if hour > 6:
         file = dayp
@@ -40,99 +48,118 @@ def composite():
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 7) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 8) ]
 
-    msg = msg.sel(lat=slice(10,20), lon=slice(-10, 10))
+    msg = msg.sel(lat=slice(11,18), lon=slice(-9, 9))
 
     res = pool.map(file_loop, msg)
     pool.close()
-    # cnt_list = []
-    # res_list = []
-    # for m in msg[0:2]:
-    #     res, cnt = file_loop(m)
-    #     res_list.append(res)
-    #     cnt_list.append(cnt)
 
     res = [x for x in res if x is not None]
 
-    res_list = []
-    res2_list = []
-    res3_list = []
-    cnt_list = []
+    snpos_list = []
+    wepos_list = []
+    snneg_list = []
+    weneg_list = []
+    snboth_list = []
+    weboth_list = []
 
-    rres_list = []
-    rres2_list = []
-    rres3_list = []
-    rcnt_list = []
+    rsnpos_list = []
+    rwepos_list = []
+    rsnneg_list = []
+    rweneg_list = []
+    rsnboth_list = []
+    rweboth_list = []
 
     for r in res:
-        res_list.append(np.squeeze(r[0]))
-        res2_list.append(np.squeeze(r[1]))
-        #res3_list.append(np.squeeze(r[2]))
-        #cnt_list.append(np.squeeze(r[3]))
+        snpos_list.append(np.squeeze(r[0]))
+        wepos_list.append(np.squeeze(r[1]))
+        snneg_list.append(np.squeeze(r[2]))
+        weneg_list.append(np.squeeze(r[3]))
+        snboth_list.append(np.squeeze(r[4]))
+        weboth_list.append(np.squeeze(r[5]))
 
-        rres_list.append(np.squeeze(r[2]))
-        rres2_list.append(np.squeeze(r[3]))
-        #rres3_list.append(np.squeeze(r[6]))
-        #rcnt_list.append(np.squeeze(r[7]))
+        rsnpos_list.append(np.squeeze(r[6]))
+        rwepos_list.append(np.squeeze(r[7]))
+        rsnneg_list.append(np.squeeze(r[8]))
+        rweneg_list.append(np.squeeze(r[9]))
+        rsnboth_list.append(np.squeeze(r[10]))
+        rweboth_list.append(np.squeeze(r[11]))
 
-        scales = r[4]
-
-
-    ns = np.squeeze(np.vstack(res_list))
-    ew = np.squeeze(np.vstack(res2_list))
-    # cns_sum = np.nansum(np.squeeze(np.stack(res3_list, axis=0)), axis=0)
-    # cew_sum = np.nansum(np.squeeze(np.stack(cnt_list, axis=0)), axis=0)
-
-    rns = np.squeeze(np.vstack(rres_list))
-    rew = np.squeeze(np.vstack(rres2_list))
-    # rcns_sum = np.nansum(np.squeeze(np.stack(rres3_list, axis=0)), axis=0)
-    # rcew_sum = np.nansum(np.squeeze(np.stack(rcnt_list, axis=0)), axis=0)
-
-    nsstat, nspvalue = ttest(ns, rns, axis=0, equal_var=False, nan_policy='omit')
-    ewstat, ewpvalue = ttest(ew, rew, axis=0, equal_var=False, nan_policy='omit')
-
-    nsmask = nspvalue < 0.05
-    ewmask = ewpvalue < 0.05
-
-    ns_mean = np.nanmean(ns, axis=0)
-    ew_mean = np.nanmean(ew, axis=0)
-
-    rns_mean = np.nanmean(rns, axis=0)
-    rew_mean = np.nanmean(rew, axis=0)
-
-    f = plt.figure(figsize=(9, 5))
-    ax = f.add_subplot(121) #- (rns_sum / rcns_sum)
-   # pdb.set_trace()
-    plt.contourf((np.arange(0, 101) - 50) * 3, scales ,(ns_mean) - (rns_mean)  , cmap='RdBu_r', vmax=0.05, vmin=-0.05)
-    plt.colorbar(label='K')
-    #plt.contourf((np.arange(0, 101) - 50) * 3, scales, nsmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
-
-    #  plt.plot(50, 50, 'bo')
-    #ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('Scales')
-
-    plt.title('South-North scales, Nb cores: ' + str(ns.shape[0]) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
-              fontsize=10)
-
-    ax = f.add_subplot(122) #-(rew_sum / rcew_sum)
-
-    plt.contourf((np.arange(0, 101) - 50) * 3,scales,   (ew_mean)- (rew_mean)  , cmap='RdBu_r', vmax=0.05, vmin=-0.05)
-    plt.colorbar(label='K')
-   # plt.contourf((np.arange(0, 101) - 50) * 3, scales, ewmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
-   # ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-
-    plt.title('West-East scales', fontsize=10)
+        scales = r[12]
 
 
-    plt.tight_layout()
+        dic = collections.OrderedDict([('SN-pos' , [snpos_list, rsnpos_list]),
+                                       ('WE-pos' , [wepos_list, rwepos_list]),
+                                       ('SN-neg' , [snneg_list, rsnneg_list]),
+                                       ('WE-neg' , [weneg_list, rweneg_list]),
+                                       ('SN-both', [snboth_list, snboth_list]),
+                                       ('WE-both', [weboth_list, weboth_list]),
+                                       ('scales' , scales)])
+
+    keys = list(dic.keys())
+    for l in keys:
+        (dic[l])[0] = np.squeeze(np.vstack((dic[l])[0]))
+        (dic[l])[1] = np.squeeze(np.vstack((dic[l])[1]))
+
+    for l in keys:
+        nsstat, nspvalue = ttest(dic[l][0], dic[l][1], axis=0, equal_var=False, nan_policy='omit')
+        mask = nspvalue < 0.05
+        dic[l].append(mask)
+
+    for l in keys:
+        (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
+        (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
+
+    pkl.dump(dic, open(path+"/composite_pos_neg_both_"+str(hour)+"UTC.p", "wb"))
 
 
+
+def plot(hour):
+
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/picks'
+    dic = pkl.load(open(path+"/composite_pos_neg_both_"+str(hour)+"UTC.p", "rb"))
+    scales = dic['scales']
+    del dic['scales']
+
+    keys = list(dic.keys())
+    cnt = (dic['SN-pos'][0]).shape[0]
+
+    for l in [0,2,4]:
+        f = plt.figure(figsize=(9, 4))
+        ax = f.add_subplot(121)
+
+        snblob = (dic[keys[l]])[0]
+        snrandom = (dic[keys[l]])[1]
+        snmask = (dic[keys[l]])[2]
+
+        weblob = (dic[keys[l+1]])[0]
+        werandom = (dic[keys[l+1]])[1]
+        wemask = (dic[keys[l+1]])[2]
+
+        plt.contourf((np.arange(0, 101) - 50) * 3, scales ,snblob - snrandom  , cmap='RdBu_r', vmax=0.05, vmin=-0.05)
+        plt.colorbar(label='Power difference (Blob-random)')
+        plt.contourf((np.arange(0, 101) - 50) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+
+        ax.set_xlabel('km')
+        ax.set_ylabel('Scales')
+
+        plt.title('South-North scales, Nb cores: ' + str(cnt) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
+                  fontsize=10)
+
+        ax = f.add_subplot(122)
+
+        plt.contourf((np.arange(0, 101) - 50) * 3,scales,  weblob- werandom  , cmap='RdBu_r', vmax=0.05, vmin=-0.05)
+        plt.colorbar(label='Power difference (Blob-random)')
+        plt.contourf((np.arange(0, 101) - 50) * 3, scales, wemask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+
+        ax.set_xlabel('km')
+        ax.set_ylabel('km')
+
+        plt.title('West-East scales', fontsize=10)
+
+        plt.tight_layout()
+        plt.savefig(path + '/lsta_hours_'+keys[l]+'_'+str(hour)+'.png')
 
 
 def cut_kernel(xpos, ypos, wl):
@@ -141,7 +168,7 @@ def cut_kernel(xpos, ypos, wl):
     #pdb.set_trace()
     try:
         kernel = wl[:, ypos - dist: ypos + dist + 1,  xpos - dist: xpos + dist + 1]
-       # pdb.set_trace()
+
     except ValueError:
         # print('Point at boundary, pass')
         return
@@ -152,17 +179,10 @@ def cut_kernel(xpos, ypos, wl):
     wav_ns = kernel[:,:,50]
     wav_we = kernel[:,50,:]
 
-    cnt = kernel.copy()
-    cnt[np.isfinite(cnt)] = 1
-    cnt_ns = cnt[:,:,50]
-    cnt_we = cnt[:,50,:]
-
-    return wav_ns, wav_we, cnt_ns, cnt_we
-
+    return wav_ns, wav_we
 
 
 def file_loop(fi):
-
 
 
     date = pd.to_datetime(
@@ -189,22 +209,31 @@ def file_loop(fi):
     lsta_day2 = lsta_day.copy()
     lsta_day2 = lsta_day2.where(lsta_day2 > -900)
 
-    # plt.figure()
-    # plt.imshow(lsta_day2[0,:,:])
-    # #
-    # return
-
-    pos = np.where((fi.values >= 1) & (fi.values <= 20))
+    pos = np.where((fi.values >= 1) & (fi.values <= 30))
     if np.sum(pos) == 0:
         print('No blobs found')
         return
 
     wav_input = lsta_day2-lsta_day2.mean()
-    #pdb.set_trace()
-    wav = util.waveletLSTA(np.squeeze(wav_input.values), 3,method='dry')
-    wl = wav['power']
+    wav_input = wav_input.values
+    points = np.where(np.isfinite(wav_input))
+    inter = np.where(np.isnan(wav_input))
+    # interpolate over sea from land points
+    try:
+         wav_input[inter] = griddata(points, np.ravel(wav_input[points]), inter, method='nearest')
+    except ValueError:
+        wav_input[inter]=0
+    wavpos = util.waveletLSTA(np.squeeze(wav_input), 3, method='pos')
+    wavneg = util.waveletLSTA(np.squeeze(wav_input), 3, method='neg')
+    wavboth = util.waveletLSTA(np.squeeze(wav_input), 3, method=None)
 
+    wlpos = wavpos['power']
+    wlneg = wavneg['power']
+    wlboth = wavboth['power']
 
+    wlpos[:,inter[0], inter[1]]=np.nan
+    wlneg[:,inter[0], inter[1]]=np.nan
+    wlboth[:,inter[0], inter[1]]=np.nan
 
     xfi = fi.shape[1]
     yfi = fi.shape[0]
@@ -213,10 +242,13 @@ def file_loop(fi):
     posr = (randy, randx)
 
 ##############################Random loop
-    rns_list = []
-    rwe_list = []
-    rcns_list = []
-    rcwe_list = []
+    rnspos_list = []
+    rwepos_list = []
+    rnsneg_list = []
+    rweneg_list = []
+    rnsboth_list = []
+    rweboth_list = []
+
     for y, x in zip(posr[0], posr[1]):
 
         lat = fi['lat'][y]
@@ -232,20 +264,26 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            wav_ns, wav_we, cnt_ns, cnt_we = cut_kernel(xpos, ypos, wl)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos)
+            wavneg_ns, wavneg_we = cut_kernel(xpos, ypos, wlneg)
+            wavboth_ns, wavboth_we = cut_kernel(xpos, ypos, wlboth)
         except TypeError:
             continue
 
-        rns_list.append(wav_ns)  # north-south wavelet
-        rwe_list.append(wav_we)  # west-east wavelet
-        rcns_list.append(cnt_ns)  # north_south valid count
-        rcwe_list.append(cnt_we)  # west_east valid count
+        rnspos_list.append(wavpos_ns)  # north-south wavelet
+        rwepos_list.append(wavpos_we)  # west-east wavelet
+        rnsneg_list.append(wavneg_ns)  # north-south wavelet
+        rweneg_list.append(wavneg_we)  # west-east wavelet
+        rnsboth_list.append(wavboth_ns)  # north-south wavelet
+        rweboth_list.append(wavboth_we)  # west-east wavelet
 
 ###############################Blob loop
-    ns_list = []
-    we_list = []
-    cns_list = []
-    cwe_list = []
+    nspos_list = []
+    wepos_list = []
+    nsneg_list = []
+    weneg_list = []
+    nsboth_list = []
+    weboth_list = []
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -262,60 +300,50 @@ def file_loop(fi):
         ypos = np.where(lsta_day['lat'].values == plat)
         ypos = int(ypos[0])
 
+
         try:
-            wav_ns, wav_we, cnt_ns, cnt_we = cut_kernel(xpos, ypos, wl)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos)
+            wavneg_ns, wavneg_we = cut_kernel(xpos, ypos, wlneg)
+            wavboth_ns, wavboth_we = cut_kernel(xpos, ypos, wlboth)
         except TypeError:
             continue
-        #print(plat,plon)
-        ns_list.append(wav_ns)  #north-south wavelet
-        we_list.append(wav_we) # west-east wavelet
-        cns_list.append(cnt_ns)  # north_south valid count
-        cwe_list.append(cnt_we) # west_east valid count
 
-    # f = plt.figure()
-    # f.add_subplot(131)
-    # plt.contourf(kernel_list[4][0,], cmap='RdBu_r', vmin=-8, vmax=8)
-    # plt.title('Local')
-    # plt.colorbar()
-    # f.add_subplot(132)
-    # plt.contourf(kernel2_list[4][0,], cmap='RdBu_r', vmin=-8, vmax=8)
-    # plt.title('Seasonal')
-    # plt.colorbar()
-    # f.add_subplot(133)
-    # plt.contourf(kernel3_list[4][0,], cmap='RdBu_r', vmin=-8, vmax=8)
-    # plt.title('Regional (kernel)')
-    # plt.colorbar()
-    #
-    # return
+        nspos_list.append(wavpos_ns)  # north-south wavelet
+        wepos_list.append(wavpos_we)  # west-east wavelet
+        nsneg_list.append(wavneg_ns)  # north-south wavelet
+        weneg_list.append(wavneg_we)  # west-east wavelet
+        nsboth_list.append(wavboth_ns)  # north-south wavelet
+        weboth_list.append(wavboth_we)  # west-east wavelet
 
-    if ns_list == []:
+    if nspos_list == []:
         return None
-    print(len(ns_list))
-    if len(ns_list) == 1:
+
+    if len(nspos_list) == 1:
       return None
     else:
-        ns_sum = np.squeeze(np.stack(ns_list, axis=0))
-        we_sum = np.squeeze(np.stack(we_list, axis=0))
+        nspos_sum = np.squeeze(np.stack(nspos_list, axis=0))
+        wepos_sum = np.squeeze(np.stack(wepos_list, axis=0))
+        nsneg_sum = np.squeeze(np.stack(nsneg_list, axis=0))
+        weneg_sum = np.squeeze(np.stack(weneg_list, axis=0))
+        nsboth_sum = np.squeeze(np.stack(nsboth_list, axis=0))
+        weboth_sum = np.squeeze(np.stack(weboth_list, axis=0))
 
-        # cns_sum = np.nansum(np.squeeze(np.stack(cns_list, axis=0)), axis=0)
-        # cwe_sum = np.nansum(np.squeeze(np.stack(cwe_list, axis=0)), axis=0)
+        rnspos_sum = np.squeeze(np.stack(rnspos_list, axis=0))
+        rwepos_sum = np.squeeze(np.stack(rwepos_list, axis=0))
+        rnsneg_sum = np.squeeze(np.stack(rnsneg_list, axis=0))
+        rweneg_sum = np.squeeze(np.stack(rweneg_list, axis=0))
+        rnsboth_sum = np.squeeze(np.stack(rnsboth_list, axis=0))
+        rweboth_sum = np.squeeze(np.stack(rweboth_list, axis=0))
 
-        rns_sum = np.squeeze(np.stack(rns_list, axis=0))
-        rwe_sum = np.squeeze(np.stack(rwe_list, axis=0))
-        # rcns_sum = np.nansum(np.squeeze(np.stack(rcns_list, axis=0)), axis=0)
-        # rcwe_sum = np.nansum(np.squeeze(np.stack(rcwe_list, axis=0)), axis=0)
-
-    # plt.figure()
-    # plt.contourf(kernel_sum/cnt_sum, cmap= 'RdBu', vmin=-3, vmax=3)
-    # plt.plot(21,21,'bo')
-    # plt.colorbar()
-    scales = wav['scales']
+    scales = wavpos['scales']
 
     print('Returning')
 
-    return (ns_sum, we_sum,  rns_sum, rwe_sum,  scales)
+    return (nspos_sum, wepos_sum,  nsneg_sum, weneg_sum,  nsboth_sum, weboth_sum,
+            rnspos_sum, rwepos_sum, rnsneg_sum, rweneg_sum, rnsboth_sum, rweboth_sum,
+            scales)
 # rcns_sum, rcwe_sum, cns_sum, cwe_sum,
 
 
 if __name__ == "__main__":
-    composite()
+    run_hours()

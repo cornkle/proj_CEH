@@ -14,9 +14,8 @@ import pandas as pd
 from utils import u_time as ut
 import datetime as dt
 import xarray as xr
-import sys
 import pdb
-import matplotlib.pyplot as plt
+from scipy.ndimage.measurements import label
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -323,9 +322,36 @@ def rewriteGridsat_toNetcdf(file):
     return
 
 
+def MCSblobs(da, t_threshold=None):
+
+    da.values[da.values > t_threshold] = 0
+    da.values[np.isnan(da.values)] = 0
+
+    labels, numL = label(da.values)
+
+    zarr = np.zeros_like(da.values)
+
+    for l in np.unique(labels):
+        if l == 0:
+            continue
+
+        blob = np.where(labels == l)
+
+        if np.sum(len(blob[0])) < 85:  # at least 1000m2
+            continue
+
+        mean = np.nanmean(da.values[blob])
+
+        zarr[blob] = mean
+
+    da.values = zarr
+    return da
+
+
+
 def rewriteGridsat_extract18Z(file):
 
-    out = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18/'
+    out = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18_panAfrica/'
     filename = os.path.basename(file)
     filename = filename.replace('.gra', '.nc')
     out=out+filename
@@ -364,8 +390,12 @@ def rewriteGridsat_extract18Z(file):
                                              'lat':  blat,
                                              'lon': blon},
                       dims=['time', 'lat', 'lon'])#.isel(time=0)
+    ###to cut down data area
+    #da = da.sel(lon=slice(np.min(nlon), np.max(nlon)), lat=slice(np.min(nlat), np.max(nlat)))
 
-    da = da.sel(lon=slice(np.min(nlon), np.max(nlon)), lat=slice(np.min(nlat), np.max(nlat)))
+    ### to keep only MCS areas
+
+    da = MCSblobs(da, t_threshold=-40)
 
     ds = xr.Dataset({'t': da})
 

@@ -103,7 +103,7 @@ def plot_data():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 
     data = xr.open_dataset('/users/global/cornkle/C_paper/wavelet/saves/maps/trmm_msg_map.nc')
-    data=data.sel(lon=slice(-17,30), lat=slice(4.,20))
+    data=data.sel(lon=slice(-17,20), lat=slice(4.,20))
     map = data.salem.get_map(cmap='inferno')
 
     outb = data['tir']
@@ -112,11 +112,12 @@ def plot_data():
     map.set_data(data['tir'])
     map.set_shapefile(countries=True, linewidth=0.1 )
 
-    f= plt.figure(figsize=(9, 5.6), dpi=300)
+    f= plt.figure(figsize=(9, 6.8), dpi=300)
     ax1 = f.add_subplot(211)
     ax2 = f.add_subplot(212)
     map.set_lonlat_contours(add_xtick_labels=False)
-    map.visualize(ax=ax1, cbar_title='Infrared temperature ($^{\circ}$C)',)
+    map.set_plot_params(cmap='inferno',  vmin=-80, vmax=20, extend=None)
+    map.visualize(ax=ax1, cbar_title='Brightness temperature ($^{\circ}$C)',)
 
     outb[outb > -40] = 0
     labels, numL = label(outb.values)
@@ -130,6 +131,9 @@ def plot_data():
     labels, numL = label(labels)
     labels = np.array(labels, dtype=float)
     labels[labels == 0] = np.nan
+    pos = np.where(labels>0)
+
+    labels[pos] = outb.values[pos]
     #
     # f = plt.figure()
     # plt.imshow(labels)
@@ -138,18 +142,20 @@ def plot_data():
     outb[outb == 0] = np.nan
 
     outboth = data['trmm'].copy().values
-    outboth[np.isfinite(labels)] = labels[np.isfinite(labels)]
+    outboth[outboth<=0] = 10
 
-    map.set_plot_params(cmap='inferno', nlevels=np.nanmax(labels) + 1, vmin=0, vmax=16, extend=None)
+   # outboth[np.isfinite(labels)] = labels[np.isfinite(labels)]
+
+    map.set_plot_params(cmap='Greys',  vmin =-150, vmax = 20,  extend=None)
     map.set_data(outboth)
     # map.set_contour(data['trmm'].values, cmap='winter')
     map.visualize(ax=ax2, addcbar=False)
 
-    map.set_plot_params(cmap='inferno', nlevels=np.nanmax(labels)+1, vmin =0, vmax = 16, extend=None)
+    map.set_plot_params(cmap='Greys', vmin =-150, vmax = 20, extend=None)
     map.set_lonlat_contours(add_xtick_labels=True)
     map.set_data(labels)
-    map.visualize(ax=ax2, cbar_title='Cloud ID')
-    #map.set_plot_params(nlevels=np.nanmax(labels) + 1, vmin=0, vmax=25, extend=None)
+    map.visualize(ax=ax2, addcbar=False)
+
     map.set_contour(data['trmm'].values, cmap='winter')
     map.visualize(ax=ax2, addcbar=False)
 
@@ -159,6 +165,11 @@ def plot_data():
                  textcoords='offset points')
 
     plt.tight_layout()
+
+    pos2 = ax2.get_position()
+    pos2 = [pos2.x0-0.025, pos2.y0, pos2.width, pos2.height]
+    ax2.set_position(pos2)
+
     plt.savefig(fpath + 'map_example.png')
     plt.close('all')
 

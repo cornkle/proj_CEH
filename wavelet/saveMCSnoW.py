@@ -171,8 +171,6 @@ def file_loop(passit):
 
     da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 
-    #da.to_netcdf('/users/global/cornkle/MCSfiles/blob_maps_0-4UTC_-65/'+str(date)+'.nc')
-
     print('Did ', file)
 
     return (da)

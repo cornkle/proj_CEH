@@ -68,7 +68,6 @@ for id, r in enumerate(ranges):
         taarr.append(tarr)
         nnz.append(nz)
 
-
     try:
 
         bbig = np.concatenate(bbig, axis=0)
@@ -79,8 +78,6 @@ for id, r in enumerate(ranges):
 
     except ValueError:
         print('return')
-
-
 
     bla = np.nansum(aarr, 0) / np.nansum(nnz, 0)
     bla1 = np.nansum(ffin, 0)

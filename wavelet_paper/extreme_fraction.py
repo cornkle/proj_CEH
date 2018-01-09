@@ -5,11 +5,6 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 
-
-
-
-
-
 dic = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_blobs.p', 'rb'))
 
 dic2 = pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_T.p', 'rb'))

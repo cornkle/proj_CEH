@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Mar 15 17:27:16 2016
-
 @author: cornkle
 """
 
@@ -10,6 +9,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
 import numpy as np
+import os
 import salem
 import pdb
 
@@ -34,19 +34,19 @@ def quick_map(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
     else:
         plt.show()
 
-def quick_map_salem(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
+def quick_map_salem(xar, save = None, levels=None, vmax=None, vmin=None, cmap=None, title=None):
 
-    map = xar.salem.get_map(cmap='viridis')
-    map.set_shapefile(rivers=True)
-
+    if not cmap:
+        cmap = 'viridis'
+    map = xar.salem.get_map()
+    #map.set_shapefile(rivers=True)
+    f = plt.figure(figsize=(10, 6), dpi=300)
     map.set_plot_params()
-
     map.set_data(xar, interp='linear')
+    map.set_plot_params(levels=levels, cmap=cmap, extend='both')
     map.visualize()
 
-    f = plt.figure(figsize=(10, 6), dpi=300)
-
-    plt.title(title)
+    #plt.title(title)
     if save:
         plt.savefig(save)
     else:
@@ -65,3 +65,12 @@ def discrete_cmap(N, base_cmap=None):
 
     #return base.from_list(cmap_name, color_list, N)
     return plt.cm.get_cmap(base_cmap, N)
+
+def savefig(savepath, filename, filetype):
+
+    start = 1
+    while os.path.isfile(savepath+os.sep+filename+str(start).zfill(2)+'.'+filetype):
+        start = start+1
+
+    plt.savefig(savepath+os.sep+filename+str(start).zfill(2)+'.'+filetype)
+
