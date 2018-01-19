@@ -19,6 +19,8 @@ import pdb
 from collections import OrderedDict
 import matplotlib.cm as cm
 import pickle as pkl
+from cold_cloud_trend import era_geop_t3d as era_geop
+from utils import u_gis
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -81,11 +83,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_-60.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_lax.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_-60.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_lax.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_-60.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_lax.p', 'wb'))
 
 
 def file_loop(fi):
@@ -100,6 +102,9 @@ def file_loop(fi):
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
     outpc = dic['pconv'].values
+
+    lon = dic['lon'].values
+    lat = dic['lat'].values
 
     outt[np.isnan(outt)] = 150
     outt[outt >= -40] = 150
@@ -124,7 +129,7 @@ def file_loop(fi):
         return
 
     perc = np.percentile(outt[np.isfinite(outt)], 60)  # 60
-    perc = -60
+    #perc = -60
 
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
@@ -206,7 +211,8 @@ def file_loop(fi):
 
     xx = []
     yy = []
-    for y, x, sc in zip(yyy, xxx, scal):
+
+    for y, x, sc in zip(yyy[::-1], xxx[::-1], scal[::-1]):
 
         if figure[y, x] == 0:
             continue
@@ -215,11 +221,23 @@ def file_loop(fi):
         yy.append(y)
         posi = np.where(arrf == sc)
 
+        t_para = np.nanmean(outt[posi])
+
         int_sc = np.round(sc)
         radius = sc
+       # if sc < 90:
+        height = era_geop.era_Tlapse(int(dic['time.month']), t_para,lon[y,x], lat[y,x]) # height in meters
+        lx, ly = u_gis.parallax_corr_msg(0, 0,lon[y,x], lat[y,x],height/1000 )
+
+        lx = int(np.round(lx/5.))
+        ly = int(np.round(ly / 5.))  # km into pixels
+        # else:
+        #     lx = 0
+        #     ly = 0
 
         r = 20
-        kernel = tm_utils.cut_kernel(outp, x, y, r)
+
+        kernel = tm_utils.cut_kernel(outp, x-lx, y-ly, r)
         kernelt = tm_utils.cut_kernel(outt, x, y, r)
 
         if kernel.shape != (r * 2 + 1, r * 2 + 1):
@@ -230,19 +248,34 @@ def file_loop(fi):
         circle_Tcenter = outt[y, x]
 
         iscale = (np.ceil(radius / 2. / 5.)).astype(int)
-        if ss <= 20:
-            iscale = iscale + 1
+        # if ss <= 20:
+        #     iscale = iscale + 1
         ycircf, xcircf = ua.draw_cut_circle(x, y, iscale, outp)
 
         pos = np.where((figure[ycircf, xcircf] == int_sc))
 
         if len(pos[0]) <= 3:
             continue
-
-        circle_p = outp[ycircf[pos], xcircf[pos]]
-        circle_pc = outpc[ycircf[pos], xcircf[pos]]
+        # if int_sc > 90:
+        #     pdb.set_trace()
+        circle_p = outp[ycircf[pos]-ly, xcircf[pos]-lx]
+        outp[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
+        circle_pc = outpc[ycircf[pos]-ly, xcircf[pos]-lx]
+        outpc[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
         circle_t = outt[ycircf[pos], xcircf[pos]]
         circle_valid = np.sum(np.isfinite(circle_p))
+
+        #
+        #
+        # if (int_sc >= 150) | (int_sc == 15):
+        #     # outp[ycircf[pos] - ly, xcircf[pos] - lx] = 1000
+        #     # outt[ycircf[pos], xcircf[pos]] = 1000
+        #     f = plt.figure()
+        #     plt.imshow(outp, cmap='jet')
+        #     f = plt.figure()
+        #     plt.imshow(outt, cmap='jet')
+        #     f = plt.figure()
+        #     plt.imshow(figure, cmap='jet')
 
         if ((circle_valid) < 3):
             continue

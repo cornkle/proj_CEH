@@ -19,8 +19,8 @@ def comp_t():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
    # path = 'D://data/wavelet/saves/pandas/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
-    dic2 = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
+    dic2 = pkl.load(open(path+'3dmax_gt15000_laxx.p', 'rb')) ##noR
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -177,7 +177,7 @@ def comp_t():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_no.png')
+    plt.savefig(fpath + 'wavelet_scale_p_no_lax.png')
 
     plt.close('all')
 
@@ -224,16 +224,16 @@ def plot():
     print('Scale', np.mean(prob2 ))
     print(cent)
 
-    prob2[0] = prob2[0]+2
-    prob1[0:4] = prob1[0:4] -1
+    # prob2[0] = prob2[0]+2
+    # prob1[0:4] = prob1[0:4] -1
     low = np.array(lower) * 100
     low2=np.array(lower2)*100
     up = np.array(upper) * 100
     up2 = np.array(upper2) * 100
-    low[0:4] = low[0:4]-1
-    up[0:4] = up[0:4] - 1
-    low2[0] = low2[0]+2
-    up2[0] = up2[0] +2
+    # low[0:4] = low[0:4]-1
+    # up[0:4] = up[0:4] - 1
+    # low2[0] = low2[0]+2
+    # up2[0] = up2[0] +2
 
     ax2.plot(cent, prob1,  linewidth=1.5 , marker='o', label='Temperature only | $\leq$-80$^{\degree}C$', color='k', linestyle='-.')
     ax2.plot(cent, prob2,  linewidth=1.5 , marker='o', label='Scale$\leq$35km | $\leq$-80$^{\degree}C$', color='k', linestyle=':')
@@ -255,7 +255,7 @@ def plot():
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(fpath + 'tonly_paperR.png')
+    plt.savefig(fpath + 'tonly_paperR_lax.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
 
 

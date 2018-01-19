@@ -131,7 +131,7 @@ def probability(precip=None,thresh=None):
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+    dic = pkl.load(open(path + '3dmax_gt15000_laxx.p', 'rb')) #noR
 
     scales = np.array(dic['scale'])
 
@@ -246,7 +246,7 @@ def probability(precip=None,thresh=None):
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_laxx_fix.png')
    # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 
@@ -389,7 +389,7 @@ def plot():
 
     prob2 = pkl.load(open(fpath+"tonly_prob2.p", "rb"))
 
-    pdb.set_trace()
+
     y = y1/y2*100
     yy = yy1 / y2 * 100
 
@@ -439,7 +439,7 @@ def plot():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T_paper.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_paper_laxx_fix.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

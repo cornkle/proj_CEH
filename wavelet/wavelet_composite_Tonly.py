@@ -22,7 +22,8 @@ import pandas as pd
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-
+from cold_cloud_trend import era_geop_t3d as era_geop
+from utils import u_gis
 
 def composite():
     pool = multiprocessing.Pool(processes=7)
@@ -82,9 +83,9 @@ def composite():
 
         precip[v[2]].extend(v[19])
 
-    pkl.dump(dic, open(out + '3dmax_gt15000_TR.p', 'wb'))
+    pkl.dump(dic, open(out + '3dmax_gt15000_TR_lax.p', 'wb'))
 
-    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_TR.p', 'wb'))
+    pkl.dump(precip, open(out + 'precip_3dmax_gt15000_TR_lax.p', 'wb'))
 
     #pkl.dump(comp_collect, open(out + 'comp_collect_composite_T.p', 'wb'))
 
@@ -113,6 +114,9 @@ def file_loop(fi):
     lat_max = np.max(dic.lat.values)
     lon_min = np.min(dic.lon.values)
     lon_max = np.max(dic.lon.values)
+
+    lon = dic['lon'].values
+    lat = dic['lat'].values
 
     outt[np.isnan(outt)] = 150
     outt[outt >= -40] = 150
@@ -182,9 +186,17 @@ def file_loop(fi):
                 continue
 
             pos = np.where((labels_blob == blob)) #(figure == sc)
+            y = pos[0]
+            x = pos[1]
 
-            circle_p = outp[pos]
-            circle_pc = outpc[pos]
+            height = era_geop.era_Tlapse(int(dic['time.month']), sc, lon[y[0],x[0]], lat[y[0],x[0]])  # height in meters
+            lx, ly = u_gis.parallax_corr_msg(0, 0,lon[y[0], x[0]], lat[y[0]],x[0]], height / 1000)
+
+            lx = int(np.round(lx / 5.))
+            ly = int(np.round(ly / 5.))  # km into pixels
+
+            circle_p = outp[y-ly, x-lx]
+            circle_pc = outpc[y-ly, x-lx]
             circle_t = outt[pos]
             circle_valid = np.sum(np.isfinite(circle_p))
 

@@ -19,7 +19,7 @@ fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
 # path = 'D://data/wavelet/saves/pandas/'
 
-df = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
+df = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb')) #noR
 
 ids = np.array(df['id'])
 scales = np.array(df['scale'])
@@ -151,5 +151,5 @@ for id,k in enumerate(outrange):
 
 
 plt.tight_layout()
-plt.savefig(fpath+'t_histogram.png')
+plt.savefig(fpath+'t_histogram_noR.png')
 plt.close('all')

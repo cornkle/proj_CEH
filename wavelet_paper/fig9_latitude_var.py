@@ -21,8 +21,8 @@ def comp_lat():
   #  fpath = 'D://data/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
-    dic2 = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
+    dic = pkl.load(open(path+'3dmax_gt15000_Tsimple.p', 'rb'))
+    dic2 = pkl.load(open(path+'3dmax_gt15000_laxx.p', 'rb')) ##noR
 
     thresh = 10
 
