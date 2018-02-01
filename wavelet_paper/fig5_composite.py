@@ -14,7 +14,7 @@ matplotlib.rc('ytick', labelsize=8)
 
 
 out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-comp_collect = pkl.load(open(out + 'comp_collect_composite_lax.p','rb'))#noR.p','rb'))
+comp_collect = pkl.load(open(out + 'comp_collect_composite_lax_nonan.p','rb'))#noR.p','rb'))
 
 siz = 3
 
@@ -118,7 +118,7 @@ for ind, k in enumerate(ll):
     # cbar.set_label('Average rain (mm h$^{-1}$)', fontsize=fos)
 
     ax2 = f.add_subplot(2, 5, 6 + ind)
-    mp2 = ax2.imshow(outbla[2], aspect=1, cmap='viridis', vmax=5) #x,x,
+    mp2 = ax2.imshow(outbla[2], aspect=1, cmap='viridis', vmax=np.max(outbla[2]-0.1)) #x,x, #vmax=np.max(outbla[2]-0.2)
     #plt.title(str(ranges[pos])+'-'+str(k) + ' km', fontsize=fos)
     ax2.plot(20, 20, 'ro', markersize=siz)
     ax2.set_xticklabels('')
@@ -169,7 +169,7 @@ cbar = f.colorbar(mp2, cax)
 cbar.ax.tick_params(labelsize=12)
 cbar.set_label('Pixel probability (%)', fontsize=12)
 
-plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_lax.png')
+plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/paper/composite3d_lax_nonan.png')
 plt.close('all')
 
 col = ['r', 'b', 'g', 'y', 'black']

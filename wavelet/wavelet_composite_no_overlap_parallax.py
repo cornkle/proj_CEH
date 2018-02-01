@@ -30,7 +30,7 @@ def composite():
     pool = multiprocessing.Pool(processes=7)
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    #files = files[0:400]
+    #files = files[0:1500]
     print('Nb files', len(files))
     tt = 'WA15'
 
@@ -83,11 +83,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_lax.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_lax_nonan.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_lax.p','wb'))
+    pkl.dump(precip, open(out+'precip_3dmax_gt15000_lax_nonan.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_lax.p', 'wb'))
+    pkl.dump(comp_collect, open(out + 'comp_collect_composite_lax_nonan.p', 'wb'))
 
 
 def file_loop(fi):
@@ -113,7 +113,7 @@ def file_loop(fi):
     outp[np.isnan(outt)] = np.nan
     outpc[np.isnan(outt)] = np.nan
 
-    area = np.sum(outt <= -40)
+    area = np.nansum(outt <= -40)
     try:
         bulk_pmax = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
     except ValueError:
@@ -148,7 +148,6 @@ def file_loop(fi):
     bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_g30 = np.sum(outp[(np.isfinite(outp)) & (np.isfinite(outt))] >= 30)
 
-    figure = np.zeros_like(outt)
 
     o2 = outt.copy()
     o2[np.isnan(o2)] = perc
@@ -171,7 +170,7 @@ def file_loop(fi):
     figure = np.zeros_like(outt)
 
     wll = wav['t']
-    maxs = np.zeros_like(wll)
+    #maxs = np.zeros_like(wll)
 
     yyy = []
     xxx = []
@@ -194,10 +193,10 @@ def file_loop(fi):
 
             ss = orig
             iscale = (np.ceil(ss / 2. / 5.)).astype(int)
-            if ss <= 20:
-                iscale = iscale + 1
+            # if ss <= 20:
+            #     iscale = iscale + 1
 
-            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outp)
+            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
             figure[ycirc, xcirc] = np.round(orig)
             xxx.append(x)
@@ -217,26 +216,50 @@ def file_loop(fi):
         if figure[y, x] == 0:
             continue
 
+        # if sc < 150:
+        #     continue
+
         xx.append(x)
         yy.append(y)
-        posi = np.where(arrf == sc)
-
-        t_para = np.nanmean(outt[posi])
 
         int_sc = np.round(sc)
         radius = sc
-       # if sc < 90:
-        height = era_geop.era_Tlapse(int(dic['time.month']), t_para,lon[y,x], lat[y,x]) # height in meters
-        lx, ly = u_gis.parallax_corr_msg(0, 0,lon[y,x], lat[y,x],height/1000 )
+        iscale = (np.ceil(radius / 2. / 5.)).astype(int)
+        # if int_sc <= 20:
+        #     iscale = iscale + 1
+        ycircf, xcircf = ua.draw_cut_circle(x, y, iscale, outt)
 
-        lx = int(np.round(lx/5.))
-        ly = int(np.round(ly / 5.))  # km into pixels
-        # else:
-        #     lx = 0
-        #     ly = 0
+        pos = np.where((figure[ycircf, xcircf] == int_sc))
+        if len(pos[0]) <= 3:
+            continue
+
+        circle_Tcenter = outt[y, x]
+        t_para = np.nanmean(outt[ycircf[pos], xcircf[pos]])
+
+
+        if sc < 90:
+            height = era_geop.era_Tlapse(int(dic['time.month']), t_para,lon[y,x], lat[y,x]) # height in meters
+            km, coords = u_gis.parallax_corr_msg(0, 0,lon[y,x], lat[y,x], height/1000 )
+            lx, ly = km
+            print(t_para, height, lx,ly)
+            lx = int(np.round(lx/5.))
+            ly = int(np.round(ly/5.))  # km into pixels
+        else:
+            lx = 0
+            ly = 0
+
+        # print(lx,ly)
+        # plt.imshow(outt)
+        # f = plt.figure()
+        # plt.imshow(figure)
+        # f = plt.figure()
+        # plt.imshow(outp)
+        # outt[ycircf[pos], xcircf[pos]] = 150
+        # outt[ycircf[pos]-ly, xcircf[pos]-lx] = 300
+        # f = plt.figure()
+        # plt.imshow(outt)
 
         r = 20
-
         kernel = tm_utils.cut_kernel(outp, x-lx, y-ly, r)
         kernelt = tm_utils.cut_kernel(outt, x, y, r)
 
@@ -245,23 +268,10 @@ def file_loop(fi):
         if kernelt.shape != (r * 2 + 1, r * 2 + 1):
             kernelt = np.zeros((41, 41)) + np.nan
 
-        circle_Tcenter = outt[y, x]
-
-        iscale = (np.ceil(radius / 2. / 5.)).astype(int)
-        # if ss <= 20:
-        #     iscale = iscale + 1
-        ycircf, xcircf = ua.draw_cut_circle(x, y, iscale, outp)
-
-        pos = np.where((figure[ycircf, xcircf] == int_sc))
-
-        if len(pos[0]) <= 3:
-            continue
-        # if int_sc > 90:
-        #     pdb.set_trace()
         circle_p = outp[ycircf[pos]-ly, xcircf[pos]-lx]
-        outp[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
+        #outp[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
         circle_pc = outpc[ycircf[pos]-ly, xcircf[pos]-lx]
-        outpc[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
+        #outpc[ycircf[pos] - ly, xcircf[pos] - lx] = np.nan
         circle_t = outt[ycircf[pos], xcircf[pos]]
         circle_valid = np.sum(np.isfinite(circle_p))
 
@@ -301,7 +311,7 @@ def file_loop(fi):
         except IndexError:
             circle_p90 = np.nan
 
-        maxs[posi, y, x] = 1
+        #maxs[posi, y, x] = 1
 
         ret.append((kernel, kernelt, int_sc, id, dic['time.hour'].values.tolist(),
                     clat, clon, lat_min, lat_max, lon_min, lon_max, area,

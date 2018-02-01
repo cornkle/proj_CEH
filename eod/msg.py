@@ -25,7 +25,7 @@ class ReadMsg(object):
     def __init__(self, msg_folder):
 
 
-        yrange = range(2004, 2016)  # 1998, 2014
+        yrange = range(2004, 2018)  # 1998, 2014
         mrange = range(1,13)
 
         try:
@@ -114,7 +114,7 @@ class ReadMsg(object):
 
         if llbox:
             i, j = np.where(
-                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
@@ -164,7 +164,7 @@ class ReadMsg(object):
 
         if llbox:
             i, j = np.where(
-                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
@@ -215,7 +215,7 @@ class ReadMsg(object):
         rr.shape = rrShape
         if llbox:
             i, j = np.where(
-                (self.lon > llbox[0]) & (self.lon < llbox[2]) & (self.lat > llbox[1]) & (self.lat < llbox[3]))
+                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]

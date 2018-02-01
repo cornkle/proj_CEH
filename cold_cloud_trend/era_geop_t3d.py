@@ -25,6 +25,7 @@ def era_Tlapse(month, temp, lon, lat):
     X = np.abs(t-temp)
     idx = np.argmin(X.values)
     height = zm.values[idx]
+
     #plt.plot(zm, t)
     # plt.plot(zm[0:ismin+1], gradient*zm[0:ismin+1]+intercept)
     return height

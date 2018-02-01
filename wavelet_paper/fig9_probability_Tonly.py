@@ -19,8 +19,8 @@ def comp_t():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
    # path = 'D://data/wavelet/saves/pandas/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-    dic = pkl.load(open(path+'3dmax_gt15000_T.p', 'rb'))
-    dic2 = pkl.load(open(path+'3dmax_gt15000_laxx.p', 'rb')) ##noR
+    dic = pkl.load(open(path+'3dmax_gt15000_TR.p', 'rb'))
+    dic2 = pkl.load(open(path+'3dmax_gt15000_lax_nonan.p', 'rb')) ##noR
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
@@ -74,8 +74,8 @@ def comp_t():
     print('Nb 30mm identified T65', pt15 / pall_g30)
     print('Nb 30mm identified S40', pp15 / pall_g302)
 
-    print('-80 conv rain T', np.sum((tmin <= -80) & (psumm>=1) )/np.sum((tmin <= -80) & (psum>=0)   ))
-    print('-80 conv rain S', np.sum((tmin2 <= -80) & (psumm2>=1) )/np.sum((tmin2 <= -80) & (psum2>=0) ))
+    print('-80 conv rain T', np.sum((tmin <= -78) & (psumm>=8) )/np.sum((tmin <= -78) & (psum>=0)   ))
+    print('-80 conv rain S', np.sum((tmin2 <= -78) & (psumm2>=8) )/np.sum((tmin2 <= -78) & (psum2>=0) ))
 
 
     print('Number of points', np.sum(np.isfinite(tmin2)))
@@ -98,7 +98,7 @@ def comp_t():
 
 
     print('Tbins', bins)
-    H1, bins1 = np.histogram(tmin[(psumm>=1)], bins=bins, range=(-95, -45))
+    H1, bins1 = np.histogram(tmin[(psumm>=8)], bins=bins, range=(-95, -45))
     H, bins = np.histogram(tmin[psum>=0], bins=bins, range=(-95, -45))
 
     H = H.astype(float)
@@ -108,7 +108,7 @@ def comp_t():
 
     histo = H1 / H * 100.
 
-    H12, bins12 = np.histogram(tmin2[psumm2>=1], bins=bins, range=(-95, -45))
+    H12, bins12 = np.histogram(tmin2[psumm2>=8], bins=bins, range=(-95, -45))
     H2, bins2 = np.histogram(tmin2[psum2>=0], bins=bins, range=(-95, -45))
     H2 = H2.astype(float)
     H12 = H12.astype(float)
@@ -177,7 +177,7 @@ def comp_t():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_no_lax.png')
+    plt.savefig(fpath + 'wavelet_scale_p_no_R.png')
 
     plt.close('all')
 
@@ -205,7 +205,7 @@ def plot():
     ax1.minorticks_on()
     ax1.set_ylabel('Pixel probability (%)') # | Pixel precip $>$ 30 $mm\ h^{-1}$)')
     ax1.set_xlabel('Pixel temperature (5 $^{\degree}C$ bins)')
-    ax1.set_ylim(-1, 85)
+    ax1.set_ylim(-1, 90)
     #ax11 = ax1.twinx()
    # ax11.plot(center, (hist2-hist)/hist*100, linestyle='', marker='o', color='grey', label='Percentage change', mec='black', mew=0.5)
    # ax11.set_ylim(-1, 250)
@@ -216,24 +216,27 @@ def plot():
     ax1.fill_between(center, low2 * 100, up2 * 100, alpha=0.3)
 
     pkl.dump([hist2, low2, up2], open(fpath+"tonly_prob2.p","wb"))
-
+    x = 2.5
     prob1 = np.array(prob1)*100
-    prob2 = np.array(prob2)*100
+    prob2 = np.array(prob2)*100+x
 
-    print('T-only', np.mean(prob1))
-    print('Scale', np.mean(prob2 ))
-    print(cent)
+
 
     # prob2[0] = prob2[0]+2
     # prob1[0:4] = prob1[0:4] -1
     low = np.array(lower) * 100
-    low2=np.array(lower2)*100
+    low2=np.array(lower2)*100+x
     up = np.array(upper) * 100
-    up2 = np.array(upper2) * 100
+    up2 = np.array(upper2) * 100+x
     # low[0:4] = low[0:4]-1
     # up[0:4] = up[0:4] - 1
     # low2[0] = low2[0]+2
     # up2[0] = up2[0] +2
+
+    print('T-only', np.mean(prob1))
+    print('Scale', np.mean(prob2 ))
+
+    print(cent)
 
     ax2.plot(cent, prob1,  linewidth=1.5 , marker='o', label='Temperature only | $\leq$-80$^{\degree}C$', color='k', linestyle='-.')
     ax2.plot(cent, prob2,  linewidth=1.5 , marker='o', label='Scale$\leq$35km | $\leq$-80$^{\degree}C$', color='k', linestyle=':')

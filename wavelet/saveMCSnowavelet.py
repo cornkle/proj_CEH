@@ -24,7 +24,7 @@ def run():
     m = msg.ReadMsg(msg_folder)
     files  = m.fpath
 
-    #files = files[4000:4100]
+    files = files[4000:4100]
     mdic = m.read_data(files[0], llbox=[-6, 3, 11, 16])
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
@@ -57,7 +57,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_burkina.nc'
+    savefile = '/users/global/cornkle/MCSfiles/mcs_map_30km_-40_JJAS_burkina.nc'
 
     try:
         os.remove(savefile)
@@ -131,102 +131,9 @@ def file_loop(passit):
 
         out = np.zeros_like(outt, dtype=np.int)
 
-        outt[outt >= -40] = 150
-        outt[np.isnan(outt)] = 150
+        outt[outt >= -40] = np.nan
+        outt[np.isnan(outt)] = -40
 
-        grad = np.gradient(outt)
-        outt[outt == 150] = np.nan
-
-        nogood = np.isnan(outt)
-
-        outt[np.isnan(outt)] = -57
-        nok = np.where(abs(grad[0]) > 80)
-        d = 2
-        i = nok[0]
-        j = nok[1]
-
-        for ii, jj in zip(i, j):
-            kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
-            outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
-
-        wav = util.waveletT(outt, 5)
-
-        outt[nogood] = np.nan
-
-        arr = np.array(wav['scales'], dtype=str)
-
-        scale_ind = range(arr.size)
-
-        figure = np.zeros_like(outt)
-
-        wll = wav['t']  # [nb, :, :]
-
-        # maxoutt = (
-        #     wll == ndimage.maximum_filter(wll, (5, 5), mode='reflect',
-        #                                   cval=np.amax(wll) + 1))  # (np.round(orig / 5))
-
-        yyy = []
-        xxx = []
-        scal = []
-        for nb in scale_ind[::-1]:
-
-            orig = float(arr[nb])
-
-            if orig >30:#> 30:  #scale filter
-                 continue
-
-            scale = int(np.round(orig))
-
-            print(np.round(orig))
-
-            wl = wll[nb, :, :]
-           # maxout = maxoutt[nb, :, :]
-
-            maxout = (
-                wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
-
-            try:
-                yy, xx = np.where((maxout == 1) & (outt <= -67) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
-            except IndexError:
-                continue
-
-            print(outt[yy,xx])
-
-            for y, x in zip(yy, xx):
-
-                ss = orig
-                iscale = (np.ceil(ss / 2. / 5.)).astype(int)
-
-                ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
-
-                figure[ycirc, xcirc] = scale
-                xxx.append(x)
-                yyy.append(y)
-                scal.append(orig)
-
-        figure[np.isnan(outt)] = 0
-
-       # # figure[figure == 0] = np.nan
-       #  f = plt.figure()
-       #  f.add_subplot(133)
-       #  plt.imshow(outt, cmap='inferno')
-       #  plt.imshow(figure, cmap='viridis')
-       #  ax = f.add_subplot(132, projection=ccrs.PlateCarree())
-       #  plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
-       #  ax.coastlines()
-       #  ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
-       #
-       #  plt.colorbar()
-       #  f.add_subplot(131)
-       #  plt.imshow(outt, cmap='inferno')
-       #
-       #  plt.plot(xxx, yyy, 'yo', markersize=3)
-       #  plt.show()
-
-        print(np.sum(figure))
-
-        # if np.sum(figure) < 10:
-        #     return
 
         hour = mdic['time.hour']
         minute = mdic['time.minute' ]
@@ -236,7 +143,7 @@ def file_loop(passit):
 
     date = dt.datetime(year, month, day, hour, minute)
 
-    da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
+    da = xr.DataArray(outt, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 
     #da.to_netcdf('/users/global/cornkle/MCSfiles/blob_maps_0-4UTC_-65/'+str(date)+'.nc')
 

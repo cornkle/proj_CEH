@@ -18,7 +18,7 @@ def run_scales():
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
 
-    df = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+    df = pkl.load(open(path + '3dmax_gt15000_lax_nonan.p', 'rb'))
 
     hours = np.arange(0, 24, 1)
     center = (np.arange(24)) + 0.5
@@ -159,7 +159,7 @@ def run_tmin():
     path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = 'D://data/wavelet/saves/pandas/'
 
-    df = pkl.load(open(path + '3dmax_gt15000_no0.5.p', 'rb'))
+    df = pkl.load(open(path + '3dmax_gt15000_lax_nonan.p', 'rb')) # no0.5
     hour = np.arange(0, 23, 1)
     center = (np.arange(23)) + 0.5
 
@@ -224,7 +224,7 @@ def run_pcp():
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     # path = 'D://data/wavelet/saves/pandas/'
 
-    df = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+    df = pkl.load(open(path + '3dmax_gt15000_lax_nonan.p', 'rb'))
     hours = list(zip(np.arange(0, 23, 2), np.arange(1, 24, 2)))
     center = (np.arange(0, 23, 2)) + 0.5
 
@@ -369,7 +369,7 @@ def run_pcp():
                  textcoords='offset points')
 
     plt.tight_layout()
-    plt.savefig(fpath + '/scale_contour.png')
+    plt.savefig(fpath + '/scale_contour_lax.png')
     plt.close('all')
 
     plt.show()
@@ -379,7 +379,7 @@ def run_pcp_T():
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
    # path = 'D://data/wavelet/saves/pandas/'
 
-    df = pkl.load(open(path + '3dmax_gt15000_noR.p', 'rb'))
+    df = pkl.load(open(path + '3dmax_gt15000_lax_nonan.p', 'rb'))
     hours = list(zip(np.arange(0, 23, 2), np.arange(1, 24, 2)))
     center = (np.arange(0, 23, 2)) + 0.5
 
@@ -606,7 +606,7 @@ def run_pcp_T():
                  textcoords='offset points')
 
     plt.tight_layout()
-    plt.savefig(fpath + '/scale_contour.png')
+    plt.savefig(fpath + '/scale_contour_lax.png')
     plt.close('all')
 
     plt.show()
