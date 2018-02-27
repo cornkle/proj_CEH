@@ -20,12 +20,12 @@ meteosat_SA15: 2006 - 2010, JJAS, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, e
 
 meteosat_tropWA: 2004 - 2015, whole year, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
 """
-
+y1 = 2006
+y2 = 2010
 class ReadMsg(object):
-    def __init__(self, msg_folder):
+    def __init__(self, msg_folder, y1=y1, y2=y2):
 
-
-        yrange = range(2004, 2018)  # 1998, 2014
+        yrange = range(y1, y2+1)  # 1998, 2014
         mrange = range(1,13)
 
         try:

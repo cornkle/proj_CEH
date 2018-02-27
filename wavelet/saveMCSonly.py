@@ -14,6 +14,7 @@ import multiprocessing
 import datetime as dt
 import matplotlib.pyplot as plt
 import pdb
+from scipy.ndimage.measurements import label
 
 
 def run():
@@ -24,8 +25,8 @@ def run():
     m = msg.ReadMsg(msg_folder)
     files  = m.fpath
 
-    #files = files[4000:4100]
-    mdic = m.read_data(files[0], llbox=[-6, 3, 11, 16])
+    #files = files[1050:1057]
+    mdic = m.read_data(files[0], llbox=[-11, 11, 9, 20])
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
 
@@ -42,22 +43,19 @@ def run():
 
     res = pool.map(file_loop, passit)
 
-
-    #
     # for l in passit:
     #
     #     test = file_loop(l)
 
     pool.close()
 
-    #return
 
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_burkina.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points_smaller15000.nc'
 
     try:
         os.remove(savefile)
@@ -96,15 +94,13 @@ def file_loop(passit):
 
     lon, lat = grid.ll_coordinates
 
-    ds = xr.Dataset()
-
     for min in min_list:
 
         file = files+min+'.gra'
 
         print('Doing file: ' + file)
         try:
-            mdic = m.read_data(file, llbox=[-6,3,11,16])
+            mdic = m.read_data(file, llbox=[-11, 11, 9, 20])
         except FileNotFoundError:
             print('File not found')
             return
@@ -128,18 +124,38 @@ def file_loop(passit):
         #
         # da.to_netcdf('/users/global/cornkle/test.nc')
         # return
+        t_thresh_size = -32
+        t_thresh_cut = -50
+        outt[outt>=t_thresh_size] = 0
+        outt[np.isnan(outt)] = 0
 
-        out = np.zeros_like(outt, dtype=np.int)
+        labels, numL = label(outt)
 
-        outt[outt >= -40] = 150
-        outt[np.isnan(outt)] = 150
+        u, inv = np.unique(labels, return_inverse=True)
+        n = np.bincount(inv)
+
+        badinds = u[(n > 600) | (n < 40)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+
+        for bi in badinds:
+            inds = np.where(labels == bi)
+            outt[inds] = 0
+
+        outt[outt >=t_thresh_cut] = 150
 
         grad = np.gradient(outt)
         outt[outt == 150] = np.nan
+        # f = plt.figure()
+        # plt.imshow(outt)
 
         nogood = np.isnan(outt)
 
-        outt[np.isnan(outt)] = -57
+        tdiff = np.nanmax(outt)-np.nanmin(outt)
+        if tdiff > 28:  # temp difference of 28 degrees
+            xmin = 15
+        else:
+            xmin = 10
+
+        outt[nogood] = t_thresh_cut-xmin
         nok = np.where(abs(grad[0]) > 80)
         d = 2
         i = nok[0]
@@ -199,14 +215,18 @@ def file_loop(passit):
 
                 ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[ycirc, xcirc] = scale
+                figure[y, x] = outt[y,x]
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)
 
         figure[np.isnan(outt)] = 0
 
-       # # figure[figure == 0] = np.nan
+        # f = plt.figure()
+        # plt.contourf(outt)
+        # plt.contour(figure)
+
+        figure[figure == 0] = np.nan
        #  f = plt.figure()
        #  f.add_subplot(133)
        #  plt.imshow(outt, cmap='inferno')
@@ -222,8 +242,6 @@ def file_loop(passit):
        #
        #  plt.plot(xxx, yyy, 'yo', markersize=3)
        #  plt.show()
-
-        print(np.sum(figure))
 
         # if np.sum(figure) < 10:
         #     return

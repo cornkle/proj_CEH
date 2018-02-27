@@ -1,41 +1,68 @@
 # -*- coding: utf-8 -*-
 
 
-import glob
 import numpy as np
 from wavelet import util
+from eod import msg
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
+from utils import u_grid
+from scipy.interpolate import griddata
 from scipy import ndimage
 from utils import u_arrays as ua
 import multiprocessing
-from scipy.ndimage.measurements import label
+import datetime as dt
+import matplotlib.pyplot as plt
 import pdb
+from scipy.ndimage.measurements import label
+import cartopy
+import cartopy.crs as ccrs
+
+
 
 def run():
     #  (1174, 378)
-    #gridsat_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18/yearly/'
-    gridsat_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/yearly_files/'
+    msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
     pool = multiprocessing.Pool(processes=7)
 
-    files = glob.glob(gridsat_folder+'gridsat_*.nc')
+    m = msg.ReadMsg(msg_folder)
+    files  = m.fpath
 
-    res = pool.map(file_loop, files)
+    #files = files[1050:1057]
+    mdic = m.read_data(files[0], llbox=[-11, 11, 9, 20])
+    # make salem grid
+    grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
+
+    files_str = []
+
+    for f in files:
+        files_str.append(f[0:-6])
+
+    files_str = np.unique(files_str)
+
+    passit = []
+    for f in files_str:
+        passit.append((grid,m, f))
+
+    #pdb.set_trace()
+
+    res = pool.map(file_loop, passit)
 
     # for l in passit:
     #
     #     test = file_loop(l)
 
+
+
     pool.close()
+
 
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
-    # da = da.sum(dim='time')
+    #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
 
     try:
         os.remove(savefile)
@@ -50,17 +77,20 @@ def run():
     print('Saved ' + savefile)
 
 
+
 def file_loop(passit):
+
+
     grid = passit[0]
 
     m = passit[1]
     files = passit[2]
 
-    min_list = ['00']  # '15','30', '45']
+    min_list = ['00'] #'15','30', '45']
 
     strr = files.split(os.sep)[-1]
 
-    if ((np.int(strr[4:6]) > 9) | (np.int(strr[4:6]) < 6)):
+    if ((np.int(strr[4:6]) > 9) | (np.int(strr[4:6])<6)):
         print('Skip month')
         return
 
@@ -72,7 +102,7 @@ def file_loop(passit):
 
     for min in min_list:
 
-        file = files + min + '.gra'
+        file = files+min+'.gra'
 
         print('Doing file: ' + file)
         try:
@@ -85,7 +115,7 @@ def file_loop(passit):
             print('File missing')
             return
 
-        outt = u_grid.quick_regrid(mdic['lon'].values, mdic['lat'].values, mdic['t'].values.flatten(), grid)
+        outt = u_grid.quick_regrid(mdic['lon'].values, mdic['lat'].values,mdic['t'].values.flatten(), grid)
 
         # hour = mdic['time.hour']
         # minute = mdic['time.minute']
@@ -102,7 +132,7 @@ def file_loop(passit):
         # return
         t_thresh_size = -32
         t_thresh_cut = -50
-        outt[outt >= t_thresh_size] = 0
+        outt[outt>=t_thresh_size] = 0
         outt[np.isnan(outt)] = 0
 
         labels, numL = label(outt)
@@ -110,13 +140,13 @@ def file_loop(passit):
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        badinds = u[n < 600]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+        badinds = u[(n < 600)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
 
         for bi in badinds:
             inds = np.where(labels == bi)
             outt[inds] = 0
 
-        outt[outt >= t_thresh_cut] = 150
+        outt[outt >=t_thresh_cut] = 150
 
         grad = np.gradient(outt)
         outt[outt == 150] = np.nan
@@ -125,13 +155,13 @@ def file_loop(passit):
 
         nogood = np.isnan(outt)
 
-        tdiff = np.nanmax(outt) - np.nanmin(outt)
+        tdiff = np.nanmax(outt)-np.nanmin(outt)
         if tdiff > 28:  # temp difference of 28 degrees
             xmin = 15
         else:
             xmin = 10
 
-        outt[nogood] = t_thresh_cut - xmin
+        outt[nogood] = t_thresh_cut-xmin
         nok = np.where(abs(grad[0]) > 80)
         d = 2
         i = nok[0]
@@ -153,9 +183,9 @@ def file_loop(passit):
 
         wll = wav['t']  # [nb, :, :]
 
-        # maxoutt = (
-        #     wll == ndimage.maximum_filter(wll, (5, 5), mode='reflect',
-        #                                   cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+        maxoutt = (
+            wll == ndimage.maximum_filter(wll, (5, 5, 5), mode='constant',
+                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))
 
         yyy = []
         xxx = []
@@ -164,34 +194,28 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig > 30:  # > 30:  #scale filter
-                continue
-
             scale = int(np.round(orig))
 
             print(np.round(orig))
 
             wl = wll[nb, :, :]
-            # maxout = maxoutt[nb, :, :]
-
-            maxout = (
-                wl == ndimage.maximum_filter(wl, (5, 5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+            maxout = maxoutt[nb, :, :]
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -67) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (
-                wl > orig ** .5)))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -50) &  (wl > orig**.5) ) # ((wl >= np.percentile(wl[wl >= 0.5], 90)) &
             except IndexError:
                 continue
 
-            print(outt[yy, xx])
+            print(outt[yy,xx])
 
             for y, x in zip(yy, xx):
+
                 ss = orig
                 iscale = (np.ceil(ss / 2. / 5.)).astype(int)
 
                 ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[y, x] = outt[y, x]
+                figure[y,x] = scale  #outt
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)
@@ -202,41 +226,39 @@ def file_loop(passit):
         # plt.contourf(outt)
         # plt.contour(figure)
 
-        figure[figure == 0] = np.nan
-        #  f = plt.figure()
-        #  f.add_subplot(133)
-        #  plt.imshow(outt, cmap='inferno')
-        #  plt.imshow(figure, cmap='viridis')
-        #  ax = f.add_subplot(132, projection=ccrs.PlateCarree())
-        #  plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
-        #  ax.coastlines()
-        #  ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
+        # figure[figure == 0] = np.nan
+        # f = plt.figure()
+        # f.add_subplot(133)
+        # plt.imshow(outt, cmap='inferno')
+        # plt.imshow(figure, cmap='viridis')
+        # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
+        # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
+        # ax.coastlines()
+        # ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
         #
-        #  plt.colorbar()
-        #  f.add_subplot(131)
-        #  plt.imshow(outt, cmap='inferno')
+        # plt.colorbar()
+        # f.add_subplot(131)
+        # plt.imshow(outt, cmap='inferno')
         #
-        #  plt.plot(xxx, yyy, 'yo', markersize=3)
-        #  plt.show()
+        # plt.plot(xxx, yyy, 'yo', markersize=3)
+        # plt.show()
 
-        # if np.sum(figure) < 10:
-        #     return
+        if np.sum(figure) < 10:
+            return
 
         hour = mdic['time.hour']
-        minute = mdic['time.minute']
+        minute = mdic['time.minute' ]
         day = mdic['time.day']
         month = mdic['time.month']
         year = mdic['time.year']
 
     date = dt.datetime(year, month, day, hour, minute)
 
-    da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:, 0], 'lon': lon[0, :]},
-                      dims=['lat', 'lon'])  # [np.newaxis, :]
+    da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 
-    # da.to_netcdf('/users/global/cornkle/MCSfiles/blob_maps_0-4UTC_-65/'+str(date)+'.nc')
+    #da.to_netcdf('/users/global/cornkle/MCSfiles/blob_maps_0-4UTC_-65/'+str(date)+'.nc')
 
     print('Did ', file)
 
     return (da)
-
 

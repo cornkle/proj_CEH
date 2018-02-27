@@ -164,6 +164,33 @@ def waveletLSTA_dom(t, dt):
 
     return dic
 
+def waveletLSTA_test(t, dt):
+
+    dic = {}
+
+    # 2D continuous wavelet analysis:
+    # TIR
+    tir = t.copy()
+
+    tir = tir - np.nanmean(tir)
+    tir[np.isnan(tir)] = 0
+    #tir[tir < 0] = 0
+
+    nanpos =  np.isnan(tir)
+    mother2d = w2d.Mexican_hat()
+
+    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+    powerTIR[np.real(powerTIR <= 0)] = 0
+    powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
+    period2d = 1. / freqs2d
+    scales2d.shape = (len(scales2d), 1, 1)
+    powerTIR = powerTIR / (scales2d * scales2d)
+    powerTIR[:,nanpos[0], nanpos[1]]= np.nan
+    dic['power'] = powerTIR
+    dic['scales'] = (period2d / 2.)
+
+    return dic
+
 
 def waveletLSTA(t, dt, method=None):
     dic = {}
@@ -179,20 +206,25 @@ def waveletLSTA(t, dt, method=None):
     tir = t.copy()
     tir = tir - np.mean(tir)
     mother2d = w2d.Mexican_hat()
-
+    #tir[tir<0] = 0
     powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)
-    if method == 'pos':
-        powerTIRR[np.real(powerTIRR <= 0)] = 0.001
-    if method == 'neg':
-        powerTIRR[np.real(powerTIRR >= 0)] = 0.001
+
     isneg = np.where(powerTIRR<0)
 
     powerTIR = (np.abs(powerTIRR)) * (np.abs(powerTIRR))  # Normalized wavelet power spectrum
-    if method == None:
-        powerTIR[isneg] = powerTIR[isneg]*-1
+
+    powerTIR[isneg] = powerTIR[isneg]*-1
     period2d = 1. / freqs2d
     scales2d.shape = (len(scales2d), 1, 1)
     powerTIR = powerTIR / (scales2d * scales2d)
+
+    if method == 'dry':
+        pos = np.where(tir<=0)
+        powerTIR[:, pos[0], pos[1]] = np.nan
+
+    if method == 'wet':
+        pos = np.where(tir>=0)
+        powerTIR[:, pos[0], pos[1]] = np.nan
 
     dic['power'] = powerTIR
     dic['scales'] = (period2d / 2.)

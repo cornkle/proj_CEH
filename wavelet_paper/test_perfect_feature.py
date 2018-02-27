@@ -27,7 +27,7 @@ def ellipse():
 
 
     ellipse[ycirc,xcirc] = -50
-    ellipse[sycirc, sxcirc] = -80
+    ellipse[sycirc, sxcirc] = -200
     # ellipse[yycirc, xxcirc] = -80
     # ellipse[yyycirc, xxxcirc] = -50
     #ellipse[np.arange(50,54), [56]*4] = -74
@@ -137,11 +137,11 @@ def ellipse():
     filetype = 'png'
     u_plot.savefig(path, figname, filetype)
 
-    f = plt.figure()
-    plt.imshow(ellipse)
-    print(xl,yl)
-    plt.plot(xl,yl, 'ro')
-    plt.show()
+    # f = plt.figure()
+    # plt.imshow(ellipse)
+    # print(xl,yl)
+    # plt.plot(xl,yl, 'ro')
+    # plt.show()
     # try:
     #     f = plt.figure()
     #     plt.imshow(dom)

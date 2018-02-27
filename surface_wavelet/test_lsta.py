@@ -12,9 +12,11 @@ import matplotlib
 import multiprocessing
 import pdb
 import pandas as pd
+import salem
 from scipy import ndimage
 ####these functions create plots of the average of the LSTAs and all blobs over the time period
 ####AVERAGE PLOTS!
+
 
 
 def modis():
@@ -23,11 +25,12 @@ def modis():
     msg = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/*.nc')
     msg = msg['LSTA']
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
-    #msg = msg[ (msg['time.month']>= 8) ]
+    msg = msg[ (msg['time.month']>= 7) ]
 
     msg = msg.where(msg>-900)
 
     dat = msg.mean(dim='time')
+
 
     f = plt.figure()
     dat.plot.contourf(cmap='RdBu_r', vmin=-1, vmax=1)
@@ -38,17 +41,24 @@ def modis():
 
 
 def blobs():
-    dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
-    dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
-    msg = xr.open_dataarray(dayp)
-    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 5))
-    msg = msg[ (msg['time.month'] >= 8 ) & (msg['time.hour'] == 3 ) ]
-    msg = msg.where((msg.values >= 1) & (msg.values <= 35))
-    msg.values[msg.values>=1] = 1
+    file = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points.nc'
+    fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
+    msg = xr.open_dataarray(file)
+    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
+    msg = msg[ (msg['time.month'] >= 7 )  ]
+    msg = msg.where(msg > -900)
+    msg.values[msg.values<=-40] = 1
     msg = msg.sum(dim='time')
 
+
+    map = msg.salem.get_map(cmap='viridis')
+    top = xr.open_dataarray(fpath)
     f = plt.figure()
-    msg.plot.contourf()
+    z = map.set_topography(top, relief_factor=1.4)
+    map.set_contour(z, levels=(200,400,600,800), cmap='Reds' )
+
+    map.set_data(msg)
+    map.visualize(title='Blobs and topo')
 
     msg = msg.sum(dim='lon')
     f = plt.figure()

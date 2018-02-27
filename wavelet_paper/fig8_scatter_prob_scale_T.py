@@ -173,6 +173,9 @@ def probability(precip=None,thresh=None):
     print('Convective fraction <-80', np.sum((tconv<=-80) & (pconv>=8)) / np.sum((tconv<=-80) & (pconv2>=0)))
     print('Convective fraction <-90', np.sum((tconv <= -87) & (pconv >= 8)) / np.sum((tconv <= -87) & (pconv2 >= 0)))
 
+    print('Convective fraction <-67', np.sum((tconv <= -70) & (pconv >= 8)) / np.sum((tconv <= -70) & (pconv2 >= 0)))
+    print('Convective fraction <-67', np.sum((tconv <= -70) & (pconv2 >= 30)) / np.sum((tconv <= -70) & (pconv2 >= 0)))
+
     bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
     ranges = [10, 35, 90, 180]

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug  4 10:15:40 2016
-
 @author: cornkle
 """
 
@@ -13,43 +12,35 @@ import multiprocessing
 import pdb
 import pandas as pd
 from scipy import ndimage
-from cold_cloud_trend import era_geop_t3d as era_geop
-from utils import u_gis
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 
-def loop():
-    l = np.arange(0,24)
-    for l in np.arange(0,24):
-        composite(l)
-
-def composite(h):
+def composite():
     pool = multiprocessing.Pool(processes=8)
 
+    nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
+    dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
 
-    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    # nightp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_0-3UTC.nc'
+    # dayp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_15-18UTC.nc'
 
-    # nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
-    # dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
+    hour = 17
 
-    hour = h
-
-    # if hour > 6:
-    #     file = dayp
-    # else:
-    #     file = nightp
+    if hour > 6:
+        file = dayp
+    else:
+        file = nightp
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 8) ]
 
-    msg = msg.sel(lat=slice(10,18), lon=slice(-10,10))
-    #
+    msg = msg.sel(lat=slice(11,18), lon=slice(-10,6))
+
     res = pool.map(file_loop, msg)
     pool.close()
-
     # res_list = []
     # cnt_list = []
     # for m in msg[0:2]:
@@ -67,7 +58,6 @@ def composite(h):
     rres2_list = []
     rres3_list = []
     rcnt_list = []
-
     for r in res:
         res_list.append(np.squeeze(r[0]))
         res2_list.append(np.squeeze(r[1]))
@@ -90,19 +80,19 @@ def composite(h):
     f = plt.figure(figsize=(9, 7))
     ax = f.add_subplot(221)
 
-    plt.contourf((kernel_sum / cnt_sum)-(rkernel_sum / rcnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05, 0.1, 0.2,0.3,0.4], extend='both')
+    plt.contourf((kernel_sum / cnt_sum)-(rkernel_sum / rcnt_sum), cmap='RdBu_r', vmin=-0.3, vmax=0.3)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     plt.colorbar(label='K')
-    plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
+    plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Aug-Sep',
               fontsize=10)
 
     ax = f.add_subplot(222)
 
-    plt.contourf((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum) , cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05,0.1, 0.2,0.3,0.4], extend='both' )
+    plt.contourf((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum) , cmap='RdBu_r', vmin=-0.3, vmax=0.3)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -113,7 +103,7 @@ def composite(h):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((kernel2_sum / cnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05, 0.1, 0.2,0.3,0.4], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((kernel2_sum / cnt_sum), cmap='RdBu_r', vmin=-2, vmax=2) #-(rkernel2_sum / rcnt_sum)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -125,7 +115,7 @@ def composite(h):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((kernel2_sum / cnt_sum)-(rkernel2_sum / rcnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05,0.1, 0.2,0.3,0.4], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((kernel2_sum / cnt_sum)-(rkernel2_sum / rcnt_sum), cmap='RdBu_r', vmin=-0.5, vmax=0.5) #-(rkernel2_sum / rcnt_sum)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -137,67 +127,62 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_fulldomain_dom.png')
-    plt.close()
+    f = plt.figure(figsize=(9, 4))
+    ax = f.add_subplot(121)
 
-    # f = plt.figure(figsize=(9, 4))
-    # ax = f.add_subplot(121)
-    #
-    # plt.hist(((kernel_sum / cnt_sum) - (rkernel_sum / rcnt_sum))[50,50])
-    # plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(122)
-    #
-    # plt.hist(((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum)[50,50]))
-    # plt.title('Regional Anomaly', fontsize=10)
-    #
-    #
-    # plt.tight_layout()
+    plt.hist(((kernel_sum / cnt_sum) - (rkernel_sum / rcnt_sum))[50,50])
+    plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Aug-Sep',
+              fontsize=10)
+
+    ax = f.add_subplot(122)
+
+    plt.hist(((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum)[50,50]))
+    plt.title('Regional Anomaly', fontsize=10)
 
 
-def cut_kernel(xpos, ypos, lsta_day2, month, lon,lat ,t, parallax=None):
+    plt.tight_layout()
+
+
+def cut_kernel(xpos, ypos, lsta_day, lsta_day2):
     mdist = 5
 
-    if parallax:
-        height = era_geop.era_Tlapse(month, t, lon, lat)  # height in meters
-        km, coords = u_gis.parallax_corr_msg(0, 0, lon, lat, height / 1000)
-        lx, ly = km
-        print(t, height, lx, ly)
-        lx = int(np.round(lx / 3.))
-        ly = int(np.round(ly / 3.))  # km into pixels
-        xpos = xpos - lx
-        ypos = ypos - ly
+    # if (x<dist) or (x>lsta_day.shape[1]-dist-2):
+    try:
 
-    mini_mean = lsta_day2.isel(lon=slice(xpos - mdist, xpos + mdist + 1),
-                              lat=slice(ypos - mdist, ypos + mdist + 1)).values
+        mini_mean = lsta_day.isel(lon=slice(xpos - mdist, xpos + mdist + 1),
+                                  lat=slice(ypos - mdist, ypos + mdist + 1)).values
+        mini_mean[mini_mean < -900] = np.nan
+        mini_mean = np.nanmean(mini_mean)
 
-    mini_mmean = np.nanmean(mini_mean)
+    except ValueError:
+        # print('Point at boundary, pass')
+        return
 
-
-    if np.isnan(mini_mmean):
-       # pdb.set_trace()
+    if np.isnan(mini_mean):
         return
 
     dist = 50
+    try:
+        kernel = lsta_day.isel(lon=slice(xpos - dist, xpos + dist + 1),
+                               lat=slice(ypos - dist, ypos + dist + 1)).values
+        kernel[kernel < -900] = np.nan
+        kernel2 = lsta_day2.isel(lon=slice(xpos - dist, xpos + dist + 1),
+                                 lat=slice(ypos - dist, ypos + dist + 1)).values
+        kernel2[kernel2 < -900] = np.nan
 
-#try:
-    kernel = lsta_day2.isel(lon=slice(xpos - dist, xpos + dist + 1),
-                           lat=slice(ypos - dist, ypos + dist + 1)).values
-    #kernel[kernel < -900] = np.nan
-
-    kernel2 = lsta_day2.isel(lon=slice(xpos - dist, xpos + dist + 1),
-                             lat=slice(ypos - dist, ypos + dist + 1)).values
+    except ValueError:
+        # print('Point at boundary, pass')
+        return
 
     if kernel.shape != (1, 101, 101):
         return
 
-    ano = kernel - mini_mmean
+    ano = kernel - mini_mean
     kernel3 = kernel - np.nanmean(kernel)
 
 
-    cnt = kernel.copy()*0
-    cnt[np.isfinite(kernel)] = 1
+    cnt = kernel.copy()
+    cnt[np.isfinite(cnt)] = 1
 
     return ano, kernel2, kernel3, cnt
 
@@ -218,11 +203,11 @@ def file_loop(fi):
     else:
         print('Daytime')
         daybefore = date #+ dayd
-    try:
-        lsta = xr.open_dataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/' \
-                           'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2) + '.nc')
-    except OSError:
-        return
+
+    lsta = xr.open_dataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/' \
+                           'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+        daybefore.day).zfill(2) + '.nc')
+
     print('Doing '+ 'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
@@ -235,8 +220,7 @@ def file_loop(fi):
     # #
     # return
 
-    pos = np.where( (fi.values >50))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
-
+    pos = np.where((fi.values >= 1) & (fi.values <= 35))
     if np.sum(pos) == 0:
         print('No blobs found')
         return
@@ -270,7 +254,7 @@ def file_loop(fi):
         ypos = np.where(lsta_day['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2, daybefore.month, plon, plat, -40, parallax=False)
+            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day, lsta_day2)
         except TypeError:
             continue
 
@@ -284,9 +268,7 @@ def file_loop(fi):
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        t = fi.sel(lat=lat, lon=lon)
-
-        point = lsta_day2.sel(lat=lat, lon=lon, method='nearest')
+        point = lsta_day.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -294,8 +276,9 @@ def file_loop(fi):
         xpos = int(xpos[0])
         ypos = np.where(lsta_day['lat'].values == plat)
         ypos = int(ypos[0])
+
         try:
-            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2, daybefore.month, plon, plat, -40, parallax=False)
+            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day, lsta_day2)
         except TypeError:
             continue
 
@@ -320,9 +303,16 @@ def file_loop(fi):
         rkernel3_sum = np.nansum(np.squeeze(np.stack(rkernel3_list, axis=0)), axis=0)
         rcnt_sum = np.nansum(np.squeeze(np.stack(rcnt_list, axis=0)), axis=0)
 
+
+    # plt.figure()
+    # plt.contourf(kernel_sum/cnt_sum, cmap= 'RdBu', vmin=-3, vmax=3)
+    # plt.plot(21,21,'bo')
+    # plt.colorbar()
+
     print('Returning')
 
     return (kernel_sum, kernel2_sum, kernel3_sum, cnt_sum, rkernel_sum, rkernel2_sum, rkernel3_sum, rcnt_sum )
+
 
 if __name__ == "__main__":
     composite()

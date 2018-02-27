@@ -20,21 +20,16 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 
-def loop():
-    l = np.arange(0,24)
-    for l in np.arange(0,24):
-        composite(l)
-
-def composite(h):
+def composite():
     pool = multiprocessing.Pool(processes=8)
 
 
-    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    file = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points.nc'
 
-    # nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
-    # dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
+    # nightp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_0-3UTC.nc'
+    # dayp = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/blob_map_35km_-70_15-18UTC.nc'
 
-    hour = h
+    hour = 3
 
     # if hour > 6:
     #     file = dayp
@@ -43,13 +38,13 @@ def composite(h):
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 7) ]
 
-    msg = msg.sel(lat=slice(10,18), lon=slice(-10,10))
-    #
+    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
+
     res = pool.map(file_loop, msg)
     pool.close()
-
+    pdb.set_trace()
     # res_list = []
     # cnt_list = []
     # for m in msg[0:2]:
@@ -90,7 +85,7 @@ def composite(h):
     f = plt.figure(figsize=(9, 7))
     ax = f.add_subplot(221)
 
-    plt.contourf((kernel_sum / cnt_sum)-(rkernel_sum / rcnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05, 0.1, 0.2,0.3,0.4], extend='both')
+    plt.contourf((kernel_sum / cnt_sum)-(rkernel_sum / rcnt_sum), cmap='RdBu_r',  vmin=-0.5, vmax=0.5)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -102,7 +97,7 @@ def composite(h):
 
     ax = f.add_subplot(222)
 
-    plt.contourf((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum) , cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05,0.1, 0.2,0.3,0.4], extend='both' )
+    plt.contourf((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum) , cmap='RdBu_r',  vmin=-0.5, vmax=0.5)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -113,7 +108,7 @@ def composite(h):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((kernel2_sum / cnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05, 0.1, 0.2,0.3,0.4], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((kernel2_sum / cnt_sum), cmap='RdBu_r',  vmin=-0.5, vmax=0.5) #-(rkernel2_sum / rcnt_sum)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -125,7 +120,7 @@ def composite(h):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((kernel2_sum / cnt_sum)-(rkernel2_sum / rcnt_sum), cmap='RdBu_r',  levels=[-0.4,-0.3,-0.2,-0.1, -0.05, 0, 0.05,0.1, 0.2,0.3,0.4], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((kernel2_sum / cnt_sum)-(rkernel2_sum / rcnt_sum), cmap='RdBu_r', vmin=-0.5, vmax=0.5) #-(rkernel2_sum / rcnt_sum)
     plt.plot(50, 50, 'bo')
     ax.set_xticklabels((np.linspace(0, 100, 6) - 50) * 3)
     ax.set_yticklabels((np.linspace(0, 100, 6) - 50) * 3)
@@ -137,37 +132,25 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_fulldomain_dom.png')
-    plt.close()
+    f = plt.figure(figsize=(9, 4))
+    ax = f.add_subplot(121)
 
-    # f = plt.figure(figsize=(9, 4))
-    # ax = f.add_subplot(121)
-    #
-    # plt.hist(((kernel_sum / cnt_sum) - (rkernel_sum / rcnt_sum))[50,50])
-    # plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(122)
-    #
-    # plt.hist(((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum)[50,50]))
-    # plt.title('Regional Anomaly', fontsize=10)
-    #
-    #
-    # plt.tight_layout()
+    plt.hist(((kernel_sum / cnt_sum) - (rkernel_sum / rcnt_sum))[50,50])
+    plt.title('Local Anomaly, Nb cores: ' + str(np.max(cnt_sum)) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
+              fontsize=10)
+
+    ax = f.add_subplot(122)
+
+    plt.hist(((kernel3_sum / cnt_sum) - (rkernel3_sum / rcnt_sum)[50,50]))
+    plt.title('Regional Anomaly', fontsize=10)
 
 
-def cut_kernel(xpos, ypos, lsta_day2, month, lon,lat ,t, parallax=None):
+    plt.tight_layout()
+
+
+def cut_kernel(xpos, ypos, lsta_day2):
     mdist = 5
 
-    if parallax:
-        height = era_geop.era_Tlapse(month, t, lon, lat)  # height in meters
-        km, coords = u_gis.parallax_corr_msg(0, 0, lon, lat, height / 1000)
-        lx, ly = km
-        print(t, height, lx, ly)
-        lx = int(np.round(lx / 3.))
-        ly = int(np.round(ly / 3.))  # km into pixels
-        xpos = xpos - lx
-        ypos = ypos - ly
 
     mini_mean = lsta_day2.isel(lon=slice(xpos - mdist, xpos + mdist + 1),
                               lat=slice(ypos - mdist, ypos + mdist + 1)).values
@@ -189,6 +172,7 @@ def cut_kernel(xpos, ypos, lsta_day2, month, lon,lat ,t, parallax=None):
     kernel2 = lsta_day2.isel(lon=slice(xpos - dist, xpos + dist + 1),
                              lat=slice(ypos - dist, ypos + dist + 1)).values
 
+
     if kernel.shape != (1, 101, 101):
         return
 
@@ -196,8 +180,8 @@ def cut_kernel(xpos, ypos, lsta_day2, month, lon,lat ,t, parallax=None):
     kernel3 = kernel - np.nanmean(kernel)
 
 
-    cnt = kernel.copy()*0
-    cnt[np.isfinite(kernel)] = 1
+    cnt = kernel.copy()
+    cnt[np.isfinite(cnt)] = 1
 
     return ano, kernel2, kernel3, cnt
 
@@ -235,7 +219,7 @@ def file_loop(fi):
     # #
     # return
 
-    pos = np.where( (fi.values >50))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
+    pos = np.where(fi.values <-50)#= 1) & (fi.values <= 20))
 
     if np.sum(pos) == 0:
         print('No blobs found')
@@ -270,7 +254,7 @@ def file_loop(fi):
         ypos = np.where(lsta_day['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2, daybefore.month, plon, plat, -40, parallax=False)
+            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2)
         except TypeError:
             continue
 
@@ -284,9 +268,7 @@ def file_loop(fi):
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        t = fi.sel(lat=lat, lon=lon)
-
-        point = lsta_day2.sel(lat=lat, lon=lon, method='nearest')
+        point = lsta_day.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -295,7 +277,7 @@ def file_loop(fi):
         ypos = np.where(lsta_day['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2, daybefore.month, plon, plat, -40, parallax=False)
+            ano, kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_day2)
         except TypeError:
             continue
 
@@ -320,9 +302,16 @@ def file_loop(fi):
         rkernel3_sum = np.nansum(np.squeeze(np.stack(rkernel3_list, axis=0)), axis=0)
         rcnt_sum = np.nansum(np.squeeze(np.stack(rcnt_list, axis=0)), axis=0)
 
+
+    # plt.figure()
+    # plt.contourf(kernel_sum/cnt_sum, cmap= 'RdBu', vmin=-3, vmax=3)
+    # plt.plot(21,21,'bo')
+    # plt.colorbar()
+
     print('Returning')
 
     return (kernel_sum, kernel2_sum, kernel3_sum, cnt_sum, rkernel_sum, rkernel2_sum, rkernel3_sum, rcnt_sum )
+
 
 if __name__ == "__main__":
     composite()
