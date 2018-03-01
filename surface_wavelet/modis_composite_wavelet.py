@@ -172,7 +172,6 @@ def cut_kernel(xpos, ypos, wl):
 
         kernel =  np.zeros([np.shape(wl)[0], 101, 101])*np.nan
 
-
         if xpos - dist >= 0:
             xmin = 0
             xmindist = dist

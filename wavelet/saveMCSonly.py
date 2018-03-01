@@ -15,6 +15,8 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import pdb
 from scipy.ndimage.measurements import label
+import cartopy
+import cartopy.crs as ccrs
 
 
 def run():
@@ -134,7 +136,7 @@ def file_loop(passit):
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        badinds = u[(n > 600) | (n < 40)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+        badinds = u[n < 600]#[(n > 600) | (n < 40)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
 
         for bi in badinds:
             inds = np.where(labels == bi)
@@ -178,7 +180,7 @@ def file_loop(passit):
         wll = wav['t']  # [nb, :, :]
 
         # maxoutt = (
-        #     wll == ndimage.maximum_filter(wll, (5, 5), mode='reflect',
+        #     wll == ndimage.maximum_filter(wll, (5,5,5), mode='nearest',
         #                                   cval=np.amax(wll) + 1))  # (np.round(orig / 5))
 
         yyy = []
@@ -188,7 +190,7 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig >30:#> 30:  #scale filter
+            if orig >25:#> 30:  #scale filter
                  continue
 
             scale = int(np.round(orig))
@@ -196,13 +198,13 @@ def file_loop(passit):
             print(np.round(orig))
 
             wl = wll[nb, :, :]
-           # maxout = maxoutt[nb, :, :]
+            #maxout = maxoutt[nb, :, :]
 
             maxout = (
                 wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -67) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig**.5) ))  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -67) & (wl > orig**.5) )  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
 
@@ -220,6 +222,7 @@ def file_loop(passit):
                 yyy.append(y)
                 scal.append(orig)
 
+
         figure[np.isnan(outt)] = 0
 
         # f = plt.figure()
@@ -227,21 +230,22 @@ def file_loop(passit):
         # plt.contour(figure)
 
         figure[figure == 0] = np.nan
-       #  f = plt.figure()
-       #  f.add_subplot(133)
-       #  plt.imshow(outt, cmap='inferno')
-       #  plt.imshow(figure, cmap='viridis')
-       #  ax = f.add_subplot(132, projection=ccrs.PlateCarree())
-       #  plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
-       #  ax.coastlines()
-       #  ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
-       #
-       #  plt.colorbar()
-       #  f.add_subplot(131)
-       #  plt.imshow(outt, cmap='inferno')
-       #
-       #  plt.plot(xxx, yyy, 'yo', markersize=3)
-       #  plt.show()
+        f = plt.figure()
+        f.add_subplot(111)
+        plt.imshow(outt, cmap='inferno')
+        plt.imshow(figure, cmap='viridis')
+        plt.plot(xxx, yyy, 'yo', markersize=3)
+        # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
+        # # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
+        # # ax.coastlines()
+        # # ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
+        #
+        # plt.colorbar()
+        # f.add_subplot(131)
+        # plt.imshow(outt, cmap='inferno')
+        #
+        # plt.plot(xxx, yyy, 'yo', markersize=3)
+        plt.show()
 
         # if np.sum(figure) < 10:
         #     return

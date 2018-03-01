@@ -52,8 +52,6 @@ def run():
     #
     #     test = file_loop(l)
 
-
-
     pool.close()
 
 
@@ -62,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_smallstorm.nc'
 
     try:
         os.remove(savefile)
@@ -184,8 +182,8 @@ def file_loop(passit):
         wll = wav['t']  # [nb, :, :]
 
         maxoutt = (
-            wll == ndimage.maximum_filter(wll, (5, 5, 5), mode='constant',
-                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+            wll == ndimage.maximum_filter(wll, (5,4,4), mode='reflect',
+                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))   #(5,4,4)
 
         yyy = []
         xxx = []
@@ -215,7 +213,7 @@ def file_loop(passit):
 
                 ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[y,x] = scale  #outt
+                figure[ycirc, xcirc] = scale  #outt
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)
@@ -226,12 +224,14 @@ def file_loop(passit):
         # plt.contourf(outt)
         # plt.contour(figure)
 
-        # figure[figure == 0] = np.nan
-        # f = plt.figure()
-        # f.add_subplot(133)
-        # plt.imshow(outt, cmap='inferno')
-        # plt.imshow(figure, cmap='viridis')
-        # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
+        figure[figure == 0] = np.nan
+        f = plt.figure()
+        f.add_subplot(111)
+        plt.imshow(outt, cmap='inferno')
+        plt.imshow(figure, cmap='viridis')
+        plt.colorbar()
+        plt.plot(xxx, yyy, 'yo', markersize=3)
+        ax = f.add_subplot(132, projection=ccrs.PlateCarree())
         # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
         # ax.coastlines()
         # ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
@@ -240,8 +240,8 @@ def file_loop(passit):
         # f.add_subplot(131)
         # plt.imshow(outt, cmap='inferno')
         #
-        # plt.plot(xxx, yyy, 'yo', markersize=3)
-        # plt.show()
+        #
+        #plt.show()
 
         if np.sum(figure) < 10:
             return
