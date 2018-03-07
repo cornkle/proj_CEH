@@ -28,25 +28,31 @@ def run_waveletDry():
     # f = plt.figure()
     # plt.imshow(lsta)
 
-    lsta[lsta<-800] = np.nan
+    lsta = lsta.where(lsta>-800)
 
 
-    #lsta = lsta   - np.nanmean(lsta)
+    lsta = lsta - lsta.mean()
+
+    f = plt.figure()
+    plt.imshow(lsta.values)
 
     points = np.where(np.isfinite(lsta.values))
     inter1 = np.where(np.isnan(lsta.values))
 
-    lsta[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
-    inter = np.where(np.isnan(lsta))
-    lsta[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
-    #lsta[inter1]=0
+    pdb.set_trace()
 
+    lsta.values[inter1] = griddata(points, np.ravel((lsta.values)[points]), inter1, method='linear')
+    inter = np.where(np.isnan(lsta))
+    lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+    #lsta[inter1]=0
+    f = plt.figure()
+    plt.imshow(lsta.values)
     wav = util.waveletLSTA_dom(lsta.values,3)
 
     wl = wav['dominant']
 
-    wl[inter[0], inter[1]] = np.nan
-    wl[inter1[0], inter1[1]] = np.nan
+    # wl[inter[0], inter[1]] = np.nan
+    # wl[inter1[0], inter1[1]] = np.nan
     f = plt.figure()
     plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
     scales = wav['scales']

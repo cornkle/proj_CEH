@@ -30,7 +30,7 @@ def composite(h):
     pool = multiprocessing.Pool(processes=8)
 
 
-    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_smallstorm.nc'
 
     # nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
     # dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
@@ -145,7 +145,7 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<20.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
     # f = plt.figure(figsize=(9, 4))
@@ -252,7 +252,7 @@ def file_loop(fi):
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 
-    if (fi['time.hour'].values) <= 6:
+    if (fi['time.hour'].values) <= 15:
         print('Nighttime')
         daybefore = date - dayd
     else:
@@ -275,7 +275,7 @@ def file_loop(fi):
     # #
     # return
 
-    pos = np.where( (fi.values >= 5) & (fi.values < 20))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
+    pos = np.where( (fi.values >= 5) & (fi.values < 60))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
 
     if np.sum(pos) == 0:
         print('No blobs found')

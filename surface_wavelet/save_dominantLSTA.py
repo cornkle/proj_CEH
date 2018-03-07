@@ -39,18 +39,18 @@ def run_netcdf():
         lsta[lsta<-800] = np.nan
 
 
-        #lsta = lsta   - np.nanmean(lsta)
+        lsta = lsta   - lsta.mean()
 
         points = np.where(np.isfinite(lsta.values))
         inter1 = np.where(np.isnan(lsta.values))
         try:
-            lsta[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
+            lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
         except ValueError:
             continue
 
         inter = np.where(np.isnan(lsta))
         try:
-            lsta[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+            lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
         except ValueError:
             continue
         #lsta[inter1]=0

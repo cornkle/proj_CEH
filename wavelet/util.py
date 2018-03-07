@@ -127,7 +127,7 @@ def waveletLSTA_dom(t, dt):
     tir = t.copy()
     tir = tir
     #
-    tir = tir - np.mean(tir)
+    #tir = tir - np.mean(tir)
 
     #tir = tir + np.min(tir)
     #tir[tir < 0] = 0
@@ -177,7 +177,7 @@ def waveletLSTA_domLocMax(t, dt):
     tir = tir
 
     tir = tir - np.mean(tir)
-    tir[np.abs(tir)<0.25]=0
+    #tir[np.abs(tir)<0.25]=0
     mother2d = w2d.Mexican_hat()
 
     powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)  # s0=30./

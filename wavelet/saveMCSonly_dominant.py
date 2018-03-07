@@ -60,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_smallstorm.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant.nc'
 
     try:
         os.remove(savefile)
