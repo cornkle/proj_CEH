@@ -11,6 +11,49 @@ from utils import u_plot
 
 
 
+def ellipse_simple():
+    matplotlib.rc('xtick', labelsize=10)
+    matplotlib.rc('ytick', labelsize=10)
+
+    ellipse = np.zeros((100,100))
+
+    ycirc, xcirc = ua.draw_ellipse(10,10,4, 4)
+    yycirc, xxcirc = ua.draw_ellipse(25, 50, 10, 10)
+
+
+    ellipse[ycirc,xcirc] = 20
+    ellipse[yycirc, xxcirc] = 20
+
+
+    wav = util.waveletLSTA_power(ellipse, 1)
+    lab = 'power'
+    wll = wav[lab]
+
+    print('Scales', wav['scales'])
+
+
+    f = plt.figure()
+    plt.imshow(ellipse)
+
+    f = plt.figure()
+    plt.imshow(wll[0,:,:])
+
+    print('Small scale max', np.max(np.abs(wll[0,:,:])))
+
+    f = plt.figure()
+    plt.imshow(wll[1, :, :])
+    print('Mid scale max', np.max(np.abs(wll[1, :, :])))
+
+    f = plt.figure()
+    plt.imshow(wll[2, :, :])
+    print('Large scale max', np.max(np.abs(wll[2, :, :])))
+
+    f = plt.figure()
+
+    plt.contourf(np.arange(wll.shape[1]),wav['scales'],wll[:,60,:])
+    plt.colorbar()
+
+    print((np.max(wll[1, :, :])-np.max(wll[0,:,:])) / np.max(wll[1, :, :]))
 
 def ellipse():
     matplotlib.rc('xtick', labelsize=10)
@@ -18,28 +61,19 @@ def ellipse():
 
     ellipse = np.zeros((100,100))
 
-    ycirc, xcirc = ua.draw_ellipse(50,50,12, 24)
-    sycirc, sxcirc = ua.draw_ellipse(55, 55, 3, 3)
-
-    yycirc, xxcirc = ua.draw_ellipse(25, 50, 8, 8)
-
-    yyycirc, xxxcirc = ua.draw_ellipse(27, 50, 3,3)
+    ycirc, xcirc = ua.draw_ellipse(50,50,10, 10)
+    yycirc, xxcirc = ua.draw_ellipse(25, 50, 4, 4)
 
 
     ellipse[ycirc,xcirc] = -50
-    ellipse[sycirc, sxcirc] = -200
-    # ellipse[yycirc, xxcirc] = -80
-    # ellipse[yyycirc, xxxcirc] = -50
-    #ellipse[np.arange(50,54), [56]*4] = -74
+    ellipse[yycirc, xxcirc] = -50
 
-    wav = util.waveletLSTA_dom(ellipse, 3)#, method='pos')
+
+    wav = util.waveletLSTA_power(ellipse, 1)
     lab = 'power'
     wll = wav[lab]
 
-    try:
-        dom =wav['dominant']
-    except:
-        pass
+    pdb.set_trace()
 
     arr = np.round(wav['scales'])
     maxs = np.zeros_like(wll)
@@ -104,8 +138,7 @@ def ellipse():
     ax1.invert_yaxis()
     ax1.legend(loc=4)
     ax1.set_ylabel('Spatial extent (km)')
-    #colors = cm.viridis(np.linspace(0, 1, len([0,1, 2,5,10,20,40,60,80,100])))
-    #
+
     mp = ax3.contourf(np.arange(wll.shape[2])*3, arr,wll[:,posi,:], cmap='viridis')
     #levels=[0,1, 2,5,10,20,40,80,100, 130, 150, 180, 200, 300,400]
     maxs = np.mean(maxs[:,posi-1:posi+2, :], 1) # -1, +2

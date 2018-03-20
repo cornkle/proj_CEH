@@ -27,7 +27,7 @@ def run_netcdf():
 
 
         file = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
-        outfile = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/scale_maps/lsta_daily_scale_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+        outfile = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/power_maps/lsta_daily_powerMaxscale_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
 
         ds = xr.open_dataset(file)
         ds = ds.sel(lon=slice(-10,10), lat=slice(10,20))

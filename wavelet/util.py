@@ -158,14 +158,53 @@ def waveletLSTA_dom(t, dt):
             pttest = ptt[max]
             if ptest < 0:
                 scal = scal*-1
+                pttest = pttest*-1
             if pttest < 0.05:
                 scal=np.nan
 
-            dom_scale[i,j] = scal
+            dom_scale[i,j] = pttest # scal
 
     dic['power'] = powerTIR
     dic['scales'] = scales
     dic['dominant'] = dom_scale
+
+    return dic
+
+
+def waveletLSTA_power(t, dt):
+    dic = {}
+
+    # 2D continuous wavelet analysis:
+    # TIR
+    # dj: distance between scales
+    # s0: start scale, approx 2*3*pixel scale (3 pix necessary for one wave)
+    # j: number of scales
+
+    # 2D continuous wavelet analysis:
+    # TIR
+    tir = t.copy()
+    #
+    #tir = tir - np.mean(tir)
+    n = tir.size
+    variance = np.std(tir)**2
+    tir = (tir - np.mean(tir) / np.sqrt(variance))
+    mother2d = w2d.Mexican_hat()
+
+    powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=1, s0=10. / mother2d.flambda(), J=2)  # s0=30./
+    #powerTIRR[np.real(powerTIRR <= 0)] = 0
+    pos = np.where(powerTIRR < 0)
+    powerTIR = (np.abs(powerTIRR)) * (np.abs(powerTIRR))  # Normalized wavelet power spectrum
+
+
+    period2d = 1. / freqs2d
+    scales2d.shape = (len(scales2d), 1, 1)
+    powerTIR = powerTIR / (scales2d * scales2d)
+
+    scales = (period2d / 2.)
+    #powerTIR = np.transpose(powerTIR.T / (scales*scales))
+    powerTIR[pos] = powerTIR[pos]* -1
+    dic['power'] = powerTIR
+    dic['scales'] = scales
 
     return dic
 

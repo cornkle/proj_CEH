@@ -165,7 +165,8 @@ def rewriteMODISLstLonLat(file, nx, ny):
 #  ny : pixel in y direction
 #  nx : pixel in x direction
 #========================================================================================
-def rewriteModis_toNetcdf(file):
+
+def rewriteModis_toNetcdf(file, write=False):
 
     out = file.replace('modis_raw_binary', 'modis_netcdf')
     if '.gz' in out:
@@ -175,14 +176,15 @@ def rewriteModis_toNetcdf(file):
 
     print('Doing '+file)
 
-    if os.path.isfile(out):
-        print('File exists, continue: ', out)
-        return
+    # if os.path.isfile(out):
+    #     print('File exists, continue: ', out)
+    #     return
 
     ll = np.load('/users/global/cornkle/data/OBS/modis_LST/lsta_728_348_lat_lon.npz')
 
     blat = ll['lat']
     blon = ll['lon']
+
     ffile = os.path.split(file)[-1]
 
     llist = ffile.split('.')
@@ -204,14 +206,14 @@ def rewriteModis_toNetcdf(file):
 
 
     ds = xr.Dataset({'LSTA': da})
-
-    try:
-        ds.to_netcdf(out)
-    except OSError:
-        print('Did not find ' + out)
-        print('Out directory not found')
-    print('Wrote ' + out)
-    return
+    if write:
+        try:
+            ds.to_netcdf(out)
+        except OSError:
+            print('Did not find ' + out)
+            print('Out directory not found')
+        print('Wrote ' + out)
+    return ds, out
 
 #========================================================================================
 # Rewrites modis lat lon to something nice (lat lon from blobs)

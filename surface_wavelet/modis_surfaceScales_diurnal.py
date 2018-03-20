@@ -52,8 +52,6 @@ def loop():
 
 
 
-
-
 def plot():
 
 
@@ -61,51 +59,7 @@ def plot():
 
     bin = np.array(dic['bin'])
     center = bin[0:-1] + (bin[1::]-bin[0:-1])
-
-    blobc = dic['blobc']
-    scalec = dic['scalec']
-
     pdb.set_trace()
-
-
-    data = (dic['blob']-dic['scale'])*100
-
-    hours = np.arange(0, 24)
-
-    pos = np.where((hours > 9) & (hours < 13))
-    data[pos[0], :] = 0
-
-    f = plt.figure()
-    ax = plt.subplot(111)
-    pmap = ax.pcolormesh(data, vmin=-1, vmax=1, cmap='RdBu_r')
-    ax.set_xticks(np.arange(dic['blob'].shape[1])+1, minor=False)
-    ax.set_xticklabels(center)
-    cbar = plt.colorbar(pmap)
-    cbar.set_label('Difference in scale frequency | Blobs')
-
-    ax.set_yticks(np.arange(dic['blob'].shape[0]) + 1, minor=False)
-    ax.set_yticklabels(np.arange(0,24))
-    ax.set_xlabel('Surface Scales of pos/neg deviation to surroundings')
-    ax.set_ylabel('Hours')
-
-
-    ax1 = ax.twinx()
-    ax1.set_yticks(np.arange(dic['blob'].shape[0])+1, minor=False)
-    ax1.set_yticklabels(dic['nblobs'])
-    pdb.set_trace()
-
-    print(np.sum(dic['blobc']>0)/np.sum(dic['nblobs']))
-
-    print(np.sum(np.isfinite(dic['blobc'])))
-
-def plot2():
-
-
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/scales.p", "rb"))
-
-    bin = np.array(dic['bin'])
-    center = bin[0:-1] + (bin[1::]-bin[0:-1])
-
     data = dic['blob']- (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
     db = dic['blobc']
     filler = np.zeros_like(db)
@@ -118,7 +72,7 @@ def plot2():
 
     mask = np.zeros_like(db)
     mask[filler>np.abs(data)] = 1
-    #data[np.where(mask)] = 0
+    data[np.where(mask)] = 0
 
     f = plt.figure()
     ax = plt.subplot(111)
@@ -218,25 +172,6 @@ def composite(h):
 
     return histb,hists,hb, blobs.size, histbc, histsc
 
-    # bins = np.percentile(scales,np.arange(0,101,5))
-    #
-    # #bins = [-140,-112,-92,-63,-43,-24,-13,-9, 9, 16,29,43,63,92,112,140]
-    #
-    # histb, hb = np.histogram(blobs, bins=bins)
-    #
-    # f = plt.figure()
-    # plt.bar(hb[0:-1], histb , align='edge', width=hb[1::] - hb[0:-1], edgecolor='k')
-    #
-    # histb, hb = np.histogram(scales, bins=bins)
-    # f = plt.figure()
-    # plt.bar(hb[0:-1], histb, align='edge', width=hb[1::] - hb[0:-1], edgecolor='k')
-    #
-    # print('Percentage pixels of similar LSTA and wavelet sign:', np.sum(sign)/len(sign))
-
-
-    #plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_scaleDist_dominant<20.png')
-    #plt.close()
-
 
 def cut_kernel(xpos, ypos, lsta_day2):
 
@@ -263,54 +198,55 @@ def file_loop(fi):
     date = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
     dayd = pd.Timedelta('1 days')
-    if fi['time.hour'].values.size != 1:
-        'hour array too big, problem!'
 
     if (fi['time.hour'].values) <= 15:
         print('Nighttime')
         daybefore = date - dayd
     else:
         print('Daytime')
-        daybefore = date #+ dayd
+        daybefore = date
+
     try:
         lsta = xr.open_dataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/scale_maps/' \
-                           'lsta_daily_scale_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2) + '.nc')
+                               'lsta_daily_scale_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+            daybefore.day).zfill(2) + '.nc')
     except OSError:
         return
-    print('Doing '+ 'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+
+    print('Doing ' + 'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
-    lsta_check = xr.open_dataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/' \
-                           'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+    temp_da = xr.open_dataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/' \
+                              'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
     try:
-        lsta_check = lsta_check.sel(lat=slice(lsta['lat'].values.min(),lsta['lat'].values.max()), lon=slice(lsta['lon'].values.min(),lsta['lon'].values.max()))
+        temp_da = temp_da.sel(lat=slice(lsta['lat'].values.min(), lsta['lat'].values.max()),
+                              lon=slice(lsta['lon'].values.min(), lsta['lon'].values.max()))
     except OSError:
         return
 
-    lsta_day = lsta['LSTA']
-    lsta = lsta_check['LSTA']
+    lsta = lsta['LSTA']
+    temp_da = temp_da['LSTA']
+    temp_da = temp_da.where(temp_da > -800)
 
-    lsta_day2 = lsta_day.copy()
+    temp = temp_da.values
 
-    lstav = lsta_check['LSTA'].values
+    lsta = lsta.where(np.abs(temp) > 0.2)
+    temp_da = temp_da.where(np.abs(temp) > 0.2)
 
-    lsta_day2 = lsta_day2.where(np.abs(lstav) > 0.2)
-    lsta = lsta.where(np.abs(lstav) > 0.2)
-
-    if np.sum(lsta_day2) == np.nan:
+    if np.sum(lsta) == np.nan:
         return
 
     #lsta_day2.values[np.abs(lsta_day2.values) < 9] = np.nan
 
-    scale_list = (lsta_day2.values).flatten()
+    scale_list = (lsta.values).flatten()
 
     # plt.figure()
     # plt.imshow(lsta_day2[0,:,:])
     # #
     # return
 
-    pos = np.where( (fi.values >= 5) & (fi.values < 76))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
+    pos = np.where( (fi.values >= 5) & (fi.values < 75))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
 
     if np.sum(pos) == 0:
         print('No blobs found')
@@ -326,16 +262,16 @@ def file_loop(fi):
 
         t = fi.sel(lat=lat, lon=lon)
 
-        point = lsta_day2.sel(lat=lat, lon=lon, method='nearest')
+        point = lsta.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
         plon = point['lon'].values
 
-        xpos = np.where(lsta_day['lon'].values == plon)
+        xpos = np.where(lsta['lon'].values == plon)
         xpos = int(xpos[0])
-        ypos = np.where(lsta_day['lat'].values == plat)
+        ypos = np.where(lsta['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            ano = cut_kernel(xpos, ypos, lsta_day2)
+            ano = cut_kernel(xpos, ypos, lsta)
         except TypeError:
             continue
 
@@ -343,7 +279,7 @@ def file_loop(fi):
             continue
 
         try:
-            anot = cut_kernel(xpos, ypos, lsta)
+            anot = cut_kernel(xpos, ypos, temp_da)
         except TypeError:
             continue
 

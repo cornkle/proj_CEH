@@ -48,15 +48,16 @@ def composite(h):
 
     msg = msg.sel(lat=slice(10.5,18), lon=slice(-9.5,9.5))
     #
-    res = pool.map(file_loop, msg)
-    pool.close()
+    # res = pool.map(file_loop, msg)
+    # pool.close()
 
-    # res_list = []
-    # cnt_list = []
-    # for m in msg[0:2]:
-    #     res, cnt = file_loop(m)
-    #     res_list.append(res)
-    #     cnt_list.append(cnt)
+    res_list = []
+    cnt_list = []
+    pdb.set_trace()
+    for m in msg[0:2]:
+        res, cnt = file_loop(m)
+        res_list.append(res)
+        cnt_list.append(cnt)
 
     res = [x for x in res if x is not None]
 
@@ -276,7 +277,7 @@ def file_loop(fi):
     # return
 
     pos = np.where( (fi.values >= 5) & (fi.values < 60))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
-
+    pdb.set_trace()
     if np.sum(pos) == 0:
         print('No blobs found')
         return
