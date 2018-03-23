@@ -30,7 +30,7 @@ def composite(h):
     pool = multiprocessing.Pool(processes=8)
 
 
-    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_smallstorm.nc'
+    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
 
     # nightp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_0-3UTC_centrePoint.nc'
     # dayp = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_17-19UTC_centrePoint.nc'
@@ -48,16 +48,16 @@ def composite(h):
 
     msg = msg.sel(lat=slice(10.5,18), lon=slice(-9.5,9.5))
     #
-    # res = pool.map(file_loop, msg)
-    # pool.close()
+    res = pool.map(file_loop, msg)
+    pool.close()
 
     res_list = []
     cnt_list = []
-    pdb.set_trace()
-    for m in msg[0:2]:
-        res, cnt = file_loop(m)
-        res_list.append(res)
-        cnt_list.append(cnt)
+    # pdb.set_trace()
+    # for m in msg[0:2]:
+    #     res, cnt = file_loop(m)
+    #     res_list.append(res)
+    #     cnt_list.append(cnt)
 
     res = [x for x in res if x is not None]
 
@@ -146,7 +146,7 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/'+'test.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
     # f = plt.figure(figsize=(9, 4))
@@ -276,8 +276,8 @@ def file_loop(fi):
     # #
     # return
 
-    pos = np.where( (fi.values >= 5) & (fi.values < 60))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
-    pdb.set_trace()
+    pos = np.where( (fi.values >= 5) & (fi.values < 75))#(fi.values >= 1) & (fi.values <= 20)) #<-50)#
+
     if np.sum(pos) == 0:
         print('No blobs found')
         return

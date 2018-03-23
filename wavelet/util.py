@@ -350,7 +350,7 @@ def waveletLSTA(t, dt, method=None):
     # 2D continuous wavelet analysis:
     # TIR
     tir = t.copy()
-    tir = tir - np.mean(tir)
+    #tir = tir - np.mean(tir)
     mother2d = w2d.Mexican_hat()
     #tir[tir<0] = 0
     powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)
@@ -359,7 +359,7 @@ def waveletLSTA(t, dt, method=None):
 
     powerTIR = (np.abs(powerTIRR)) * (np.abs(powerTIRR))  # Normalized wavelet power spectrum
 
-    powerTIR[isneg] = powerTIR[isneg]*-1
+    #powerTIR[isneg] = powerTIR[isneg]*-1
     period2d = 1. / freqs2d
     scales2d.shape = (len(scales2d), 1, 1)
     powerTIR = powerTIR / (scales2d * scales2d)

@@ -41,7 +41,7 @@ def composite(hour):
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] ==hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 8) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
     msg = msg.sel(lat=slice(10,18), lon=slice(-10, 10))
 
@@ -132,7 +132,7 @@ def plot(hour):
     werandom = (dic[keys[l+1]])[1]
     wemask = (dic[keys[l+1]])[2]
 
-    plt.contourf((np.arange(0, 101) - 50) * 3, scales ,snblob - snrandom   , cmap='RdBu_r', vmin=-0.05, vmax=0.05)
+    plt.contourf((np.arange(0, 101) - 50) * 3, scales ,snblob - snrandom   , cmap='RdBu_r', vmin=-0.2, vmax=0.2)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 101) - 50) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
@@ -144,7 +144,7 @@ def plot(hour):
 
     ax = f.add_subplot(122)
 
-    plt.contourf((np.arange(0, 101) - 50) * 3,scales,  weblob - werandom  , cmap='RdBu_r', vmin=-0.05, vmax=0.05)
+    plt.contourf((np.arange(0, 101) - 50) * 3,scales,  weblob - werandom  , cmap='RdBu_r', vmin=-0.2, vmax=0.2)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 101) - 50) * 3, scales, wemask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
@@ -225,7 +225,7 @@ def file_loop(fi):
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 
-    if (fi['time.hour'].values) <= 7:
+    if (fi['time.hour'].values) <= 15:
         print('Nighttime')
         daybefore = date - dayd
     else:
@@ -265,7 +265,7 @@ def file_loop(fi):
     except ValueError:
         wav_input[inter]=0
 
-    wavpos = util.waveletLSTA(wav_input, 3, method='wet')
+    wavpos = util.waveletLSTA(wav_input, 3, method='dry')
 
     wlpos = wavpos['power']
 

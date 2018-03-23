@@ -9,6 +9,7 @@ import os
 import xarray as xr
 import numpy as np
 import pandas as pd
+from scipy.interpolate import griddata
 
 def saveNetcdf():
 
@@ -42,7 +43,7 @@ def saveDailyBlobs():
     md = msg.resample('24H', base=16, dim='time', skipna=True, how='min')
 
     md = md[(md['time.month'] >=6) & (md['time.month'] <=9)]
-    pdb.set_trace()
+
     md.values[md.values>23] = md.values[md.values>23]-24
 
     md.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc')
@@ -69,8 +70,8 @@ def saveNetcdf_blobs():
 
         ds['cell'] = ds['LSTA'].copy()*np.nan
 
-        pos = np.where((m.values > 5) )
-        if np.sum(pos) == 0:
+        pos = np.where(np.isfinite(m.values))
+        if np.isnan(np.nansum(m.values)):
             print('No blobs found')
             try:
                 ds.to_netcdf(out)
@@ -104,7 +105,49 @@ def saveNetcdf_blobs():
 
 
 
+def saveNetcdf_power():
 
+    ds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
+
+    lsta = ds['LSTA']
+
+    points = np.where(np.isfinite(lsta.values))
+    inter1 = np.where(np.isnan(lsta.values))
+
+    try:
+        lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
+    except ValueError:
+        continue
+
+    inter = np.where(np.isnan(lsta))
+    try:
+        lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+    except ValueError:
+        continue
+    # lsta[inter1]=0
+
+    wav = util.waveletLSTA_dom(lsta.values, 3)
+
+    wl = wav['dominant']
+
+    wl[inter[0], inter[1]] = np.nan
+    wl[inter1[0], inter1[1]] = np.nan
+    # f = plt.figure()
+    # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
+    scales = wav['scales']
+
+    print(scales)
+
+    ds['LSTA'].values = wl[None, ...]
+    ds.attrs['scales'] = scales
+
+    try:
+        os.remove(outfile)
+    except OSError:
+        pass
+    ds.to_netcdf(path=outfile, mode='w')
+
+    print('Saved ' + outfile)
 
 
 

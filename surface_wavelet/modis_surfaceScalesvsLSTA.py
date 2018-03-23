@@ -45,7 +45,7 @@ def plot():
 
 
 
-    lsta_all = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/scale_maps/*.nc')
+    lsta_all = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/scale_maps_smallPref/*.nc')
 
     temp_all = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
     temp_all = temp_all.sel(lat=slice(10.5,17.5), lon=slice(-9.5,9.5))

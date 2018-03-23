@@ -116,6 +116,7 @@ def draw_cut_circle(x, y, radius, array):
 
     return (ycirc, xcirc)
 
+
 def draw_ring(x, y, inrad, outrad, array):
 
     in_ycirc, in_xcirc = draw_cut_circle(x, y, inrad, array)
