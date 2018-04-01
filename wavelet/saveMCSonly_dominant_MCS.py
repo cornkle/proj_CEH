@@ -60,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_gt15k.nc'
 
     try:
         os.remove(savefile)
@@ -117,6 +117,17 @@ def file_loop(passit):
 
 
         outt[outt > -50] = 0
+
+        labels, numL = label(outt)
+
+        u, inv = np.unique(labels, return_inverse=True)
+        n = np.bincount(inv)
+
+        badinds = u[(n < 600)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+
+        for bi in badinds:
+            inds = np.where(labels == bi)
+            outt[inds] = 0
 
         figure = outt
 

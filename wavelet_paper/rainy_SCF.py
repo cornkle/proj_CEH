@@ -19,25 +19,25 @@ from wavelet_paper import fig9_latitude_var as lv
 fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 #path = 'D://data/wavelet/saves/pandas/'
 path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-dic = pkl.load(open(path+'3dmax_gt15000_noR.p', 'rb'))
+dic = pkl.load(open(path+'3dmax_gt15000_lax_nonan_dominant.p', 'rb'))
 
-bulk = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
-
-print('Sys check', len(bulk['pmax'])), len(np.unique(dic['id']))
+# bulk = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
+#
+# print('Sys check', len(bulk['pmax'])), len(np.unique(dic['id']))
 
 
 psum = np.array(dic['circle_max'])
 tmin = np.array(dic['circle_Tcentre'])
-tmin = np.array(dic['circle_t'])
-for id, tt in enumerate(tmin):
-    tmin[id] = np.nanmean(tt)
+# tmin = np.array(dic['circle_t'])
+# for id, tt in enumerate(tmin):
+#     tmin[id] = np.nanmean(tt)
 
 scales = np.array(dic['scale'])
 
-bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
+bins = np.array(list(range(-95, -49, 5)))  # compute probability per temperature range (1degC)
 print(bins)
-ranges = [10, 30, 60, 90, 180]
-outrange = [30, 60, 90, 180]
+ranges = [10, 60, 90, 180]
+outrange = [60, 90, 180]
 # #
 # ranges = [15, 30, 60, 202]
 # outrange = [    30, 60, 202]
@@ -62,20 +62,23 @@ for id, r in enumerate(ranges):
     t = tmin[(scales <= r) & (scales > ranges[id - 1])]
     p = psum[(scales <= r) & (scales > ranges[id - 1])]
 
-    to30 = t[p > 0]
+    to30 = t[p > 30]
+    t = t[p>1]
 
     # bins = np.percentile(t, np.arange(0,101,5))
     # center = (bins[:-1] + bins[1:]) / 2
 
     print('Tbins', bins)
-    H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -45))
-    H, bins = np.histogram(t, bins=bins, range=(-95, -45))
+    H1, bins1 = np.histogram(to30, bins=bins, range=(-95, -50))
+    H, bins = np.histogram(t, bins=bins, range=(-95, -50))
     H = H.astype(float)
     H1 = H1.astype(float)
 
-    H[H < 10] = np.nan
+    #H[H < 10] = np.nan
 
     histo = H1 / H * 100.
+
+    print('Total percentage', r, np.nansum(H1)/ np.nansum(H) * 100.)
 
     lower, upper = stats.proportion_confint(H1, H)
 

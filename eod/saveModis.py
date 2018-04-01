@@ -106,48 +106,49 @@ def saveNetcdf_blobs():
 
 
 def saveNetcdf_power():
+    pass
 
-    ds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
-
-    lsta = ds['LSTA']
-
-    points = np.where(np.isfinite(lsta.values))
-    inter1 = np.where(np.isnan(lsta.values))
-
-    try:
-        lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
-    except ValueError:
-        continue
-
-    inter = np.where(np.isnan(lsta))
-    try:
-        lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
-    except ValueError:
-        continue
-    # lsta[inter1]=0
-
-    wav = util.waveletLSTA_dom(lsta.values, 3)
-
-    wl = wav['dominant']
-
-    wl[inter[0], inter[1]] = np.nan
-    wl[inter1[0], inter1[1]] = np.nan
-    # f = plt.figure()
-    # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
-    scales = wav['scales']
-
-    print(scales)
-
-    ds['LSTA'].values = wl[None, ...]
-    ds.attrs['scales'] = scales
-
-    try:
-        os.remove(outfile)
-    except OSError:
-        pass
-    ds.to_netcdf(path=outfile, mode='w')
-
-    print('Saved ' + outfile)
+    # ds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
+    #
+    # lsta = ds['LSTA']
+    #
+    # points = np.where(np.isfinite(lsta.values))
+    # inter1 = np.where(np.isnan(lsta.values))
+    #
+    # try:
+    #     lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
+    # except ValueError:
+    #     continue
+    #
+    # inter = np.where(np.isnan(lsta))
+    # try:
+    #     lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+    # except ValueError:
+    #     continue
+    # # lsta[inter1]=0
+    #
+    # wav = util.waveletLSTA_dom(lsta.values, 3)
+    #
+    # wl = wav['dominant']
+    #
+    # wl[inter[0], inter[1]] = np.nan
+    # wl[inter1[0], inter1[1]] = np.nan
+    # # f = plt.figure()
+    # # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
+    # scales = wav['scales']
+    #
+    # print(scales)
+    #
+    # ds['LSTA'].values = wl[None, ...]
+    # ds.attrs['scales'] = scales
+    #
+    # try:
+    #     os.remove(outfile)
+    # except OSError:
+    #     pass
+    # ds.to_netcdf(path=outfile, mode='w')
+    #
+    # print('Saved ' + outfile)
 
 
 

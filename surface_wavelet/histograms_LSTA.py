@@ -14,6 +14,7 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 import pdb
 import multiprocessing
+from statsmodels.stats.proportion import proportion_confint
 
 def diurnal_loop():
 
@@ -45,7 +46,7 @@ def cut_kernel(zpos, ypos, xpos, da):
 def composite(hour):
     #hour = 18
     mds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc', autoclose=True)
-    mds = mds.sel(lat=slice(10,19), lon=slice(-10,10))
+    mds = mds.sel(lat=slice(10,17), lon=slice(-10,10))
     #mds = mds.isel(time=slice(150,300))
     pos = np.where((mds['cell'].values==hour) )
     shape = mds['LSTA'].shape
@@ -67,13 +68,13 @@ def composite(hour):
         print(lpoint)
         point.append(lpoint)
 
-        randx = np.random.randint(0, shape[2], 10)
-        randy = np.random.randint(-10, 10, 10)
+        randx = np.random.randint(0, shape[2], 20)
+        randy = np.random.randint(-10, 11, 20)
 
         for ry, rx in zip(randy, randx):
 
             if y+ry < 0: ry=0
-            if y+ry > shape[1]: ry = shape[1]
+            if y+ry > shape[1]-1: ry = shape[1]-1
 
             try:
                 apoint = cut_kernel(z, y+ry, rx, mds['LSTA'])
@@ -94,7 +95,7 @@ def composite(hour):
 
     }
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_test"+str(hour).zfill(2)+".p", "wb"))
 
     #
     # plt.figure()
@@ -106,7 +107,7 @@ def composite(hour):
 
 def plot():
 
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_17.p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_shift003.p", "rb"))
 
     all = dic['all']
 
@@ -166,32 +167,70 @@ def plot_diurn():
 
     percmmax = []
     percmmin = []
+    nbmax = []
+    nbmin = []
+    err90_up = []
+    err90_low = []
+    err10_up = []
+    err10_low = []
 
-    for h in range(0,24):
 
-        dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_"+str(h).zfill(2)+".p", "rb"))
+    rrange = [16,17,18,19,20,21,22,23,0,1,2,3,4,5, 6]
+
+    for h in rrange:
+
+        dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_shift0"+str(h).zfill(2)+".p", "rb"))
         print('Open')
         all = dic['all']
 
         point = dic['point']
 
-        p = 75
-        prob = np.sum(point > np.percentile(all, p)) / point.size
+        p = 90
+        pprob = np.sum(point > np.percentile(all, p))
+        prob = pprob / point.size
 
-        percmax = (prob - (100-p)*0.01) / ((100-p)*0.01) # percentage of cells in warmest 25% of LSTA
+        percmax = (prob - (100-p)*0.01) / ((100-p)*0.01) *100 # percentage of cells in warmest 25% of LSTA
         percmmax.append(percmax)
+        nbmax.append(point > np.percentile(all, p))
 
-        p = 25
-        prob = np.sum(point < np.percentile(all, p)) / point.size
-        percmin =  (prob - p*0.01) / (p*0.01) # percentage of cells in warmest 25% of LSTA
+        low90, upp90 = proportion_confint(pprob, point.size)
+
+        err90_up.append( ((upp90 - (100-p)*0.01) / ((100-p)*0.01) *100) - percmax)
+        err90_low.append(percmax -((low90 - (100 - p) * 0.01) / ((100 - p) * 0.01) * 100) )
+
+        p = 10
+        pprob = np.sum(point < np.percentile(all, p))
+        prob = pprob / point.size
+        percmin =  (prob - p*0.01) / (p*0.01) *100 # percentage of cells in warmest 25% of LSTA
+
         percmmin.append(percmin)
+        nbmin.append(len(point))
+        low10, upp10 = proportion_confint(pprob, point.size)
 
-    plt.figure()
-    plt.plot(np.arange(0,24), percmmax, 'o-', label='90th perc.')
-    plt.plot(np.arange(0, 24), percmmin, 'o-', label='10th perc.')
-    plt.xlabel('Hour')
-    plt.axvline(16, color='k')
-    plt.text(17, 0, 'Start of day')
-    plt.ylabel('NbCells|LSTA gt/lt perc. / NbCells')
+        err10_up.append((upp10 - p*0.01) / (p*0.01) *100 - percmin)
+        err10_low.append( percmin - (low10 - p*0.01) / (p*0.01) *100 )
+
+    f = plt.figure()
+    ax = f.add_subplot(111)
+    ax.bar(np.arange(0,15), percmmin,  label='10th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k') #
+    ax.bar(np.arange(0, 15), percmmax, label='90th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k')
+    ax.set_xticks(np.arange(0, 15))
+    ax.set_xticklabels(rrange)
+
+    ax.set_xlabel('Hour')
+    #plt.axvline(16, color='k')
+
+    #ax.set_xlim(-2,25)
+    #plt.ylabel('NbCells|LSTA gt/lt perc. / NbCells')
+    plt.ylabel('Difference in probability (%)')
     plt.legend()
+
+    ax1 = ax.twiny()
+    ax1.bar(np.arange(0, 15), percmmin, label='10th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k')
+    ax1.bar(np.arange(0, 15), percmmax, label='90th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k')
+    ax1.set_xticks(np.arange(0,15))
+    ax1.set_xticklabels(nbmin, rotation=45)
+    ax1.set_xlabel('Number of convective cores')
+
+    plt.tight_layout()
 

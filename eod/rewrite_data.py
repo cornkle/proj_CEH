@@ -166,7 +166,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
 #  nx : pixel in x direction
 #========================================================================================
 
-def rewriteModis_toNetcdf(file, write=False):
+def rewriteLSTA_toNetcdf(file, write=False):
 
     out = file.replace('modis_raw_binary', 'modis_netcdf')
     if '.gz' in out:
@@ -180,7 +180,7 @@ def rewriteModis_toNetcdf(file, write=False):
     #     print('File exists, continue: ', out)
     #     return
 
-    ll = np.load('/users/global/cornkle/data/OBS/modis_LST/lsta_728_348_lat_lon.npz')
+    ll = np.load('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
 
     blat = ll['lat']
     blon = ll['lon']
@@ -221,7 +221,7 @@ def rewriteModis_toNetcdf(file, write=False):
 #  ny : pixel in y direction
 #  nx : pixel in x direction
 #========================================================================================
-def rewriteModisClim_toNetcdf(file):
+def rewriteLSTAClim_toNetcdf(file):
 
     out = file.replace('modis_raw_binary', 'modis_netcdf')
     if '.gz' in out:
@@ -235,7 +235,7 @@ def rewriteModisClim_toNetcdf(file):
         print('File exists, continue: ', out)
         return
 
-    ll = np.load('/users/global/cornkle/data/OBS/modis_LST/lsta_728_348_lat_lon.npz')
+    ll = np.load('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
 
     blat = ll['lat']
     blon = ll['lon']
@@ -268,146 +268,6 @@ def rewriteModisClim_toNetcdf(file):
     print('Wrote ' + out)
     return
 
-
-#========================================================================================
-# Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
-#  file: lat lon grads file
-#  ny : pixel in y direction
-#  nx : pixel in x direction
-#========================================================================================
-def rewriteGridsat_toNetcdf(file):
-
-    out = file.replace('gridsat_raw_binary', 'gridsat_netcdf')
-    out = out.replace('.gra', '.nc')
-
-    if os.path.isfile(out):
-        print('File exists, continue: ', out)
-        return
-
-    ll = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon.nc')
-
-    blat = ll['lat']
-    blon = ll['lon']
-    ffile = os.path.split(file)[-1]
-
-    llist = ffile.split('.')
-    yr = int(llist[0].split('_')[-1])
-    mon = int(llist[1])
-    day = int(llist[2])
-    hr = int(llist[3])
-
-    date = [pd.datetime(yr, mon, day, hr, 0)]
-
-    rrShape = (ll.shape[1],ll.shape[2])
-
-    rrMDI = np.uint8(255)
-    rr = np.fromfile(file, dtype=rrMDI.dtype)
-    rr.shape = rrShape
-
-    rr = rr.astype(np.int32) - 173
-
-
-    da = xr.DataArray(rr[None, ...], coords={'time':  date,
-                                             'lat':  blat,
-                                             'lon': blon},
-                      dims=['time', 'lat', 'lon'])#.isel(time=0)
-
-
-    ds = xr.Dataset({'t': da})
-
-    try:
-        ds.to_netcdf(out)
-    except OSError:
-        print('Did not find ' + out)
-        print('Out directory not found')
-    print('Wrote ' + out)
-    return
-
-
-def MCSblobs(da, t_threshold=None):
-
-    da.values[da.values > t_threshold] = 0
-    da.values[np.isnan(da.values)] = 0
-
-    labels, numL = label(da.values)
-
-    zarr = np.zeros_like(da.values)
-
-    for l in np.unique(labels):
-        if l == 0:
-            continue
-
-        blob = np.where(labels == l)
-
-        if np.sum(len(blob[0])) < 85:  # at least 1000m2
-            continue
-
-        mean = np.nanmean(da.values[blob])
-
-        zarr[blob] = mean
-
-    da.values = zarr
-    return da
-
-
-
-def rewriteGridsat_extract18Z(file):
-
-    out = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18_panAfrica/'
-    filename = os.path.basename(file)
-    filename = filename.replace('.gra', '.nc')
-    out=out+filename
-
-    if os.path.isfile(out):
-        print('File exists, continue: ', out)
-        return
-
-    ll = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon_Africa.nc')
-    llnew = xr.open_dataarray('/users/global/cornkle/data/OBS/gridsat/latlon_netcdf/lat_lon.nc')
-
-    blat = ll['lat']
-    blon = ll['lon']
-    nlat = llnew['lat']
-    nlon = llnew['lon']
-    ffile = os.path.split(file)[-1]
-
-    llist = ffile.split('.')
-    yr = int(llist[0].split('_')[-1])
-    mon = int(llist[1])
-    day = int(llist[2])
-    hr = int(llist[3])
-
-    date = [pd.datetime(yr, mon, day, hr, 0)]
-
-    rrShape = (ll.shape[1],ll.shape[2])
-
-    rrMDI = np.uint8(255)
-    rr = np.fromfile(file, dtype=rrMDI.dtype)
-    rr.shape = rrShape
-
-    rr = rr.astype(np.int32) - 173
-
-
-    da = xr.DataArray(rr[None, ...], coords={'time':  date,
-                                             'lat':  blat,
-                                             'lon': blon},
-                      dims=['time', 'lat', 'lon'])#.isel(time=0)
-    ###to cut down data area
-    #da = da.sel(lon=slice(np.min(nlon), np.max(nlon)), lat=slice(np.min(nlat), np.max(nlat)))
-
-    ### to keep only MCS areas
-
-    da = MCSblobs(da, t_threshold=-40)
-
-    ds = xr.Dataset({'t': da})
-
-    try:
-        ds.to_netcdf(out)
-    except OSError:
-        print('Did not find ' + out)
-        print('Out directory not found')
-    print('Wrote ' + out)
-    return
 
 
 

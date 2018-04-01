@@ -89,7 +89,7 @@ def cut_kernel(zpos, ypos, xpos, da):
 
 
 def composite():
-    hour = 17
+    hour = 2
     mds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
     mds = mds.sel(lat=slice(10.5,18), lon=slice(-9.5,9.5))
     

@@ -131,7 +131,7 @@ def probability(precip=None,thresh=None):
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
-    dic = pkl.load(open(path + '3dmax_gt15000_lax_nonan.p', 'rb')) #noR lax_nonan
+    dic = pkl.load(open(path + '3dmax_gt15000_lax_nonan_dominant.p', 'rb')) #noR lax_nonan
 
     scales = np.array(dic['scale'])
 
@@ -166,15 +166,15 @@ def probability(precip=None,thresh=None):
 
     print('Convective fraction <-80, all scales', np.sum((tconv <= -80) & (pconv >= 8)) / np.sum((tconv <= -80) & (pconv2>=0)))
 
-    tconv = np.concatenate(tmin[(scales<=35)])
-    pconv = np.concatenate(psum[(scales <= 35)])
-    pconv2 = np.concatenate(pcsum[(scales <= 35)])
+    tconv = np.concatenate(tmin[(scales<=20)])
+    pconv = np.concatenate(psum[(scales <= 20)])
+    pconv2 = np.concatenate(pcsum[(scales <= 20)])
 
     print('Convective fraction <-80', np.sum((tconv<=-80) & (pconv>=8)) / np.sum((tconv<=-80) & (pconv2>=0)))
     print('Convective fraction <-90', np.sum((tconv <= -87) & (pconv >= 8)) / np.sum((tconv <= -87) & (pconv2 >= 0)))
 
-    print('Convective fraction <-67', np.sum((tconv <= -70) & (pconv >= 8)) / np.sum((tconv <= -70) & (pconv2 >= 0)))
-    print('Convective fraction <-67', np.sum((tconv <= -70) & (pconv2 >= 30)) / np.sum((tconv <= -70) & (pconv2 >= 0)))
+    print('Convective fraction <-50', np.sum((tconv <= -50) & (pconv >= 8)) / np.sum((tconv <= -50) & (pconv2 >= 0)))
+    print('Extreme fraction <-50', np.sum((tconv <= -50) & (pconv2 >= 30)) / np.sum((tconv <= -50) & (pconv2 >= 0)))
 
     bins = np.array(list(range(-95, -44, 5)))  # compute probability per temperature range (1degC)
     print(bins)
@@ -323,7 +323,7 @@ def plot():
 
 
     plt.tight_layout()
-    plt.savefig(fpath + 'wavelet_scale_p_T_paper_lax.png')
+    plt.savefig(fpath + 'wavelet_scale_p_T_paper_lax_dominant.png')
     # plt.savefig(path + 'wavelet_scale_p_T.pdf')
     plt.close('all')
 

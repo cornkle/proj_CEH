@@ -42,7 +42,7 @@ def quick_map_salem(xar, save = None, levels=None, vmax=None, vmin=None, cmap=No
     #map.set_shapefile(rivers=True)
     f = plt.figure(figsize=(10, 6), dpi=300)
     map.set_plot_params()
-    map.set_data(xar, interp='linear')
+    map.set_data(xar) # interp='linear'
     map.set_plot_params(levels=levels, cmap=cmap, extend='both',vmax=vmax, vmin=vmin)
     map.visualize()
 
