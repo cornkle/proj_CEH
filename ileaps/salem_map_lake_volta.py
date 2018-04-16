@@ -13,18 +13,18 @@ from matplotlib import lines
 import shapely.geometry as shpg
 
 
-path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'
+path = '/users/global/cornkle/MCSfiles/'
 figpath = '/users/global/cornkle/figs/Ileaps/'
 
-# file2 = path+'blob_map_30km_sum_18UTC.nc'
-# file = path+'blob_map_30km_sum_3UTC.nc'
-file2 = path+'blob_map_35km_-75_sum_16-17UTC.nc'
+file2 = path+'blob_map_35km_-65_JJAS_sum_18UTC.nc'
+file = path+'blob_map_35km_-65_JJAS_sum_03UTC.nc'
+#file2 = path+'blob_map_35km_-75_sum_16-17UTC.nc'
 
-file=path+'blob_map_35km_-75_sum_0-3UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
+#file=path+'blob_map_35km_-75_sum_0-3UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
 
 fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
 #lst = '/users/global/cornkle/data/LandCover/evergreen_trees.tif'
-lst = '/users/global/cornkle/data/LandCover/evergreen_trees.tif'
+lst = '/localscratch/wllf030/cornkle/obs_data/LandCover/evergreen_trees.tif'
 vegfra = '/users/global/cornkle/data/MODIS/vegfra/Average.tif'
 
 tfile = '/users/global/cornkle/data/MODIS/LST/acp_0130MYD_h17v08_regridded.nc'
@@ -197,5 +197,5 @@ ax1.set_ylabel('Average elevation (m)')
 print(pearsonr(dsp.values.flatten(), dsp2.values.flatten()))
 
 
-plt.savefig(figpath+'cross_'+name+'.png', dpi=300)
+#plt.savefig(figpath+'cross_'+name+'.png', dpi=300)
 plt.show()

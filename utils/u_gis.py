@@ -1,9 +1,8 @@
-import salem
-from salem.utils import get_demo_file
-import xarray as xr
+
 import numpy as np
 from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
-from utils import u_grid as ug
+from utils import u_met
+from utils import u_gis
 import pdb
 import math
 from math import radians, cos, sin, asin, sqrt
@@ -122,6 +121,15 @@ def parallax_corr_msg(slon, slat, plon, plat, height):
         lax_y = lax_y * -1
 
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
+
+
+def call_parallax_era(month, t_cloud, lon_cloud, lat_cloud, lon_sat, lat_sat):
+
+    height = u_met.era_Tlapse_height(month, t_cloud, lon_cloud, lat_cloud)  # height in meters
+    km, coords = u_gis.parallax_corr_msg(lon_sat, lat_sat, lon_cloud, lat_cloud, height / 1000)
+
+    return km, coords
+
 
 
 

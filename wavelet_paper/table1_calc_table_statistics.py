@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import pdb
 
 
-dic = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_zR.p', 'rb'))
-dic2 = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
-scf =  pkl.load(open('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_noR.p', 'rb'))
+dic = pkl.load( open ('/users/global/cornkle/papers/wavelet/saves/bulk_40big_zR.p', 'rb'))
+dic2 = pkl.load( open ('/users/global/cornkle/papers/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
+scf =  pkl.load(open('/users/global/cornkle/papers/wavelet/saves/pandas/3dmax_gt15000_lax_nonan_dominant_fulldomain.p', 'rb')) #3dmax_gt15000_noR
 
 
 p = np.array(dic['pmax'])
@@ -14,6 +14,7 @@ p2 = np.array(dic2['pmax'])
 
 p30 = np.array(dic['po30'])
 p302 = np.array(dic2['po30'])
+
 pconv = np.array(dic2['pc'])
 ponly = np.array(dic2['p'])
 clat = np.array(dic2['clat'])
@@ -55,6 +56,7 @@ tmin = np.array(scf['circle_Tcentre'])
 isfin_scf = np.array(scf['circle_val'])
 isnz_scf = np.array(scf['circle_nz'])
 p_scf = np.array(scf['circle_g30'])
+p_scf = p_scf[np.array(scf['scale'])<=60]
 pmax_scf = np.array(scf['bulk_pmax'])
 pcmax_scf = np.array(scf['circle_max'])
 pp_scf = np.concatenate(np.array(scf['circle_p']))
@@ -112,50 +114,50 @@ print('Small nb', a.size)
 print('Big nb', a2.size)
 print('SCF nb', np.unique(ids).size)
 
-
 print('Lostpixel big', 100- (np.nansum(p302)/np.nansum(p30))*100)
 print('Lostpixel SCF', 100- (np.nansum(p_scf)/np.nansum(p30))*100)
 
-f=plt.figure()
-plt.hist(hours,bins=np.arange(-0.5,24, 1)+0.5, edgecolor='black')
-plt.title('Number big storms')
 
-
-f=plt.figure()
-plt.scatter(hours, a2)
-plt.title('Number big storms')
-
-f=plt.figure()
-for h in range(0,24,1):
-    plt.scatter(h,np.percentile(a2[hours==h], 95))
-    plt.title('95th percentile area of big storms')
-plt.show()
-
-
-f=plt.figure()
-for h in range(0,24,1):
-
-    plt.scatter(h, np.nansum((p2>=30) & (hours==h)& (clat>=13))/np.nansum((hours==h) & (clat>=13)))
-    plt.title('Count: max is extreme')
-plt.show()
-
-f=plt.figure()
-for h in range(0,24,1):
-
-    plt.scatter(h, np.nansum(p302[(hours==h) & (clat>=13)])/np.nansum(isfin2[(hours==h) & (clat>=13)]))
-    plt.title('Count: Probability per pixel for extreme')
-plt.show()
-
-f=plt.figure()
-for h in range(0,24,1):
-
-    plt.scatter(h, np.nansum((p2>=30) & (hours==h)& (clat>=13))/np.nansum((hours==h) & (clat>=13)))
-    plt.title('Count: max is extreme')
-plt.show()
-
-f=plt.figure()
-for h in range(0,24,2):
-    dummy = np.concatenate(np.array(dic2['p'])[(hours>=h) & (hours<=h+1)  & (clat>=13)])
-    plt.scatter(h, np.nansum(dummy>=25)/np.nansum(dummy>=3))
-    plt.title('Count: Probability per rainy pixel for extreme')
-plt.show()
+# f=plt.figure()
+# plt.hist(hours,bins=np.arange(-0.5,24, 1)+0.5, edgecolor='black')
+# plt.title('Number big storms')
+#
+#
+# f=plt.figure()
+# plt.scatter(hours, a2)
+# plt.title('Number big storms')
+#
+# f=plt.figure()
+# for h in range(0,24,1):
+#     plt.scatter(h,np.percentile(a2[hours==h], 95))
+#     plt.title('95th percentile area of big storms')
+# plt.show()
+#
+#
+# f=plt.figure()
+# for h in range(0,24,1):
+#
+#     plt.scatter(h, np.nansum((p2>=30) & (hours==h)& (clat>=13))/np.nansum((hours==h) & (clat>=13)))
+#     plt.title('Count: max is extreme')
+# plt.show()
+#
+# f=plt.figure()
+# for h in range(0,24,1):
+#
+#     plt.scatter(h, np.nansum(p302[(hours==h) & (clat>=13)])/np.nansum(isfin2[(hours==h) & (clat>=13)]))
+#     plt.title('Count: Probability per pixel for extreme')
+# plt.show()
+#
+# f=plt.figure()
+# for h in range(0,24,1):
+#
+#     plt.scatter(h, np.nansum((p2>=30) & (hours==h)& (clat>=13))/np.nansum((hours==h) & (clat>=13)))
+#     plt.title('Count: max is extreme')
+# plt.show()
+#
+# f=plt.figure()
+# for h in range(0,24,2):
+#     dummy = np.concatenate(np.array(dic2['p'])[(hours>=h) & (hours<=h+1)  & (clat>=13)])
+#     plt.scatter(h, np.nansum(dummy>=25)/np.nansum(dummy>=3))
+#     plt.title('Count: Probability per rainy pixel for extreme')
+# plt.show()

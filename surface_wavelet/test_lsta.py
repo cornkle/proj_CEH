@@ -19,13 +19,12 @@ from scipy import ndimage
 
 
 
-def modis():
-    files = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/'
+def lsta():
 
-    msg = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/*.nc')
+    msg = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_new/*.nc')
     msg = msg['LSTA']
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
-    msg = msg[ (msg['time.month']>= 7) ]
+    msg = msg[ (msg['time.month']>=6) ]
 
     msg = msg.where(msg>-900)
 
@@ -41,13 +40,14 @@ def modis():
 
 
 def blobs():
-    file = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points.nc'
+    #file = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points.nc'
+    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
     fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
     msg = xr.open_dataarray(file)
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
-    msg = msg[ (msg['time.month'] >= 7 )  ]
-    msg = msg.where(msg > -900)
-    msg.values[msg.values<=-40] = 1
+    msg = msg[ (msg['time.month'] >= 6 )  ]
+    msg = msg.where(msg > 6)
+    msg.values[msg.values>6] = 1
     msg = msg.sum(dim='time')
 
 

@@ -117,6 +117,15 @@ def draw_cut_circle(x, y, radius, array):
     return (ycirc, xcirc)
 
 
+"""
+Find all indices creating the ring of a local circle of radius but remove indeces that
+are out of an area box, specified with an 2d array.
+Input:
+x: x index of center point
+y: y index of center point
+radius: radius in pixels, floats are handled including the farthest point
+Returns a tuple of (y index, x index)
+"""
 def draw_ring(x, y, inrad, outrad, array):
 
     in_ycirc, in_xcirc = draw_cut_circle(x, y, inrad, array)
@@ -133,6 +142,64 @@ def draw_ring(x, y, inrad, outrad, array):
         out_xcirc = np.delete(out_xcirc, nok)
 
     return (out_ycirc, out_xcirc)
+
+
+def cut_kernel(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 2:
+        raise IndexError('Cut kernel only allows 2D arrays.')
+
+    kernel = np.zeros((dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[1]:
+        xmax = kernel.shape[1]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[1])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[1])
+
+    if ypos + dist_from_point < array.shape[0]:
+        ymax = kernel.shape[0]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[0])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[0])
+
+    cutk = array[ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
+
+
+
+
+
 
 
 

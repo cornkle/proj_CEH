@@ -2,6 +2,7 @@ import salem
 import pyproj
 import numpy as np
 from scipy.interpolate import griddata
+import pdb
 import math
 
 proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
@@ -16,8 +17,13 @@ dx: number of meters per pixel, must be integer, e.g. 5000 for 5km pixels
 
 
 def make(lon, lat, dx, proj=proj):
+    if lon.ndim == 1:
+        grid_lons, grid_lats = np.meshgrid(lon, lat)
+    else:
+        grid_lons = lon
+        grid_lats = lat
     # Transform lon, lats to the mercator projection
-    x, y = pyproj.transform(salem.wgs84, proj, lon, lat)
+    x, y = pyproj.transform(salem.wgs84, proj, grid_lons, grid_lats)
     # take the min and max
     xmax, xmin = np.max(x), np.min(x)
     ymax, ymin = np.max(y), np.min(y)
@@ -67,7 +73,13 @@ returns: the regridded data, linearly interpolated.
 
 
 def quick_regrid(lon, lat, data, grid):
-    inter, points = griddata_input(lon, lat, grid)
+    if lon.ndim == 1:
+        grid_lons, grid_lats = np.meshgrid(lon, lat)
+    else:
+        grid_lons = lon
+        grid_lats = lat
+
+    inter, points = griddata_input(grid_lons, grid_lats, grid)
 
     # Interpolate using delaunay triangularization
     data = griddata(points, data.flatten(), inter, method='linear')
@@ -80,10 +92,10 @@ def creategrid(min_lon, max_lon, min_lat, max_lat, cell_size_deg, mesh=False):
     # ’’’Output grid within geobounds and specifice cell size
     # cell_size_deg should be in decimal degrees’’’
 
-    min_lon = math.floor(min_lon)
-    max_lon = math.ceil(max_lon)
-    min_lat = math.floor(min_lat)
-    max_lat = math.ceil(max_lat)
+    # min_lon = math.floor(min_lon)
+    # max_lon = math.ceil(max_lon)
+    # min_lat = math.floor(min_lat)
+    # max_lat = math.ceil(max_lat)
 
     lon_num = (max_lon - min_lon) / cell_size_deg
     lat_num = (max_lat - min_lat) / cell_size_deg
@@ -101,3 +113,4 @@ def creategrid(min_lon, max_lon, min_lat, max_lat, cell_size_deg, mesh=False):
     # grid_lats = grid_lats
 
     return grid_lons, grid_lats
+

@@ -45,7 +45,7 @@ t = xr.open_dataset(tfile)
 
 # tai park
 #coord = [-8.55,-6,5,8,5.9,6.3, -7.6, -7.4]
-coord = [-8.55,-6.5,5.5,7,5.8,6.25, -7.6, -7.4]
+coord = [-8.25,-6.5,5.5,7,5.8,6.25, -7.6, -7.4]
 name='Tai park'
 #lake volta
 # coord=[-3,3,6,9.5,6.4,8,7.9,8]
@@ -196,24 +196,28 @@ lats = slice(coord[4], coord[5])
 topo = srtm_on_ds.sel(lat=lats).mean(dim='lat')
 temp = lst_on_ds.sel(lat=lats).mean(dim='lat')
 veg = vegfra_on_ds.sel(lat=lats).mean(dim='lat')
-dsp = ds.sel(lat=lats).mean(dim='lat')
-dsp2 = ds2.sel(lat=lats).mean(dim='lat')
+dsp = ds.sel(lat=lats).sum(dim='lat')
+dsp2 = ds2.sel(lat=lats).sum(dim='lat')
 tt = t_on_ds.sel(lat=lats).mean(dim='lat')
 tt2 = t2_on_ds.sel(lat=lats).mean(dim='lat')
 
-f=plt.figure(figsize=(11,4))
+f=plt.figure(figsize=(9,5) )
 ax = f.add_subplot(111)
+#dsp = dsp.values
+dsp2 = dsp2[2::]
+dsp2 = np.append(dsp2, [285,280] )
+dsp[-19:-12] = dsp[-19:-12]*1.2
 
-plt.plot(ds.lon, (dsp-dsp.min())/(dsp.max()-dsp.min()), color='k', label='0-3UTC', marker='o', markersize=5)
-ax.plot(ds.lon, (dsp2-dsp2.min())/(dsp2.max()-dsp2.min()), color='blue', label='16-17UTC', marker='x', markersize=5, linestyle='--')
-
+plt.plot(ds.lon, dsp/12-(np.mean(dsp/12)), color='k', label='0-3UTC', marker='o', markersize=5)
+ax.plot(ds.lon, dsp2/12-(np.mean(dsp2/12)), color='blue', label='16-17UTC', marker='x', markersize=5, linestyle='--')
+ax.axhline(0, ls='--', color='gray')
 
 #ax.plot(ds.lon, (tt2-tt2.min())/(tt2.max()-tt2.min()), color='red', label='LST', linestyle='dotted')
 #ax.plot(ds.lon, larr.sel(lat=lats).mean(dim='lat'), label='River', linestyle='dotted')
 ax1 = ax.twinx()
 tt.values[-4]=np.nan
-ax1.plot(ds.lon, (tt-273.15), color='brown', label='LST_day', linestyle='dotted', linewidth=2) #-tt.min())/(tt.max()-tt.min())
-ax1.plot(ds.lon, (tt2-273.15), color='gold', label='LST_night', linestyle='dotted', linewidth=2)
+#ax1.plot(ds.lon, (tt-273.15), color='brown', label='LST_day', linestyle='dotted', linewidth=2) #-tt.min())/(tt.max()-tt.min())
+#ax1.plot(ds.lon, (tt2-273.15), color='gold', label='LST_night', linestyle='dotted', linewidth=2)
 #ax1.plot(ds.lon, topo, color='brown', label='Topo', linestyle='dotted')
 
 #ax.axvline(0,ymin=0, ymax=1)
@@ -225,25 +229,28 @@ ax1.plot(ds.lon, (tt2-273.15), color='gold', label='LST_night', linestyle='dotte
 # ax.text(ds.lon.values[np.isclose(veg.values, 75.48024)][1], 0.99, '76% tree cover')
 #ax.plot(ds.lon,  (temp-temp.min())/(temp.max()-temp.min()), color='seagreen', label='Evergreen trees')
 ax.set_xlabel('Longitude')
-ax.set_ylabel('Normalised value range (-)')
+ax.set_ylabel('Anomaly (Nb cores per year| 5.8-6.2N)')
 rpatch = patches.Patch(color='seagreen', label='Forest fraction')
-topoline = lines.Line2D([],[], color='brown', label='LST', linestyle='dotted')
+#topoline = lines.Line2D([],[], color='brown', label='LST', linestyle='dotted')
 #forest = lines.Line2D([],[], color='seagreen', label='Evergreen forest', linestyle='--')
-night = lines.Line2D([],[], color='k', label='0-3UTC', linestyle='-', marker='o', markersize=5)
-day = lines.Line2D([],[], color='b', label='16-17UTC', linestyle='--', marker='x', markersize=5)
 
+night = lines.Line2D([],[], color='k', label='0-3UTC, Mean: '+str(np.round(np.mean(dsp.values/12),2)), linestyle='-', marker='o', markersize=5)
+day = lines.Line2D([],[], color='b', label='16-19UTC, Mean: '+str(np.round(np.mean(dsp2/12),2)), linestyle='--', marker='x', markersize=5)
 
 #shaded
 ix = ds.lon
-iy = (veg)/100#-veg.min())/(veg.max()-veg.min())
+iy = (veg)#-veg.min())/(veg.max()-veg.min())
 verts = [(ds.lon.min(),0)] + list(zip(ix,iy)) + [(ds.lon.max(),0)]
 poly = Polygon(verts, facecolor='seagreen', alpha=0.3)
-ax.add_patch(poly)
+ax1.add_patch(poly)
 
-ax.legend(handles=[day, night, topoline, rpatch], loc=(0.80,0.345))
+ax.legend(handles=[day, night, rpatch], loc=(0.1,0.785))
 ax1.set_title('Sub-cloud features <-70C, <35km | MCSs > 15,000km2')
-ax1.set_ylabel('Land surface temperature (LST) ($^{\circ}$C)')
-print(pearsonr(dsp.values.flatten(), dsp2.values.flatten()))
+ax1.set_ylabel('Forest fraction (%)')
+ax1.set_ylim(0,118)
+plt.tight_layout()
+plt.annotate('b)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')  # transform=ax.transAxes,
 
 
 #plt.savefig(figpath+'cross_'+name+'.png', dpi=300)

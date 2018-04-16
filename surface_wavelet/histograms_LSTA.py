@@ -40,12 +40,15 @@ def cut_kernel(zpos, ypos, xpos, da):
     except ValueError:
         return
 
+    if lpoint == 0:
+        return
+
     return lpoint
 
 
 def composite(hour):
     #hour = 18
-    mds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc', autoclose=True)
+    mds = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_*.nc', autoclose=True)
     mds = mds.sel(lat=slice(10,17), lon=slice(-10,10))
     #mds = mds.isel(time=slice(150,300))
     pos = np.where((mds['cell'].values==hour) )
@@ -94,7 +97,7 @@ def composite(hour):
             'point' : point,
 
     }
-
+    pdb.set_trace()
     pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_test"+str(hour).zfill(2)+".p", "wb"))
 
     #
@@ -179,7 +182,7 @@ def plot_diurn():
 
     for h in rrange:
 
-        dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_shift0"+str(h).zfill(2)+".p", "rb"))
+        dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_noshift"+str(h).zfill(2)+".p", "rb"))
         print('Open')
         all = dic['all']
 
@@ -210,7 +213,7 @@ def plot_diurn():
         err10_up.append((upp10 - p*0.01) / (p*0.01) *100 - percmin)
         err10_low.append( percmin - (low10 - p*0.01) / (p*0.01) *100 )
 
-    f = plt.figure()
+    f = plt.figure(figsize=(9,5))
     ax = f.add_subplot(111)
     ax.bar(np.arange(0,15), percmmin,  label='10th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k') #
     ax.bar(np.arange(0, 15), percmmax, label='90th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k')
@@ -233,4 +236,6 @@ def plot_diurn():
     ax1.set_xlabel('Number of convective cores')
 
     plt.tight_layout()
+    plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')  # transform=ax.transAxes,
 

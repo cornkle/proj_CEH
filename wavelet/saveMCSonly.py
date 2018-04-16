@@ -24,11 +24,11 @@ def run():
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
     pool = multiprocessing.Pool(processes=7)
 
-    m = msg.ReadMsg(msg_folder)
+    m = msg.ReadMsg(msg_folder, y1=2006, y2=2010)
     files  = m.fpath
 
     #files = files[1050:1057]
-    mdic = m.read_data(files[0], llbox=[-11, 11, 9, 20])
+    mdic = m.read_data(files[0]) #, llbox=[-11, 11, 9, 20]
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
 
@@ -51,23 +51,22 @@ def run():
 
     pool.close()
 
-
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_30km_-67_JJAS_points_smaller15000.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_35km_-65_JJAS_18UTC.nc'
 
     try:
         os.remove(savefile)
     except OSError:
         pass
-    da.to_netcdf(path=savefile, mode='w')
+    #da.to_netcdf(path=savefile, mode='w')
     #
-    # das = da.sum(dim='time')
-    #
-    # das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-67_JJAS_sum_17-19UTC.nc')
+    das = da.sum(dim='time')
+    #those
+    das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-70_JJAS_sum_0-3UTC.nc')
 
     print('Saved ' + savefile)
 
@@ -90,9 +89,9 @@ def file_loop(passit):
         print('Skip month')
         return
 
-    # if not ((np.int(strr[8:10]) >= 20)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
-    #     print('Skip hour')
-    #     return
+    if not ((np.int(strr[8:10]) <= 3)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
+        print('Skip hour')
+        return
 
     lon, lat = grid.ll_coordinates
 
@@ -102,7 +101,7 @@ def file_loop(passit):
 
         print('Doing file: ' + file)
         try:
-            mdic = m.read_data(file, llbox=[-11, 11, 9, 20])
+            mdic = m.read_data(file) #, llbox=[-11, 11, 9, 20]
         except FileNotFoundError:
             print('File not found')
             return
@@ -126,8 +125,8 @@ def file_loop(passit):
         #
         # da.to_netcdf('/users/global/cornkle/test.nc')
         # return
-        t_thresh_size = -32
-        t_thresh_cut = -50
+        t_thresh_size = -40 # -32
+        t_thresh_cut = -50 # -50
         outt[outt>=t_thresh_size] = 0
         outt[np.isnan(outt)] = 0
 
@@ -190,7 +189,7 @@ def file_loop(passit):
 
             orig = float(arr[nb])
 
-            if orig >25:#> 30:  #scale filter
+            if orig >35:#> 30:  #scale filter
                  continue
 
             scale = int(np.round(orig))
@@ -204,7 +203,7 @@ def file_loop(passit):
                 wl == ndimage.maximum_filter(wl, (5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
             try:
-                yy, xx = np.where((maxout == 1) & (outt <= -67) & (wl > orig**.5) )  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
+                yy, xx = np.where((maxout == 1) & (outt <= -70) & (wl > orig**.5) )  # )& (wl > orig**.5) (wl >= np.percentile(wl[wl >= 0.1], 90)) )#(wl > orig**.5))#  & (wlperc > orig**.5))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80)))# & (wlperc > np.percentile(wlperc[wlperc>=0.1], 80) ))  # & (wl100 > 5)
             except IndexError:
                 continue
 
@@ -217,7 +216,7 @@ def file_loop(passit):
 
                 ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[y, x] = outt[y,x]
+                figure[ycirc, xcirc] = 1#outt[y,x]
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)
@@ -229,12 +228,12 @@ def file_loop(passit):
         # plt.contourf(outt)
         # plt.contour(figure)
 
-        figure[figure == 0] = np.nan
-        f = plt.figure()
-        f.add_subplot(111)
-        plt.imshow(outt, cmap='inferno')
-        plt.imshow(figure, cmap='viridis')
-        plt.plot(xxx, yyy, 'yo', markersize=3)
+        # figure[figure == 0] = np.nan
+        # f = plt.figure()
+        # f.add_subplot(111)
+        # plt.imshow(outt, cmap='inferno')
+        # plt.imshow(figure, cmap='viridis')
+        # plt.plot(xxx, yyy, 'yo', markersize=3)
         # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
         # # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
         # # ax.coastlines()
@@ -245,7 +244,7 @@ def file_loop(passit):
         # plt.imshow(outt, cmap='inferno')
         #
         # plt.plot(xxx, yyy, 'yo', markersize=3)
-        plt.show()
+        #plt.show()
 
         # if np.sum(figure) < 10:
         #     return

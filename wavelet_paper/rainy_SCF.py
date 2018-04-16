@@ -16,9 +16,9 @@ import sys
 from wavelet_paper import fig9_latitude_var as lv
 
 
-fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+fpath = '/users/global/cornkle/papers/wavelet/figs/paper/'
 #path = 'D://data/wavelet/saves/pandas/'
-path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+path = '/users/global/cornkle/papers/wavelet/saves/pandas/'
 dic = pkl.load(open(path+'3dmax_gt15000_lax_nonan_dominant.p', 'rb'))
 
 # bulk = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))

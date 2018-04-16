@@ -13,15 +13,19 @@ from scipy.interpolate import griddata
 
 def saveNetcdf():
 
-    modis_folder = '/users/global/cornkle/data/OBS/modis_LST/modis_raw_binary'
+    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     pool = multiprocessing.Pool(processes=7)
     files = glob.glob(modis_folder+'/lsta_daily_2*.gra')
 
     for f in files:
-        ds = rewrite_data.rewriteModis_toNetcdf(f, write=True)
+        ds = rewrite_data.rewriteLSTA_toNetcdf(f, write=True)
 
 
 def saveDailyBlobs():
+    """
+    Converts hourly centre-point convective-core files to daily netcdf files so they can be saved with LSTA daily data
+    :return:
+    """
 
     msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
     msg = xr.open_dataarray(msgfile)
@@ -51,7 +55,7 @@ def saveDailyBlobs():
 
 def saveNetcdf_blobs():
 
-    modis_folder = '/users/global/cornkle/data/OBS/modis_LST/modis_raw_binary'
+    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     td = pd.Timedelta('16 hours')
     files = glob.glob(modis_folder + '/lsta_daily_2*.gra')
 
@@ -105,60 +109,19 @@ def saveNetcdf_blobs():
 
 
 
-def saveNetcdf_power():
+def saveNetcdf_fromLST():
     pass
 
-    # ds = xr.open_mfdataset('/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_*.nc')
-    #
-    # lsta = ds['LSTA']
-    #
-    # points = np.where(np.isfinite(lsta.values))
-    # inter1 = np.where(np.isnan(lsta.values))
-    #
-    # try:
-    #     lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
-    # except ValueError:
-    #     continue
-    #
-    # inter = np.where(np.isnan(lsta))
-    # try:
-    #     lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
-    # except ValueError:
-    #     continue
-    # # lsta[inter1]=0
-    #
-    # wav = util.waveletLSTA_dom(lsta.values, 3)
-    #
-    # wl = wav['dominant']
-    #
-    # wl[inter[0], inter[1]] = np.nan
-    # wl[inter1[0], inter1[1]] = np.nan
-    # # f = plt.figure()
-    # # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
-    # scales = wav['scales']
-    #
-    # print(scales)
-    #
-    # ds['LSTA'].values = wl[None, ...]
-    # ds.attrs['scales'] = scales
-    #
-    # try:
-    #     os.remove(outfile)
-    # except OSError:
-    #     pass
-    # ds.to_netcdf(path=outfile, mode='w')
-    #
-    # print('Saved ' + outfile)
+    mf = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LST/lst_netcdf/lst_daily_*.nc')
 
+    pool = multiprocessing.Pool(processes=7)
 
+    mf['ymonth'] = ('time', [str(y)+'-'+str(m) for (y,m) in zip(mf['time.year'].values,mf['time.month'].values)])
+    minus =  mf.groupby('ymonth').mean(dim='time')
+    dso = mf.groupby('ymonth') - minus
 
-
-
-
-
-
-
-
+    for d in dso:		
+    	d.to_netcdf('/users/global/cornkle/data/OBS/MSG_LST/lsta_netcdf_new/lsta_daily_'+str(d['time.year'].values)+.str(d['time.month'].values)+str(d['time.day'].values)+'.nc')
 
 
 def saveClimNetcdf():

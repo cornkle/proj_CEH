@@ -19,8 +19,8 @@ import pdb
 from collections import OrderedDict
 import matplotlib.cm as cm
 import pickle as pkl
-from cold_cloud_trend import era_geop_t3d as era_geop
-from utils import u_gis
+
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -29,7 +29,7 @@ matplotlib.rc('ytick', labelsize=10)
 def composite():
     pool = multiprocessing.Pool(processes=7)
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size_zR/')   # /WA30/
-    out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
+    out = '/users/global/cornkle/papers/wavelet/saves/pandas/'
     #files = files[0:1500]
     print('Nb files', len(files))
     tt = 'WA15'
@@ -83,11 +83,11 @@ def composite():
         precip[v[2]].extend(v[20])
 
 
-    pkl.dump(dic, open(out+'3dmax_gt15000_lax_nonan_dominant.p','wb'))
+    pkl.dump(dic, open(out+'3dmax_gt15000_lax_nonan_dominant_fulldomain.p','wb'))
 
-    pkl.dump(precip, open(out+'precip_3dmax_gt15000_lax_nonan_dominant.p','wb'))
+    #pkl.dump(precip, open(out+'precip_3dmax_gt15000_lax_nonan_dominant.p','wb'))
 
-    pkl.dump(comp_collect, open(out + 'comp_collect_composite_lax_nonan_dominant.p', 'wb'))
+    #pkl.dump(comp_collect, open(out + 'comp_collect_composite_lax_nonan_dominant.p', 'wb'))
 
 
 def file_loop(fi):
@@ -134,7 +134,10 @@ def file_loop(fi):
     clat = np.min(dic.lat.values) + ((np.max(dic.lat.values) - np.min(dic.lat.values)) * 0.5)
     clon = np.min(dic.lon.values) + ((np.max(dic.lon.values) - np.min(dic.lon.values)) * 0.5)
 
-    if (clon > 10) or (clon < -10) or (clat < 10):
+    # if (clon > 10) or (clon < -10) or (clat < 10):
+    #     return
+
+    if (clon > 28) or (clon < -17.2) or (clat < 4.1):
         return
 
     lat_min = np.min(dic.lat.values)
@@ -194,10 +197,10 @@ def file_loop(fi):
 
             ss = orig
             iscale = (np.ceil(ss / 2. / 5.)).astype(int)
-            # if ss <= 20:
-            #     iscale = iscale + 1
+            if ss <= 20:
+                iscale = iscale + 1
 
-            ycirc, xcirc = ua.draw_cut_circle(x, y, 3, outt) # 15km radius in every direction for all scales
+            ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt) # 15km radius in every direction for all scales
 
             figure[ycirc, xcirc] = np.round(orig)
             xxx.append(x)
@@ -211,13 +214,17 @@ def file_loop(fi):
 
     xx = []
     yy = []
-
+    cnt = 0
     for y, x, sc in zip(yyy[::-1], xxx[::-1], scal[::-1]):
 
         if figure[y, x] == 0:
             continue
 
-        # if sc < 150:
+        if cnt > 0:
+            bulk_g30 = bulk_g30*0
+
+
+        # if sc < 150:spoti
         #     continue
 
         xx.append(x)
@@ -226,9 +233,9 @@ def file_loop(fi):
         int_sc = np.round(sc)
         radius = sc
         iscale = (np.ceil(radius / 2. / 5.)).astype(int)
-        # if int_sc <= 20:
-        #     iscale = iscale + 1
-        ycircf, xcircf = ua.draw_cut_circle(x, y, 3, outt)
+        if int_sc <= 20:
+            iscale = iscale + 1
+        ycircf, xcircf = ua.draw_cut_circle(x, y, iscale, outt) # 20km radius
 
         pos = np.where((figure[ycircf, xcircf] == int_sc))
         if len(pos[0]) <= 3:
@@ -238,16 +245,14 @@ def file_loop(fi):
         t_para = np.nanmean(outt[ycircf[pos], xcircf[pos]])
 
 
-        if sc < 90:
-            height = era_geop.era_Tlapse(int(dic['time.month']), t_para,lon[y,x], lat[y,x]) # height in meters
-            km, coords = u_gis.parallax_corr_msg(0, 0,lon[y,x], lat[y,x], height/1000 )
-            lx, ly = km
-            print(t_para, height, lx,ly)
-            lx = int(np.round(lx/5.))
-            ly = int(np.round(ly/5.))  # km into pixels
-        else:
-            lx = 0
-            ly = 0
+        # if sc < 90:
+        #     km, coords = u_gis.call_parallax_era(int(dic['time.month']), t_para, lon[y,x], lat[y,x], 0, 0)
+        #     lx, ly = km
+        #     lx = int(np.round(lx/5.))
+        #     ly = int(np.round(ly/5.))  # km into pixels
+        # else:
+        lx = 0
+        ly = 0
 
         # print(lx,ly)
         # plt.imshow(outt)
@@ -278,17 +283,28 @@ def file_loop(fi):
 
         #
         #
-        # if (int_sc >= 150) | (int_sc == 15):
-        #     # outp[ycircf[pos] - ly, xcircf[pos] - lx] = 1000
-        #     # outt[ycircf[pos], xcircf[pos]] = 1000
-        #     f = plt.figure()
-        #     plt.imshow(outp, cmap='jet')
-        #     f = plt.figure()
-        #     plt.imshow(outt, cmap='jet')
-        #     f = plt.figure()
-        #     plt.imshow(figure, cmap='jet')
+        if (int_sc >=90):
+            # outp[ycircf[pos] - ly, xcircf[pos] - lx] = 1000
+            # outt[ycircf[pos], xcircf[pos]] = 1000
+            ppos = np.where(outp>=30)
 
-        if ((circle_valid) < 3):
+            outt[np.isnan(outt)] = -40
+            # f = plt.figure()
+            # plt.imshow(outp, cmap='jet', origin='lower')
+            # f = plt.figure()
+            # plt.pcolormesh(outt, cmap='jet')
+            f = plt.figure()
+            plt.imshow(outt, cmap='jet', origin='lower')
+
+            plt.contour(outp, cmap='viridis', vmin=20)
+            figure[figure < 15] = np.nan
+            plt.contourf(figure,cmap='Reds', vmin=9, title='dominant')
+            plt.plot(ppos[1], ppos[0], 'ro')
+
+            f = plt.figure()
+            plt.imshow(figure, cmap='jet', origin='lower')
+
+        if ((circle_valid) < 2):
             continue
 
         circle_sum = np.nansum(circle_p)
@@ -313,6 +329,8 @@ def file_loop(fi):
             circle_p90 = np.nan
 
         #maxs[posi, y, x] = 1
+
+        cnt = cnt+1
 
         ret.append((kernel, kernelt, int_sc, id, dic['time.hour'].values.tolist(),
                     clat, clon, lat_min, lat_max, lon_min, lon_max, area,

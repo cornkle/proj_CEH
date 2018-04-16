@@ -30,24 +30,23 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_POINTS_DOM
+    file = constants.TRMM5KM_FILE
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
+    msg = msg[(msg['time.hour'] == hour)  &(
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
 
-    dic = u_parallelise.run_arrays(8,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+    dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_topo"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -77,7 +76,7 @@ def composite(h):
 
     ax = f.add_subplot(233)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  vmin=-0.6, vmax=0.6) #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  vmin=-2, vmax=2) #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -89,7 +88,7 @@ def composite(h):
 
     ax = f.add_subplot(234)
 
-    plt.contourf((dic['ano'] / dic['cnt']) - (dic['rano'] / dic['rcnt']), cmap='RdBu_r',  vmin=-1.5, vmax=1.5)
+    plt.contourf((dic['ano'] / dic['cnt']) - (dic['rano'] / dic['rcnt']), cmap='RdBu_r',  vmin=-2, vmax=2)
     plt.plot(extent,extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -124,8 +123,8 @@ def composite(h):
               fontsize=10)
 
     plt.tight_layout()
-
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/test/comp/'+str(hour).zfill(2)+'_small.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    #
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/test/comp/TRMM_'+str(hour).zfill(2)+'_small.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 
@@ -157,7 +156,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
     cnt[np.isfinite(kernel)] = 1
 
     if kernel.shape != (201, 201):
-        pdb.set_trace()
+        return
 
     return kernel, kernel3, cnt
 
@@ -185,6 +184,7 @@ def file_loop(fi):
     try:
         lsta = xr.open_dataset(constants.LSTA + 'lsta_daily_' + fdate + '.nc')
     except OSError:
+        print('No data')
         return None
     print('Doing '+ 'lsta_daily_' + fdate + '.nc')
 
@@ -203,7 +203,8 @@ def file_loop(fi):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where( (fi.values >= 5) & (fi.values < 65))
+
+    pos = np.where(fi.values >= 30)
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
@@ -217,7 +218,10 @@ def file_loop(fi):
 
     randx = np.random.randint(0,xfi,100)
 
-    randy = np.random.randint(np.min(pos[0]),np.max(pos[0]),100)
+    try:
+        randy = np.random.randint(np.min(pos[0]), np.max(pos[0]), 100)
+    except ValueError:
+        return None
     posr = (randy, randx)
 
     rkernel2_list = []

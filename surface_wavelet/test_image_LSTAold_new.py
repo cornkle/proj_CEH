@@ -10,9 +10,7 @@ import time
 import matplotlib.gridspec as gridspec
 from scipy.interpolate import griddata
 from utils import u_grid
-from utils import u_plot
 import matplotlib
-import salem as sm
 
 #nice example 25.06.2006
 
@@ -21,25 +19,42 @@ import salem as sm
 #2.8.2009
 #29.07.2007
 
-DATE = {'day' : 19,
-        'month' : 7,
+DATE = {'day' : 12,
+        'month' : 8,
         'year' : 2009}
 
 def run_waveletDry():
 
 
-    file = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+    file = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_new/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+    file2 = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_' + str(DATE['year']) + str(
+        DATE['month']).zfill(2) + str(DATE['day']).zfill(2) + '.nc'
 
     ds = xr.open_dataset(file)
+    ds2 = xr.open_dataset(file2)
     ds = ds.sel(lon=slice(-10,10), lat=slice(10,18))
+    ds2 = ds2.sel(lon=slice(-10, 10), lat=slice(10, 18))
 
     lsta = ds['LSTA'][0,:,:]
-    cells = ds['cell'][0,:,:]
+    cells = ds2['cell'][0,:,:]
 
+    # f = plt.figure()
+    # plt.imshow(lsta)
+
+    lsta = lsta.where(lsta>-800)
     lsta_raw = lsta.copy()
+    #lsta_raw.values[lsta_raw.values>0] =10
+    #lsta_raw.values[lsta_raw.values < 0] = -10
+
+
+    #lsta = lsta - lsta.mean()set
+
+    # f = plt.figure()
+    # plt.imshow(lsta.values)
 
     points = np.where(np.isfinite(lsta.values))
     inter1 = np.where(np.isnan(lsta.values))
+
 
     lsta.values[inter1] = griddata(points, np.ravel((lsta.values)[points]), inter1, method='linear')
     inter = np.where(np.isnan(lsta))
@@ -52,15 +67,16 @@ def run_waveletDry():
     wl = wav['dominant']
     power = wav['power']
 
-    power[:, inter1[0], inter1[1]] = np.nan
-    wl[inter1[0], inter1[1]] = np.nan
-
+    # wl[inter[0], inter[1]] = np.nan
+    # wl[inter1[0], inter1[1]] = np.nan
+    # f = plt.figure()
+    # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
     scales = wav['scales']
 
     print(scales)
 
-       # for id, s in enumerate(scales):
-       #     wl[id, :, :][wl[id, :, :] <= s ** .5] = 0
+  #  for id, s in enumerate(scales):
+  #      wl[id, :, :][wl[id, :, :] <= s ** .5] = 0
 
     return wl, scales, power, lsta, inter1, cells, lsta_raw
 
@@ -86,6 +102,9 @@ def wav_checkDry():
 
     wll, scales, power, lsta, inter, cells, lsta_raw = run_waveletDry()
 
+    # day = xr.open_dataarray(dayp)
+    # night = xr.open_dataarray(nightp)
+    #cells[np.isnan(cells)]=-1
 
     latmin, latmax = (np.min(lsta['lat']), np.max(lsta['lat']))
     lonmin, lonmax = (np.min(lsta['lon']), np.max(lsta['lon']))
@@ -94,80 +113,54 @@ def wav_checkDry():
     #smarr = sm['SM'].sel(time=daystring)
 
     wllmean0=wll
-    ppower_small= np.nansum(power[0:9,:,:], axis=0)
-    ppower_big = np.nansum(power[-9::, :, :], axis=0)
-    print(scales[0:9])
-    print(scales[7:10])
+    ppower_small= np.nansum(power[0:8,:,:], axis=0)
+    ppower_big = np.nansum(power[-8::, :, :], axis=0)
+    print(scales[0:8])
 
     xv, yv = np.meshgrid(lsta['lon'], lsta['lat'])
-    cmap = u_plot.discrete_cmap(24, base_cmap='gist_ncar')
-
-    era = xr.open_dataset('/local/localscratch/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc')
-    eday = era.sel(longitude=slice(-10, 10), latitude=slice(18, 10),
-                   time=str(DATE['year']) + str(DATE['month']).zfill(2) + str(DATE['day']).zfill(2))
-
-    eday['p55.162'][0, :, :].plot.pcolormesh()
 
     f= plt.figure()
-
-    ax1=f.add_subplot(2,2,1)
-    # cmap= plt.get_cmap('RdBu_r')
-    # cmap.set_bad(color='gray', alpha=1.)
-    # plt.pcolormesh(lsta['lon'], lsta['lat'], lsta_raw, vmin=-8, vmax=8, cmap=cmap)
-    #
+    f.add_subplot(2,2,1)
+    cmap= plt.get_cmap('RdBu_r')
+    cmap.set_bad(color='gray', alpha=1.)
+    plt.pcolormesh(lsta['lon'], lsta['lat'], lsta_raw, vmin=-8, vmax=8, cmap=cmap)
+    plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    plt.colorbar()
+    # plt.contour(lsta['lon'], lsta['lat'], wllmean0, cmap='jet')
     # plt.colorbar()
-    map = lsta.salem.get_map()
-    xl, yl = map.grid.transform(xv, yv)
-    map.set_data(lsta_raw)
+
+    #plt.plot(day_pos[1], day_pos[0], 'ro')
 
 
-    map.set_plot_params(cmap='RdBu_r', vmin=-8, vmax=8, extend='both')
-    map.visualize(ax=ax1, addcbar=False )
-    cax = ax1.scatter(xl, yl, c=cells, cmap=cmap, s=5)
-    cbar = plt.colorbar(cax, ticks=np.arange(0,24))
-    cbar.set_ticklabels(np.array(np.arange(0,24), dtype=str))
-
-
-    plt.title(str(pd.to_datetime(lsta['time'].values))+' LSTA')
+    plt.title(str(pd.to_datetime(lsta['time'].values))+' DRY anomaly DAYTIME')
 
     f.add_subplot(2, 2, 2)
     # plt.contourf(smarr['lon'], smarr['lat'], smarr.values[0,:,:], vmin=-8, vmax=8, nlevels=7, cmap='RdBu_r')
     # plt.colorbar()
     # plt.contour(night['lon'], night['lat'], night, cmap='prism')
-    arr = np.zeros_like(lsta2.values)
-    arr[lsta2.values<-0] = -4
-    arr[lsta2.values>0] = 4
-
-    plt.pcolormesh(lsta['lon'], lsta['lat'], arr, vmin=-8, vmax=8, cmap='RdBu_r')
-    plt.colorbar()
-    plt.contour(eday['longitude'], eday['latitude'], eday['p55.162'][0,:,:])
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
+    plt.pcolormesh(lsta['lon'], lsta['lat'], lsta2, vmin=-8, vmax=8, cmap=cmap)
+    plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
     #
     # plt.contourf(day_small['lon'], day_small['lat'], night, cmap='viridis')
 
-    plt.title(str(pd.to_datetime(lsta['time'].values)) + ' Land surface temperature anomaly, +/-4')
-
+    plt.title(str(pd.to_datetime(lsta['time'].values)) + ' LSTA following day')
+    plt.colorbar()
 
     f.add_subplot(2, 2, 3)
     #plt.contourf(day_small['lon'], day_small['lat'], day_small)
-    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_small, cmap='Reds', vmax=10)
+    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_small, cmap='Reds', vmax=30)
     plt.colorbar()
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    #plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
-    plt.title('Wavelet powers < 42km')
-
+    plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    plt.title('Deep conv. frequency, <50C:, Reds: wavelet power')
 
     f.add_subplot(2, 2, 4)
     #plt.contourf(night['lon'], night['lat'], night)
-    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_big, cmap='Reds', vmax=10)
+    plt.pcolormesh(lsta['lon'], lsta['lat'], wllmean0, cmap='RdBu_r', vmin=-90, vmax=90)
     plt.colorbar()
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    #plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
     #plt.gca().invert_yaxis()
 
-    plt.title('Wavelet powers  35-51km')
-
-    plt.figure()
+    plt.title('Deep conv. frequency, <50C:, Reds: wavelet power')
 
 
 

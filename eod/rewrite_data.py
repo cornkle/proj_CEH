@@ -13,6 +13,7 @@ from utils import u_arrays as uarr
 import pandas as pd
 from utils import u_time as ut
 import datetime as dt
+from utils import u_grid
 import xarray as xr
 import pdb
 from scipy.ndimage.measurements import label
@@ -102,22 +103,6 @@ def rewriteMsgLonLat_Sahel():
     llsavefile = '/users/global/cornkle/data/OBS/meteosat_SA15/MSG_728_350_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
-#========================================================================================
-# Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
-#========================================================================================
-def rewriteMsgLonLat_IODC_TIR():
-    llFile = '/users/global/cornkle/Emma/TIR/lat_lon_nx326_ny201.gra'
-
-    llShape = (201,326)
-    llMDI = np.float32(13.5)
-    ll = np.fromfile(llFile,dtype=llMDI.dtype)
-    lon = ll[0:201*326]
-    lat = ll[201*326:]
-    lat.shape = llShape
-    lon.shape = llShape
-
-    llsavefile = '/users/global/cornkle/Emma/TIR/lat_lon_nx326_ny201'
-    np.savez(llsavefile,lon=lon,lat=lat)
 
 #========================================================================================
 # Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
@@ -269,5 +254,53 @@ def rewriteLSTAClim_toNetcdf(file):
     return
 
 
+def rewrite_AMSRE(file):
 
+    out = file.replace('raw', 'nc')
+    out = out.replace('.gra', '.nc')
+    day=True
+    if day:
+        hour = 13
+    else:
+        hour = 1
 
+    print('Doing ' + file)
+    #full_globe, 0.25deg
+    blat = np.arange(-89.875,90, 0.25)
+    blon = np.arange(-179.875,180, 0.25)
+
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+    yr = int(llist[0][-8:-4])
+    mon = int(llist[0][-4:-2])
+    day = int(llist[0][-2::])
+
+    date = [pd.datetime(yr, mon, day, hour, 0)]
+
+    rrShape = (blat.shape[0], blon.shape[0])
+
+    rr = np.array(np.fromfile(file, dtype=np.int8()), dtype=float)
+    rr.shape = rrShape
+    rr = np.flip(rr,axis=0)
+
+    da = xr.DataArray(rr[None, ...], coords={'time': date,
+                                             'lat': blat,
+                                             'lon': blon},
+                      dims=['time', 'lat', 'lon'])  # .isel(time=0)
+
+    da.values[da.values==-1] = np.nan
+    if np.sum(da.values) == np.nan:
+        return
+
+    ds = xr.Dataset({'SM': da})
+
+    ds = ds.sel(lon=slice(-17,20), lat=slice(0,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return ds

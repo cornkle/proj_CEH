@@ -60,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-25000_JJAS_-50-points_dominant.nc'
 
     try:
         os.remove(savefile)
@@ -128,7 +128,7 @@ def file_loop(passit):
         #
         # da.to_netcdf('/users/global/cornkle/test.nc')
         # return
-        t_thresh_size = -32
+        t_thresh_size = -40
         t_thresh_cut = -50
         outt[outt>=t_thresh_size] = 0
         outt[np.isnan(outt)] = 0
@@ -138,7 +138,7 @@ def file_loop(passit):
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        badinds = u[(n < 600)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+        badinds = u[(n < 1000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
 
         for bi in badinds:
             inds = np.where(labels == bi)
@@ -213,7 +213,7 @@ def file_loop(passit):
 
                 ycirc, xcirc = ua.draw_cut_circle(x, y, iscale, outt)
 
-                figure[ycirc, xcirc] = scale  #outt
+                figure[y, x] = scale  #outt
                 xxx.append(x)
                 yyy.append(y)
                 scal.append(orig)
@@ -224,14 +224,14 @@ def file_loop(passit):
         # plt.contourf(outt)
         # plt.contour(figure)
 
-        figure[figure == 0] = np.nan
-        f = plt.figure()
-        f.add_subplot(111)
-        plt.imshow(outt, cmap='inferno')
-        plt.imshow(figure, cmap='viridis')
-        plt.colorbar()
-        plt.plot(xxx, yyy, 'yo', markersize=3)
-        ax = f.add_subplot(132, projection=ccrs.PlateCarree())
+        # figure[figure == 0] = np.nan
+        # f = plt.figure()
+        # f.add_subplot(111)
+        # plt.imshow(outt, cmap='inferno')
+        # plt.imshow(figure, cmap='viridis')
+        # plt.colorbar()
+        # plt.plot(xxx, yyy, 'yo', markersize=3)
+        # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
         # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
         # ax.coastlines()
         # ax.add_feature(cartopy.feature.BORDERS, linestyle='--');

@@ -9,6 +9,7 @@ import numpy as np
 import xarray as xr
 from wavelet import util
 from utils import u_arrays as ua
+
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib
@@ -19,7 +20,7 @@ import pdb
 from collections import OrderedDict
 import matplotlib.cm as cm
 import pickle as pkl
-from cold_cloud_trend import era_geop_t3d as era_geop
+
 from utils import u_gis
 
 matplotlib.rc('xtick', labelsize=10)
@@ -237,27 +238,33 @@ def file_loop(fi):
         t_para = np.nanmean(outt[ycircf[pos], xcircf[pos]])
 
 
-        if sc < 90:
-            height = era_geop.era_Tlapse(int(dic['time.month']), t_para,lon[y,x], lat[y,x]) # height in meters
-            km, coords = u_gis.parallax_corr_msg(0, 0,lon[y,x], lat[y,x], height/1000 )
-            lx, ly = km
-            print(t_para, height, lx,ly)
-            lx = int(np.round(lx/5.))
-            ly = int(np.round(ly/5.))  # km into pixels
-        else:
-            lx = 0
-            ly = 0
+        # if sc < 90:
+        #     km, coords = u_gis.call_parallax_era(int(dic['time.month']), t_para, lon[y,x], lat[y,x], 0, 0)
+        #     lx, ly = km
+        #     lx = int(np.round(lx/5.))
+        #     ly = int(np.round(ly/5.))  # km into pixels
+        # else:
+        lx = 0
+        ly = 0
 
-        # print(lx,ly)
-        # plt.imshow(outt)
-        # f = plt.figure()
-        # plt.imshow(figure)
-        # f = plt.figure()
-        # plt.imshow(outp)
-        # outt[ycircf[pos], xcircf[pos]] = 150
-        # outt[ycircf[pos]-ly, xcircf[pos]-lx] = 300
-        # f = plt.figure()
-        # plt.imshow(outt)
+        if (int_sc >= 90):
+            # outp[ycircf[pos] - ly, xcircf[pos] - lx] = 1000
+            # outt[ycircf[pos], xcircf[pos]] = 1000
+            ppos = np.where(outp >= 30)
+
+            outt[np.isnan(outt)] = -40
+            f = plt.figure()
+            # plt.imshow(outp, cmap='jet', origin='lower')
+            # f = plt.figure()
+            # plt.imshow(outt, cmap='jet', origin='lower')
+            # f = plt.figure()
+            plt.imshow(outt, cmap='jet', origin='lower')
+
+            plt.contour(outp, cmap='viridis', vmin=20)
+            figure[figure<15] = np.nan
+            plt.contourf(figure, cmap='Reds', vmin=9)
+            plt.plot(ppos[1], ppos[0], 'ro')
+
 
         r = 20
         kernel = tm_utils.cut_kernel(outp, x-lx, y-ly, r)
