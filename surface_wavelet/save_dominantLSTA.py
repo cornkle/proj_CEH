@@ -26,48 +26,44 @@ def run_netcdf():
                 'year': y}
 
 
-        file = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
-        outfile = '/users/global/cornkle/data/OBS/modis_LST/modis_netcdf/power_maps/lsta_daily_powerMaxscale_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+        file = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+        outfile = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/dominant_maps/lsta_daily_powerMaxscale_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
 
         ds = xr.open_dataset(file)
-        ds = ds.sel(lon=slice(-10,10), lat=slice(10,20))
-        lsta = ds['LSTA'][0,:,:]
+        #ds = ds.sel(lon=slice(-10, 10), lat=slice(10, 18))
 
-        # f = plt.figure()
-        # plt.imshow(lsta)
+        lsta = ds['LSTA'].squeeze()
 
-        lsta[lsta<-800] = np.nan
-
-
-        lsta = lsta   - lsta.mean()
-
-        points = np.where(np.isfinite(lsta.values))
         inter1 = np.where(np.isnan(lsta.values))
-        try:
-            lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
-        except ValueError:
-            continue
+        lsta[inter1] = 0
 
-        inter = np.where(np.isnan(lsta))
-        try:
-            lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
-        except ValueError:
-            continue
-        #lsta[inter1]=0
-
-        wav = util.waveletLSTA_dom(lsta.values,3)
-
+        wav = util.waveletLSTA_dom(lsta.values, 3)
+        # points = np.where(np.isfinite(lsta.values))
+        #
+        # try:
+        #     lsta.values[inter1] = griddata(points, np.ravel(lsta.values[points]), inter1, method='linear')
+        # except ValueError:
+        #     continue
+        #
+        # inter = np.where(np.isnan(lsta))
+        # try:
+        #     lsta.values[inter] = griddata(points, np.ravel(lsta.values[points]), inter, method='nearest')
+        # except ValueError:
+        #     continue
         wl = wav['dominant']
+        try:
+            power = wav['power']
+        except KeyError:
+            power = wav['power_dry']
 
-        wl[inter[0], inter[1]] = np.nan
+        power[:, inter1[0], inter1[1]] = np.nan
         wl[inter1[0], inter1[1]] = np.nan
-        # f = plt.figure()
-        # plt.imshow(wl, cmap='RdBu', vmin=9, vmax=120)
+
         scales = wav['scales']
 
-        print(scales)
 
         ds['LSTA'].values = wl[None, ...]
+
         ds.attrs['scales'] = scales
 
         try:

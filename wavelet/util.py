@@ -141,7 +141,14 @@ def waveletLSTA_dom(t, dt):
     powerTIR = powerTIR / (scales2d * scales2d)
 
     maxperpix = np.argmax(powerTIR, axis=0)
+    perc = []
+    for i in range(powerTIR.shape[0]):
+        sp = np.percentile(powerTIR[i,:,:],20)
+        perc.append(sp)
+    perc = np.array(perc)
+
     dom_scale = np.zeros_like(tir)
+    power_scale = np.zeros_like(tir)
     scales = (period2d / 2.)
     for i in range(maxperpix.shape[0]):
         for j in range(maxperpix.shape[1]):
@@ -154,12 +161,12 @@ def waveletLSTA_dom(t, dt):
             if ptest < 0:
                 scal = scal*-1
                 pttest = pttest*-1
-            # if pttest < 0.05:
+            # if pttest < perc[max]:
             #     scal=np.nan
-
+            power_scale[i,j] = pttest
             dom_scale[i,j] = scal
 
-    dic['power'] = powerTIR
+    dic['power'] = power_scale
     dic['scales'] = scales
     dic['dominant'] = dom_scale
 
@@ -199,7 +206,7 @@ def waveletLSTA_domLocMax(t, dt):
                 continue
             pt = np.real(powerTIRR[:, i, j])
 
-            print('Max scales', scales[x], x)
+           # print('Max scales', scales[x], x)
 
             scal = scales[ind]
             ptest = pt[ind]
@@ -220,38 +227,79 @@ def waveletLSTA_domLocMax(t, dt):
 
 
 
-def waveletLSTA_both(t, dt):
+def waveletLSTA_both(t, dt, dom=False):
+
+    def dom_get(wseries, tpoint, scales):
+
+        values = (np.abs(wseries)) * (np.abs(wseries))
+        values = values / (scales * scales)
+
+        maxoutt = (values == ndimage.maximum_filter(values, 15, mode='reflect'))
+
+        try:
+            x = np.where(
+                (maxoutt == 1))  # & (np.abs(parr) > scales ** .5)# ((wl >= np.percentile(wl[wl >= 0.5], 90)) &
+        except IndexError:
+            return False
+        try:
+            ind = (x[0])[0]
+        except IndexError:
+            return False
+
+        scal = scales[ind]
+        wavelet_pos_neg = np.real(wseries)[ind]
+
+        if (wavelet_pos_neg < 0) : #| (tpoint < -1.)
+            scal = scal * -1
+        # if values[ind] < 0.02:
+        #     scal = np.nan
+        return scal
+
     dic = {}
 
     tir = t.copy()
     mother2d = w2d.Mexican_hat()
-    powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
-    scales2d.shape = (len(scales2d), 1, 1)
-    powerTIRR_dry = powerTIRR
+    powerTIRR_dry, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    powerTIRR_dry[np.real(powerTIRR_dry <= 0)] = 0
 
-    #powerTIRR_dry[np.real(powerTIRR_dry <= 0)] = 0
+    tir = tir * -1
+    powerTIRR_wet, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    powerTIRR_wet[np.real(powerTIRR_wet <= 0)] = 0
+
+    period2d = 1. / freqs2d
+    scales = (period2d / 2.)
+    scales2d.shape = (len(scales2d), 1, 1)
+
     powerTIR_dry = (np.abs(powerTIRR_dry)) * (np.abs(powerTIRR_dry))
     powerTIR_dry = powerTIR_dry / (scales2d * scales2d)
 
-    tir = tir*-1
-    powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
-    scales2d.shape = (len(scales2d), 1, 1)
-    powerTIRR_wet = powerTIRR
-    #powerTIRR_wet[np.real(powerTIRR_wet <= 0)] = 0
     powerTIR_wet = (np.abs(powerTIRR_wet)) * (np.abs(powerTIRR_wet))
     powerTIR_wet = powerTIR_wet / (scales2d * scales2d)
 
-    period2d = 1. / freqs2d
-
-    scales = (period2d / 2.)
-
-    # for id, s in enumerate(scales):
-    #     (powerTIR_wet[id, :, :])[powerTIR_wet[id, :, :] <= np.percentile(powerTIR_wet[id, :, :],50)] = 0
-    #     (powerTIR_dry[id, :, :])[powerTIR_dry[id, :, :] <= np.percentile(powerTIR_dry[id, :, :],50)] = 0
+    for id, s in enumerate(scales):
+        (powerTIR_wet[id, :, :])[powerTIR_wet[id, :, :] <= np.percentile(powerTIR_wet[id, :, :],50)] = 0
+        (powerTIR_dry[id, :, :])[powerTIR_dry[id, :, :] <= np.percentile(powerTIR_dry[id, :, :],50)] = 0
 
     dic['power_dry'] = powerTIR_dry
     dic['power_wet'] = powerTIR_wet
     dic['scales'] = scales
+
+    if dom:
+        dom_scale = np.zeros_like(tir) * np.nan
+        for i in range(powerTIRR_dry.shape[1]):
+            for j in range(powerTIRR_dry.shape[2]):
+                parr_dry = powerTIRR_dry[:, i, j]
+                parr_wet = powerTIRR_wet[:, i, j]
+                tpoint = t[i,j]
+
+                scal_dry = dom_get(parr_dry, tpoint, scales)
+                scal_wet = dom_get(parr_wet, tpoint, scales)
+
+                scal_pos = np.argmin([np.abs(scal_dry), np.abs(scal_wet)])
+                scal_arr = scal_dry # [scal_dry,scal_wet][scal_pos]
+
+                dom_scale[i, j] = scal_arr
+        dic['dominant'] = dom_scale
 
     return dic
 

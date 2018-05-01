@@ -47,12 +47,15 @@ def run_waveletDry():
     lsta[inter1]=0
     # f = plt.figure()
     # plt.imshow(lsta.values)
-    wav = util.waveletLSTA_domLocMax(lsta.values,3)
+    wav = util.waveletLSTA_dom(lsta.values,3)
 
     wl = wav['dominant']
-    power = wav['power']
+    try:
+        power = wav['power']
+    except KeyError:
+        power = wav['power_dry']
 
-    power[:, inter1[0], inter1[1]] = np.nan
+    power[inter1[0], inter1[1]] = np.nan
     wl[inter1[0], inter1[1]] = np.nan
 
     scales = wav['scales']
@@ -94,21 +97,9 @@ def wav_checkDry():
     daystring = str(DATE['year'])+'-'+str(DATE['month']).zfill(2)+'-'+str(DATE['day']).zfill(2)
 
     wllmean0=wll
-    ppower_small= np.nansum(power[0:4,:,:], axis=0)
-    ppower_big = np.nansum(power[4:7, :, :], axis=0)
-    ppower_biggest = np.nansum(power[7::, :, :], axis=0)
-    print(scales[0:4])
-    print(scales[4:7])
-    print(scales[7::])
 
     xv, yv = np.meshgrid(lsta['lon'], lsta['lat'])
     cmap = u_plot.discrete_cmap(24, base_cmap='gist_ncar')
-
-    era = xr.open_dataset(constants.ERA_DAILY_SRFC_ANO)
-    eday = era.sel(longitude=slice(-10, 10), latitude=slice(18, 10),
-                   time=str(DATE['year']) + str(DATE['month']).zfill(2) + str(DATE['day']).zfill(2))
-
-    eday['ws10'][0,:,:].plot.pcolormesh() #'p84.162'
 
     f= plt.figure()
 
@@ -122,7 +113,6 @@ def wav_checkDry():
     xl, yl = map.grid.transform(xv, yv)
     map.set_data(lsta_raw)
 
-
     map.set_plot_params(cmap='RdBu_r', vmin=-8, vmax=8, extend='both')
     map.visualize(ax=ax1, addcbar=False )
     cax = ax1.scatter(xl, yl, c=cells, cmap=cmap, s=5)
@@ -131,53 +121,49 @@ def wav_checkDry():
 
 
     plt.title(str(pd.to_datetime(lsta['time'].values))+' LSTA')
-    #
-    # f.add_subplot(2, 2, 2)
-    # # plt.contourf(smarr['lon'], smarr['lat'], smarr.values[0,:,:], vmin=-8, vmax=8, nlevels=7, cmap='RdBu_r')
-    # # plt.colorbar()
-    # # plt.contour(night['lon'], night['lat'], night, cmap='prism')
-    # arr = np.zeros_like(lsta2.values)
-    # arr[lsta2.values<-0] = -4
-    # arr[lsta2.values>0] = 4
-    #
-    # plt.pcolormesh(lsta['lon'], lsta['lat'], arr, vmin=-8, vmax=8, cmap='RdBu_r')
-    # plt.colorbar()
-    # plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    # #
-    # # plt.contourf(day_small['lon'], day_small['lat'], night, cmap='viridis')
-    #
-    # plt.title(str(pd.to_datetime(lsta['time'].values)) + ' Land surface temperature anomaly, +/-4')
 
 
-    f.add_subplot(2, 2, 3)
+
+    ax2 = f.add_subplot(2, 2, 2)
+    map.set_data(wllmean0)
+    minscales = [np.flip(np.array(scales)*-1, axis=0), np.array(scales)]
+
+    map.set_plot_params(cmap='RdBu_r', vmin=-200, vmax=200)
+    map.visualize(ax=ax2, addcbar=True)
     #plt.contourf(day_small['lon'], day_small['lat'], day_small)
-    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_small, cmap='RdBu_r', vmin=-10, vmax=10)
-    plt.colorbar()
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    #plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    # plt.pcolormesh(lsta['lon'], lsta['lat'], wllmean0, cmap='RdBu_r', vmin=-200, vmax=200)
+    # plt.colorbar()
+    ax2.scatter(xl, yl, c=cells, cmap=cmap, s=5)
     plt.title('Wavelet powers < 42km')
 
+    ax3 = f.add_subplot(2, 2, 3)
+    map.set_data(power)
 
-    f.add_subplot(2, 2, 4)
-    #plt.contourf(night['lon'], night['lat'], night)
-    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_big, cmap='RdBu_r', vmin=-10, vmax=10)
-    plt.colorbar()
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    #plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
-    #plt.gca().invert_yaxis()
+    map.set_plot_params(cmap='RdBu_r', vmin=-10, vmax=10)
+    map.visualize(ax=ax3, addcbar=True)
+    ax2.scatter(xl, yl, c=cells, cmap=cmap, s=5)
+    plt.title('Wavelet powers < 42km')
 
-    plt.title('Wavelet powers  35-51km')
-
-    f.add_subplot(2, 2, 2)
-    # plt.contourf(night['lon'], night['lat'], night)
-    plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_biggest, cmap='RdBu_r', vmin=-10, vmax=10)
-    plt.colorbar()
-    plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
-    # plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
-    # plt.gca().invert_yaxis()
-
-    plt.title('Wavelet powers  35-51km')
-
+    # f.add_subplot(2, 2, 4)
+    # #plt.contourf(night['lon'], night['lat'], night)
+    # plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_big, cmap='RdBu_r', vmin=-10, vmax=10)
+    # plt.colorbar()
+    # plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
+    # #plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    # #plt.gca().invert_yaxis()
+    #
+    # plt.title('Wavelet powers  35-51km')
+    #
+    # f.add_subplot(2, 2, 2)
+    # # plt.contourf(night['lon'], night['lat'], night)
+    # plt.pcolormesh(lsta['lon'], lsta['lat'], ppower_biggest, cmap='RdBu_r', vmin=-10, vmax=10)
+    # plt.colorbar()
+    # plt.scatter(xv, yv, c=cells, cmap=cmap, s=5)
+    # # plt.scatter(xv, yv, c=cells, cmap='jet', s=5)
+    # # plt.gca().invert_yaxis()
+    #
+    # plt.title('Wavelet powers  35-51km')
+    #
 
 
 
