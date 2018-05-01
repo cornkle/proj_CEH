@@ -195,6 +195,57 @@ def cut_kernel(array, xpos, ypos, dist_from_point):
 
     return kernel
 
+def cut_kernel_3d(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 3:
+        raise IndexError('Cut kernel3d only allows 3D arrays.')
+
+    kernel = np.zeros((array.shape[0], dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[2]:
+        xmax = kernel.shape[2]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[2])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[2])
+
+    if ypos + dist_from_point < array.shape[1]:
+        ymax = kernel.shape[1]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[1])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[1])
+
+    cutk = array[:, ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[:, ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
 
 
 

@@ -138,7 +138,7 @@ def file_loop(passit):
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        badinds = u[(n < 1000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+        badinds = u[(n < 3000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
 
         for bi in badinds:
             inds = np.where(labels == bi)

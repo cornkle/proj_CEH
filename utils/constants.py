@@ -3,6 +3,7 @@
 ERA_MONTHLY_TUVWZ_AFRICA = '/localscratch/wllf030/cornkle/ERA-I/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
 ERA_DAILY_SURFACE =   '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc'
 ERA_DAILY_PL = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc'
+ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
 
 
 LSTA_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/lsta_topo.nc'
@@ -11,7 +12,7 @@ TOPO_1MIN = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min
 MSG5KM_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/msg5km_topo.nc'
 
 MCS_POINTS_DOM = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
-MCS_DOM = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_gt15k.nc'
+MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_gt15k.nc'
 
 
 

@@ -3,6 +3,7 @@ from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
 from utils import constants
+import pdb
 
 
 def u_v_to_ws_wd(u,v):
@@ -13,10 +14,14 @@ def u_v_to_ws_wd(u,v):
     :return: tuple (wind speed, wind direction (convention "wind coming from")
     """
 
-    ws = np.sqrt(u*u + v*v)
-    wd = 180. + np.arctan2(u, v) * 180./ np.pi  # dir where wind is coming from
-    if ws == 0:
-        wd = np.nan
+    ws = np.array(np.sqrt(u*u + v*v))
+    wd = np.array(180. + np.arctan2(u, v) * 180./ np.pi)  # dir where wind is coming from
+    pos = np.where(ws == 0)
+    try:
+        wd[pos] = np.nan
+    except IndexError:
+        pass
+
     return ws,wd
 
 
@@ -89,5 +94,47 @@ def era_wind_rotate(array, ptime, lat, lon, level=None, ref_angle=None):
     v = point[vstr].values
     ws, wd = u_v_to_ws_wd(u, v)
     rot_array = inter.rotate(array, ref_angle - wd, reshape=False, cval=np.nan, prefilter=False)
+
+    return rot_array
+
+def era_wind_rotate3d(array, ptime, lat, lon, level=None, ref_angle=None):
+    """
+
+    :param array: 2d array
+    :param ptime: pandas time step to choose ERA-time (daily at 12UTC)
+    :param lat: latitude
+    :param lon: longitude
+    :param level:  ERA pressure level in hPa, note: level 0 means surface. Available: 0, 925, 850, 700, 600
+    :param ref_angle: the reference angle to rotate to (direction where all wind should come from)
+    :return: rotated array
+    """
+    if array.ndim != 3:
+        raise IndexError('Cut kernel only allows 3D arrays.')
+
+    if ref_angle==None:
+        ref_angle=0
+
+    if level==None:
+        level= 0
+        ustr = 'u10'
+        vstr = 'v10'
+    if level == 0:
+        era = xr.open_dataset(constants.ERA_DAILY_SURFACE)
+        point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime)
+    else:
+        era = xr.open_dataset(constants.ERA_DAILY_PL)
+        point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime, level=level)
+        ustr = 'u'
+        vstr = 'v'
+
+    u = point[ustr].values
+    v = point[vstr].values
+    ws, wd = u_v_to_ws_wd(u, v)
+    rot_array = np.zeros_like(array)
+
+    for s in range(array.shape[0]):
+        torot = array[s,:,:]
+        rot = inter.rotate(torot, ref_angle - wd, reshape=False, cval=np.nan, prefilter=False)
+        rot_array[s,:,:] = rot
 
     return rot_array

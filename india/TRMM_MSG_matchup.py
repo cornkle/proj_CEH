@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
-
 import salem
-import pyproj
 import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage.measurements import label
@@ -10,7 +6,6 @@ import datetime as dt
 from eod import msg, trmm, tm_utils
 import xarray as xr
 import os
-import ipdb
 import matplotlib.pyplot as plt
 from utils import u_grid
 import pdb
@@ -19,23 +14,23 @@ HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)
 
 
-def saveMCS_WA15():
+def saveMCS():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
 
-    t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 4, 20, 25])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
+    t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 4, 20, 25])  # (ll_lon, ll_lat, ur_lon, ur_lat) define initial TRMM box and scan for swaths in that box
     m = msg.ReadMsg(msg_folder)
 
     cnt = 0
 
-    # define the "0 lag" frist
+    # minute array to find closest MSG minute
     arr = np.array([15, 30, 45, 60, 0])
 
-    # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
+    # loop through TRMM dates - only dates that have a certain number of pixels in llbox are considered
     for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
 
-        tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[3, 26])
-        #get closest minute
+        tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[3,26]) # cut TRMM data at lower/upper lat
+        #get value of closest minute
         dm = arr - _mi
         dm = dm[dm<0]
         try:
@@ -43,7 +38,7 @@ def saveMCS_WA15():
         except ValueError:
             continue
 
-        # set zero shift time for msg
+        # set smallest lag time for msg
         date = dt.datetime(_y, _m, _d, _h, _mi)
 
         dt0 = dm[ind]
@@ -54,6 +49,7 @@ def saveMCS_WA15():
         # check whether date is completely missing or just 30mins interval exists
         if not mdic:
             dm = np.delete(dm, np.argmin(np.abs(dm)), axis=0)
+            # try second closest minute
             try:
                 dummy = np.min(np.abs(dm))> 15
             except ValueError:
@@ -67,23 +63,22 @@ def saveMCS_WA15():
             m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
             mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lat'].values.min(), tdic['lon'].values.max(),
                                      tdic['lat'].values.max()])
-
             if not mdic:
                 print('Date missing')
                 continue
 
         print('TRMM:', date, 'MSG:', ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute )
 
-        lon1 = mdic['lon'].values
+        lon1 = mdic['lon'].values # MSG coords
         lat1 = mdic['lat'].values
-        mdic['t'].values[mdic['t'].values >= -40] = 0  # T threshold -10
+        mdic['t'].values[mdic['t'].values >= -10] = 0  # T threshold -10 for clouds
+        ### filter minimum cloud size
         labels, numL = label(mdic['t'].values)
-
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
+        goodinds = u[n > 39]  # defines minimum MCS size e.g. 9x39 ~ 350km2
+        print(goodinds) # indices of clouds of "good size"
 
-        goodinds = u[n > 39]  # defines minimum MCS size e.g.
-        print(goodinds)
         if not sum(goodinds) > 0:
             continue
 
@@ -91,34 +86,25 @@ def saveMCS_WA15():
             if gi == 0:  # index 0 is always background, ignore!
                 continue
 
-            inds = np.where(labels == gi)
+            inds = np.where(labels == gi) # position of cloud
 
-            # cut a box for every single blob from msg - get min max lat lon of the blob, cut upper lower from TRMM to match blob
-            latmax, latmin = mdic['lat'].values[inds].max(), mdic['lat'].values[inds].min()
-            lonmax, lonmin = mdic['lon'].values[inds].max(), mdic['lon'].values[inds].min()
+            # cut a box for every single blob (cloud) from msg - get min max lat lon of the blob, cut upper lower from TRMM to match blob
+            latmax, latmin = lat1[inds].max(), lat1[inds].min()
+            lonmax, lonmin = lon1.values[inds].max(), lon1[inds].min()
             mmeans = np.percentile(mdic['t'].values[inds], 90)
-            td = t.get_ddata(_y, _m, _d, _h, _mi, cut=[latmin - 1, latmax + 1])
-
-            # ensure minimum trmm rainfall in area
-            # if len(np.where(td['p'].values > 0.1)[0]) < 1:  # at least 1 pixel with rainfall
-            #     print('Kickout: TRMM min pixel < 1')
-            #     continue
+            td = t.get_ddata(_y, _m, _d, _h, _mi, cut=[latmin - 1, latmax + 1]) # for each cloud, cut TRMM swath
 
             dt0 = dm[ind]
-            ndate = date + dt.timedelta(minutes=int(dt0))
 
-            # if (ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute) == (2006, 6, 6, 5, 0):
-            #     ipdb.set_trace()
-
-            ml0 = m.get_data(llbox=[lonmin - 1, latmin - 1, lonmax + 1, latmax + 1])
+            ml0 = m.get_data(llbox=[lonmin - 1, latmin - 1, lonmax + 1, latmax + 1]) # cut cloud box in MSG
             if not ml0:
                 continue
 
             #make salem grid
-            grid = u_grid.make(ml0['lon'].values, ml0['lat'].values,5000)
-            lon, lat = grid.ll_coordinates
+            grid = u_grid.make(ml0['lon'].values, ml0['lat'].values,5000)  # 5km regular grid from lat/lon coords
+            lon, lat = grid.ll_coordinates # 5km grid lat/lon coordinates
 
-            # interpolate TRM and MSG to salem grid
+            # interpolate TRMM and MSG to 5km common grid
             inter, mpoints = u_grid.griddata_input(ml0['lon'].values, ml0['lat'].values,grid)
             inter, tpoints = u_grid.griddata_input(td['lon'].values, td['lat'].values, grid)
 
@@ -128,22 +114,19 @@ def saveMCS_WA15():
             except ValueError:
                 continue
             outt = dummyt.reshape((grid.ny, grid.nx))
-            # if len(np.where(outt > 0.1)[0]) < 2:  # at least 2 pixel with rainfall
-            #     print('Kickout: TRMM wavelet min pixel pcp < 2')
-            #     continue
 
-            if np.sum(np.isfinite(outt)) < 5:  # at least 2 valid pixel
-                print('Kickout: TRMM wavelet min pixel  < 2')
+            if np.sum(np.isfinite(outt)) < 5:  # at least 5 valid pixel
+                print('Kickout: TRMM min pixel  < 5')
                 continue
 
-            # Interpolate TRMM flags using nearest
+            # Interpolate TRMM flags USING NEAREST
             dummyf = griddata(tpoints, td['flags'].values.flatten(), inter, method='nearest')
             outf = dummyf.reshape((grid.ny, grid.nx))
             outf=outf.astype(np.float)
             isnot = np.isnan(outt)
             outf[isnot]=np.nan
 
-            ##remove edges of interpolated TRMM
+            ##remove artefact edges of interpolated TRMM
             for nb in range(5):
                 boole = np.isnan(outt)
                 outt[boole] = -1000
@@ -155,10 +138,9 @@ def saveMCS_WA15():
                 outf[abs(grad[0]) > 300] = np.nan
 
             #get convective rainfall only
-            outff = tm_utils.getTRMMconv(outf)
-            outk = outt.copy()*0
+            outff = tm_utils.getTRMMconv(outf) ## from TRMM flags, get positions of convective rain
+            outk = np.zeros_like(outt)
             outk[np.where(outff)]=outt[np.where(outff)]
-
 
             # Interpolate MSG using delaunay triangularization
             dummy = griddata(mpoints, ml0['t'].values.flatten(), inter, method='linear')
@@ -167,7 +149,7 @@ def saveMCS_WA15():
             xl, yl = grid.transform(lon1[inds], lat1[inds], crs=salem.wgs84, nearest=True, maskout=True)
             outl[yl.compressed(), xl.compressed()] = dummy[yl.compressed(), xl.compressed()]
 
-            # #### SHIFTING WITH RESPECT TO MIN T / MAX P - search for Pmax within 20km from Tmin, shift TRMM image
+            # TODO #### SHIFTING WITH RESPECT TO MIN T / MAX P - search for Pmax within 20km from Tmin, shift TRMM image
             #
             # tmin = np.argmin(outl)
             # pmax =
@@ -179,30 +161,30 @@ def saveMCS_WA15():
             mmask = np.isfinite(outl)
             mask2 = np.isfinite(outl[tmask])
 
-            if (sum(mmask.flatten())*25 < 350) or (outt.max()>200) or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
+            #last check for min area, crazy rainfall or crazy cloud size
+            if (sum(mmask.flatten())*25 < 350) or (outt.max()>200) or (sum(mmask.flatten())*25 > 1500000):
                 continue
 
-            if sum(mask2.flatten()) < 5:  # sum(mmask.flatten())*0.3:
+            if sum(mask2.flatten()) < 5:  # Check minimum overlap between TRMM swath and MSG cloud
                 print('Kickout: TRMM MSG overlap less than 3pix of cloud area')
                 continue
 
             print('Hit:', gi)
 
-
-            da = xr.Dataset({'p': (['x', 'y'], outt),
-                             'pconv': (['x', 'y'], outk),
-                             't_lag0': (['x', 'y'], dummy),
-                             'tc_lag0': (['x', 'y'], outl),
+            da = xr.Dataset({'p': (['x', 'y'], outt),  # rainfall field
+                             'pconv': (['x', 'y'], outk), # convective rainfall
+                             't_lag0': (['x', 'y'], dummy), # full T image in cutout region
+                             'tc_lag0': (['x', 'y'], outl), # cloud area only
                              },
                             coords={'lon': (['x', 'y'], lon),
                                     'lat': (['x', 'y'], lat),
                                     'time': date})
-            da.attrs['lag0'] = dt0
-            da.attrs['meanT'] = np.mean(outl[mmask])
-            da.attrs['T90perc'] = mmeans
-            da.attrs['meanT_cut'] = np.mean(outl[tmask][mask2])
-            da.attrs['area'] = sum(mmask.flatten())
-            da.attrs['area_cut'] = sum(mask2)
+            da.attrs['lag0'] = dt0  # lag in minutes between TRMM / MSG
+            da.attrs['meanT'] = np.mean(outl[mmask])  # cloud mean T
+            da.attrs['T90perc'] = mmeans # cloud 90perc T
+            da.attrs['meanT_cut'] = np.mean(outl[tmask][mask2]) # cloud mean T in TRMM region
+            da.attrs['area'] = sum(mmask.flatten()) # total cloud area
+            da.attrs['area_cut'] = sum(mask2)  # cloud area overlapping with TRMM
             da.close()
             savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_zR/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
@@ -214,4 +196,4 @@ def saveMCS_WA15():
 
             cnt = cnt + 1
 
-    print('Saved ' + str(cnt) + ' MCSs as netcdf.')
+    print('Saved ' + str(cnt) + ' TRMM/MSG merged MCSs as netcdf.')

@@ -34,12 +34,23 @@ def composite(h):
 
     hour = h
 
+    if hour == 0:
+        hours = [0,23,22,21]
+    if hour == 1:
+        hours = [1,0,23,22]
+    if hour == 2:
+        hours = [2,1,0,23]
+
+    if hour not in [0,1,2]:
+        hours = [hour, hour-1, hour-2, hour-3]
+
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
+    msg = msg[(np.in1d(msg['time.hour'], hours)) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
+    msg['lead_hour'] = hour
 
+    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
     dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
@@ -163,7 +174,28 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
 
 
 
-def file_loop(fi):
+def file_loop(fi_all):
+
+    uni_hours = np.unique(fi_all['time.hours'])
+
+    f
+    lead_hour = fi_all['lead_hour']
+
+    if lead_hour == 0:
+        hours = [0, 23, 22, 21]
+    if lead_hour == 1:
+        hours = [1, 0, 23, 22]
+    if lead_hour == 2:
+        hours = [2, 1, 0, 23]
+
+    if lead_hour not in [0,1,2]:
+        hours = [lead_hour, lead_hour-1, lead_hour-2, lead_hour-3]
+
+    fi = fi_all[fi_all['time.hours'] == hours[0]]
+    fi1 = fi_all[fi_all['time.hours'] == hours[1]]
+    fi2 = fi_all[fi_all['time.hours'] == hours[2]]
+    fi3 = fi_all[fi_all['time.hours'] == hours[3]]
+
     print('Doing day: ', fi)
 
     date = pd.to_datetime(
@@ -204,6 +236,9 @@ def file_loop(fi):
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
     pos = np.where( (fi.values >= 5) & (fi.values < 65))
+    pos1 = np.where((fi.values >= 5) & (fi.values < 65))
+    pos2 = np.where((fi.values >= 5) & (fi.values < 65))
+    pos3 = np.where((fi.values >= 5) & (fi.values < 65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')

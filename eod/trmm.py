@@ -127,13 +127,15 @@ class ReadWA(object):
         self.dates = fdic['date']
         self.__area = area
 
-    """
-    Gets a file with a certain date out of the initialised TRMM file list
-    Keywords:
-    cut: [lower,upper], list, gets the data and cuts swath at the given latitude upper and lower bondaries
-    """
+
 
     def get_ddata(self, yr, mo, dy, hr, mi, cut=None, netcdf_path=None):
+        """
+        Gets a file with a certain date out of the initialised TRMM file list
+        Keywords:
+        cut: [lower,upper], list, gets the data and cuts swath at the given latitude upper and lower bondaries
+        """
+
         ind = self.dates.getInd(yr, mo, dy, hr, mi)
         # print('Ind:', ind)
         if not ind:
@@ -145,15 +147,16 @@ class ReadWA(object):
 
         return da
 
-    """
-    Gets TRMM data given the path to the file.
-    Automatically crops TRMM to the initialised box (see ReadWA) or, if not given, to 3 - 22N, even if no "cut" is given!!
-    Keywords:
-    cut: [lower,upper], list, gets the data and cuts swath at the given latitude upper and lower bondaries. Can be used
-    cut out smaller North-South ranges than initialised box (or 3-22N).
-    """
+
 
     def get_data(self, path, cut=None, netcdf_path=None):
+        """
+           Gets TRMM data given the path to the file.
+           Automatically crops TRMM to the initialised box (see ReadWA) or, if not given, to 3 - 22N, even if no "cut" is given!!
+           Keywords:
+           cut: [lower,upper], list, gets the data and cuts swath at the given latitude upper and lower bondaries. Can be used
+           cut out smaller North-South ranges than initialised box (or 3-22N).
+           """
         tfile = path
         if not os.path.isfile(tfile):
             print('File does not exist. Error')
