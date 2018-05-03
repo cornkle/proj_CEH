@@ -47,7 +47,7 @@ def loop():
             'bin': bins,
             'nblobs' : np.array(nblob)}
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_local.p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_newrandom.p", "wb"))
     print('Successfully written save file')
 
 
@@ -55,7 +55,7 @@ def loop():
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_local.p", "rb"))
+    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_newrandom.p", "rb"))
 
     bin = np.array(dic['bin'])
     center = bin[0:-1] + (bin[1::]-bin[0:-1])
@@ -72,7 +72,7 @@ def plot():
 
     mask = np.zeros_like(db)
     mask[filler>np.abs(dic['blob']- dic['scale'])] = 1
-    data[np.where(mask)] = 0
+    #data[np.where(mask)] = 0
 
     f = plt.figure()
     ax = plt.subplot(111)
@@ -100,7 +100,7 @@ def plot():
 
 
 def composite(h):
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=6)
 
 
     file = constants.MCS_POINTS_DOM
@@ -111,16 +111,18 @@ def composite(h):
     msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(10.5,17.5), lon=slice(-9.5,9.5))
+    msg = msg.sel(lat=slice(10.5,18), lon=slice(-9.5,9.5))
 
 
     res = pool.map(file_loop, msg)
     pool.close()
 
-
+    # #
+    # bla = []
     # for m in msg[0:50]:
-    #     file_loop(m)
-    #
+    #     res = file_loop(m)
+    #     bla.append(res)
+    # pdb.set_trace()
     # return
 
     res = [x for x in res if x is not None]
@@ -182,7 +184,7 @@ def cut_kernel(xpos, ypos, lsta_day2):
     # #
     # kernel =  np.mean(kernel)
 
-    kernel = lsta_day2.isel(lon=xpos,
+    kernel = lsta_day2.isel(lon=xpos+5,
                              lat=ypos).values
 
     # if (kernel == np.nan):
@@ -234,7 +236,7 @@ def file_loop(fi):
     lsta_da.values[ttopo.values >= 400] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
-    scale_list = lsta_da.values.flatten()
+    #scale_list = lsta_da.values.flatten()
 
     # plt.figure()
     # plt.imshow(lsta_day2[0,:,:])
@@ -249,6 +251,7 @@ def file_loop(fi):
 
     kernel_list = []
     sign_list = []
+    scale_list = []
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -273,6 +276,39 @@ def file_loop(fi):
         if ~np.isfinite(ano):
             continue
 
+        xfi = fi.shape[1]
+        randx = np.random.randint(0, xfi, 100)
+        if np.min(pos[0]) == 0:
+            ymin = np.min(pos[0])
+        else:
+            ymin = np.min(pos[0]) - 1
+        if np.max(pos[0]) == fi.shape[0] - 1:
+            ymax = np.max(pos[0])
+        else:
+            ymax = np.max(pos[0]) + 1
+        randy = np.random.randint(ymin, ymax, 100)
+        posr = (randy, randx)
+
+        for y, x in zip(posr[0], posr[1]):
+
+            lat = fi['lat'][y]
+            lon = fi['lon'][x]
+
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+            plat = point['lat'].values
+            plon = point['lon'].values
+
+            xpos = np.where(lsta_da['lon'].values == plon)
+            xpos = int(xpos[0])
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
+
+            try:
+                scale = cut_kernel(xpos, ypos, lsta_da)
+            except TypeError:
+                print('Kernel random error')
+                continue
+
         if ano > 0:
             bla = 1
         else:
@@ -280,6 +316,7 @@ def file_loop(fi):
 
         kernel_list.append(ano)
         sign_list.append(bla)
+        scale_list.append(scale)
 
     if kernel_list == None:
         return None

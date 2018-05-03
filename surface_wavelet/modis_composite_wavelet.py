@@ -117,7 +117,7 @@ def composite(hour):
         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
 
 
-    pkl.dump(dic, open(path+"/c_wet_dry_smallscale"+str(hour)+"UTC.p", "wb"))
+    pkl.dump(dic, open(path+"/c_wet_dry_smallscale_rot"+str(hour)+"UTC.p", "wb"))
     print('Save file written!')
 
 
@@ -125,7 +125,7 @@ def composite(hour):
 def plot(hour):
 
     path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
-    dic = pkl.load(open(path+"/c_wet_dry_rotate_smallscale"+str(hour)+"UTC.p", "rb"))
+    dic = pkl.load(open(path+"/c_wet_dry_rotate_smallscale_rot"+str(hour)+"UTC.p", "rb"))
 
 
     scales = dic['scales']
@@ -360,7 +360,7 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=True)
         except TypeError:
             print('Kernel random error')
             continue
@@ -369,7 +369,7 @@ def file_loop(fi):
         rwepos_list_dry.append(wavpos_we)  # west-east wavelet
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=False)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=True)
         except TypeError:
             print('Kernel random error')
             continue
@@ -400,7 +400,7 @@ def file_loop(fi):
 
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=True)
         except TypeError:
             print('Kernel error')
             continue
@@ -409,7 +409,7 @@ def file_loop(fi):
         wepos_list_dry.append(wavpos_we)  # west-east wavelet
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=False)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=True)
         except TypeError:
             print('Kernel error')
             continue
@@ -509,8 +509,8 @@ def plot_gewex():
 
         rand=True
         if rand:
-            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
-            b= (weblob - werandom) - (wet_weblob-wet_werandom)
+            a = (snblob-snrandom) #-(wet_snblob-wet_snrandom)
+            b= (weblob - werandom) #- (wet_weblob-wet_werandom)
         else:
             a = (snblob  - wet_snblob )
             b = (weblob - wet_weblob )

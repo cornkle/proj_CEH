@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
+from scipy.interpolate import griddata
 
 import pickle as pkl
 
@@ -34,30 +35,20 @@ def composite(h):
 
     hour = h
 
-    if hour == 0:
-        hours = [0,23,22,21]
-    if hour == 1:
-        hours = [1,0,23,22]
-    if hour == 2:
-        hours = [2,1,0,23]
-
-    if hour not in [0,1,2]:
-        hours = [hour, hour-1, hour-2, hour-3]
-
     msg = xr.open_dataarray(file)
-    msg = msg[(np.in1d(msg['time.hour'], hours)) & (msg['time.minute'] == 0) & (
+    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
-
-    msg['lead_hour'] = hour
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
-    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'cells'])
+
+    dic = u_parallelise.run_arrays(2,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'prob'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack-"+str(hour).zfill(2)+".p", "wb"))
+
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_-"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -141,7 +132,7 @@ def composite(h):
 
 
 
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, cell=False):
+def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
 
     if parallax:
         km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
@@ -156,7 +147,10 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-
+    if np.sum(probs) > 0:
+        prob = u_arrays.cut_kernel(probs,xpos, ypos,dist)
+    else:
+        prob = 0
 
     if rotate:
         kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
@@ -172,28 +166,58 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
     if kernel.shape != (201, 201):
         pdb.set_trace()
 
-    if cell:
-        cell_prob = u_arrays.cut_kernel(cell, xpos, ypos, dist)
-        cell_prob[np.nan(kernel)] = np.nan
-    else:
-        cell_prob = False
-
-    return kernel, kernel3, cnt, cell_prob
 
 
+    return kernel, kernel3, cnt, prob
 
-def file_loop(fi_all):
 
-    pdb.set_trace()
+def get_previous_hours(date):
 
-    lead_hour = fi_all['lead_hour']
+    # hour = date.hour
+    #
+    # if hour == 0:
+    #     hours = [0,23,22,21]
+    # if hour == 1:
+    #     hours = [1,0,23,22]
+    # if hour == 2:
+    #     hours = [2,1,0,23]
+    #
+    # if hour not in [0,1,2]:
+    #     hours = [hour, hour-1, hour-2, hour-3]
 
-    fi = fi_all[fi_all['time.hours'] == lead_hour]
+    before = pd.Timedelta('3 hours')
 
+    prev_time = date - before
+
+    file = constants.MCS_POINTS_DOM
+    msg = xr.open_dataarray(file)
+
+    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10), time=slice(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H")))
+
+    # msg = msg[(np.in1d(msg['time.hour'], hours))]
+    # pdb.set_trace()
+    # msg = msg[(msg['time.minute'] == 0) & (
+    #     msg['time.year']== date.year) & (msg['time.month'] == date.month & (msg['time.day'] == date.day))]
+
+    pos = np.where((msg.values >= 5) & (msg.values < 65))
+
+    out = np.zeros_like(msg)
+    out[pos] = 1
+    out = np.sum(out, axis=0) / out.shape[0]
+
+    msg = msg.sum(axis=0)
+    xout = msg.copy()
+    xout.name = 'probs'
+    xout.values = out
+
+    return xout
+
+
+
+def file_loop(fi):
     print('Doing day: ', fi)
 
-    date = pd.to_datetime(
-        str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
+    date = pd.Timestamp(fi.time.values)
 
     dayd = pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
@@ -229,23 +253,7 @@ def file_loop(fi_all):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-
     pos = np.where( (fi.values >= 5) & (fi.values < 65))
-    other_pos = np.where((fi_all.values >= 5) & (fi_all.values < 65))
-    dlat = fi['lat'][other_pos[1]]
-    dlon = fi['lon'][other_pos[2]]
-
-    dummy_cell = np.zeros_like(lsta_da.values)
-    points = lsta_da.sel(lat=dlat, lon=dlon, method='nearest')
-    newlat = points['lat'].values
-    newlon = points['lon'].values
-
-    xpos = np.where(lsta_da['lon'].values == newlon)
-    xpos = int(xpos[0])
-    ypos = np.where(lsta_da['lat'].values == newlat)
-    ypos = int(ypos[0])
-
-    dummy_cell[ypos,xpos] += 1
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
@@ -254,7 +262,6 @@ def file_loop(fi_all):
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
-    cell_list = []
 
     xfi = fi.shape[1]
 
@@ -266,7 +273,7 @@ def file_loop(fi_all):
     rkernel2_list = []
     rkernel3_list = []
     rcnt_list = []
-
+    prkernel_list = []
 
     for y, x in zip(posr[0], posr[1]):
 
@@ -284,7 +291,7 @@ def file_loop(fi_all):
         ypos = int(ypos[0])
 
         try:
-            rkernel2, rkernel3, rcnt, cell = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False, rotate=False)
+            rkernel2, rkernel3, rcnt, rp = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False, rotate=False, probs=False)
         except TypeError:
             continue
 
@@ -292,6 +299,14 @@ def file_loop(fi_all):
         rkernel3_list.append(rkernel3)
         rcnt_list.append(rcnt)
 
+    probs = get_previous_hours(date)
+    probs_on_lsta = lsta.salem.transform(probs)
+
+    # # Interpolate TRMM flags USING NEAREST
+    # inter, points = u_grid.griddata_input(fi['lon'].values, fi['lat'].values, lsta)
+    # dummyf = griddata(points, probs.flatten(), inter, method='nearest')
+    # outf = dummyf.reshape((grid.ny, grid.nx))
+    # outf = outf.astype(np.float)
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
@@ -308,15 +323,15 @@ def file_loop(fi_all):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt, cell = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False, cell=dummy_cell)
+            kernel2, kernel3, cnt, prkernel = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False, probs=probs_on_lsta)
         except TypeError:
             continue
 
 
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
+        prkernel_list.append(prkernel)
         cnt_list.append(cnt)
-        cell_list.append(cell)
 
     if kernel2_list == []:
         return None
@@ -328,16 +343,15 @@ def file_loop(fi_all):
         kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
         kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
         cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
-        cell_sum = np.nansum(np.stack(cell_list, axis=0), axis=0)
+        pr_sum = np.nansum(np.stack(prkernel_list, axis=0), axis=0)
 
         rkernel2_sum = np.nansum((np.stack(rkernel2_list, axis=0)), axis=0)
         rkernel3_sum = np.nansum((np.stack(rkernel3_list, axis=0)), axis=0)
         rcnt_sum = np.nansum((np.stack(rcnt_list, axis=0)), axis=0)
 
-
     print('Returning')
 
-    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum, cell_sum)
+    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum, pr_sum)
 
 
 
@@ -454,3 +468,4 @@ def plot_all():
 
     for h in hours:
         plot_gewex(h)
+

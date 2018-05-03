@@ -25,59 +25,65 @@ def plot():
     dic = pkl.load(
         open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scatter_scales.p", "rb"))
 
-    cmap = u_plot.discrete_cmap(24, base_cmap='gnuplot2')
+    cmap = u_plot.discrete_cmap(24, base_cmap='jet')
 
     f = plt.figure()
     ax = plt.subplot(111)
 
     chourly = []
     shourly = []
+    smhourly = []
+    cmhourly = []
     sstd = []
     cstd = []
     hh = []
     for h in range(0,24,1):
-        c = np.mean(dic['cell'][(dic['hour']==h) & (dic['cell']>=15)  & (dic['surface'] >= 9) & (dic['surface'] < 130)]) #& (dic['surface'] < 130)
-        s = np.mean(np.abs(dic['surface'][(dic['hour']==h) & (dic['cell']>=15)& (dic['surface'] >= 9) & (dic['surface'] < 130)]))
-        sc = np.std(dic['cell'][(dic['hour']==h) & (dic['cell']>=15)  & (dic['surface'] >= 9) & (dic['surface'] < 130)])
-        ss = np.std(np.abs(dic['surface'][(dic['hour']==h) & (dic['cell']>=15)& (dic['surface'] >= 9) & (dic['surface'] < 130)]))
-
-        pdb.set_trace()
-        cstd.append(sc)
-        sstd.append(ss)
+        c = np.mean(dic['cell'][(dic['hour']==h) & (dic['cell']>=15)  & (dic['surface'] > 9)]) #& (dic['surface'] < 130)
+        s = np.mean(np.abs(dic['surface'][(dic['hour']==h) & (dic['cell']>=15)& (dic['surface'] > 9)]))
+        sm = np.mean(dic['surface'][(dic['hour'] == h) & (dic['cell'] >= 15) & (dic['surface'] < -9)])
+        cm = np.mean(
+            dic['cell'][(dic['hour'] == h) & (dic['cell'] >= 15) & (dic['surface'] < -9)])  # & (dic['surface'] < 130)
 
         chourly.append(c)
         shourly.append(s)
+        smhourly.append(sm)
+        cmhourly.append(cm)
         hh.append(h)
 
     plt.scatter(chourly, shourly, c=hh, cmap=cmap)
    # plt.errorbar(chourly, shourly, cstd, sstd)
     plt.colorbar()
 
-    chourly = []
-    hh = []
+    clouds = []
+    hhh = []
     for h in range(0,24,1):
         c = np.mean(dic['cell'][(dic['hour']==h) & (dic['cell']>=15)])
-        chourly.append(c)
-        hh.append(h)
-    f = plt.figure()
-    ax = plt.subplot(111)
-    plt.scatter(hh, chourly, c=hh, cmap=cmap)
+        clouds.append(c)
+        hhh.append(h)
+    f = plt.figure(figsize=(4,10))
+    ax = plt.subplot(311)
+    plt.scatter(hh, chourly, c=hhh, cmap=cmap, edgecolors='k', s=50)
+    plt.xlabel('Time of day')
+    plt.ylabel('Average cloud core scale (km)')
+    ax = plt.subplot(312)
+    mpl = plt.scatter(shourly, chourly, c=hh, cmap=cmap, edgecolors='k', s=50)
+    plt.xlabel('Average surface scale (km)')
+    plt.ylabel('Average cloud core scale (km)')
+    plt.title('Warm features', fontsize=10)
+    ax = plt.subplot(313)
+    mpl = plt.scatter(smhourly, cmhourly, c=hh, cmap=cmap, edgecolors='k', s=50)
+    plt.xlabel('Average surface scale (km)')
+    plt.ylabel('Average cloud core scale (km)')
+    plt.title('Cold features', fontsize=10)
+    #plt.colorbar(mpl)
+    plt.tight_layout()
 
-    chourly = []
-    shourly = []
-
-    for h in np.unique(dic['surface'])[7:-1]:
-        c = np.mean((dic['cell'])[(dic['surface'] == h) ])
-        s = h
-
-        chourly.append(c)
-        shourly.append(s)
-        hh.append(h)
-
-    f = plt.figure()
-    ax = plt.subplot(111)
-    plt.scatter(chourly, shourly)
-    #plt.colorbar()
+    f.subplots_adjust(right=0.83)
+    cax = f.add_axes([0.85, 0.33, 0.035, 0.35])
+    cbar = f.colorbar(mpl, cax)
+    cbar.ax.tick_params(labelsize=10)
+    cbar.set_ticklabels(np.arange(0,24))
+    cbar.set_label('Time of day', fontsize=10)
 
 
 def composite():
