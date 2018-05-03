@@ -52,12 +52,12 @@ def composite(h):
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
-    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'cells'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
-    #pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_topo_0-"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack-"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -141,7 +141,7 @@ def composite(h):
 
 
 
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False):
+def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, cell=False):
 
     if parallax:
         km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
@@ -155,6 +155,8 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
     dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
+
+
 
     if rotate:
         kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
@@ -170,31 +172,23 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
     if kernel.shape != (201, 201):
         pdb.set_trace()
 
-    return kernel, kernel3, cnt
+    if cell:
+        cell_prob = u_arrays.cut_kernel(cell, xpos, ypos, dist)
+        cell_prob[np.nan(kernel)] = np.nan
+    else:
+        cell_prob = False
+
+    return kernel, kernel3, cnt, cell_prob
 
 
 
 def file_loop(fi_all):
 
-    uni_hours = np.unique(fi_all['time.hours'])
+    pdb.set_trace()
 
-    f
     lead_hour = fi_all['lead_hour']
 
-    if lead_hour == 0:
-        hours = [0, 23, 22, 21]
-    if lead_hour == 1:
-        hours = [1, 0, 23, 22]
-    if lead_hour == 2:
-        hours = [2, 1, 0, 23]
-
-    if lead_hour not in [0,1,2]:
-        hours = [lead_hour, lead_hour-1, lead_hour-2, lead_hour-3]
-
-    fi = fi_all[fi_all['time.hours'] == hours[0]]
-    fi1 = fi_all[fi_all['time.hours'] == hours[1]]
-    fi2 = fi_all[fi_all['time.hours'] == hours[2]]
-    fi3 = fi_all[fi_all['time.hours'] == hours[3]]
+    fi = fi_all[fi_all['time.hours'] == lead_hour]
 
     print('Doing day: ', fi)
 
@@ -235,10 +229,23 @@ def file_loop(fi_all):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
+
     pos = np.where( (fi.values >= 5) & (fi.values < 65))
-    pos1 = np.where((fi.values >= 5) & (fi.values < 65))
-    pos2 = np.where((fi.values >= 5) & (fi.values < 65))
-    pos3 = np.where((fi.values >= 5) & (fi.values < 65))
+    other_pos = np.where((fi_all.values >= 5) & (fi_all.values < 65))
+    dlat = fi['lat'][other_pos[1]]
+    dlon = fi['lon'][other_pos[2]]
+
+    dummy_cell = np.zeros_like(lsta_da.values)
+    points = lsta_da.sel(lat=dlat, lon=dlon, method='nearest')
+    newlat = points['lat'].values
+    newlon = points['lon'].values
+
+    xpos = np.where(lsta_da['lon'].values == newlon)
+    xpos = int(xpos[0])
+    ypos = np.where(lsta_da['lat'].values == newlat)
+    ypos = int(ypos[0])
+
+    dummy_cell[ypos,xpos] += 1
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
@@ -247,6 +254,7 @@ def file_loop(fi_all):
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
+    cell_list = []
 
     xfi = fi.shape[1]
 
@@ -258,6 +266,7 @@ def file_loop(fi_all):
     rkernel2_list = []
     rkernel3_list = []
     rcnt_list = []
+
 
     for y, x in zip(posr[0], posr[1]):
 
@@ -275,7 +284,7 @@ def file_loop(fi_all):
         ypos = int(ypos[0])
 
         try:
-            rkernel2, rkernel3, rcnt= cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False, rotate=False)
+            rkernel2, rkernel3, rcnt, cell = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False, rotate=False)
         except TypeError:
             continue
 
@@ -299,7 +308,7 @@ def file_loop(fi_all):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False)
+            kernel2, kernel3, cnt, cell = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False, cell=dummy_cell)
         except TypeError:
             continue
 
@@ -307,6 +316,7 @@ def file_loop(fi_all):
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
         cnt_list.append(cnt)
+        cell_list.append(cell)
 
     if kernel2_list == []:
         return None
@@ -318,14 +328,16 @@ def file_loop(fi_all):
         kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
         kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
         cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
+        cell_sum = np.nansum(np.stack(cell_list, axis=0), axis=0)
 
         rkernel2_sum = np.nansum((np.stack(rkernel2_list, axis=0)), axis=0)
         rkernel3_sum = np.nansum((np.stack(rkernel3_list, axis=0)), axis=0)
         rcnt_sum = np.nansum((np.stack(rcnt_list, axis=0)), axis=0)
 
+
     print('Returning')
 
-    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
+    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum, cell_sum)
 
 
 

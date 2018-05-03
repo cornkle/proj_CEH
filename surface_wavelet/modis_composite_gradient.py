@@ -35,131 +35,72 @@ def composite(h):
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
+    msg = msg[(msg['time.hour'] == hour)  & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
 
-    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+    dic = u_parallelise.run_mixed(1,file_loop,msg,['grad', 'rgrad'])
 
     for k in dic.keys():
-       dic[k] = np.nansum(dic[k], axis=0)
+        sort = dic[k]
+        flat = [item for sublist in sort for item in sublist]
+        dic[k] = flat
 
-    #pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_topo_0-"+str(hour).zfill(2)+".p", "wb"))
-    extent = dic['ano'].shape[1]/2-1
+    grad = np.array(dic['grad'])
+    rgrad= np.array(dic['rgrad'])
 
-    f = plt.figure(figsize=(14, 7))
-    ax = f.add_subplot(231)
+    grad = grad[np.isfinite(grad)]
+    rgrad = rgrad[np.isfinite(rgrad)]
 
-    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r')
-    plt.plot(extent, extent, 'bo')
+    weight_grad = np.ones_like(grad) / float(len(grad))
+    weight_rgrad = np.ones_like(rgrad) / float(len(rgrad))
 
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Regional anomaly, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
-              fontsize=10)
+    histb, hb = np.histogram(grad, bins=np.arange(-20,21,2))
+    hists, hs = np.histogram(rgrad, bins=np.arange(-20,21,2))
 
-    ax = f.add_subplot(232)
+    f = plt.figure()
 
-    plt.contourf((dic['regional'] / dic['cnt']) - (dic['rregional'] / dic['rcnt']) , cmap='RdBu_r')
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Regional anomaly', fontsize=10)
-
-    ax = f.add_subplot(233)
-
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  vmin=-0.6, vmax=0.6) #-(rkernel2_sum / rcnt_sum)
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Seasonal anomaly',
-              fontsize=10)
-
-    ax = f.add_subplot(234)
-
-    plt.contourf((dic['ano'] / dic['cnt']) - (dic['rano'] / dic['rcnt']), cmap='RdBu_r',  vmin=-1.5, vmax=1.5)
-    plt.plot(extent,extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Seasonal anomaly - random',
-              fontsize=10)
-
-    ax = f.add_subplot(235)
-
-    plt.contourf(dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Valid count',
-              fontsize=10)
-
-    ax = f.add_subplot(236)
-
-    plt.contourf(dic['rcnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
-    plt.plot(extent,extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title('Random valid count',
-              fontsize=10)
-
-    plt.tight_layout()
-    plt.show()
-    #
-    # plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/test/comp/'+str(hour).zfill(2)+'_small.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    # plt.close()
+    plt.bar(hs[0:-1], hists/np.sum(hists), align='edge', width=hb[1::]-hb[0:-1],edgecolor='k')
+    plt.bar(hb[0:-1], histb/np.sum(histb), align='edge', width=hb[1::]-hb[0:-1],edgecolor='r', alpha=0.5)
 
 
 
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False):
 
-    if parallax:
-        km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
-        lx, ly = km
+def cut_kernel(xpos, ypos, arr):
 
-        lx = int(np.round(lx / 3.))
-        ly = int(np.round(ly / 3.))  # km into pixels
-        xpos = xpos - lx
-        ypos = ypos - ly
+    xfi = arr.shape[1]
+    randx = np.random.randint(0,xfi,30)
+    #randy = np.random.randint(ypos-1,ypos+1,30)
+    posr = randx
 
-    dist = 100
+    grads_rand = []
+    for coords in posr:
 
-    kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
+        ref = np.nanmean(u_arrays.cut_kernel(arr, coords, ypos, 1))
+        try:
+            compare = np.nanmean(u_arrays.cut_kernel(arr, coords, ypos- 25, 1))
+        except ValueError:
+            continue
 
-    if rotate:
-        kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
+        grad = ref - compare
 
-    if (np.sum(np.isfinite(kernel)) < 0.10 * kernel.size):
+        grads_rand.append(grad)
+
+
+    ref = np.nanmean(u_arrays.cut_kernel(arr, xpos, ypos, 1))
+    try:
+        compare = np.nanmean(u_arrays.cut_kernel(arr, xpos, ypos-25, 1))
+    except ValueError:
+        return None
+
+    grad = ref-compare
+
+    if ~np.isfinite(grad):
         return
 
-    kernel3 = kernel - np.nanmean(kernel)
-
-    cnt = np.zeros_like(kernel)
-    cnt[np.isfinite(kernel)] = 1
-
-    if kernel.shape != (201, 201):
-        pdb.set_trace()
-
-    return kernel, kernel3, cnt
+    return grad, grads_rand
 
 
 
@@ -208,53 +149,13 @@ def file_loop(fi):
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
         return None
-
-    kernel2_list = []
-    kernel3_list = []
-    cnt_list = []
-
-    xfi = fi.shape[1]
-
-    randx = np.random.randint(0,xfi,100)
-
-    randy = np.random.randint(np.min(pos[0]),np.max(pos[0]),100)
-    posr = (randy, randx)
-
-    rkernel2_list = []
-    rkernel3_list = []
-    rcnt_list = []
-
-    for y, x in zip(posr[0], posr[1]):
-
-
-        lat = fi['lat'][y]
-        lon = fi['lon'][x]
-
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
-        plat = point['lat'].values
-        plon = point['lon'].values
-
-        xpos = np.where(lsta_da['lon'].values == plon)
-        xpos = int(xpos[0])
-        ypos = np.where(lsta_da['lat'].values == plat)
-        ypos = int(ypos[0])
-
-        try:
-            rkernel2, rkernel3, rcnt= cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False, rotate=False)
-        except TypeError:
-            continue
-
-        rkernel2_list.append(rkernel2)
-        rkernel3_list.append(rkernel3)
-        rcnt_list.append(rcnt)
-
+    grad_list = []
+    rgrad_list = []
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        t = fi.sel(lat=lat, lon=lon)
-
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
         plon = point['lon'].values
@@ -264,33 +165,20 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False)
+            grad, grads_rand = cut_kernel(xpos, ypos, lsta_da)
         except TypeError:
             continue
 
+        grad_list.append(grad)
+        rgrad_list.append(grads_rand)
+    grad_out = grad_list
+    rgrad_out = rgrad_list
 
-        kernel2_list.append(kernel2)
-        kernel3_list.append(kernel3)
-        cnt_list.append(cnt)
 
-    if kernel2_list == []:
-        return None
-
-    if len(kernel2_list) == 1:
-      return None
-    else:
-
-        kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
-        kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
-        cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
-
-        rkernel2_sum = np.nansum((np.stack(rkernel2_list, axis=0)), axis=0)
-        rkernel3_sum = np.nansum((np.stack(rkernel3_list, axis=0)), axis=0)
-        rcnt_sum = np.nansum((np.stack(rcnt_list, axis=0)), axis=0)
 
     print('Returning')
 
-    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
+    return (grad_out, rgrad_out)
 
 
 

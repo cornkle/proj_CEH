@@ -21,8 +21,8 @@ import salem as sm
 #2.8.2009
 #29.07.2007
 
-DATE = {'day' : 29,
-        'month' : 6,
+DATE = {'day' : 14,
+        'month' : 7,
         'year' : 2006}
 
 def run_waveletDry():
@@ -104,9 +104,9 @@ def wav_checkDry():
     xv, yv = np.meshgrid(lsta['lon'], lsta['lat'])
     cmap = u_plot.discrete_cmap(24, base_cmap='gist_ncar')
 
-    era = xr.open_dataset(constants.ERA_DAILY_SRFC_ANO)
+    era = xr.open_dataset(constants.ERA_DAILY_PL_NIGHT)
     eday = era.sel(longitude=slice(-10, 10), latitude=slice(18, 10),
-                   time=str(DATE['year']) + str(DATE['month']).zfill(2) + str(DATE['day']).zfill(2))
+                   time=str(DATE['year']) + str(DATE['month']).zfill(2) + str(DATE['day']).zfill(2), level=925)
 
     eday['ws10'][0,:,:].plot.pcolormesh() #'p84.162'
 

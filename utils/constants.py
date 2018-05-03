@@ -3,7 +3,9 @@
 ERA_MONTHLY_TUVWZ_AFRICA = '/localscratch/wllf030/cornkle/ERA-I/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
 ERA_DAILY_SURFACE =   '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc'
 ERA_DAILY_PL = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc'
+ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
 ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
+
 
 
 LSTA_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/lsta_topo.nc'
@@ -23,6 +25,7 @@ MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant
 LSTA = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/'
 LSTA_NEW = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_new/'
 LSTA_TESTFILE = LSTA + 'lsta_daily_20060624.nc'
+LSTA_DOMSCALE = '/users/global/cornkle/data/OBS/MSG_LSTA/power_maps/'
 
 AMSRE_DIR = '/users/global/cornkle/data/OBS/AMSRE/aqua/'
 AMSRE_NIGHT = AMSRE_DIR + 'nc_night/'

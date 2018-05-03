@@ -32,9 +32,10 @@ def composite(h):
     file = constants.TRMM5KM_FILE
 
     hour = h
-
+    # 16UTC - 18UTC
+    # 0-3 UTC
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] >=19) & (msg['time.hour'] <=22) &(
+    msg = msg[(msg['time.hour'] >=0) & (msg['time.hour'] <=3) &(
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
@@ -43,6 +44,8 @@ def composite(h):
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
+
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/amsre_0-"+str(hour).zfill(2)+".p", "wb"))
 
     extent = dic['ano'].shape[1]/2
 
@@ -135,8 +138,8 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         ly = int(np.round(ly / 27.5))  # km into pixels
         xpos = xpos - lx
         ypos = ypos - ly
-
-    dist = 11
+    #AMSRE 0.25 degrees ~ 27.5 km
+    dist = 10
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -166,7 +169,7 @@ def file_loop(fi):
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 
-    if (fi['time.hour'].values) <= 16:
+    if (fi['time.hour'].values) <= 15:
         print('Nighttime')
         daybefore = date - dayd
     else:
@@ -201,7 +204,7 @@ def file_loop(fi):
     lsta_da.values[ttopo.values >= 450] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
-    pos = np.where(fi.values >= 10)
+    pos = np.where(fi.values >= 15)
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 2):
         print('No blobs found')
@@ -292,3 +295,38 @@ def file_loop(fi):
 
     return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
 
+
+def plot_gewex():
+
+    dic1 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/amsre_0-17.p", "rb"))
+    dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/amsre_0-03.p", "rb"))
+
+    extent = (dic1['ano'].shape[1]-1)/2
+
+    f = plt.figure(figsize=(5, 7))
+    ax = f.add_subplot(211)
+
+    plt.contourf(dic1['regional'] / dic1['cnt'], cmap='RdBu',  levels=[-1,-0.75,-0.5,-0.25,0.25,0.5,0.75,1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent/2) * 60, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 30, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.colorbar(label='Volumetric soil moisture anomaly (%)')
+    plt.title('16-1800UTC | '+str(np.max(dic1['cnt']))+' cores', fontsize=12)
+
+    ax = f.add_subplot(212)
+
+    plt.contourf(dic2['regional'] / dic2['cnt'], cmap='RdBu',  levels=[-1,-0.75,-0.5,-0.25,0.25,0.5,0.75,1], extend='both')
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticklabels(np.array((np.linspace(0, extent * 2, 9) - extent/2) * 60, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 30, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.colorbar(label='Volumetric soil moisture anomaly (%)')
+    plt.title('00-0300UTC | ' + str(np.max(dic2['cnt'])) + ' cores', fontsize=12)
+
+
+    plt.tight_layout()
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/AMSRE_TRMM.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    # plt.close()

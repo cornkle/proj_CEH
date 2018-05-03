@@ -29,6 +29,7 @@ def loop():
     arr_scalec = np.zeros([24, len(bins) - 1])
     nblob = []
 
+
     for l in np.arange(0,24):
         print('Doing '+str(l))
         blobs, scales, bins, nblobs, blobsc, scalesc = composite(l)
@@ -46,19 +47,20 @@ def loop():
             'bin': bins,
             'nblobs' : np.array(nblob)}
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_local.p", "wb"))
+    print('Successfully written save file')
 
 
 
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
+    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_local.p", "rb"))
 
     bin = np.array(dic['bin'])
     center = bin[0:-1] + (bin[1::]-bin[0:-1])
-    pdb.set_trace()
-    data = dic['blob']- (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
+
+    data = (dic['blob']- dic['scale'])/(dic['scale'])#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
     db = dic['blobc']
     filler = np.zeros_like(db)
     for i in range(db.shape[0]):
@@ -69,14 +71,14 @@ def plot():
             filler[i,j] = unrange
 
     mask = np.zeros_like(db)
-    mask[filler>np.abs(data)] = 1
+    mask[filler>np.abs(dic['blob']- dic['scale'])] = 1
     data[np.where(mask)] = 0
 
     f = plt.figure()
     ax = plt.subplot(111)
-    pmap = ax.pcolormesh(data*100, vmin=-2, vmax=2, cmap='RdBu_r')
-    ax.set_xticks(np.arange(dic['blob'].shape[1])+1, minor=False)
-    ax.set_xticklabels(center)
+    pmap = ax.pcolormesh(data[:,3:-3]*100, vmin=-40, vmax=40, cmap='RdBu_r')
+    ax.set_xticks(np.arange(data[:,3:-3].shape[1])+1, minor=False)
+    ax.set_xticklabels(center[3:-3])
     cbar = plt.colorbar(pmap)
     cbar.set_label('Difference in scale frequency | Blobs')
 
@@ -98,7 +100,7 @@ def plot():
 
 
 def composite(h):
-    pool = multiprocessing.Pool(processes=1)
+    pool = multiprocessing.Pool(processes=5)
 
 
     file = constants.MCS_POINTS_DOM
@@ -109,7 +111,7 @@ def composite(h):
     msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(10.2,17), lon=slice(-9.5,9.5))
+    msg = msg.sel(lat=slice(10.5,17.5), lon=slice(-9.5,9.5))
 
 
     res = pool.map(file_loop, msg)
@@ -180,7 +182,7 @@ def cut_kernel(xpos, ypos, lsta_day2):
     # #
     # kernel =  np.mean(kernel)
 
-    kernel = lsta_day2.isel(lon=xpos+3,
+    kernel = lsta_day2.isel(lon=xpos,
                              lat=ypos).values
 
     # if (kernel == np.nan):
@@ -191,7 +193,7 @@ def cut_kernel(xpos, ypos, lsta_day2):
 
 
 def file_loop(fi):
-    print('Doing day: ', fi)
+    print('Starting day: ', fi)
 
     date = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
@@ -206,25 +208,14 @@ def file_loop(fi):
 
     try:
         lsta = xr.open_dataset(constants.LSTA_DOMSCALE + \
-                               'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+                               'lsta_daily_powerMaxscale_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
             daybefore.day).zfill(2) + '.nc')
     except OSError:
+        print('File not found')
         return
 
     print('Doing ' + 'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
-
-    temp_da = xr.open_dataset(constants.LSTA + \
-                              'lsta_daily_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
-        daybefore.day).zfill(2) + '.nc')
-    try:
-        temp_da = temp_da.sel(lat=slice(lsta['lat'].values.min(), lsta['lat'].values.max()),
-                              lon=slice(lsta['lon'].values.min(), lsta['lon'].values.max()))
-    except OSError:
-        return
-
-    temp_da = temp_da['LSTA']
-    temp = temp_da.values
 
     # lsta = lsta.where(np.abs(temp) > 0.2)
     # temp_da = temp_da.where(np.abs(temp) > 0.2)
@@ -234,16 +225,16 @@ def file_loop(fi):
     gradsum = abs(grad[0]) + abs(grad[1])
 
     lsta_da = lsta['LSTA'].squeeze()
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
+    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.40:
         print('Not enough valid')
         return None
 
     # lsta_da.values[np.isnan(lsta_da.values)] = 0
 
-    lsta_da.values[ttopo.values >= 450] = np.nan
+    lsta_da.values[ttopo.values >= 400] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
-    scale_list = (lsta.values).flatten()
+    scale_list = lsta_da.values.flatten()
 
     # plt.figure()
     # plt.imshow(lsta_day2[0,:,:])
@@ -275,27 +266,17 @@ def file_loop(fi):
         ypos = np.where(lsta['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            ano = cut_kernel(xpos, ypos, lsta)
+            ano = cut_kernel(xpos, ypos, lsta_da)
         except TypeError:
             continue
 
-        if ano == np.nan:
+        if ~np.isfinite(ano):
             continue
 
-        try:
-            anot = cut_kernel(xpos, ypos, temp_da)
-        except TypeError:
-            continue
-
-        if anot > 0: signt = 1
-        else: signt = 0
-        if ano > 0: sign = 1
-        else: sign = 0
-
-        if signt == sign: bla = 1
-        else: bla = 0
-
-        if ano == np.nan: bla = np.nan
+        if ano > 0:
+            bla = 1
+        else:
+            bla = 0
 
         kernel_list.append(ano)
         sign_list.append(bla)

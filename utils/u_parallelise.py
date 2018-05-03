@@ -27,7 +27,7 @@ def run_mixed(nb_processors, func, data, dic_names):
 
     res = pool.map(func, data)
     pool.close()
-    pdb.set_trace()
+
     if len(res[0]) != len(dic_names):
         print('Error with creating output dic. Need same number of function output as dictionary names')
 
@@ -38,7 +38,24 @@ def run_mixed(nb_processors, func, data, dic_names):
 
     for r in res:
         for id, l in enumerate(dic_names):
-            dic[l].append(np.squeeze(r[id]))
+            dic[l].append(r[id])
 
     return dic
 
+def run_flat(nb_processors, func, data, dic_names):
+
+    pool = multiprocessing.Pool(processes=nb_processors)
+
+    res = pool.map(func, data)
+    pool.close()
+
+    res = [x for x in res if x is not None]
+    dic = {}
+
+    res = np.array(res)
+    pdb.set_trace()
+    for id, l in enumerate(dic_names):
+
+            dic[l] = np.squeeze(res[:,id,...])
+
+    return dic

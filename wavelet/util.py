@@ -101,6 +101,7 @@ def waveletSurface(t, dt):
     mother2d = w2d.Mexican_hat()
 
     powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.75, s0=1500. / mother2d.flambda(), J=10)  # s0=30./
+
     #powerTIR[np.real(powerTIR >= 0)] = 0.01
     powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR))  # Normalized wavelet power spectrum
     period2d = 1. / freqs2d
@@ -129,7 +130,8 @@ def waveletLSTA_dom(t, dt):
 
     mother2d = w2d.Mexican_hat()
 
-    powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+    #powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)  # s0=30./
+    powerTIRR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
     #powerTIRR[np.real(powerTIRR <= 0)] = 0
 
     powerTIR = (np.abs(powerTIRR)) * (np.abs(powerTIRR))  # Normalized wavelet power spectrum
@@ -259,11 +261,13 @@ def waveletLSTA_both(t, dt, dom=False):
 
     tir = t.copy()
     mother2d = w2d.Mexican_hat()
-    powerTIRR_dry, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    #powerTIRR_dry, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    powerTIRR_dry, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)
     powerTIRR_dry[np.real(powerTIRR_dry <= 0)] = 0
 
     tir = tir * -1
-    powerTIRR_wet, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    #powerTIRR_wet, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.45, s0=18. / mother2d.flambda(), J=10)
+    powerTIRR_wet, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=0.28, s0=18. / mother2d.flambda(), J=14)
     powerTIRR_wet[np.real(powerTIRR_wet <= 0)] = 0
 
     period2d = 1. / freqs2d
