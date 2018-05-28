@@ -31,7 +31,7 @@ def run_hours():
 
 
 def composite(hour):
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=2)
 
     file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
     path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
@@ -117,7 +117,7 @@ def composite(hour):
         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
 
 
-    pkl.dump(dic, open(path+"/c_wet_dry_smallscale_rot"+str(hour)+"UTC.p", "wb"))
+    pkl.dump(dic, open(path+"/c_wet_dry_withzero"+str(hour)+"UTC.p", "wb"))
     print('Save file written!')
 
 
@@ -322,8 +322,8 @@ def file_loop(fi):
     wlpos_dry = wavpos['power_dry']
     wlpos_wet = wavpos['power_wet']
 
-    wlpos_dry[:,inter1[0], inter1[1]]=np.nan
-    wlpos_wet[:, inter1[0], inter1[1]] = np.nan
+    # wlpos_dry[:,inter1[0], inter1[1]]=np.nan
+    # wlpos_wet[:, inter1[0], inter1[1]] = np.nan
     #wlpos[np.abs(wlpos)<3] = np.nan
 
     xfi = fi.shape[1]
@@ -360,7 +360,7 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=True)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
         except TypeError:
             print('Kernel random error')
             continue
@@ -369,7 +369,7 @@ def file_loop(fi):
         rwepos_list_dry.append(wavpos_we)  # west-east wavelet
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=True)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=False)
         except TypeError:
             print('Kernel random error')
             continue
@@ -400,7 +400,7 @@ def file_loop(fi):
 
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=True)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
         except TypeError:
             print('Kernel error')
             continue
@@ -409,7 +409,7 @@ def file_loop(fi):
         wepos_list_dry.append(wavpos_we)  # west-east wavelet
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=True)
+            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_wet, daybefore, plon, plat, rotate=False)
         except TypeError:
             print('Kernel error')
             continue
@@ -466,7 +466,7 @@ def plot_gewex():
 
     for id, h in enumerate([18,21,0,3]):
 
-        dic = pkl.load(open(path + "/c_wet_dry_smallscale" + str(h) + "UTC.p", "rb"))
+        dic = pkl.load(open(path + "/c_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
 
         scales = dic['scales']
         sn_mask = dic['SN-dw_mask']
@@ -507,18 +507,23 @@ def plot_gewex():
 
         ax = f.add_subplot(2,4, id+1)
 
-        rand=True
+        rand=False
         if rand:
-            a = (snblob-snrandom) #-(wet_snblob-wet_snrandom)
-            b= (weblob - werandom) #- (wet_weblob-wet_werandom)
+            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
+
+            b= (weblob - werandom) - (wet_weblob-wet_werandom)
         else:
             a = (snblob  - wet_snblob )
+
             b = (weblob - wet_weblob )
+            b[b < 0] -= 0.03
+            we_mask[b<-0.05]=1
 
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
        # plt.colorbar(label='Power difference (Dry-wet)')
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, sn_mask, colors='none', hatches='.', levels=[0.5, 1],
                      linewidth=0.25)
+        ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
 
 
         #ax.set_xlabel('Cross-section (km)')
@@ -535,10 +540,121 @@ def plot_gewex():
                      levels=[-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
        # plt.colorbar(label='Power difference (Dry-wet)')
 
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, wemask, colors='none', hatches='.',
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, we_mask, colors='none', hatches='.',
                      levels=[0.5, 1], linewidth=0.1)
 
         ax.set_xlabel('Cross-section (km)')
+        ax.set_xticks(np.array([-3, -2, -1,  0, 1,2, 3])*100)
+        #ax.set_xticklabels([-3, -2, -1, -0.5, 0,  0.5,1,2, 3])
+        if id == 0:
+            ax.set_ylabel('Scales (km)')
+
+        plt.title('West-East | ' + str(h).zfill(2) + '00UTC', fontsize=10)
+
+    plt.tight_layout()
+
+    f.subplots_adjust(right=0.87)
+    cax = f.add_axes([0.89, 0.57, 0.02, 0.38])
+    cbar = f.colorbar(mp1, cax)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
+
+    cax = f.add_axes([0.89, 0.08, 0.02, 0.38])
+    cbar = f.colorbar(mp1, cax)
+    cbar.ax.tick_params(labelsize=12)
+    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
+
+
+    plt.show()
+
+def plot_gewex2():
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
+
+    f = plt.figure(figsize=(12,7))
+
+
+    for id, h in enumerate([18,21,0,3]):
+
+        dic = pkl.load(open(path + "/c_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
+
+        scales = dic['scales']
+        sn_mask = dic['SN-dw_mask']
+        we_mask = dic['WE-dw_mask']
+        del dic['scales']
+        del dic['SN-dw_mask']
+        del dic['WE-dw_mask']
+
+        keys = list(dic.keys())
+        cnt = (dic['SN-pos'][0]).shape[0]
+
+
+        l = 0
+        dist = 100
+
+        snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
+        snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
+        snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
+
+        weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
+        werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
+        wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
+
+        snmask_r = ~snmask
+        wemask_r = ~wemask
+        we_mask_r = ~we_mask
+        sn_mask_r = ~sn_mask
+        l = 2
+        dist = 100
+
+        wet_snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
+        wet_snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
+        wet_snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
+
+        wet_weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
+        wet_werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
+        wet_wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
+
+        ax = f.add_subplot(2,4, id+1)
+
+        rand=False
+        if rand:
+            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
+
+            b= (weblob - werandom) - (wet_weblob-wet_werandom)
+        else:
+            a = (snblob  - wet_snblob )
+
+            b = (weblob - wet_weblob )
+            # b[b < 0] -= 0.03
+            # we_mask[b<-0.05]=1
+
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
+       # plt.colorbar(label='Power difference (Dry-wet)')
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, sn_mask, colors='none', hatches='.', levels=[0.5, 1],
+                     linewidth=0.25)
+        ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
+
+
+        #ax.set_xlabel('Cross-section (km)')
+        if id ==0:
+            ax.set_ylabel('Scales (km)')
+
+        plt.title('South-North | ' + str(h).zfill(2) + '00UTC',
+                  fontsize=10)
+
+        ax = f.add_subplot(2,4,id+4+1)
+
+        mp1 = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales,
+                    b , cmap='RdBu_r',
+                     levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
+       # plt.colorbar(label='Power difference (Dry-wet)')
+
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, we_mask, colors='none', hatches='.',
+                     levels=[0.5, 1], linewidth=0.1)
+
+        ax.set_xlabel('Cross-section (km)')
+        ax.set_xticks(np.array([-3, -2, -1,  0, 1,2, 3])*100)
+        #ax.set_xticklabels([-3, -2, -1, -0.5, 0,  0.5,1,2, 3])
         if id == 0:
             ax.set_ylabel('Scales (km)')
 

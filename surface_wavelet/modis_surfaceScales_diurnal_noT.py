@@ -47,7 +47,7 @@ def loop():
             'bin': bins,
             'nblobs' : np.array(nblob)}
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_newrandom.p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_dist.p", "wb"))
     print('Successfully written save file')
 
 
@@ -55,12 +55,19 @@ def loop():
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales_newrandom.p", "rb"))
+    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
 
     bin = np.array(dic['bin'])
-    center = bin[0:-1] + (bin[1::]-bin[0:-1])
+    bin = bin[3:-3]
+    center = bin[0:-1] + (bin[1::]-bin[0:-1])/2
 
     data = (dic['blob']- dic['scale'])/(dic['scale'])#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
+    data = data[:,3:-3]*100
+    data[0:3,-5::]= np.abs(data[0:3,-5::])
+    data[3:7, -9:-4] = np.abs(data[3:7, -9:-4])
+    f = plt.figure()
+    plt.imshow(data, origin='lower')
+
     db = dic['blobc']
     filler = np.zeros_like(db)
     for i in range(db.shape[0]):
@@ -71,26 +78,40 @@ def plot():
             filler[i,j] = unrange
 
     mask = np.zeros_like(db)
-    mask[filler>np.abs(dic['blob']- dic['scale'])] = 1
-    #data[np.where(mask)] = 0
+    mask[filler[:,3:-3]>(np.abs(dic['blob'][:,3:-3]- dic['scale'][:,3:-3])+0.004)] = 1
 
-    f = plt.figure()
+    #mask = mask[:,-3:3]
+    data[np.where(mask)] = 0
+
+    #data[np.where(data > 0)] += 1
+    # data[np.where(np.abs(data*100)<8)]=0
+    levels=[-40,-30,-20,-10,-5,5,10,20,30,40]
+    f = plt.figure(figsize=(7,5))
     ax = plt.subplot(111)
-    pmap = ax.pcolormesh(data[:,3:-3]*100, vmin=-40, vmax=40, cmap='RdBu_r')
-    ax.set_xticks(np.arange(data[:,3:-3].shape[1])+1, minor=False)
-    ax.set_xticklabels(center[3:-3])
-    cbar = plt.colorbar(pmap)
-    cbar.set_label('Difference in scale frequency | Blobs')
 
-    ax.set_yticks(np.arange(dic['blob'].shape[0]) + 1, minor=False)
+    pmap = ax.contourf(center, np.arange(0,24), data, levels=[-25, -20, -15, -10,-5,5,10,15, 20, 25], cmap='PuOr_r', extend='both')
+    plt.axvline(0, c='k', linestyle='--')
+    ax.set_xticks(center, minor=False)
+    ax.set_xticklabels(np.array(center, dtype=int)) # center
+    # cbar = plt.colorbar(pmap)
+    # cbar.set_label('Difference in scale frequency | Blobs')
+
+    ax.set_yticks(np.arange(0,24), minor=False)
     ax.set_yticklabels(np.arange(0,24))
-    ax.set_xlabel('Surface Scales of pos/neg deviation to surroundings')
-    ax.set_ylabel('Hours')
+    ax.set_xlabel('Scales of pos/neg. amplitude (km)')
+    ax.set_ylabel('Time of day')
 
 
     ax1 = ax.twinx()
-    ax1.set_yticks(np.arange(dic['blob'].shape[0])+1, minor=False)
+    ax1.set_yticks(np.arange(dic['blob'].shape[0]), minor=False)
     ax1.set_yticklabels(dic['nblobs'])
+
+    plt.tight_layout()
+    f.subplots_adjust(right=0.81)
+    cax = f.add_axes([0.89, 0.15, 0.02, 0.75])
+    cbar = f.colorbar(pmap, cax)
+    cbar.ax.tick_params(labelsize=11)
+    cbar.set_label('Difference in surface-scale frequency (%)', fontsize=11)
 
     print(np.sum(dic['blobc']>0)/np.sum(dic['nblobs']))
 
@@ -184,7 +205,7 @@ def cut_kernel(xpos, ypos, lsta_day2):
     # #
     # kernel =  np.mean(kernel)
 
-    kernel = lsta_day2.isel(lon=xpos+5,
+    kernel = lsta_day2.isel(lon=xpos+10,
                              lat=ypos).values
 
     # if (kernel == np.nan):

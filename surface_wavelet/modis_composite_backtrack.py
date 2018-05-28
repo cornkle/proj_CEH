@@ -23,7 +23,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for l in np.arange(16,24):
+    for l in np.arange(17,23):
         print('Doing '+str(l))
         composite(l)
 
@@ -42,13 +42,13 @@ def composite(h):
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
 
-    dic = u_parallelise.run_arrays(2,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'prob'])
+    dic = u_parallelise.run_arrays(1,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'prob'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_-"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -440,7 +440,7 @@ def plot(h):
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_topo"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
@@ -449,6 +449,8 @@ def plot_gewex(h):
 
     plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
+    plt.contour((dic['prob']/ dic['cnt']) * 100, levels=np.arange(0,2, 0.5), extend='both')
+
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
@@ -458,8 +460,8 @@ def plot_gewex(h):
 
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    plt.close()
+    # plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    # plt.close()
 
 
 def plot_all():

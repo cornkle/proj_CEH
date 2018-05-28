@@ -130,7 +130,7 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(constants.LSTA + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
     print('Doing '+ 'lsta_daily_' + fdate + '.nc')
