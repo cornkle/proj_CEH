@@ -7,8 +7,13 @@ Created on Thu Jun  2 14:08:18 2016
 import numpy as np
 from wavelet import twod as w2d 
 from scipy import ndimage
+from wavelet import wav
 import pdb
 import matplotlib.pyplot as plt
+
+TIR = {'dist': 1/12. ,'start': 15, 'number': 45}
+SRFC = {'dist': 0.45 ,'start': 9, 'number': 10}
+
 def waveletTP(t, p, dt):
         
     dic= {}    
@@ -17,18 +22,19 @@ def waveletTP(t, p, dt):
     #TIR   
     tir=t.copy()
     tir[tir>0] = 0
-    tir = tir - np.mean(tir) 
-    mother2d = w2d.Mexican_hat()
-    
-    powerTIR, scales2d, freqs2d = w2d.cwt2d(tir, dt, dt, dj=1./12, s0=30./mother2d.flambda(), J=45)  # s0=30./
+    tir = tir - np.mean(tir)
+
+    obj = wav.method(dt, TIR['dist'], TIR['start'], TIR['number'])
+    powerTIR = obj.calc_coeff(tir)
+    scales2d = obj.norm_scales
     powerTIR[np.real(powerTIR>=0)] = 0.01
     powerTIR = (np.abs(powerTIR)) * (np.abs(powerTIR)) # Normalized wavelet power spectrum
-    period2d = 1. / freqs2d    
+
     scales2d.shape = (len(scales2d),1,1)
     powerTIR = powerTIR / (scales2d*scales2d)
     
     #Precip
-    powerPCP, scales2d, freqs2d = w2d.cwt2d(p, dt, dt, dj=1./12, s0=30./mother2d.flambda(), J=45)
+    powerPCP = obj.calc_coeff(p)
     powerPCP[np.real(powerPCP<=0)] = 0.01
     powerPCP = (np.abs(powerPCP)) * (np.abs(powerPCP)) # Normalized wavelet power spectrum
     scales2d.shape = (len(scales2d),1,1)
@@ -36,7 +42,7 @@ def waveletTP(t, p, dt):
         
     dic['t']=powerTIR
     dic['p']=powerPCP
-    dic['scales'] = (period2d/2.)
+    dic['scales'] = obj.scales
     
     return dic
 

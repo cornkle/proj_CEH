@@ -103,6 +103,11 @@ def cwt2d(f, dx, dy, dj=1./12, s0=-1, J=-1, a=None, wavelet=Mexican_hat()):
     N, M = 2 ** int(ceil(log2(n0))), 2 ** int(ceil(log2(m0)))   # Next higher power of 2
     
     a = s0 * 2. ** (arange(0, J+1) * dj)         # The scales
+    freqs = 1. / (wavelet.flambda() * a)         # As of Mallat 1999
+#    if a == None:
+##        J = int(floor(log2(min(n0, m0))) * 12)
+#        J = int(ceil(log2(min(n0, m0))) * 11)
+#        a = 46. * 2 ** (arange(J) / 9.)
     A = len(a)
     # Calculates the zonal and meridional wave numbers.
     l, k = 2 * pi * fftfreq(N, dy), 2 * pi * fftfreq(M, dx)
@@ -115,7 +120,7 @@ def cwt2d(f, dx, dy, dj=1./12, s0=-1, J=-1, a=None, wavelet=Mexican_hat()):
         psi_ft_bar = an * wavelet.psi_ft(an * k, an * l)
         Wf[i, :, :] = ifft2(f_ft * psi_ft_bar, s=(N, M))
 
-    return Wf[:, :n0, :m0]
+    return Wf[:, :n0, :m0], a, freqs
 
 
 def icwt2d(W, a, dx=0.25, dy=0.25, da=0.25, wavelet=Mexican_hat()):
