@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 TIR = {'dist': 1/12. ,'start': 15, 'number': 45}
 SRFC = {'dist': 0.45 ,'start': 9, 'number': 10}
 
+def normalise(wav_coeffs):
+    norm_coeffs = (np.abs(wav_coeffs)) * (np.abs(wav_coeffs))  # Normalized wavelet power spectrum
+
 def waveletTP(t, p, dt):
         
     dic= {}    

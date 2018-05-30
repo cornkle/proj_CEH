@@ -45,7 +45,20 @@ class method(object):
         self.pixel = res
         self.scales = scales
         self.norm_scales = a
+        self.norm_coeffs = None
+        self.wav_coeffs = None
 
-    def calc_coeff(self, data):
+    def calc_coeffs(self, data):
+        """
+        Calculate wavelet coefficients and scale-normalised wavelet coefficients
+        :param data: 
+        :return: 
+        """
 
-        p_spec = w2d.cwt2d(data, self.pixel, self.pixel, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
+        wav_coeffs = w2d.cwt2d(data, self.pixel, self.pixel, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
+        norm_coeffs = (np.abs(wav_coeffs)) * (np.abs(wav_coeffs))  # Normalized wavelet power spectrum
+        scale_dummy = np.reshape(self.norm_scales, (len(self.norm_scales), 1, 1))
+        norm_coeffs = norm_coeffs / (scale_dummy * scale_dummy)
+
+        self.wav_coeffs = wav_coeffs
+        self.norm_coeffs = norm_coeffs
