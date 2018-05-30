@@ -39,12 +39,12 @@ class method(object):
         period = 1. / freqs
         scales = period/2.
 
-        self.scale_dist = dist
-        self.scale_start = s0
-        self.scale_number = nb
-        self.pixel = res
-        self.scales = scales
-        self.norm_scales = a
+        self.scale_dist = dist  # exponential factor for calculation of distance between decomposition scales
+        self.scale_start = s0 # smallest decomposition scale
+        self.scale_number = nb # the number of scales the data is decomposed into
+        self.pixel = res # pixel resolution (e.g. in km)
+        self.scales = scales # scales in unit of given pixel resolution
+        self.norm_scales = a # scales for normalising power spectrum
 
     def calc_coeff(self, data):
 
