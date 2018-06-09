@@ -204,7 +204,7 @@ def circle():
 
 
     ellipse = np.zeros((100,100))-70
-    short = 6
+    short = 5
 
     xcirc, ycirc = ua.draw_circle(50,50,short)
 
@@ -212,10 +212,11 @@ def circle():
     ellipse[ycirc,xcirc] = -80
     #ellipse[np.arange(50,54), [56]*4] = -74
 
-    wav = util.waveletT(ellipse, 5)
+    wav = util.waveletT(ellipse, 1)
 
     wll = wav['t']
     arr = np.round(wav['scales'])
+    print('AVAIL WAVELET SCALES: ', arr)
     maxs = np.zeros_like(wll)
     yl = []
     xl = []
@@ -224,13 +225,11 @@ def circle():
         orig = float(wav['scales'][nb])
         scale = int(np.round(orig))
 
-        print(np.round(orig))
-
         wl = wav['t'][nb, :, :]
         # maxout = maxoutt[nb, :, :]
 
         maxout = (
-            wl == ndimage.maximum_filter(wl, (5, 5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+            wl == ndimage.maximum_filter(wl, (5, 5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
         try:
             yy, xx = np.where((maxout == 1) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig*15 )))
@@ -248,7 +247,7 @@ def circle():
     print('finish loop')
 
     maxout2 = (
-            wll == ndimage.maximum_filter(wll, (5, 5,5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+            wll == ndimage.maximum_filter(wll, (5, 5,5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
     zl, yl, xl = np.where((maxout2==1))
     print('Scales: ', arr[zl])

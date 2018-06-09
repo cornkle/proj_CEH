@@ -34,6 +34,26 @@ def quick_map(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
     else:
         plt.show()
 
+def quick_imshow(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
+
+    f = plt.figure(figsize=(10, 6), dpi=300)
+    if not cmap:
+        cmap='viridis'
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    xar.plot.imshow(vmax=vmax, vmin=vmin, cmap=cmap)
+    ax.coastlines()
+    # Gridlines
+    xl = ax.gridlines(draw_labels=True);
+    xl.xlabels_top = False
+    xl.ylabels_right = False
+    # Countries
+    ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
+    plt.title(title)
+    if save:
+        plt.savefig(save)
+    else:
+        plt.show()
+
 def quick_map_salem(xar, save = None, levels=None, vmax=None, vmin=None, cmap=None, title=None):
 
     if not cmap:

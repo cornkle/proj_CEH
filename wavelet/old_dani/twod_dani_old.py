@@ -98,7 +98,7 @@ def cwt2d(f, dx, dy, dj=1./12, s0=-1, J=-1, a=None, wavelet=Mexican_hat()):
     # Determines the shape of the arrays and the discrete scales.
 
     n0, m0 = f.shape
-    if s0 == -1: s0 = 3 * max(dx,dy) / wavelet.flambda()  # Smallest resolvable scale
+    if s0 == -1: s0 = 2 * max(dx,dy) / wavelet.flambda()  # Smallest resolvable scale
     if J == -1: J = int(log2(max(n0,m0) * max(dx,dy) / s0) / dj)  # Number of scales
     N, M = 2 ** int(ceil(log2(n0))), 2 ** int(ceil(log2(m0)))   # Next higher power of 2
     
