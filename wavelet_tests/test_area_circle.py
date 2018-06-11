@@ -26,7 +26,7 @@ def calc_grid_area(diameter, grid_length):
 
 
 def plot_error():
-    df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000.p')
+    df = pd.read_pickle('/users/global/cornkle/papers/wavelet/saves/pandas/3dmax_gt15000_noR.p')
 
     scales = np.unique(df['scale'])
 

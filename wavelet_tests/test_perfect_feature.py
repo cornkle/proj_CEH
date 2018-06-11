@@ -203,14 +203,14 @@ def circle():
 
 
     ellipse = np.zeros((100,100))-70
-    short =7
+    short =20
 
     xcirc, ycirc = ua.draw_circle(50,50,short)
 
 
     ellipse[ycirc,xcirc] = -80
 
-    wav = util.waveletT(ellipse,dataset='METEOSAT5K')#dx=5, dist=0.08,start=15,nb=15 )
+    wav = util.waveletT(ellipse, dx=1, dist=1/12., start=15, nb=45)#dx=5, dist=0.08,start=15,nb=15 )
 
     wll = wav['t']
     arr = np.round(wav['scales'])
@@ -308,6 +308,19 @@ def circle():
 
     f = plt.figure()
     plt.imshow(ellipse)
+    print(xl,yl)
+    plt.plot(xl,yl, 'ro')
+    plt.show()
+
+    f = plt.figure()
+    pos = np.argmin(np.abs((2*short+1)*wav['res']-arr))
+
+    plt.imshow(wll[pos, :,:])
+    print(xl,yl)
+    plt.plot(xl,yl, 'ro')
+    plt.show()
+    f = plt.figure()
+    plt.imshow(wll[amax[0], :,:])
     print(xl,yl)
     plt.plot(xl,yl, 'ro')
     plt.show()
