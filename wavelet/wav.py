@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 from wavelet import twod as w2d
 
 
+
 class wavelet(object):
+
 
     def __init__(self, res, dist, nb, mother2d = w2d.Mexican_hat(), start=None):
 
@@ -37,7 +39,7 @@ class wavelet(object):
         self.scale_dist = dist  # exponential factor for calculation of distance between decomposition scales, check resulting scales!
         self.scale_start = s0 # smallest decomposition scale
         self.scale_number = nb # the number of scales the data is decomposed into
-        self.pixel = res # pixel resolution (e.g. in km)
+        self.res = res # pixel resolution (e.g. in km)
         self.scales = scales # scales in unit of given pixel resolution
         self.norm_scales = a # scales for normalising power spectrum
 
@@ -53,7 +55,7 @@ class wavelet(object):
                  norm_power: normalised wavelet power spectrum
         """
 
-        wav_coeffs = w2d.cwt2d(data, self.pixel, self.pixel, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
+        wav_coeffs = w2d.cwt2d(data, self.res, self.res, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
 
         if le_thresh:
             wav_coeffs[np.real(wav_coeffs <= le_thresh)] = fill

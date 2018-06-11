@@ -11,39 +11,50 @@ from wavelet import wav
 import pdb
 import matplotlib.pyplot as plt
 
-def create_dic(dt, dist, start, nb):
-
-    dic = {}
-    dic['dt'] = dt
-    dic['dist'] = dist
-    dic['start'] = start
-    dic['nb'] = nb
-
 def read_dic(dic):
-    dt = dic['dt']
+    dt = dic['dx']
     dist = dic['dist']
     start = dic['start']
     nb = dic['nb']
 
     return dt, dist, start, nb
 
+def _create_dic(dx, dist, start, nb):
+
+    dic = {}
+    dic['dx'] = dx
+    dic['dist'] = dist
+    dic['start'] = start
+    dic['nb'] = nb
+
+    return dic
+
 ############ Frequently used datasets
-METEOSAT5k = create_dic(5, 1/12., 15, 45)
-GRIDSAT = create_dic(8, 1/12. , 15,  45)
-METSRFC = create_dic( 3, 0.45 ,9, 10)
+DATASETS = {
+    'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),
+    'GRIDSAT': _create_dic(8, 1 / 12., 15, 45),
+    'METSRFC': _create_dic(3, 0.45, 9, 10)
+}
 
 
-def waveletTP(t, p, dt):
-        
-    dic= {}    
-        
+def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
     #2D continuous wavelet analysis:
     #TIR   
     tir=t.copy()
     tir[tir>0] = 0
     tir = tir - np.mean(tir)
 
-    obj = wav.wavelet(dt, METEOSAT5k['dist'], dt, METEOSAT5k['number'])
+    obj = wav.wavelet(dx, dist, nb, start=start)
 
     #TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
@@ -53,30 +64,32 @@ def waveletTP(t, p, dt):
     dic['t']=powerTIR
     dic['p']=powerPCP
     dic['scales'] = obj.scales
-    
+    dic['res'] = obj.res
     return dic
 
 
-def waveletT(t, input_dic=None, dt=None, dist=None, start=None, number=None  ):
-
-    if input_dic:
-        dt, dist, start, number = read_dic(input_dic)
-    else:
-        if not all([dt, dist, number]):
-            return('Missing an input keyword, return')
+def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
     dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx, dist, nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
 
     tir = t.copy()
     tir[tir > 0] = 0
     tir = tir - np.mean(tir)
 
-    obj = wav.wavelet(dt, dist, number, start=start)
+    obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
 
     dic['t'] = powerTIR
     dic['scales'] = obj.scales
+    dic['res'] = obj.res
 
     return dic
 #

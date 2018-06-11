@@ -197,22 +197,20 @@ def ellipse():
     plt.show()
 
 
-
 def circle():
     matplotlib.rc('xtick', labelsize=10)
     matplotlib.rc('ytick', labelsize=10)
 
 
     ellipse = np.zeros((100,100))-70
-    short = 5
+    short =7
 
     xcirc, ycirc = ua.draw_circle(50,50,short)
 
 
     ellipse[ycirc,xcirc] = -80
-    #ellipse[np.arange(50,54), [56]*4] = -74
 
-    wav = util.waveletT(ellipse, 1)
+    wav = util.waveletT(ellipse,dataset='METEOSAT5K')#dx=5, dist=0.08,start=15,nb=15 )
 
     wll = wav['t']
     arr = np.round(wav['scales'])
@@ -223,24 +221,22 @@ def circle():
     for nb in range(wav['t'].shape[0]):
 
         orig = float(wav['scales'][nb])
-        scale = int(np.round(orig))
 
         wl = wav['t'][nb, :, :]
-        # maxout = maxoutt[nb, :, :]
 
         maxout = (
-            wl == ndimage.maximum_filter(wl, (5, 5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
+            wl == ndimage.maximum_filter(wl, (5, 5), mode='constant', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
         try:
-            yy, xx = np.where((maxout == 1) & ((wl >= np.percentile(wl[wl >= 0.5], 90)) & (wl > orig*15 )))
+            yy, xx = np.where((maxout == 1) & (wl > orig ** .5))
         except IndexError:
             continue
-        #pdb.set_trace()
+
         for y, x in zip(yy, xx):
-            print(arr[nb],y,x)
+            #print(arr[nb],y,x)
 
             maxs[nb,y,x] = 1
-            print('Power value',wll[nb,y,x])
+            #print('Power value',wll[nb,y,x])
             yl.append(y)
             xl.append(x)
 
@@ -249,15 +245,23 @@ def circle():
     maxout2 = (
             wll == ndimage.maximum_filter(wll, (5, 5,5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
-    zl, yl, xl = np.where((maxout2==1))
-    print('Scales: ', arr[zl])
-    print(np.where((maxout2==1)))
-    print(arr[np.where((maxout2==1))[0]])
+    zl, yl, xl = np.where((maxout2==1) & (wll > arr.repeat(100*100,axis=0).reshape((46,100,100)) ** .5))
+    wlmax = np.max(wll[zl,yl,xl])
+    pl = np.where(wll == wlmax)
 
+    zll, yll, xll = np.where((maxs == 1))
+    wllmax = np.max(wll[zll,yll,xll])
+    pll = np.where(wll == wllmax)
+
+    print('Max point scales: ', arr[zl])
 
     amax = np.unravel_index(np.argmax(wll), wll.shape)
-    print('Totalmax', arr[amax[0]])
-    print('Pixelacross', arr[amax[0]]/5)
+    print('Totalmax whole domain', arr[amax[0]])
+    print('Totalmax 3d', arr[pl[0]])
+    print('Totalmax 2d', arr[pll[0]])
+    print('Scale of perfect circle', (2*short+1)*wav['res'])
+    print('Pixel-adjusted perfect circle', (2 *short + 1 -2) * wav['res'])
+    print('Max scale in pixelacross', arr[amax[0]]/wav['res'])
     print('Power max', np.max(wll))
 
     f = plt.figure(figsize = (6.5,11), dpi=300)
