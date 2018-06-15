@@ -4,6 +4,9 @@ import numpy as np
 from scipy.interpolate import griddata
 import pdb
 import math
+import scipy.interpolate as spint
+import scipy.spatial.qhull as qhull
+import itertools
 
 proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
 
@@ -14,6 +17,20 @@ proj: projection from pyproj to create the grid. If not set default is mercator:
       proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
 dx: number of meters per pixel, must be integer, e.g. 5000 for 5km pixels
 """
+
+def _interp_weights(xyz, uvw, d=None):
+    tri = qhull.Delaunay(xyz)
+    simplex = tri.find_simplex(uvw)
+    vertices = np.take(tri.simplices, simplex, axis=0)
+    temp = np.take(tri.transform, simplex, axis=0)
+    delta = uvw - temp[:, d]
+    bary = np.einsum('njk,nk->nj', temp[:, :d, :], delta)
+    return vertices, np.hstack((bary, 1 - bary.sum(axis=1, keepdims=True)))
+
+def _interpolate(values, vtx, wts, fill_value=np.nan):
+    ret = np.einsum('nj,nj->n', np.take(values, vtx), wts)
+    ret[np.any(wts < 0, axis=1)] = fill_value
+    return ret
 
 
 def make(lon, lat, dx, proj=proj):
@@ -59,6 +76,7 @@ def griddata_input(lon, lat, grid):
     return inter, points
 
 
+
 """
 Quick linear regrid function for irregular data that takes lon, lat, data of the same dimensions and interpolates
 the data to the salem grid
@@ -87,32 +105,129 @@ def quick_regrid(lon, lat, data, grid):
 
     return data
 
+def regrid_irregular(x, y, new_x, new_y,  data):
+    if x.ndim == 1:
+        grid_xs, grid_ys = np.meshgrid(x, y)
+    else:
+        grid_xs = x
+        grid_ys = y
 
-def creategrid(min_lon, max_lon, min_lat, max_lat, cell_size_deg, mesh=False):
-    # ’’’Output grid within geobounds and specifice cell size
-    # cell_size_deg should be in decimal degrees’’’
+    if new_x.ndim == 1:
+        new_xs, new_ys = np.meshgrid(new_x, new_y)
+    else:
+        new_xs = new_x
+        new_ys = new_y
 
-    # min_lon = math.floor(min_lon)
-    # max_lon = math.ceil(max_lon)
-    # min_lat = math.floor(min_lat)
-    # max_lat = math.ceil(max_lat)
+    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
 
-    lon_num = (max_lon - min_lon) / cell_size_deg
-    lat_num = (max_lat - min_lat) / cell_size_deg
+    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
 
-    grid_lons = np.zeros(lon_num)  # fill with lon_min
-    grid_lats = np.zeros(lat_num)  # fill with lon_max
-    grid_lons = grid_lons + (np.asarray(range(lon_num)) * cell_size_deg)
-    grid_lats = grid_lats + (np.asarray(range(lat_num)) * cell_size_deg)
+    # Interpolate using delaunay triangularization
+    coll = []
+    for d in data:
 
-    grid_lons, grid_lats = np.meshgrid(grid_lons, grid_lats)
-    grid_lons = np.ravel(grid_lons)
-    grid_lats = np.ravel(grid_lats)
-    # if mesh = True:
-    # grid_lons = grid_lons
-    # grid_lats = grid_lats
+        d2d = griddata(points, d.flatten(), inter, method='linear')
 
-    return grid_lons, grid_lats
+        d2d = d2d.reshape((new_xs.shape[0], new_xs.shape[1]))
+        coll.append(d2d[None,...])
+    if len(coll)>1:
+        coll = np.concatenate(coll, axis=0)
+
+    return coll
+
+def regrid_irregular_quick(x, y, new_x, new_y,  data):
+
+    if data.ndim < 2:
+        print('Error. Data has less than 2 dimensions.')
+        return
+
+    if x.ndim == 1:
+        grid_xs, grid_ys = np.meshgrid(x, y)
+    else:
+        grid_xs = x
+        grid_ys = y
+
+    if new_x.ndim == 1:
+        new_xs, new_ys = np.meshgrid(new_x, new_y)
+    else:
+        new_xs = new_x
+        new_ys = new_y
+
+    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
+    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
+    # delaunay triangularization
+    vtx, wts = _interp_weights(points, inter, d=2)
+    # interpolate 2d arrays
+    coll = []
+    for d in data:
+        if d.ndim == 2:
+            d2d = _interpolate(d.flatten(), vtx, wts)
+            d2d = d2d.reshape((new_xs.shape))
+            coll.append(d2d[None,...])
+        if d.ndim == 3:
+            plevs = []
+            for pl in d:
+                pl2d = _interpolate(pl.flatten(), vtx, wts)
+                pl2d = pl2d.reshape((new_xs.shape))
+                plevs.append(pl2d[None, ...])
+            if len(plevs) > 1:
+                plevs = np.concatenate(plevs, axis=0)
+            coll.append(plevs[None, ...])
+
+    if len(coll)>1:
+        coll = np.concatenate(coll, axis=0)
+
+    return coll
+
+def interpolation_weights(x, y, new_x, new_y):
+
+    if x.ndim == 1:
+        grid_xs, grid_ys = np.meshgrid(x, y)
+    else:
+        grid_xs = x
+        grid_ys = y
+
+    if new_x.ndim == 1:
+        new_xs, new_ys = np.meshgrid(new_x, new_y)
+    else:
+        new_xs = new_x
+        new_ys = new_y
+
+    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
+    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
+
+    inds, weights = _interp_weights(points, inter, d=2)
+
+    return inds, weights
+
+
+def interpolate_data(data, inds, weights):
+
+    if data.ndim < 2 | data.ndim > 4:
+        print('Error. Only data with 2 - 4 dimensions allowed.')
+        return
+
+    # interpolate 2d arrays
+    coll = []
+    for d in data:
+        if d.ndim == 2:
+            d2d = _interpolate(d.flatten(), inds, weights)
+            d2d = d2d.reshape((data.shape[-2::]))
+            coll.append(d2d[None, ...])
+        if d.ndim == 3:
+            plevs = []
+            for pl in d:
+                pl2d = _interpolate(pl.flatten(), inds, weights)
+                pl2d = pl2d.reshape((data.shape[-2::]))
+                plevs.append(pl2d[None, ...])
+            if len(plevs) > 1:
+                plevs = np.concatenate(plevs, axis=0)
+            coll.append(plevs[None, ...])
+
+    if len(coll) > 1:
+        coll = np.concatenate(coll, axis=0)
+
+    return coll
 
 
 

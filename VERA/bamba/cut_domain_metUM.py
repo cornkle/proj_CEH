@@ -9,8 +9,9 @@ import salem
 
 veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'
 topo = cnst.WA_TOPO_1MIN
-
+### 3dvars & t2 , xmh*.pb*.nc files
 filepart = '/scratch/ssf/xmhkga.pb20140407.nc'
+
 keep_vars2d = ['STASH_m01s00i024', 'STASH_m01s03i237', 'STASH_m01s03i236', 'STASH_m01s16i222', 'STASH_m01s03i226' , 'STASH_m01s03i225'] # LST, spec hum 1.5m, T 1.5m, p at sl,10m v wind, 10m u wind
 keep_vars3d = ['STASH_m01s30i203', 'STASH_m01s30i201', 'STASH_m01s30i202', 'STASH_m01s30i204', 'STASH_m01s30i205', 'STASH_m01s30i206', 'STASH_m01s30i208' ] # u on P, v on P, T on P, spec H on P, rel H on P, omega on P
 
