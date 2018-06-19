@@ -4,7 +4,6 @@ import numpy as np
 import glob
 import os
 from utils import u_interpolate as uint
-import itertools
 
 
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'
@@ -62,9 +61,6 @@ units = {'sw_net': 'W m-2',
 box = [320, 500, 93, 250 ]  # x1, x2, y1, y2 Tai park box
 
 flist = glob.glob(folder+'xmhk*.nc')
-
-# vegdat = xr.open_dataarray(veg)
-# vegdat = vegdat.isel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
 
 dummy = xr.open_dataset(flist[0])
 dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
@@ -127,13 +123,11 @@ for tt in timex:
                 unit = units[key]
                 ds[key] = (('time', 'lat', 'lon'), regridded)
                 ds[key].attrs['unit'] = unit
-
-            # varsdat['forest_frac'] = (('pseudo_dim', 'grid_latitude_t', 'grid_longitude_t'), vegdat.values[0,:,:][None,...])
-
+            pdb.set_trace()
             if current in fname:
-                fname.replace(current, 'current')
+                fname = fname.replace(current, 'current')
             if past in fname:
-                fname.replace(past, 'past')
+                fname = fname.replace(past, 'past')
 
             ds.to_netcdf(out+fname)
             ds.close()
