@@ -49,7 +49,7 @@ def saveMCS_WA15():
         dt0 = dm[ind]
         ndate = date + dt.timedelta(minutes=int(dt0))
         m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
-        mdic = m.get_data(llbox=[tdic['lon'].values.min(),  tdic['lat'].values.min(), tdic['lon'].values.max(),tdic['lat'].values.max()])
+        mdic = m.get_data(llbox=[tdic['lon'].values.min(),  tdic['lon'].values.max(), tdic['lat'].values.min(),tdic['lat'].values.max()])
 
         # check whether date is completely missing or just 30mins interval exists
         if not mdic:
@@ -65,8 +65,7 @@ def saveMCS_WA15():
             dt0 = dm[ind]
             ndate = date + dt.timedelta(minutes=int(dt0))
             m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
-            mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lat'].values.min(), tdic['lon'].values.max(),
-                                     tdic['lat'].values.max()])
+            mdic = m.get_data(llbox=[tdic['lon'].values.min(),  tdic['lon'].values.max(), tdic['lat'].values.min(),tdic['lat'].values.max()])
 
             if not mdic:
                 print('Date missing')

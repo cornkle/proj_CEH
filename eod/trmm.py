@@ -108,7 +108,7 @@ class ReadWA(object):
             if np.sum(rain>rain_thresh) < min_rain_swath:  # minimum TRMM rainfall > 0.1 in swath
                 continue
             if area:
-                box = np.where((lont > area[0]) & (lont < area[2]) & (latt > area[1]) & (latt < area[3]))
+                box = np.where((lont > area[0]) & (lont < area[1]) & (latt > area[2]) & (latt < area[3]))
 
                 if not box[0].any():
                     continue

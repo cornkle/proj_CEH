@@ -10,11 +10,11 @@ from utils import u_interpolate as uint
 
 ### 2d vars , xmh*.pc*.nc files
 folder = '/scratch/ssf/'
-out = '/users/global/cornkle/w2018_bamba/linked/small/'
+out = '/users/global/cornkle/w2018_bamba/clean_files_raw/'
 
 atmo_bstream = '.pb'
-current = 'xmhkga'
-past = 'xmhkha'
+current = 'current'
+past = 'past'
 timex = [current, past]
 
 dict_cstream ={
@@ -39,10 +39,10 @@ units = {
 
 box = [320, 500, 93, 250 ]  # x1, x2, y1, y2 Tai park box
 
-flist = glob.glob(folder+'xmhk*.nc')
+flist = glob.glob(folder+'current*.nc')
 
 dummy = xr.open_dataset(flist[0])
-dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
+#dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
 
 lats = dummy.latitude_t[:, 0]
 lons = dummy.longitude_t[0, :]
@@ -61,32 +61,35 @@ inds, weights, shape = uint.interpolation_weights(lons, lats, lon_regular, lat_r
 for tt in timex:
     flist = glob.glob(folder + tt + atmo_bstream +'*.nc')
 
-    for f in flist[0:2]:
+    for f in flist:
 
         fname = f.split(os.sep)[-1]
         varsdat = xr.open_dataset(f)
-        varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]),
-                               P_ECMWF=slice(950, 550), grid_longitude_uv=slice(box[0], box[1]),
-                               grid_latitude_uv=slice(box[2], box[3]))
+        # varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]),
+        #                        P_ECMWF=slice(950, 550), grid_longitude_uv=slice(box[0], box[1]),
+        #                        grid_latitude_uv=slice(box[2], box[3]))
 
-        time = varsdat.TH1_MN.values
-        plevels = varsdat.P_ECMWF.values
-        ds = xr.Dataset(coords={'time': time, 'lat': lat_regular, 'lon': lon_regular, 'plevels' : plevels} )
-
-        varsdat = varsdat[list(dict_cstream.keys())]
-        varsdat.rename(dict_cstream, inplace=True)
-
+        #time = varsdat.TH1_MN.values
+        #plevels = varsdat.P_ECMWF.values
+        # ds = xr.Dataset(coords={'time': time, 'lat': lat_regular, 'lon': lon_regular, 'plevels' : plevels} )
+        #
+        # varsdat = varsdat[list(dict_cstream.keys())]
+        # varsdat.rename(dict_cstream, inplace=True)
+        varsdat = varsdat.sel(P_ECMWF=slice(975, 600))
         vkeys = varsdat.keys()
         for key in vkeys:
 
-            if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) :
-                continue
-            print('Doing variable', key)
-            data = varsdat[key].values
-            regridded = uint.interpolate_data(data, inds, weights, shape)
-            unit = units[key]
-            ds[key] = (('time', 'plevels', 'lat', 'lon'), regridded)
-            ds[key].attrs['unit'] = unit
+            # if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) :
+            #     continue
+            # print('Doing variable', key)
+            # data = varsdat[key].values
+            # regridded = uint.interpolate_data(data, inds, weights, shape)
+            try:
+                unit = units[key]
+            except KeyError:
+                pass
+            # ds[key] = (('time', 'plevels', 'lat', 'lon'), regridded)
+            # ds[key].attrs['unit'] = unit
 
         # varsdat['forest_frac'] = (('pseudo_dim', 'grid_latitude_t', 'grid_longitude_t'), vegdat.values[0,:,:][None,...])
 
@@ -95,8 +98,8 @@ for tt in timex:
         if past in fname:
             fname = fname.replace(past, 'past')
 
-        ds.to_netcdf(out+fname)
-        ds.close()
+        varsdat.to_netcdf(out+fname)
+        varsdat.close()
 
 
 

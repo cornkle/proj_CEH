@@ -71,7 +71,7 @@ units = {'sw_net': 'W m-2',
 
          }
 
-box = [150, 900, 93, 400]  # x1, x2, y1, y2 Tai park box
+box = [150, 900, 93, 400]
 flist = []
 
 for tx, sx in itertools.product(timex, streamx):

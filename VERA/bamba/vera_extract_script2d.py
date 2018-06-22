@@ -10,12 +10,12 @@ from utils import u_interpolate as uint
 
 ### 2d vars , xmh*.pc*.nc files
 folder = '/scratch/ssf/'
-out = '/users/global/cornkle/w2018_bamba/linked/small/'
+out = '/users/global/cornkle/w2018_bamba/clean_files_raw/'
 
 atmo_bstream = '.pb'
 flux_cstream = '.pc'
-current = 'xmhkga'
-past = 'xmhkha'
+current = 'current'
+past = 'past'
 timex = [current, past]
 streamx = [atmo_bstream, flux_cstream]
 
@@ -58,23 +58,23 @@ units = {'sw_net': 'W m-2',
 
          }
 
-box = [320, 500, 93, 250 ]  # x1, x2, y1, y2 Tai park box
+box = [30, 730, 10, 75 ]  # x1, x2, y1, y2 Tai park box
 
-flist = glob.glob(folder+'xmhk*.nc')
+flist = glob.glob(folder+'current*.nc')
 
 dummy = xr.open_dataset(flist[0])
-dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
+#dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
 
-lats = dummy.latitude_t[:, 0]
-lons = dummy.longitude_t[0, :]
-latmin = dummy.latitude_t.min()
-latmax = dummy.latitude_t.max()
-lonmin = dummy.longitude_t.min()
-lonmax = dummy.longitude_t.max()
-dist = np.round(np.float(np.mean(lats[1::].values - lats[0:-1].values)), decimals=4)
+lats = dummy.latitude_t[:, 0].values
+lons = dummy.longitude_t[0, :].values
+latmin = dummy.latitude_t.min().values
+latmax = dummy.latitude_t.max().values
+lonmin = dummy.longitude_t.min().values
+lonmax = dummy.longitude_t.max().values
+dist = np.round(np.float(np.mean(lats[1::] - lats[0:-1])), decimals=4)
 
-lat_regular = np.arange(latmin+5*dist, latmax - 5*dist, dist)
-lon_regular = np.arange(lonmin+5*dist, lonmax - 5*dist, dist)
+lat_regular = np.arange(latmin+10*dist, latmax - 10*dist, dist)
+lon_regular = np.arange(lonmin+10*dist, lonmax - 10*dist, dist)
 
 # interpolation weights for new grid
 inds, weights, shape = uint.interpolation_weights(lons, lats, lon_regular, lat_regular)
@@ -97,40 +97,40 @@ for tt in timex:
 
             fname = f.split(os.sep)[-1]
             varsdat = xr.open_dataset(f)
-
+            #varsdat = varsdat.sel(P_ECMWF=slice(975,600))
             time = varsdat.TH1_MN.values
             if 'time' not in ds.keys():
                 ds['time'] = time
 
-            if atmo_bstream in fname:
-                varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_longitude_uv=slice(box[0], box[1]),
-                                       grid_latitude_t=slice(box[2], box[3]), grid_latitude_uv=slice(box[2], box[3]))
-                varsdat = varsdat[list(dict_bstream.keys())]
-                varsdat.rename(dict_bstream, inplace=True)
-            if flux_cstream in fname:
-                varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
-                varsdat = varsdat[list(dict_cstream.keys())]
-                varsdat.rename(dict_cstream, inplace=True)
+            # if atmo_bstream in fname:
+            #     varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_longitude_uv=slice(box[0], box[1]),
+            #                            grid_latitude_t=slice(box[2], box[3]), grid_latitude_uv=slice(box[2], box[3]))
+            #     # varsdat = varsdat[list(dict_bstream.keys())]
+            #     # varsdat.rename(dict_bstream, inplace=True)
+            # if flux_cstream in fname:
+            #     varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
+                # varsdat = varsdat[list(dict_cstream.keys())]
+                # varsdat.rename(dict_cstream, inplace=True)
 
             vkeys = varsdat.keys()
             for key in vkeys:
 
-                if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) :
-                    continue
-                print('Doing variable', key)
-                data = varsdat[key].values
-                regridded = uint.interpolate_data(data, inds, weights, shape)
+                # if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) :
+                #     continue
+                # print('Doing variable', key)
+                # data = varsdat[key].values
+                # regridded = uint.interpolate_data(data, inds, weights, shape)
                 unit = units[key]
-                ds[key] = (('time', 'lat', 'lon'), regridded)
-                ds[key].attrs['unit'] = unit
-            pdb.set_trace()
+                # ds[key] = (('time', 'lat', 'lon'), regridded)
+                varsdat[key].attrs['unit'] = unit
+
             if current in fname:
                 fname = fname.replace(current, 'current')
             if past in fname:
                 fname = fname.replace(past, 'past')
 
-            ds.to_netcdf(out+fname)
-            ds.close()
+            varsdat.to_netcdf(out+fname)
+            varsdat.close()
 
 
 

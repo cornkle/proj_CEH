@@ -1,6 +1,11 @@
 import pdb
 import scipy.spatial.qhull as qhull
 import numpy as np
+from scipy.interpolate import griddata
+import salem
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import pause
+import pyproj
 
 
 def _interp_weights(xyz, uvw, d=None):
@@ -118,3 +123,43 @@ def regrid_irregular_quick(x, y, new_x, new_y, data):
     coll = interpolate_data(data, inds, weights, shape)
 
     return coll
+
+
+def griddata_comparison(data, x, y, new_x, new_y, isll=False):
+
+    """
+    :param x: current x variables (1 or 2d, definitely 2d if irregular!)
+    :param y: current y variables (1 or 2d, definitely 2d if irregular!)
+    :param new_x: target x vars
+    :param new_y: target y vars
+    :return:  triangulisation lookup table, point weights, 2d shape - inputs for interpolation func
+    """
+
+    if x.ndim == 1:
+        grid_xs, grid_ys = np.meshgrid(x, y)
+    else:
+        grid_xs = x
+        grid_ys = y
+
+    if new_x.ndim == 1:
+        new_xs, new_ys = np.meshgrid(new_x, new_y)
+    else:
+        new_xs = new_x
+        new_ys = new_y
+
+    if isll:
+        # Transform lon, lats to the mercator projection
+        proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
+        grid_xs, grid_ys = pyproj.transform(salem.wgs84, proj, grid_xs, grid_ys)
+        new_xs, new_ys = pyproj.transform(salem.wgs84, proj, new_xs, new_ys)
+
+    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
+    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
+    shape = new_xs.shape
+
+    # Interpolate using delaunay triangularization
+    data = griddata(points, data.flatten(), inter, method='nearest')
+    data = data.reshape((shape[0], shape[1]))
+
+    return data
+
