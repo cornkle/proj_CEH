@@ -92,7 +92,9 @@ def interpolate_data(data, inds, weights, shape):
             coll.append(d2d[None, ...])
         if d.ndim == 3:
             plevs = []
+
             for pl in d:
+                pdb.set_trace()
                 pl2d = _interpolate(pl.flatten(), inds, weights)
                 pl2d = pl2d.reshape(shape)
                 plevs.append(pl2d[None, ...])

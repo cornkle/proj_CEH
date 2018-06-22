@@ -10,7 +10,7 @@ from utils import u_interpolate as uint
 
 ### 2d vars , xmh*.pc*.nc files
 folder = '/scratch/ssf/'
-out = '/users/global/cornkle/w2018_bamba/clean_files_raw/'
+out = '/users/global/cornkle/w2018_bamba/regrid_raw/'
 
 atmo_bstream = '.pb'
 current = 'current'
@@ -37,69 +37,84 @@ units = {
          'omega_pl': 'Pa s-1'
          }
 
-box = [320, 500, 93, 250 ]  # x1, x2, y1, y2 Tai park box
-
-flist = glob.glob(folder+'current*.nc')
+flist = glob.glob(folder+'current*.pb*.nc')
 
 dummy = xr.open_dataset(flist[0])
-#dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
+box = [0, 690, 0, 300 ]
 
-lats = dummy.latitude_t[:, 0]
-lons = dummy.longitude_t[0, :]
-latmin = dummy.latitude_t.min()
-latmax = dummy.latitude_t.max()
-lonmin = dummy.longitude_t.min()
-lonmax = dummy.longitude_t.max()
-dist = np.round(np.float(np.mean(lats[1::].values - lats[0:-1].values)), decimals=4)
+dummy = dummy.isel(grid_latitude_t=slice(box[2],box[3]), grid_longitude_t=slice(box[0],box[1]),
+                   grid_latitude_uv=slice(box[2],box[3]), grid_longitude_uv=slice(box[0],box[1]))
 
-lat_regular = np.arange(latmin+5*dist, latmax - 5*dist, dist)
-lon_regular = np.arange(lonmin+5*dist, lonmax - 5*dist, dist)
+lats = dummy.latitude_t[:, 0].values
+lons = dummy.longitude_t[0, :].values
+latmin = dummy.latitude_t.min().values
+latmax = dummy.latitude_t.max().values
+lonmin = dummy.longitude_t.min().values
+lonmax = dummy.longitude_t.max().values
+dist = np.round(np.float(np.mean(lats[1::] - lats[0:-1])), decimals=4)
 
-# interpolation weights for new grid
-inds, weights, shape = uint.interpolation_weights(lons, lats, lon_regular, lat_regular)
+lat_regular = np.arange(latmin+10*dist, latmax - 10*dist, dist)
+lon_regular = np.arange(lonmin+10*dist, lonmax - 10*dist, dist)
+
+inds_uv, weights_uv, shr = uint.interpolation_weights(dummy.longitude_uv.values, dummy.latitude_uv.values, lon_regular, lat_regular)
 
 for tt in timex:
-    flist = glob.glob(folder + tt + atmo_bstream +'*.nc')
-
+    flist = glob.glob(folder + tt+'*.pb*.nc')
+    dates = []
     for f in flist:
+        strs = f.split('.')
+        dates.append(strs[1][2:10])
+    dates = np.unique(dates)
 
-        fname = f.split(os.sep)[-1]
-        varsdat = xr.open_dataset(f)
-        # varsdat = varsdat.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]),
-        #                        P_ECMWF=slice(950, 550), grid_longitude_uv=slice(box[0], box[1]),
-        #                        grid_latitude_uv=slice(box[2], box[3]))
+    for d in dates:
 
-        #time = varsdat.TH1_MN.values
-        #plevels = varsdat.P_ECMWF.values
-        # ds = xr.Dataset(coords={'time': time, 'lat': lat_regular, 'lon': lon_regular, 'plevels' : plevels} )
-        #
-        # varsdat = varsdat[list(dict_cstream.keys())]
-        # varsdat.rename(dict_cstream, inplace=True)
-        varsdat = varsdat.sel(P_ECMWF=slice(975, 600))
-        vkeys = varsdat.keys()
-        for key in vkeys:
+        ds = xr.Dataset(coords={'lat': lat_regular, 'lon': lon_regular})
 
-            # if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) :
-            #     continue
-            # print('Doing variable', key)
-            # data = varsdat[key].values
-            # regridded = uint.interpolate_data(data, inds, weights, shape)
-            try:
+        for f in flist:
+
+            fname = f.split(os.sep)[-1]
+            varsdat = xr.open_dataset(f)
+
+
+            if 'time' not in ds.keys():
+                time = varsdat.TH1.values
+                ds['time'] = time
+
+
+            varsdat = varsdat[list(units.keys())]
+
+            varsdat = varsdat.isel(grid_longitude_uv=slice(box[0], box[1]), grid_latitude_uv=slice(box[2], box[3]))
+            varsdat = varsdat.sel(P_ECMWF=slice(975,200))
+
+            vkeys = varsdat.keys()
+            for key in vkeys:
+
+                if ('longitude' in key) | ('latitude' in key) | ('TH1' in key) | ('height' in key) | ('P_ECMWF' in key) :
+                    continue
+                print('Doing variable', key)
+
+                data = varsdat[key].squeeze().values
+
+                times = []
+                for dat in data:
+                    regridded = uint.interpolate_data(dat, inds_uv, weights_uv, shr)
+
+                    times.append(regridded[None, ...])
+                regridded = np.concatenate(times, axis=0)
+
                 unit = units[key]
-            except KeyError:
-                pass
-            # ds[key] = (('time', 'plevels', 'lat', 'lon'), regridded)
-            # ds[key].attrs['unit'] = unit
+                ds[key] = (('time', 'plevel', 'lat', 'lon'), regridded)
+                ds[key].attrs['unit'] = unit
 
-        # varsdat['forest_frac'] = (('pseudo_dim', 'grid_latitude_t', 'grid_longitude_t'), vegdat.values[0,:,:][None,...])
+            if current in fname:
+                fname = fname.replace(current, 'current')
+            if past in fname:
+                fname = fname.replace(past, 'past')
 
-        if current in fname:
-            fname = fname.replace(current, 'current')
-        if past in fname:
-            fname = fname.replace(past, 'past')
 
-        varsdat.to_netcdf(out+fname)
-        varsdat.close()
-
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(out+tt+'_3d_'+d+'.nc', format='NETCDF4', encoding=encoding)
+        ds.close()
 
 

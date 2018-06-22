@@ -34,13 +34,13 @@ def quick_map_xr(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
     else:
         plt.show()
 
-def quick_map(ar, lon, lat, save = None, vmax=None, vmin=None, cmap=None, title=None):
+def quick_map(ar, lon, lat, save = None, vmax=None, vmin=None, cmap=None, title=None, levels=None, extent=None):
 
     f = plt.figure(figsize=(10, 6), dpi=300)
     if not cmap:
         cmap='viridis'
     ax = plt.axes(projection=ccrs.PlateCarree())
-    plt.contourf(lon, lat, ar, projection=ccrs.PlateCarree(), vmax=vmax, vmin=vmin, cmap=cmap)
+    mapp = ax.contourf(lon, lat, ar, projection=ccrs.PlateCarree(), vmax=vmax, vmin=vmin, cmap=cmap, levels=levels, extent=extent)
     ax.coastlines()
     # Gridlines
     xl = ax.gridlines(draw_labels=True);
@@ -49,6 +49,7 @@ def quick_map(ar, lon, lat, save = None, vmax=None, vmin=None, cmap=None, title=
     # Countries
     ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
     plt.title(title)
+    plt.colorbar(mapp)
     if save:
         plt.savefig(save)
     else:

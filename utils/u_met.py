@@ -138,3 +138,12 @@ def era_wind_rotate3d(array, ptime, lat, lon, level=None, ref_angle=None):
         rot_array[s,:,:] = rot
 
     return rot_array
+
+
+def theta_factor(pz):
+
+    return (1000 /pz) ** 0.286
+
+
+def theta(pz, t):
+    return (1000 / pz) ** 0.286 * t
