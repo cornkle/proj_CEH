@@ -85,11 +85,12 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
     obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
-    coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0)
 
     dic['t'] = powerTIR
     dic['scales'] = obj.scales
     dic['res'] = obj.res
+    dic['coeffs'] = coeffsTIR
 
     return dic
 #

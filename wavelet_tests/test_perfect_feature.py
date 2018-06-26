@@ -202,15 +202,15 @@ def circle():
     matplotlib.rc('ytick', labelsize=10)
 
 
-    ellipse = np.zeros((100,100))-70
-    short =20
+    ellipse = np.zeros((100,100))+5
+    short =25
 
     xcirc, ycirc = ua.draw_circle(50,50,short)
 
 
     ellipse[ycirc,xcirc] = -80
-
-    wav = util.waveletT(ellipse, dx=1, dist=1/12., start=15, nb=45)#dx=5, dist=0.08,start=15,nb=15 )
+    nb = 21
+    wav = util.waveletT(ellipse, dx=1, dist=0.08, start=15, nb=nb)#dx=5, dist=0.08,start=15,nb=15 )
 
     wll = wav['t']
     arr = np.round(wav['scales'])
@@ -245,7 +245,7 @@ def circle():
     maxout2 = (
             wll == ndimage.maximum_filter(wll, (5, 5,5), mode='reflect', cval=np.amax(wl) + 1))  # (np.round(orig / 5))
 
-    zl, yl, xl = np.where((maxout2==1) & (wll > arr.repeat(100*100,axis=0).reshape((46,100,100)) ** .5))
+    zl, yl, xl = np.where((maxout2==1) & (wll > arr.repeat(100*100,axis=0).reshape((nb+1,100,100)) ** .5))
     wlmax = np.max(wll[zl,yl,xl])
     pl = np.where(wll == wlmax)
 
@@ -324,3 +324,11 @@ def circle():
     print(xl,yl)
     plt.plot(xl,yl, 'ro')
     plt.show()
+
+    plt.figure()
+    plt.plot(wll[amax[0],50,:])
+    plt.plot(ellipse[50, :])
+    plt.plot(wav['coeffs'][amax[0],50,:])
+
+    print(np.sum(wll[amax[0],50,:]>0))
+    print(amax[0])
