@@ -28,7 +28,7 @@ def run_netcdf():
         inter1 = np.where(np.isnan(lsta.values))
         lsta[inter1] = 0
 
-        wav = util.waveletLSTA_dom(lsta.values, 3)
+        wav = util.LSTA_maxPowerScale(lsta.values, 3)
 
         wl = wav['dominant']
 

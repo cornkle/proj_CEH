@@ -317,7 +317,7 @@ def file_loop(fi):
     # except ValueError:
     #     wav_input[inter]=0
 
-    wavpos = util.waveletLSTA_both(wav_input, 3)
+    wavpos = util.LSTA_bothSigns(wav_input, 3)
 
     wlpos_dry = wavpos['power_dry']
     wlpos_wet = wavpos['power_wet']

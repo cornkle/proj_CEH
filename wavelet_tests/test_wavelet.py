@@ -1,10 +1,10 @@
-from wavelet import wavelet_composite_no_overlap as wcno
-from wavelet import wavelet_composite_Tonly as wct
-import numpy as np
-from utils import u_arrays as ua
 import pdb
-import matplotlib.pyplot as plt
 
+import numpy as np
+
+from utils import u_arrays as ua
+from wav_mixed import wavelet_composite_no_overlap as wcno
+from wavelet import wavelet_composite_Tonly as wct
 
 files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_size/')
 

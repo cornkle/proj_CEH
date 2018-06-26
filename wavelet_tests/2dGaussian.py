@@ -1,9 +1,9 @@
 #!/bin/env python
 
-import numpy as np
 import matplotlib.pyplot as plt
-from wavelet.old_dani import twod_dani_old as w2d
+import numpy as np
 
+from wav_mixed.old_dani import twod_dani_old as w2d
 
 x1 = np.arange(300)
 y1 = np.arange(300)

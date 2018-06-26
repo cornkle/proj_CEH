@@ -56,7 +56,7 @@ def run_waveletDry():
     lsta[inter1]=0
     # f = plt.figure()
     # plt.imshow(lsta.values)
-    wav = util.waveletLSTA_both(lsta.values,3)
+    wav = util.LSTA_bothSigns(lsta.values, 3)
 
     #wl = wav['dominant']
     power = wav['power_dry']
