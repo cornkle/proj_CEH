@@ -49,23 +49,23 @@ def slp():
     #ma# p.append_colorbar(ax=ax)
 
 def scatter_AEJspeed_tgrad():
-    file = '/localscratch/wllf030/cornkle/obs_data/ERA-I/ERA_u_wind_monthly_600hPa_79-2014.nc'
-    file2 = '/localscratch/wllf030/cornkle/obs_data/ERA-I/ERA-Int-Monthly-2mTemp.nc'
-    file3 = '/localscratch/wllf030/cornkle/obs_data/ERA-I/ERA_uv_wind_79-2014_925-850hPa.nc'
+    file = '/localscratch/wllf030/cornkle/ERA-I/ERA_u_wind_monthly_600hPa_79-2014.nc'
+    file2 = '/localscratch/wllf030/cornkle/ERA-I/ERA-Int-Monthly-2mTemp.nc'
+    file3 = '/localscratch/wllf030/cornkle/ERA-I/ERA_uv_wind_79-2014_925-850hPa.nc'
 
     da = xr.open_dataset(file)
     da2 = xr.open_dataset(file2)
     da3 = xr.open_dataset(file3)
 
-    da = da['u'].isel(time=(da['time.month']==8))
-    da2 = da2['t2m'].isel(time=(da2['time.month']==8))
-    da3 = da3['u'].isel(time=(da3['time.month'] == 8))
+    da = da['u'].isel(time=(da['time.month']==6))
+    da2 = da2['t2m'].isel(time=(da2['time.month']==6))
+    da3 = da3['u'].isel(time=(da3['time.month'] == 6))
 
     u = da.sel(latitude=slice(20, 5), longitude=slice(-10, 10)).mean(dim='longitude')
     t2 = da2.sel(latitude=slice(20, 5), longitude=slice(-10, 10)).mean(dim='longitude')
     u850 = da3.sel(latitude=slice(20, 5), longitude=slice(-10, 10), level=850).mean(dim='longitude')
     #pdb.set_trace()
-    pos = np.where((u['latitude']>9.) & (u['latitude']<16))
+    pos = np.where((u['latitude']>4.5) & (u['latitude']<14))
     pos=pos[0]
     print(u['latitude'][pos])
 
