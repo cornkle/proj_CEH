@@ -11,7 +11,7 @@ import numpy as np
 import os
 from utils import u_arrays as uarr
 import pandas as pd
-from utils import u_time as ut
+from utils import u_time as ut, u_interpolate as uint
 import datetime as dt
 from utils import u_grid
 import xarray as xr
@@ -153,7 +153,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
 
 def rewriteLSTA_toNetcdf(file, write=False):
 
-    out = file.replace('modis_raw_binary', 'modis_netcdf')
+    out = file.replace('lsta_raw_binary_new', 'lsta_netcdf_new_-mean')
     if '.gz' in out:
         out = out.replace('.gra.gz', '.nc')
     else:
@@ -181,16 +181,57 @@ def rewriteLSTA_toNetcdf(file, write=False):
 
     rrShape = (blat.shape[0],blat.shape[1])
 
-    rr = np.fromfile(file, dtype='>f')
-    rr.shape = rrShape
+    rr = np.fromfile(file, dtype=np.float32())#dtype='>f')
+    addVar = False
 
-    da = xr.DataArray(rr[None, ...], coords={'time':  date,
-                                             'lat':  blat[:,0],
-                                             'lon': blon[0,:]},
-                      dims=['time', 'lat', 'lon'])#.isel(time=0)
+    latmin = np.min(blat)
+    latmax = np.max(blat)
+    lonmin = -9.98 #np.min(blon)
+    lonmax = 9.98 #np.max(blon)
+    dist = np.round(np.float(np.mean(blon[0,:][1::] - blon[0,:][0:-1])), decimals=4)
+
+    lat_regular = np.arange(latmin + 10*dist, latmax - 10*dist , dist)
+    lon_regular = np.arange(lonmin , lonmax  , dist)
+    #
+    # # interpolation weights for new grid
+    # inds, weights, shape = uint.interpolation_weights(blon,blat, lon_regular,
+    #                                                   lat_regular)
+
+    ds = xr.Dataset(coords={'time':  date,
+                                             'lat':  lat_regular,
+                                             'lon': lon_regular})
+
+    if rrShape[0]*rrShape[1]*2 == rr.size:
+        rr2 = rr[int(rr.size/2)::].copy()
+        rr2.shape = rrShape
+        rr2_regridded = uint.griddata_comparison(rr2, blon, blat, lon_regular, lat_regular)
+
+        ds['NbSlot'] = (('time', 'lat', 'lon'), rr2_regridded[None, ...])
+
+        rr3 = rr[0:int(rr.size/2)].copy()
+        rr3.shape = rrShape
+        rr3[rr3 == -999] = np.nan
+        rr3_regridded = uint.griddata_comparison(rr3, blon, blat, lon_regular, lat_regular)
+
+        ds['LSTA'] = (('time', 'lat', 'lon'), rr3_regridded[None, ...])
+    else:
+        rr.shape = rrShape
+        rr[rr == -999] = np.nan
+        rr_regridded = uint.griddata_comparison(rr, blon, blat, lon_regular, lat_regular)
+        ds['LSTA'] = (('time', 'lat', 'lon'), rr_regridded[None, ...])
 
 
-    ds = xr.Dataset({'LSTA': da})
+    # rr.shape = rrShape
+    #
+    #
+    #
+    # da = xr.DataArray(rr[None, ...], ,
+    #                   dims=['time', 'lat', 'lon'])#.isel(time=0)
+    #
+    # ds = xr.Dataset({'LSTA': da})
+    # if addVar:
+    #     ds['NbSlot'] = (('time', 'lat', 'lon'), rr2[None, ...])
+
     if write:
         try:
             ds.to_netcdf(out)

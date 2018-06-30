@@ -13,7 +13,7 @@ import multiprocessing
 import pdb
 import pandas as pd
 from scipy import ndimage
-from cold_cloud_trend import era_geop_t3d as era_geop
+from CLOVER import era_geop_t3d as era_geop
 from utils import u_gis
 import pickle as pkl
 import statsmodels.stats.proportion as prop

@@ -39,7 +39,7 @@ def composite(h):
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
+    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
 
 
     dic = u_parallelise.run_arrays(1,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'prob'])
@@ -48,7 +48,7 @@ def composite(h):
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -173,33 +173,19 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
 
 def get_previous_hours(date):
 
-    # hour = date.hour
-    #
-    # if hour == 0:
-    #     hours = [0,23,22,21]
-    # if hour == 1:
-    #     hours = [1,0,23,22]
-    # if hour == 2:
-    #     hours = [2,1,0,23]
-    #
-    # if hour not in [0,1,2]:
-    #     hours = [hour, hour-1, hour-2, hour-3]
 
-    before = pd.Timedelta('3 hours')
+    before = pd.Timedelta('4 hours')
+    end = pd.Timedelta('1 hour')
 
     prev_time = date - before
 
-    file = constants.MCS_POINTS_DOM
+    file = constants.MCS_15K# MCS_15K #_POINTS_DOM
     msg = xr.open_dataarray(file)
 
-    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10), time=slice(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H")))
-
-    # msg = msg[(np.in1d(msg['time.hour'], hours))]
-    # pdb.set_trace()
-    # msg = msg[(msg['time.minute'] == 0) & (
-    #     msg['time.year']== date.year) & (msg['time.month'] == date.month & (msg['time.day'] == date.day))]
-
-    pos = np.where((msg.values >= 5) & (msg.values < 65))
+    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8), time=slice(prev_time.strftime("%Y-%m-%dT%H"), (date-end).strftime("%Y-%m-%dT%H")))
+    #pdb.set_trace()
+    #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
+    pos = np.where(msg.values<=-70) #(msg.values >= 5) & (msg.values < 65)) # #
 
     out = np.zeros_like(msg)
     out[pos] = 1
@@ -302,17 +288,10 @@ def file_loop(fi):
     probs = get_previous_hours(date)
     probs_on_lsta = lsta.salem.transform(probs)
 
-    # # Interpolate TRMM flags USING NEAREST
-    # inter, points = u_grid.griddata_input(fi['lon'].values, fi['lat'].values, lsta)
-    # dummyf = griddata(points, probs.flatten(), inter, method='nearest')
-    # outf = dummyf.reshape((grid.ny, grid.nx))
-    # outf = outf.astype(np.float)
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
-
-        t = fi.sel(lat=lat, lon=lon)
 
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
@@ -440,16 +419,17 @@ def plot(h):
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
     f = plt.figure(figsize=(7, 5))
     ax = f.add_subplot(111)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
-    plt.plot(extent, extent, 'bo')
-    plt.contour((dic['prob']/ dic['cnt']) * 100, levels=np.arange(0,2, 0.5), extend='both')
+    plt.contourf((dic['regional'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
+    #plt.plot(extent, extent, 'bo')
+    pdb.set_trace()
+    plt.contour((dic['prob']/ dic['cnt']) * 100, extend='both') #, levels=np.arange(1,5, 0.5)
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))

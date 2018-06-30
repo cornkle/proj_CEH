@@ -22,7 +22,7 @@ import pandas as pd
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-from cold_cloud_trend import era_geop_t3d as era_geop
+from CLOVER import era_geop_t3d as era_geop
 from utils import u_gis
 
 def composite():

@@ -17,13 +17,14 @@ import pdb
 from scipy.ndimage.measurements import label
 import cartopy
 import cartopy.crs as ccrs
+from matplotlib.pyplot import pause
 
 
 
 def run():
     #  (1174, 378)
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
-    pool = multiprocessing.Pool(processes=7)
+    pool = multiprocessing.Pool(processes=6)
 
     m = msg.ReadMsg(msg_folder, y1=2006, y2=2010)
     files  = m.fpath
@@ -46,15 +47,14 @@ def run():
 
     #pdb.set_trace()
 
-    res = pool.map(file_loop, passit)
+    #res = pool.map(file_loop, passit)
 
-    # for l in passit:
-    #
-    #     test = file_loop(l)
+    for l in passit:
+
+        test = file_loop(l)
 
     pool.close()
-
-
+    return
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
@@ -113,35 +113,47 @@ def file_loop(passit):
         return
 
     outt = u_grid.quick_regrid(mdic['lon'].values, mdic['lat'].values,mdic['t'].values.flatten(), grid)
-    figure = np.zeros_like(outt)
+    figure = np.zeros_like(outt.flatten())
 
-    outt[outt > -50] = 0
+    outt[outt > -40] = 0
 
     labels, numL = label(outt)
 
     u, inv = np.unique(labels, return_inverse=True)
     n = np.bincount(inv)
 
-    badinds = u[(n < 600)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
-    goodinds = u[(n >= 600)]
+    badinds = u[(n < 1000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+    goodinds = u[(n >= 1000)]
 
     for bi in badinds:
         inds = np.where(labels == bi)
         outt[inds] = 0
 
     for gi in goodinds:
+
         if gi == 0:
             continue
-        pos = np.where(labels == gi)
-        ismin = np.argmin(outt[pos])
-        if (outt[pos])[ismin] < -50:
-            (figure[pos])[ismin] = 10
+
+        pos = np.where(labels.flatten() == gi)
+        pos = pos[0]
+        ismin = np.argmin(outt.flatten()[pos])
+        #print((outt.flatten()[pos])[ismin])
+
+        if (outt.flatten()[pos])[ismin] < -50:
+            (figure[pos[0]:pos[-1] + 1])[ismin] = (outt.flatten()[pos])[ismin]  # BULLSHIT INDEXING
+
+
 
     hour = mdic['time.hour']
     minute = mdic['time.minute' ]
     day = mdic['time.day']
     month = mdic['time.month']
     year = mdic['time.year']
+    figure.shape = outt.shape
+    #
+    # plt.figure()
+    # plt.imshow(figure, origin='lower')
+    # pause(10000000)
 
     date = dt.datetime(year, month, day, hour, minute)
 

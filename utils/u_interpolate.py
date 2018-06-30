@@ -89,6 +89,7 @@ def interpolate_data(data, inds, weights, shape):
             d2d = _interpolate(d.flatten(), inds, weights)
 
             d2d = d2d.reshape(shape)
+
             coll.append(d2d[None, ...])
         if d.ndim == 3:
             plevs = []

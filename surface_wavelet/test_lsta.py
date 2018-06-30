@@ -18,21 +18,24 @@ from scipy import ndimage
 ####AVERAGE PLOTS!
 
 
-
 def lsta():
 
-    msg = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_new/*.nc')
-    msg = msg['LSTA']
-    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
+    msgf = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf_new/*.nc')
+    msg = msgf['LSTA']
+    #msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
     msg = msg[ (msg['time.month']>=6) ]
 
-    msg = msg.where(msg>-900)
+    #msg = msg.where(msg>-900)
 
-    dat = msg.mean(dim='time')
-
-
+    dat = msg.sum(dim='time')
+    # t = msg.values
+    # count = msgf['NbSlot'].values
+    # mean = np.nansum(t * count, axis=0)/ np.nansum(count, axis=0)
     f = plt.figure()
     dat.plot.contourf(cmap='RdBu_r', vmin=-1, vmax=1)
+
+    # f = plt.figure()
+    # plt.contourf(mean, cmap='RdBu_r', vmin=-1, vmax=1)
 
     dat = dat.mean(dim='lon')
     f = plt.figure()

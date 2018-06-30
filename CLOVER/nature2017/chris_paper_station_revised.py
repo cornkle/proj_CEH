@@ -10,7 +10,7 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 #sns.set(color_codes=True)
 from scipy.stats import gaussian_kde
-from cold_cloud_trend.nature2017 import stations_cc
+from CLOVER.nature2017 import stations_cc
 import numpy as np
 from scipy.stats.stats import pearsonr
 import matplotlib.pyplot as plt

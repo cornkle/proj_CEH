@@ -60,7 +60,7 @@ def run():
     da = xr.concat(res, 'time')
     #da = da.sum(dim='time')
 
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-25000_JJAS_-50-points_dominant.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc'
 
     try:
         os.remove(savefile)
@@ -138,7 +138,7 @@ def file_loop(passit):
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        badinds = u[(n < 3000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+        badinds = u[(n < 3000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat regridded 5km)
 
         for bi in badinds:
             inds = np.where(labels == bi)
@@ -169,7 +169,7 @@ def file_loop(passit):
             kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
             outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
 
-        wav = util.waveletT(outt, 5)
+        wav = util.waveletT(outt, dataset='METEOSAT5K')
 
         outt[nogood] = np.nan
 

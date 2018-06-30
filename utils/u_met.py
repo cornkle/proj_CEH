@@ -6,6 +6,14 @@ from utils import constants
 import pdb
 
 
+planck_const = 6.62607004*1e-34 # m2 kg s-1 (h)
+c = 299792458 # speed of light m s-1
+boltzmann = 1.38064903*1e-23  # m2kg s-2K-1 (k)
+#Tb_lambda = 10.6*1e-6 # MSG window in micro metres
+Tb_lambda = 0.00032782597395146035
+Tconst = 0.7167381974248928    # 2 * kc / lambda**4 with OLR/Tb = 167 W m-2 / 233K
+
+
 def u_v_to_ws_wd(u,v):
     """
     U and V wind coords to wind speed and direction
@@ -147,3 +155,10 @@ def theta_factor(pz):
 
 def theta(pz, t):
     return (1000 / pz) ** 0.286 * t
+
+
+def OLR_to_Tb(OLR):
+    return OLR / Tconst
+
+def Tb_to_OLR(Tb):
+    return Tconst * Tb

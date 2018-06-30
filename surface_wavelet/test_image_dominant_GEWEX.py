@@ -23,16 +23,16 @@ import salem as sm
 
 # 3.08.2007: ERA-I 10m wind anomaly matches
 
-#28.06.2006 is cool
+#28.06.2006 used for GEWEX
 
-DATE = {'day' : 28,
-        'month' : 6,
-        'year' : 2006}
+DATE = {'day' : 21,
+        'month' : 9,
+        'year' : 2008}
 
 def run_waveletDry():
 
 
-    file = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
+    file = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf_new/lsta_daily_'+str(DATE['year'])+str(DATE['month']).zfill(2)+str(DATE['day']).zfill(2)+'.nc'
 
     ds = xr.open_dataset(file)
     ds = ds.sel(lon=slice(-10,10), lat=slice(10,20))
@@ -56,7 +56,7 @@ def run_waveletDry():
     lsta[inter1]=0
     # f = plt.figure()
     # plt.imshow(lsta.values)
-    wav = util.LSTA_bothSigns(lsta.values, 3)
+    wav = util.LSTA_bothSigns(lsta.values, dataset='METSRFC')
 
     #wl = wav['dominant']
     power = wav['power_dry']
@@ -93,7 +93,6 @@ def wav_checkDry():
     msg = xr.open_dataarray(msg_t)
     msg.name = 'msg'
 
-    pdb.set_trace()
     ds = ds.sel(lon=slice(-10,10), lat=slice(10,20))
     top = top.sel(lon=slice(-10, 10), lat=slice(10, 20))
     msg = msg.sel(lon=slice(-10, 10), lat=slice(10, 20), time=slice('2006-06-28T17:00:00','2006-06-29T15:00:00'))
@@ -220,7 +219,7 @@ def wav_checkDry():
     #ax4.scatter(xl, yl, c=cells, cmap=cmap, s=5)
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/example_map.png')
+    #plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/example_map.png')
 
 
     # ax2=f.add_subplot(2,2,2)

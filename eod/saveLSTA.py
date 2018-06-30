@@ -10,6 +10,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
+from utils import constants as cnst
 
 def saveNetcdf():
 
@@ -55,9 +56,9 @@ def saveDailyBlobs():
 
 def saveNetcdf_blobs():
 
-    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary_new'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     td = pd.Timedelta('16 hours')
-    files = glob.glob(modis_folder + '/lsta_daily_2*.gra')
+    files = glob.glob(modis_folder + '/lsta_daily_*.gra') #2*.gra')
 
     msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
     msg = xr.open_dataarray(msgfile)
@@ -65,7 +66,7 @@ def saveNetcdf_blobs():
 
 
     for f in files:
-        ds,out = rewrite_data.rewriteModis_toNetcdf(f, write=False)
+        ds,out = rewrite_data.rewriteLSTA_toNetcdf(f, write=False)
         ds['LSTA'].values[ds['LSTA'].values < -800] = np.nan
         ds['LSTA'].values = ds['LSTA'].values - np.nanmean(ds['LSTA'].values)
 
@@ -120,8 +121,8 @@ def saveNetcdf_fromLST():
     minus =  mf.groupby('ymonth').mean(dim='time')
     dso = mf.groupby('ymonth') - minus
 
-    for d in dso:		
-    	d.to_netcdf('/users/global/cornkle/data/OBS/MSG_LST/lsta_netcdf_new/lsta_daily_'+str(d['time.year'].values)+.str(d['time.month'].values)+str(d['time.day'].values)+'.nc')
+    for d in dso:
+        d.to_netcdf('/users/global/cornkle/data/OBS/MSG_LST/lsta_netcdf_new/lsta_daily_'+str(d['time.year'].values)+str(d['time.month'].values)+str(d['time.day'].values)+'.nc')
 
 
 def saveClimNetcdf():

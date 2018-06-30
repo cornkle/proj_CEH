@@ -34,7 +34,7 @@ def composite(hour):
     pool = multiprocessing.Pool(processes=2)
 
     file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
 
     hour = hour
 
@@ -117,15 +117,15 @@ def composite(hour):
         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
 
 
-    pkl.dump(dic, open(path+"/c_wet_dry_withzero"+str(hour)+"UTC.p", "wb"))
+    pkl.dump(dic, open(path+"/test_wet_dry_withzero"+str(hour)+"UTC.p", "wb"))
     print('Save file written!')
 
 
 
 def plot(hour):
 
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
-    dic = pkl.load(open(path+"/c_wet_dry_rotate_smallscale_rot"+str(hour)+"UTC.p", "rb"))
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
+    dic = pkl.load(open(path+"/c_wet_dry_nan"+str(hour)+"UTC.p", "rb"))
 
 
     scales = dic['scales']
@@ -193,7 +193,7 @@ def plot(hour):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snrandom - wet_snrandom,  cmap='RdBu_r', vmin = -0.4, vmax=0.4) #, vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob - wet_snblob,  cmap='RdBu_r', vmin = -0.4, vmax=0.4) #, vmin = -0.1, vmax=0.1)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wet_snmask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -206,7 +206,7 @@ def plot(hour):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, werandom - wet_werandom   , cmap='RdBu_r', vmin = -0.4, vmax=0.4) # vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob - wet_weblob   , cmap='RdBu_r', vmin = -0.4, vmax=0.4) # vmin = -0.1, vmax=0.1)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wet_wemask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -272,7 +272,7 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(constants.LSTA + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
@@ -317,13 +317,13 @@ def file_loop(fi):
     # except ValueError:
     #     wav_input[inter]=0
 
-    wavpos = util.LSTA_bothSigns(wav_input, 3)
+    wavpos = util.LSTA_bothSigns(wav_input, dataset='METSRFC')
 
     wlpos_dry = wavpos['power_dry']
     wlpos_wet = wavpos['power_wet']
 
-    # wlpos_dry[:,inter1[0], inter1[1]]=np.nan
-    # wlpos_wet[:, inter1[0], inter1[1]] = np.nan
+    wlpos_dry[:,inter1[0], inter1[1]]=np.nan
+    wlpos_wet[:, inter1[0], inter1[1]] = np.nan
     #wlpos[np.abs(wlpos)<3] = np.nan
 
     xfi = fi.shape[1]
@@ -459,14 +459,14 @@ if __name__ == "__main__":
 
 
 def plot_gewex():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
 
     f = plt.figure(figsize=(12,7))
 
 
     for id, h in enumerate([18,21,0,3]):
 
-        dic = pkl.load(open(path + "/c_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
+        dic = pkl.load(open(path + "/test_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
 
         scales = dic['scales']
         sn_mask = dic['SN-dw_mask']
@@ -516,8 +516,8 @@ def plot_gewex():
             a = (snblob  - wet_snblob )
 
             b = (weblob - wet_weblob )
-            b[b < 0] -= 0.03
-            we_mask[b<-0.05]=1
+            # b[b < 0] -= 0.03
+            # we_mask[b<-0.05]=1
 
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
        # plt.colorbar(label='Power difference (Dry-wet)')
@@ -568,7 +568,7 @@ def plot_gewex():
     plt.show()
 
 def plot_gewex2():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
 
     f = plt.figure(figsize=(12,7))
 

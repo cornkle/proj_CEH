@@ -46,14 +46,14 @@ def loop():
             'bin': bins,
             'nblobs' : np.array(nblob)}
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/dominant_scales_save/scales.p", "wb"))
 
 
 
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
+    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/dominant_scales_save/scales.p", "rb"))
 
     bin = np.array(dic['bin'])
     center = bin[0:-1] + (bin[1::]-bin[0:-1])
