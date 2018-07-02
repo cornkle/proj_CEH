@@ -5,10 +5,11 @@ import itertools
 from JASMIN import constants as cnst, MetUM_variables as mv
 import numpy as np
 import pdb
-fpath = '/users/global/cornkle/figs/CLOVER/CP4testfiles'
 
-def run(fpath, orig_names=False):
+def run(orig_names=False):
 
+    fpath = '/home/users/cornkle/runscript/fut_in'
+    outpath = '/home/users/cornkle/runscript/fut_out'
 
     local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
@@ -32,26 +33,31 @@ def run(fpath, orig_names=False):
 
         info = cnst.VARDIC[k]
         dinfo = dic[k]
-        if orig_names:
-            var = mv.create_CP4_filename(k)
-        else:
-            var = k
-        infolder = fpath+os.sep + var
-        outfolder = fpath +os.sep +  k
-        files = glob.glob(infolder + os.sep + var+'*.nc' )
+        var = mv.create_CP4_filename(k)
 
+        if not orig_names:
+            pathvar = k
+        else:
+            pathvar = var
+
+        infolder = fpath+os.sep + pathvar
+        outfolder = outpath +os.sep +  k
+        files = glob.glob(infolder + os.sep + var+'*.nc' )
         for f in files:
 
+            fname = os.path.basename(f)
+            outname = fname.replace(var, k+'_'+month_tag)
+            outfile = outfolder + os.sep + outname
+            if os.path.isfile(outfile):
+                print('File already exists, continue.')
+                continue
             ds = xr.open_dataset(f)
 
             if (ds['time.month'][0]<months[0]) | (ds['time.month'][0]>months[1]):
                 continue
 
             if dinfo[3] != []:
-                ds = ds.isel(time=[np.in1d(ds['time.hour'].values, dinfo[3])][0])
-                pdb.set_trace()
-
-            fname = os.path.basename(f)
+                ds = ds.isel(time=(([np.in1d(ds['time.hour'].values, dinfo[3])][0]) & (ds['time.minute']==0))) 
             box = dinfo[0]
 
             for id, b in enumerate(box):
@@ -59,7 +65,10 @@ def run(fpath, orig_names=False):
                 agg = dinfo[1][id]
                 pres = dinfo[2]
                 cut = ds.sel(longitude=slice(b[0], b[1]), latitude=slice(b[2], b[3]))
-                da = cut[var]
+                try:
+                  da = cut[var]
+                except KeyError:
+                   pdb.set_trace()
 
                 if pres != []:
                     da = da.sel(pressure=pres)
@@ -67,7 +76,6 @@ def run(fpath, orig_names=False):
                 if agg != 'keep':
                     da = da.resample('24H', base=16, dim='time', skipna=True, how='mean')
 
-                outname = fname.replace(var, k+'_'+month_tag)
 
                 comp = dict(zlib=True, complevel=5)
 
