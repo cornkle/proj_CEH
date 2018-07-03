@@ -32,7 +32,7 @@ def run():
     mdic = m.read_data(files[0], llbox=[-11, 11, 9, 20])
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
-
+    pdb.set_trace()
     files_str = []
 
     for f in files:

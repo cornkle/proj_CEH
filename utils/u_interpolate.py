@@ -5,6 +5,7 @@ from scipy.interpolate import griddata
 import salem
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import pause
+from utils import u_grid
 import pyproj
 
 
@@ -67,6 +68,13 @@ def interpolation_weights(x, y, new_x, new_y):
     return inds, weights, new_xs.shape
 
 
+def interpolation_weights_grid(lon, lat, grid):
+
+    inter, points = u_grid.griddata_input(lon, lat, grid)
+    inds, weights = _interp_weights(points, inter, d=2)
+
+    return inds, weights, (grid.ny, grid.nx)
+
 def interpolate_data(data, inds, weights, shape):
 
     """
@@ -81,30 +89,35 @@ def interpolate_data(data, inds, weights, shape):
     if (data.ndim < 2) | (data.ndim > 4):
         print('Error. Only data with 2 - 4 dimensions allowed.')
         return
-
     # interpolate 2d arrays
     coll = []
-    for d in data:
-        if d.ndim == 2:
-            d2d = _interpolate(d.flatten(), inds, weights)
-
-            d2d = d2d.reshape(shape)
-
-            coll.append(d2d[None, ...])
-        if d.ndim == 3:
-            plevs = []
-
-            for pl in d:
+    if data.ndim > 2:
+        for d in data:
+            if d.ndim == 2:
                 pdb.set_trace()
-                pl2d = _interpolate(pl.flatten(), inds, weights)
-                pl2d = pl2d.reshape(shape)
-                plevs.append(pl2d[None, ...])
-            if len(plevs) > 1:
-                plevs = np.concatenate(plevs, axis=0)
-            coll.append(plevs[None, ...])
+                d2d = _interpolate(d.flatten(), inds, weights)
 
-    if len(coll) > 1:
-        coll = np.concatenate(coll, axis=0)
+                d2d = d2d.reshape(shape)
+
+                coll.append(d2d[None, ...])
+            if d.ndim == 3:
+                plevs = []
+
+                for pl in d:
+                    pdb.set_trace()
+                    pl2d = _interpolate(pl.flatten(), inds, weights)
+                    pl2d = pl2d.reshape(shape)
+                    plevs.append(pl2d[None, ...])
+                if len(plevs) > 1:
+                    plevs = np.concatenate(plevs, axis=0)
+                coll.append(plevs[None, ...])
+        if len(coll) > 1:
+            coll = np.concatenate(coll, axis=0)
+    else:
+        d2d = _interpolate(data.flatten(), inds, weights)
+        d2d = d2d.reshape(shape)
+        coll = d2d
+
 
     return coll
 

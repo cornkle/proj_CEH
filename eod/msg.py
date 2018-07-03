@@ -164,30 +164,27 @@ class ReadMsg(object):
 
         if llbox:
             i, j = np.where(
-                (self.lon >= llbox[0]) & (self.lon <= llbox[1]) & (self.lat >= llbox[2]) & (self.lat <= llbox[3]))
+                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
         else:
             blat = self.lat
             blon = self.lon
-            rr = rr
+        rr = rr
 
         str = file.split(os.sep)[-1]
         curr_date = [
             pd.datetime(np.int(str[0:4]), np.int(str[4:6]), np.int(str[6:8]), np.int(str[8:10]), np.int(str[10:12]))]
         date = curr_date  # or np.atleast_1d(dt.datetime())
 
-        # da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
-        #                                            'lat': (('y', 'x'), blat),
-        #                                            'lon': (('y', 'x'), blon)},
-        #                   dims=['time', 'lat', 'lon']).isel(time=0)
+        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
+                                                   'lat': (('y', 'x'), blat),
+                                                   'lon': (('y', 'x'), blon)},
+                          dims=['time', 'y', 'x']).isel(time=0)
 
-        da = xr.DataArray(rr[None, ...], coords={'time':  date,
-                                                   'lat': blat[:,0],
-                                                   'lon': blon[0,:]},
-                          dims=['time', 'lat', 'lon']).isel(time=0)
-
+        # if llbox:
+        #     da = da.where((da.lon > llbox[0]) & (da.lon < llbox[1]) & (da.lat > llbox[2]) & (da.lat < llbox[3]), drop=True)
 
         ds = xr.Dataset({'t': da})
 

@@ -6,19 +6,12 @@ from wavelet import util
 from eod import msg
 import xarray as xr
 import os
-from utils import u_grid
-from scipy.interpolate import griddata
-from scipy import ndimage
-from utils import u_arrays as ua
+from utils import u_grid, u_interpolate as u_int
 import multiprocessing
 import datetime as dt
 import matplotlib.pyplot as plt
 import pdb
 from scipy.ndimage.measurements import label
-import cartopy
-import cartopy.crs as ccrs
-from matplotlib.pyplot import pause
-
 
 
 def run():
@@ -34,6 +27,10 @@ def run():
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
 
+    inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
+
+    gridd = (inds,weights,shape, grid)
+
     files_str = []
 
     for f in files:
@@ -43,18 +40,16 @@ def run():
 
     passit = []
     for f in files_str:
-        passit.append((grid,m, f))
+        passit.append((gridd,m, f))
 
-    #pdb.set_trace()
+    res = pool.map(file_loop, passit)
 
-    #res = pool.map(file_loop, passit)
-
-    for l in passit:
-
-        test = file_loop(l)
+    # for l in passit:
+    #
+    #     test = file_loop(l)
 
     pool.close()
-    return
+
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
@@ -79,7 +74,11 @@ def run():
 def file_loop(passit):
 
 
-    grid = passit[0]
+    gridd = passit[0]
+    inds = gridd[0]
+    weights = gridd[1]
+    shape = gridd[2]
+    grid = gridd[3]
 
     m = passit[1]
     files = passit[2]
@@ -92,12 +91,11 @@ def file_loop(passit):
         print('Skip month')
         return
 
-    # if not ((np.int(strr[8:10]) >= 20)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
-    #     print('Skip hour')
-    #     return
+    if not ((np.int(strr[8:10]) >= 17) & (np.int(strr[8:10]) <= 20)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
+        print('Skip hour')
+        return
 
     lon, lat = grid.ll_coordinates
-
 
     file = files+min+'.gra'
 
@@ -111,11 +109,25 @@ def file_loop(passit):
     if not mdic:
         print('File missing')
         return
+    hour = mdic['time.hour']
+    minute = mdic['time.minute' ]
+    day = mdic['time.day']
+    month = mdic['time.month']
+    year = mdic['time.year']
 
-    outt = u_grid.quick_regrid(mdic['lon'].values, mdic['lat'].values,mdic['t'].values.flatten(), grid)
-    figure = np.zeros_like(outt.flatten())
+    #
+    # plt.figure()
+    # plt.imshow(figure, origin='lower')
+    # pause(10000000)
+
+    date = dt.datetime(year, month, day, hour, minute)
+
+    outt = u_int.interpolate_data(mdic['t'].values, inds, weights, shape)
+
+    figure = np.zeros_like(outt)
 
     outt[outt > -40] = 0
+    outt[np.isnan(outt)] = 0
 
     labels, numL = label(outt)
 
@@ -134,28 +146,14 @@ def file_loop(passit):
         if gi == 0:
             continue
 
-        pos = np.where(labels.flatten() == gi)
-        pos = pos[0]
-        ismin = np.argmin(outt.flatten()[pos])
-        #print((outt.flatten()[pos])[ismin])
+        dummy = np.zeros_like(outt)
 
-        if (outt.flatten()[pos])[ismin] < -50:
-            (figure[pos[0]:pos[-1] + 1])[ismin] = (outt.flatten()[pos])[ismin]  # BULLSHIT INDEXING
+        pos = np.where(labels == gi)
+        dummy[pos] = outt[pos]
+        ismin = np.argmin(dummy)
 
-
-
-    hour = mdic['time.hour']
-    minute = mdic['time.minute' ]
-    day = mdic['time.day']
-    month = mdic['time.month']
-    year = mdic['time.year']
-    figure.shape = outt.shape
-    #
-    # plt.figure()
-    # plt.imshow(figure, origin='lower')
-    # pause(10000000)
-
-    date = dt.datetime(year, month, day, hour, minute)
+        if outt.flat[ismin] < -50:
+            figure.flat[ismin] = outt.flat[ismin]
 
     da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
 

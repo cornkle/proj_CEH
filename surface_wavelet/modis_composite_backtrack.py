@@ -31,16 +31,15 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_POINTS_DOM
+    file = constants.MCS_POINTS_TMIN
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
+    msg = msg[((msg['time.hour'] >= 18 ) | (msg['time.hour'] <= 20 )) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
-
 
     dic = u_parallelise.run_arrays(1,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt', 'prob'])
 
@@ -48,7 +47,7 @@ def composite(h):
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/lsta_corr/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
     extent = dic['ano'].shape[1]/2-1
 
     f = plt.figure(figsize=(14, 7))
@@ -155,7 +154,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
     if rotate:
         kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
 
-    if (np.sum(np.isfinite(kernel)) < 0.10 * kernel.size):
+    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
     kernel3 = kernel - np.nanmean(kernel)
@@ -174,15 +173,15 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
 def get_previous_hours(date):
 
 
-    before = pd.Timedelta('4 hours')
-    end = pd.Timedelta('1 hour')
+    before = pd.Timedelta('3 hours')
 
+    before = pd.Timedelta('10 minutes')
     prev_time = date - before
 
     file = constants.MCS_15K# MCS_15K #_POINTS_DOM
     msg = xr.open_dataarray(file)
 
-    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8), time=slice(prev_time.strftime("%Y-%m-%dT%H"), (date-end).strftime("%Y-%m-%dT%H")))
+    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8), time=slice(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H")))
     #pdb.set_trace()
     #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
     pos = np.where(msg.values<=-70) #(msg.values >= 5) & (msg.values < 65)) # #
@@ -231,7 +230,7 @@ def file_loop(fi):
 
 
     lsta_da = lsta['LSTA'].squeeze()
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
+    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.10:
         print('Not enough valid')
         return None
 
@@ -239,7 +238,7 @@ def file_loop(fi):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where( (fi.values >= 5) & (fi.values < 65))
+    pos = np.where(fi.values <= -20 )  #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
@@ -336,7 +335,7 @@ def file_loop(fi):
 
 def plot(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/composite_topo_0-"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/lsta_corr/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = dic['ano'].shape[1]/2-1
 
@@ -414,12 +413,12 @@ def plot(h):
               fontsize=10)
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/0-'+str(hour).zfill(2)+'_allplots.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    plt.close()
+    # plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/0-'+str(hour).zfill(2)+'_allplots.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    # plt.close()
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/lsta_corr/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
@@ -428,14 +427,16 @@ def plot_gewex(h):
 
     plt.contourf((dic['regional'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
     #plt.plot(extent, extent, 'bo')
-    pdb.set_trace()
-    plt.contour((dic['prob']/ dic['cnt']) * 100, extend='both') #, levels=np.arange(1,5, 0.5)
+    plt.colorbar(label='K')
+    #pdb.set_trace()
+    contours = plt.contour((dic['prob']/ dic['cnt']) * 100, extend='both') # levels=[ 10,30,50,70]#, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.0f')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.colorbar(label='K')
+
     plt.title(str(hour).zfill(2)+'00 UTC | '+str(np.max(dic['cnt']))+' cores', fontsize=17)
 
 

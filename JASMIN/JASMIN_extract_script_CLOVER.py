@@ -68,7 +68,10 @@ def run(orig_names=False):
                 try:
                   da = cut[var]
                 except KeyError:
-                   pdb.set_trace()
+                   try:
+                      da = cut['c03238'] # stupid t2 problem
+                   except KeyError:
+                      pdb.set_trace()
 
                 if pres != []:
                     da = da.sel(pressure=pres)

@@ -30,12 +30,12 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_POINTS_DOM
+    file = constants.MCS_POINTS_TMIN
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 17 ) | (msg['time.hour'] <= 4 ))  & (msg['time.minute'] == 0) & (
+    msg = msg[((msg['time.hour'] >= 17 ) | (msg['time.hour'] <= 19 ))  & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] == 7) ]
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
@@ -302,7 +302,7 @@ def file_loop(fi):
 
 def plot(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_topo_0-"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_topo_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = dic['ano'].shape[1]/2-1
 
