@@ -13,6 +13,7 @@ import multiprocessing
 import pdb
 import pandas as pd
 import salem
+from utils import constants
 from scipy import ndimage
 ####these functions create plots of the average of the LSTAs and all blobs over the time period
 ####AVERAGE PLOTS!
@@ -20,14 +21,14 @@ from scipy import ndimage
 
 def lsta():
 
-    msgf = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf_new/*.nc')
+    msgf = xr.open_mfdataset(constants.LSTA_NEW + '*.nc')
     msg = msgf['LSTA']
     #msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
-    msg = msg[ (msg['time.month']>=6) ]
+    msg = msg[ (msg['time.month']==6) ]
 
     #msg = msg.where(msg>-900)
 
-    dat = msg.sum(dim='time')
+    dat = msg.mean(dim='time')
     # t = msg.values
     # count = msgf['NbSlot'].values
     # mean = np.nansum(t * count, axis=0)/ np.nansum(count, axis=0)

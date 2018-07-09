@@ -345,3 +345,64 @@ def rewrite_AMSRE(file):
         print('Out directory not found')
     print('Wrote ' + out)
     return ds
+
+def rewrite_CMORPH(file):
+
+    out = file.replace('raw', 'nc')
+    out = out.replace('.gra', '.nc')
+    day=True
+
+    hours = [3,6,9,12,15,18,21,0]
+
+    print('Doing ' + file)
+    #full_globe, 0.25deg
+    blat = np.arange(-59.875,60, 0.25)
+    blon = np.arange(0.125, 360, 0.25)
+
+    ffile = os.path.split(file)[-1]
+
+    rrShape = (8, blat.shape[0], blon.shape[0])
+
+    rr = np.array(np.fromfile(file, dtype=np.int16()))
+
+    rr.shape = rrShape
+    rr = np.array(rr/100., dtype=np.float)
+    #pdb.set_trace()
+    #rr = np.flip(rr,axis=0)
+
+
+    llist = ffile.split('.')
+
+    yr = int(llist[2][-8:-4])
+    mon = int(llist[2][-4:-2])
+    day = int(llist[2][-2::])
+    date = []
+    for h in hours:
+        datel = pd.datetime(yr, mon, day, h, 0)
+        date.append(datel)
+
+    date = pd.to_datetime(date)
+    #pdb.set_trace()
+    blon[blon>180] = blon[blon>180]-360
+
+    da = xr.DataArray(rr, coords={'time': date,
+                                             'lat': blat,
+                                             'lon': blon},
+                      dims=['time', 'lat', 'lon'])  # .isel(time=0)
+    #
+    da.values[da.values==-1] = np.nan
+    # if np.sum(da.values) == np.nan:
+    #     return
+
+    da = da.roll(lon=np.sum(blon<0))
+    ds = xr.Dataset({'pr': da})
+
+    ds = ds.sel(lon=slice(-17.5,20), lat=slice(2,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
+
+    try:
+        ds.to_netcdf(out)
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return ds

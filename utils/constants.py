@@ -37,3 +37,5 @@ AMSRE_NIGHT_TESTFILE = AMSRE_NIGHT + 'AMSR_L3_LPRMv05_A_20060116.nc'
 
 TRMM5KM = '/users/global/cornkle/TRMMfiles/'
 TRMM5KM_FILE = TRMM5KM + 'single/TRMM5km_2006-2010.nc'
+
+CMORPH = '/users/global/cornkle/data/OBS/CMORPH/CMORPH_nc/'
