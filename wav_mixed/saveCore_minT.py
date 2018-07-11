@@ -26,9 +26,7 @@ def run():
     mdic = m.read_data(files[0], llbox=[-11, 11, 9, 20])
     # make salem grid
     grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000) #m.lon, m.lat, 5000)
-
     inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
-
     gridd = (inds,weights,shape, grid)
 
     files_str = []
@@ -53,19 +51,15 @@ def run():
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
-    #da = da.sum(dim='time')
-
     savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_minT.nc'
 
     try:
         os.remove(savefile)
     except OSError:
         pass
-    da.to_netcdf(path=savefile, mode='w')
-    #
-    # das = da.sum(dim='time')
-    #
-    # das.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_35km_-67_JJAS_sum_17-19UTC.nc')
+    da.name = 'blob'
+    enc = {'blob': {'complevel': 5, 'zlib': True}}
+    da.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
 
     print('Saved ' + savefile)
 
@@ -114,11 +108,6 @@ def file_loop(passit):
     day = mdic['time.day']
     month = mdic['time.month']
     year = mdic['time.year']
-
-    #
-    # plt.figure()
-    # plt.imshow(figure, origin='lower')
-    # pause(10000000)
 
     date = dt.datetime(year, month, day, hour, minute)
 

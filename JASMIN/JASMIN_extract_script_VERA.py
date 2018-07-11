@@ -107,7 +107,10 @@ for f in flist:
     if past in fname:
         fname = fname.replace(past, 'past')
 
-    varsdat.to_netcdf(out+fname)
+    comp = dict(zlib=True, complevel=5)
+    encoding = {var: comp for var in varsdat.data_vars}
+    varsdat.to_netcdf(path=out+fname, mode='w', encoding=encoding, format='NETCDF4')
+
     varsdat.close()
 
 

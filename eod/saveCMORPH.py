@@ -7,16 +7,19 @@ from eod import rewrite_data
 import pdb
 import os
 import xarray as xr
+import salem
+from utils import constants
 import numpy as np
-import pandas as pd
-from scipy.interpolate import griddata
 
 def saveNetcdf():
 
     sm_folder = '/users/global/cornkle/data/OBS/CMORPH/CMORPH_raw'
     pool = multiprocessing.Pool(processes=7)
     for y in range(2006,2011):
-        files = glob.glob(sm_folder+'/'+ str(y) + '/' +'*.gra')
+        outfolder = sm_folder+'/'+ str(y)
+        if not os.path.exists(outfolder):
+            os.makedirs(outfolder)
+        files = glob.glob( outfolder + '/' +'*.gra')
 
         for f in files:
             ds = rewrite_data.rewrite_CMORPH(f)
@@ -39,24 +42,35 @@ def mergeCMORPH():
 
 
 
-def to_datetime():
+def regrid(cmorph):
 
-    sm_folder = '/users/global/cornkle/data/OBS/CMORPH/CMORPH_nc/'
+    dummy = xr.open_dataset(constants.LSTA_TESTFILE)
+    cm = xr.open_dataarray(cmorph)
 
-    for y in range(2006, 2011):
-        files = sm_folder + 'CMORPH_WA_' + str(y) + '.nc'
-        dsa = xr.open_dataset(files)
+    out = cmorph.replace('WA_', 'WA_onLSTA_')
 
-        date = pd.to_datetime(dsa.time.values)
+    arrays = []
+    for c in cm:
 
-        da = xr.DataArray(dsa.pr, coords={'time': date,
-                                      'lat': dsa.lat,
-                                      'lon': dsa.lon},
-                          dims=['time', 'lat', 'lon'])  # .isel(time=0)
+        c_on_lsta = dummy.salem.transform(c)
+        arrays.append(c_on_lsta)
 
-        ds = xr.Dataset({'pr': da})
+    astack = np.stack(arrays, axis=0)
+    da = xr.DataArray(astack, coords={'time': cm.time,
+                                  'lat': dummy.lat,
+                                  'lon': dummy.lon},
+                      dims=['time', 'lat', 'lon'])  # .isel(time=0)
 
-        enc = {'pr': {'complevel': 5, 'zlib': True}}
-        ds.to_netcdf(sm_folder + 'CMORPH_WA_T' + str(y) + '.nc', encoding=enc, format='NETCDF4')
+    da.to_netcdf(out)
 
-        print('Wrote ' + sm_folder + 'CMORPH_WA_T' + str(y) + '.nc')
+def regrid_simpler(cmorph):
+
+    dummy = xr.open_dataset(constants.LSTA_TESTFILE)
+    cm = xr.open_dataarray(cmorph)
+
+    out = cmorph.replace('WA_', 'WA_onLSTA_')
+
+    cm_on_lst = dummy.salem.transform(cm)
+    enc = {'pr': {'complevel': 5, 'zlib': True}}
+
+    cm_on_lst.to_netcdf(out, encoding=enc, format='NETCDF4')

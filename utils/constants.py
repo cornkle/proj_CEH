@@ -15,7 +15,7 @@ MSG5KM_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/msg5km_t
 
 MCS_POINTS_DOM = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc' #/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc'#'/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
 MCS_POINTS_TMIN = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_minT.nc'
-MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_gt15k.nc'
+MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
 
 
 

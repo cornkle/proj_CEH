@@ -153,7 +153,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
 
 def rewriteLSTA_toNetcdf(file, write=False):
 
-    out = file.replace('lsta_raw_binary_new', 'lsta_netcdf_new_-mean')
+    out = file.replace('lsta_raw_binary_new', 'lsta_netcdf_new')
     if '.gz' in out:
         out = out.replace('.gra.gz', '.nc')
     else:
@@ -234,7 +234,10 @@ def rewriteLSTA_toNetcdf(file, write=False):
 
     if write:
         try:
-            ds.to_netcdf(out)
+            comp = dict(zlib=True, complevel=5)
+            encoding = {var: comp for var in ds.data_vars}
+            ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
         except OSError:
             print('Did not find ' + out)
             print('Out directory not found')
@@ -287,7 +290,10 @@ def rewriteLSTAClim_toNetcdf(file):
     ds = xr.Dataset({'LST': da})
 
     try:
-        ds.to_netcdf(out)
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
     except OSError:
         print('Did not find ' + out)
         print('Out directory not found')
@@ -339,7 +345,10 @@ def rewrite_AMSRE(file):
     ds = ds.sel(lon=slice(-17,20), lat=slice(0,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
 
     try:
-        ds.to_netcdf(out)
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
     except OSError:
         print('Did not find ' + out)
         print('Out directory not found')
@@ -352,7 +361,7 @@ def rewrite_CMORPH(file):
     out = out.replace('.gra', '.nc')
     day=True
 
-    hours = [3,6,9,12,15,18,21,0]
+    hours = [0,3,6,9,12,15,18,21]
 
     print('Doing ' + file)
     #full_globe, 0.25deg
@@ -382,13 +391,15 @@ def rewrite_CMORPH(file):
         date.append(datel)
 
     date = pd.to_datetime(date)
-    #pdb.set_trace()
+    dates = pd.date_range(date[0], date[-1], freq='3H')
+
     blon[blon>180] = blon[blon>180]-360
 
-    da = xr.DataArray(rr, coords={'time': date,
+    da = xr.DataArray(rr, coords={'time': dates,
                                              'lat': blat,
                                              'lon': blon},
                       dims=['time', 'lat', 'lon'])  # .isel(time=0)
+
     #
     da.values[da.values==-1] = np.nan
     # if np.sum(da.values) == np.nan:
@@ -400,7 +411,10 @@ def rewrite_CMORPH(file):
     ds = ds.sel(lon=slice(-17.5,20), lat=slice(2,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
 
     try:
-        ds.to_netcdf(out)
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
     except OSError:
         print('Did not find ' + out)
         print('Out directory not found')
