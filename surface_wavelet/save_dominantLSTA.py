@@ -49,8 +49,9 @@ def run_netcdf():
             os.remove(outfile)
         except OSError:
             pass
-        container.to_netcdf(path=outfile, mode='w')
-
+        comp = dict(zlib=True, complevel=5)
+        enc = {var: comp for var in container.data_vars}
+        container.to_netcdf(path=outfile, mode='w', encoding=enc, format='NETCDF4')
 
         print('Saved ' + outfile)
 

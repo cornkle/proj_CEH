@@ -36,26 +36,26 @@ def monthly_loop():
 
 def composite(h):
     #pool = multiprocessing.Pool(processes=8)
-    file = constants.MCS_POINTS_DOM
+    file = constants.MCS_CENTRE70 #MCS_POINTS_DOM
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == h ) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6) ]
+    msg = msg[(msg['time.hour'] >= 18 ) & (msg['time.hour'] <= 21 )  & (msg['time.minute'] == 0) & (
+        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6) ]
 
-    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
+    msg = msg.sel(lat=slice(10.9,19.5), lon=slice(-9.8,9.8))
 
     dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'pcnt']) #'rano', 'rregional', 'rcnt',
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/lsta_sameHour/passage-40/composite_backtrack_-3_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/composite_backtrack_"+str(hour).zfill(2)+".p", "wb"))
 
 
 
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
+def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False,  probs=False):
 
     if parallax:
         km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
@@ -66,25 +66,20 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
         xpos = xpos - lx
         ypos = ypos - ly
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    if np.sum(probs) > 0:
+    if np.nansum(probs) > 0:
         prob = u_arrays.cut_kernel(probs,xpos, ypos,dist)
         cnt2 = np.zeros_like(kernel)
         cnt2[np.isfinite(prob)] = 1
+
     else:
         prob = np.zeros_like(kernel)
         cnt2 = np.zeros_like(kernel)
 
-    if len(prob) < 2:
-        prob = np.zeros_like(kernel)
-
-    if rotate:
-        kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
-
-    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
+    if (np.sum(np.isfinite(kernel)) < 2):
         return
 
     kernel3 = kernel - np.nanmean(kernel)
@@ -92,42 +87,53 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
     cnt = np.zeros_like(kernel)
     cnt[np.isfinite(kernel)] = 1
 
-    if kernel.shape != (201, 201):
+    if kernel.shape != (dist*2+1, dist*2+1):
         pdb.set_trace()
-
 
     return kernel, kernel3, cnt, prob, cnt2
 
 
 def get_previous_hours(date):
 
-    try:
-        before = pd.Timedelta('3 hour')
-    except OverflowError:
-        return None
+    tdic = {18 : ('36 hours', '15 hours'),
+            19 : ('37 hours', '16 hours'),
+            20: ('38 hours', '17 hours'),
+            21: ('39 hours', '18 hours'),
+            22: ('40 hours', '19 hours'),
+            23: ('41 hours', '20 hours'),
+            0: ('42 hours', '21 hours'),
+            3: ('45 hours', '24 hours'),
+            6: ('48 hours', '27 hours')}
+    before = pd.Timedelta(tdic[date.hour][0])
+    before2 = pd.Timedelta(tdic[date.hour][1])
 
-    before2 = pd.Timedelta('15 minutes')
-    try:
-        t1 = date - before
-    except OverflowError:
-        return None
-    t2 = date - before + before2
+
+
+
+    #before2 = pd.Timedelta('15 minutes')
+
+    t1 = date - before
+    t2 = date - before2
 
     file = constants.MCS_15K# MCS_15K #_POINTS_DOM
     msg = xr.open_dataarray(file)
     try:
-        msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8), time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
+        msg = msg.sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
     except OverflowError:
         return None
 
     #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
-    pos = np.where(msg.values<=-40) #(msg.values >= 5) & (msg.values < 65)) # #
+    pos = np.where((msg.values <= -70) ) #(msg.values >= 5) & (msg.values < 65)) # #
 
     out = np.zeros_like(msg)
     out[pos] = 1
-    out = np.sum(out, axis=0) / out.shape[0]
+    out = np.sum(out, axis=0)
+    out[out>0]=1
+    if np.sum(out>1) != 0:
+        'Stop!!!'
+        pdb.set_trace()
 
-    msg = msg.sum(axis=0)
+    msg = msg.sum(axis=0)*0
     xout = msg.copy()
     xout.name = 'probs'
     xout.values = out
@@ -165,36 +171,17 @@ def file_loop(fi):
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0])+abs(grad[1])
 
-
     lsta_da = lsta['LSTA'].squeeze()
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.10:
+    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
         return None
 
-    # points = np.where(np.isfinite(lsta_da.values))
-    # inter1 = np.where(np.isnan(lsta_da.values))
-    # #interpolate over sea from land points
-    # #wav_input[inter1] = 0  # halfway between minus and plus rather than interpolate
-    #
-    # try:
-    #     lsta_da.values[inter1] = griddata(points, np.ravel(lsta_da.values[points]), inter1, method='linear')
-    # except ValueError:
-    #     pass
-    #
-    # inter = np.where(np.isnan(lsta_da.values))
-    # try:
-    #     lsta_da.values[inter] = griddata(points, np.ravel(lsta_da.values[points]), inter, method='nearest')
-    # except ValueError:
-    #     lsta_da.values[inter]=-0.5
-
-    # plt.figure()
-    # plt.imshow(lsta_da.values, origin='lower')
-
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where((fi.values >= 5) & (fi.values < 65)  )  #(fi.values >= 5) & (fi.values < 65)
 
-    if (np.sum(pos) == 0) | (len(pos[0]) < 3):
+    pos = np.where(fi.values == 2)  #(fi.values >= 5) & (fi.values < 65)#(fi.values >= 5) & (fi.values < 65)
+
+    if (np.sum(pos) == 0):
         print('No blobs found')
         return None
 
@@ -241,8 +228,12 @@ def file_loop(fi):
     #     rcnt_list.append(rcnt)
 
     probs = get_previous_hours(date)
-    print(lsta)
-    probs_on_lsta = lsta.salem.transform(probs)
+    probs_on_lsta = lsta.salem.transform(probs, interp='nearest')
+    if np.sum(probs_on_lsta>1) != 0:
+        'Stopp!!'
+        pdb.set_trace()
+
+
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -258,22 +249,27 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt, prkernel, pcnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False, probs=probs_on_lsta)
+            kernel2, kernel3, cnt, prkernel, pcnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, probs=probs_on_lsta)
         except TypeError:
             continue
-
 
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
         prkernel_list.append(prkernel)
         cnt_list.append(cnt)
-        pcnt_list.append(cnt)
+        pcnt_list.append(pcnt)
 
     if kernel2_list == []:
         return None
 
     if len(kernel2_list) == 1:
-      return None
+
+        kernel2_sum = kernel2_list[0]
+        kernel3_sum = kernel3_list[0]
+        cnt_sum = cnt_list[0]
+        pcnt_sum = pcnt_list[0]
+        pr_sum = prkernel_list[0]
+
     else:
 
         kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
@@ -377,7 +373,7 @@ def plot(h):
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/lsta_corr/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
@@ -388,7 +384,7 @@ def plot_gewex(h):
     #plt.plot(extent, extent, 'bo')
     plt.colorbar(label='K')
     #pdb.set_trace()
-    contours = plt.contour((dic['prob']/ dic['cnt']) * 100, extend='both') # #, levels=np.arange(1,5, 0.5)
+    contours = plt.contour((dic['prob']/ dic['pcnt']) * 100, extend='both') # #, levels=np.arange(1,5, 0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.0f')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -405,17 +401,16 @@ def plot_gewex(h):
 
 def plot_gewex_double(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/lsta_sameHour/passage-40/composite_backtrack_-3_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/composite_backtrack_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
     f = plt.figure(figsize=(12, 5))
     ax = f.add_subplot(121)
-
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
-    #plt.plot(extent, extent, 'bo')
+#
+    plt.contourf((dic['ano']/ dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.colorbar(label='K')
-    #pdb.set_trace()
+
     contours = plt.contour((dic['prob']/ dic['pcnt']) * 100, extend='both') # #, levels=np.arange(1,5, 0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
@@ -424,25 +419,26 @@ def plot_gewex_double(h):
     ax.set_xlabel('km')
     ax.set_ylabel('km')
 
-    plt.title(str(hour).zfill(2)+'00 UTC | '+str(np.max(dic['cnt']))+' cores, Monthly LSTA', fontsize=17)
+    plt.title('17-19UTC | '+str(np.max(dic['cnt']))+' cores, Monthly LSTA', fontsize=17)
 
     ax = f.add_subplot(122)
 
-    plt.contourf((dic['regional'] / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
-    #plt.plot(extent, extent, 'bo')
-    plt.colorbar(label='K')
-    #pdb.set_trace()
-    contours = plt.contour((dic['prob']/ dic['pcnt']) * 100, extend='both') # #, levels=np.arange(1,5, 0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+    #plt.pcolormesh( dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
 
+
+    contours = plt.pcolormesh((dic['cnt']) ) # #, levels=np.arange(1,5, 0.5)
+    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+
+    #plt.contourf((dic['prob']/ dic['pcnt'])*100)
+    #plt.colorbar(label='%')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.title(str(hour).zfill(2) + '00 UTC | ' + str(np.max(dic['cnt'])) + ' cores, Regional LSTA', fontsize=17)
+    plt.title('17-19UTC | ' + str(np.max(dic['cnt'])) + ' cores, Regional LSTA', fontsize=17) #str(hour).zfill(2) + '
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/lsta_sameHour/passage-40/'+str(hour).zfill(2)+'_single_-3.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/composite_backtrack_'+str(hour).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 

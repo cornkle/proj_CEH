@@ -5,6 +5,33 @@ import pdb
 
 def run_arrays(nb_processors, func, data, dic_names):
 
+    # pool = multiprocessing.Pool(processes=nb_processors)
+    #
+    # res = pool.map(func, data)
+    # pool.close()
+    #
+    # res = [x for x in res if x is not None]
+
+    res = []
+    for d in data:
+        r = func(d)
+        res.append(r)
+
+    pdb.set_trace()
+
+    dic = {}
+
+    res = np.array(res)
+
+    for id, l in enumerate(dic_names):
+
+            dic[l] = np.squeeze(res[:,id,...])
+
+    return dic
+
+
+def era_run_arrays(nb_processors, func, data):
+
     pool = multiprocessing.Pool(processes=nb_processors)
 
     res = pool.map(func, data)
@@ -13,11 +40,15 @@ def run_arrays(nb_processors, func, data, dic_names):
     res = [x for x in res if x is not None]
     dic = {}
 
-    res = np.array(res)
+    rres = []
+    dic_names = (res[0])[1]
+    for r in res:
+        rres.append(np.array(r[0]))
 
+
+    vars = np.array(rres)
     for id, l in enumerate(dic_names):
-
-            dic[l] = np.squeeze(res[:,id,...])
+            dic[l] = np.nansum(np.squeeze(vars[:,id,...]), axis=0)
 
     return dic
 

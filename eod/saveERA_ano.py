@@ -14,7 +14,7 @@ from scipy.interpolate import griddata
 
 
 def saveAnomaly():
-    mf = xr.open_dataset('/local/localscratch/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc')
+    mf = xr.open_dataset('/localscratch/wllf030/cornkle/ERA5/ERA5_2010_12UTCpl.nc' )
 
     u = mf['u'].values
     v = mf['v'].values
@@ -43,7 +43,7 @@ def saveAnomaly():
     dso = mf.groupby(grouped) - minus
     dso = dso.drop('ymonth')
 
-    dso.to_netcdf('/local/localscratch/cornkle/ERA-I/daily_2006-2010_12UTCpl_anomaly.nc')
+    dso.to_netcdf('/localscratch/wllf030/cornkle/ERA5/ERA5_2010_12UTCpl_anomaly.nc')
 
 def rewrite_ERA_latflip(file):
 
@@ -51,3 +51,17 @@ def rewrite_ERA_latflip(file):
         era = era.sel(latitude=slice(None, None, -1))
         era_write = era.load().copy()
     era_write.to_netcdf(file)
+
+
+def saveClimatology():
+
+    mf = xr.open_mfdataset('/localscratch/wllf030/cornkle/ERA5/ERA5_*_srfc.nc', concat_dim='time')
+    #mf['ymonth'] = ('time', [str(y) + '-' + str(m) for (y, m) in zip(mf['time.year'].values, mf['time.month'].values)])
+
+    mf['monthHour'] = (
+    'time', [str(y) + '-' + str(m) for (y, m) in zip(mf['time.month'].values, mf['time.hour'].values)])
+    clim = mf.groupby('monthHour').mean(dim='time')
+    for _, sl in clim.groupby('monthHour'):
+
+        sl.to_netcdf('/localscratch/wllf030/cornkle/ERA5/CLIM/ERA5_2008-2010_CLIM_'+str(sl.monthHour.values)+'_srfc.nc')
+

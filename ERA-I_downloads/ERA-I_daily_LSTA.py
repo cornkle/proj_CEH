@@ -14,5 +14,5 @@ server.retrieve({
     "type": "an",
     "area": "22/-12/8/12",
     "format": "netcdf",
-    "target": "/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc"
+    "target": "/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTC_srfc.nc"
 })

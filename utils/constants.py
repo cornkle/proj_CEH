@@ -5,6 +5,7 @@ ERA_DAILY_SURFACE =   '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTC
 ERA_DAILY_PL = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc'
 ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
 ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
+ERA5 = '/localscratch/wllf030/cornkle/ERA5/'
 
 
 
@@ -13,11 +14,14 @@ WA_TOPO_1MIN = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1
 TOPO_1MIN = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min.nc'
 MSG5KM_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/msg5km_topo.nc'
 
+
 MCS_POINTS_DOM = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc' #/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc'#'/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
 MCS_POINTS_TMIN = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_minT.nc'
 MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
-
-
+MCS_CENTRE70 = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_15k.nc'
+MCS_CENTRE70_SMALL = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_1-5k.nc'
+MCS_CENTRE40 = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-40CentreMass_25k.nc'
+MCS_BACK = '/users/global/cornkle/MCSfiles/blob_map_JJAS_25000-40_-70CentreMassBack.nc'
 
 
 
