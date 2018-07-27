@@ -2,12 +2,12 @@ from ecmwfapi import ECMWFDataServer
 import xarray as xr
 import numpy as np
 
-file = "/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTC_pl.nc"
+file = "/localscratch/wllf030/cornkle/ERA-I/daily_2004-2014_pl.nc"
 server = ECMWFDataServer()
 server.retrieve({
     "class": "ei",
     "dataset": "interim",
-    "date": "2006-06-01/to/2010-09-30",
+    "date": "1983-03-01/to/2014-09-30",
     "expver": "1",
     "grid": "0.75/0.75",
     "levtype": "pl",
@@ -17,7 +17,7 @@ server.retrieve({
     "stream": "oper",
     "time": "12:00:00",
     "type": "an",
-    "area": "22/-12/8/12",
+    "area": "22/-15/3/15",
     "format": "netcdf",
     "target": file
 })

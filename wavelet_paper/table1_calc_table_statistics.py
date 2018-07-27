@@ -44,7 +44,7 @@ a2 = np.array(dic2['area'])*25
 isfin = np.array(dic['isfin'])
 isfin2 = np.array(dic2['isfin'])
 isnz = np.array(dic['isnz'])
-isnz2 = np.array(dic2['isnz'])
+#isnz2 = np.array(dic2['isnz'])
 
 
 

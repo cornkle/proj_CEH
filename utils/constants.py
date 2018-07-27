@@ -16,12 +16,19 @@ MSG5KM_TOPO = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/msg5km_t
 
 
 MCS_POINTS_DOM = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc' #/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc'#'/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
-MCS_POINTS_TMIN = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_minT.nc'
+MCS_TMIN = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70minT_15k.nc'
 MCS_15K = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
 MCS_CENTRE70 = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_15k.nc'
 MCS_CENTRE70_SMALL = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_1-5k.nc'
+MCS_CENTRE70_GT5 = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_GT5k.nc'
 MCS_CENTRE40 = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-40CentreMass_25k.nc'
 MCS_BACK = '/users/global/cornkle/MCSfiles/blob_map_JJAS_25000-40_-70CentreMassBack.nc'
+
+CP4_PATH= '/users/global/cornkle/data/CP4/'
+CP4_OLR = CP4_PATH + 'CLOVER/CP4hist/lw_out_PBLtop/lw_out_PBLtop_MAM_A1hr_mean_ah261_4km_200205040030-200205042330.nc'
+CP4_RAIN = CP4_PATH + 'CLOVER/CP4hist/lsRain/lsRain_MAM_A1hr_mean_ah261_4km_200205040030-200205042330.nc'
+CP4_LANDSEA = CP4_PATH + 'ANCILS/landseamask_ancil_4km.nc'
+CP4_TOPO = CP4_PATH + 'ANCILS/orog_original_ac144_ancil_4km.nc'
 
 
 
@@ -40,6 +47,6 @@ AMSRE_ANO_DAY = AMSRE_DIR + 'sma_nc_day/'
 AMSRE_NIGHT_TESTFILE = AMSRE_NIGHT + 'AMSR_L3_LPRMv05_A_20060116.nc'
 
 TRMM5KM = '/users/global/cornkle/TRMMfiles/'
-TRMM5KM_FILE = TRMM5KM + 'single/TRMM5km_2006-2010.nc'
+TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 
 CMORPH = '/users/global/cornkle/data/OBS/CMORPH/CMORPH_nc/'

@@ -31,10 +31,10 @@ def run_hours():
 
 
 def composite(hour):
-    pool = multiprocessing.Pool(processes=2)
+    pool = multiprocessing.Pool(processes=5)
 
-    file = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
+    file = constants.MCS_CENTRE70
+    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet/large_scale'
 
     hour = hour
 
@@ -124,7 +124,7 @@ def composite(hour):
 
 def plot(hour):
 
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
     dic = pkl.load(open(path+"/c_wet_dry_nan"+str(hour)+"UTC.p", "rb"))
 
 
@@ -228,7 +228,7 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     kernel = u_arrays.cut_kernel_3d(arr,xpos, ypos,dist)
 
-    if (np.sum(np.isfinite(kernel)) < 0.20 * kernel.size):
+    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
     #kernel3 = kernel - np.nanmean(kernel)
@@ -286,7 +286,7 @@ def file_loop(fi):
     # f = plt.figure()
     # plt.imshow(lsta_da, origin='lower')
 
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.40:
+    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
         return None
 
@@ -294,9 +294,9 @@ def file_loop(fi):
     #
     lsta_da.values[ttopo.values >= 400] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
-    pos = np.where((fi.values >= 5) & (fi.values < 65))
+    pos = np.where(fi.values==2)#(fi.values >= 5) & (fi.values < 65))
 
-    if (np.sum(pos) == 0) | (len(pos[0]) < 3):
+    if (np.sum(pos) == 0):
         print('No blobs found')
         return None
 
@@ -459,7 +459,7 @@ if __name__ == "__main__":
 
 
 def plot_gewex():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
 
     f = plt.figure(figsize=(12,7))
 
@@ -568,7 +568,7 @@ def plot_gewex():
     plt.show()
 
 def plot_gewex2():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA'
+    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
 
     f = plt.figure(figsize=(12,7))
 

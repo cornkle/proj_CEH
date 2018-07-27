@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage.measurements import label
 import datetime as dt
-from eod import msg, trmm, tm_utils
+from eod import msg, trmm, tm_utils, trmm_clover
 import xarray as xr
 import os
 import ipdb
@@ -21,20 +21,27 @@ YRANGE = range(2004, 2015)
 
 def saveMCS_WA15():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
+    msg_folder = '/users/global/cornkle/data/OBS/meteosat_tropWA' #meteosat_WA30'
 
-    t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 4, 20, 25])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
+    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-14, 12, 4, 8])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
     m = msg.ReadMsg(msg_folder)
 
     cnt = 0
 
     # define the "0 lag" frist
     arr = np.array([15, 30, 45, 60, 0])
-
+    #mon = [3,4,5] # months march april may only
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
-    for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
+    for _y, _m, _d, _h, _mi in zip(t.dates.dt.year,  t.dates.dt.month, t.dates.dt.day, t.dates.dt.hour, t.dates.dt.minute):
 
-        tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[3, 26])
+        if (_h <10) | (_h>19):
+            continue
+
+        date = dt.datetime(_y, _m, _d, _h, _mi)
+
+        tdic = t.get_ddata(date, cut=[4, 8])
+
+
         #get closest minute
         dm = arr - _mi
         dm = dm[dm<0]
@@ -44,14 +51,17 @@ def saveMCS_WA15():
             continue
 
         # set zero shift time for msg
-        date = dt.datetime(_y, _m, _d, _h, _mi)
+
 
         dt0 = dm[ind]
         ndate = date + dt.timedelta(minutes=int(dt0))
         m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+
         mdic = m.get_data(llbox=[tdic['lon'].values.min(),  tdic['lon'].values.max(), tdic['lat'].values.min(),tdic['lat'].values.max()])
 
         # check whether date is completely missing or just 30mins interval exists
+        # if str(date) == '2004-05-02 13:15:00':
+        #     pdb.set_trace()
         if not mdic:
             dm = np.delete(dm, np.argmin(np.abs(dm)), axis=0)
             try:
@@ -81,7 +91,7 @@ def saveMCS_WA15():
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        goodinds = u[n > 39]  # defines minimum MCS size e.g.
+        goodinds = u[n > 39]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res
         print(goodinds)
         if not sum(goodinds) > 0:
             continue
@@ -96,7 +106,7 @@ def saveMCS_WA15():
             latmax, latmin = mdic['lat'].values[inds].max(), mdic['lat'].values[inds].min()
             lonmax, lonmin = mdic['lon'].values[inds].max(), mdic['lon'].values[inds].min()
             mmeans = np.percentile(mdic['t'].values[inds], 90)
-            td = t.get_ddata(_y, _m, _d, _h, _mi, cut=[latmin - 1, latmax + 1])
+            td = t.get_ddata(date, cut=[latmin - 1, latmax + 1])
 
             # ensure minimum trmm rainfall in area
             # if len(np.where(td['p'].values > 0.1)[0]) < 1:  # at least 1 pixel with rainfall
@@ -109,7 +119,7 @@ def saveMCS_WA15():
             # if (ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute) == (2006, 6, 6, 5, 0):
             #     ipdb.set_trace()
 
-            ml0 = m.get_data(llbox=[lonmin - 1, latmin - 1, lonmax + 1, latmax + 1])
+            ml0 = m.get_data(llbox=[lonmin - 1,  lonmax + 1, latmin - 1, latmax + 1])
             if not ml0:
                 continue
 
@@ -178,7 +188,7 @@ def saveMCS_WA15():
             mmask = np.isfinite(outl)
             mask2 = np.isfinite(outl[tmask])
 
-            if (sum(mmask.flatten())*25 < 350) or (outt.max()>200) or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
+            if (sum(mmask.flatten())*25 < 350) | (outt.max()>200):# or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
                 continue
 
             if sum(mask2.flatten()) < 5:  # sum(mmask.flatten())*0.3:
@@ -186,7 +196,6 @@ def saveMCS_WA15():
                 continue
 
             print('Hit:', gi)
-
 
             da = xr.Dataset({'p': (['x', 'y'], outt),
                              'pconv': (['x', 'y'], outk),
@@ -203,7 +212,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA15_big_-40_15W-20E_zR/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA350_4-8N_14W-10E_-40/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:

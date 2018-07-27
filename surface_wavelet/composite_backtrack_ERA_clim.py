@@ -38,7 +38,7 @@ def composite(h):
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 17 ) & (msg['time.hour'] <= 21 )) & ((msg['time.minute'] == 0) & (
+    msg = msg[((msg['time.hour'] >= 17 ) & (msg['time.hour'] <= 19 )) & ((msg['time.minute'] == 0) & (
         msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6)) ]
 
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
@@ -49,7 +49,7 @@ def composite(h):
     #    dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_clim"+str(hour).zfill(2)+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, dist, probs=False):
@@ -103,7 +103,7 @@ def get_previous_hours(date):
     file = constants.ERA5
 
     try:
-        cmm = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_pls.nc')
+        cmm = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_pl.nc')
     except:
         return None
 
@@ -113,7 +113,7 @@ def get_previous_hours(date):
         return None
 
 
-    pl_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_pls.nc')
+    pl_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_pl.nc')
     srfc_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_srfc.nc')
 
     cmm = cmm.sel(time=t1)
@@ -121,43 +121,31 @@ def get_previous_hours(date):
     # pl_clim = pl_clim.sel(month=cmm['time.month'].values)
     # srfc_clim = srfc_clim.sel(month=cmm['time.month'].values)
 
-    cm = cmm['t'].sel(level=950).squeeze() - pl_clim['t'].sel(level=950).squeeze() #* 1000
+    cm =  pl_clim['t'].sel(level=950).squeeze() #* 1000
 
     cm = cm.to_dataset()
 
-    shear =  (cmm['u'].sel(level=600).squeeze() - cmm['u'].sel(level=925).squeeze() ) - (pl_clim['u'].sel(level=600).squeeze() - pl_clim['u'].sel(level=925).squeeze() ) #
+    shear =  (cmm['u'].sel(level=600).squeeze() - cmm['u'].sel(level=925).squeeze() ) #
 
 
-    vwind_srfc = cmm['v'].sel(level=950).squeeze() - pl_clim['v'].sel(level=950).squeeze()
-    uwind_srfc = cmm['u'].sel(level=950).squeeze() - pl_clim['u'].sel(level=950).squeeze()
-    wwind_srfc = cmm['w'].sel(level=400).squeeze() - pl_clim['w'].sel(level=400).squeeze()
+    vwind_srfc = pl_clim['v'].sel(level=950).squeeze()
+    uwind_srfc =  pl_clim['u'].sel(level=950).squeeze()
     div = cmm['d'].sel(level=950).squeeze()
 
-    cape = css['cape'].squeeze() - srfc_clim['cape'].squeeze()
-    #surface_pressure = css['sp'].squeeze() / 100 - srfc_clim['sp'].squeeze() / 100
-    #sl_pressure = css['msl'].squeeze() / 100 - srfc_clim['msl'].squeeze()/ 100
-    lv = 2.26 * 1e6  # energy of evaporation in J / kg of water
-    #sh = css['ishf'].squeeze() * (-1)
-    #lh = css['ie'].squeeze()* lv * (-1)
-    #ef = lh / (sh + lh)
-    #ef_clim = (srfc_clim['ie'].squeeze()*lv*(-1)) / (srfc_clim['ishf'].squeeze()*(-1) + srfc_clim['ie'].squeeze()*lv*(-1))
+    cape =  srfc_clim['cape'].squeeze()
 
-    #ef_ano = ef - ef_clim
-
-    t2 = css['t2m'].squeeze() - srfc_clim['t2m'].squeeze()
-    q = cmm['q'].sel(level=950).squeeze() - pl_clim['q'].sel(level=950).squeeze()
+    t2 =  srfc_clim['t2m'].squeeze()
+    q =  pl_clim['q'].sel(level=950).squeeze()
 
     cm['shear'] = shear
     cm['u950'] = uwind_srfc
     cm['v950'] = vwind_srfc
     cm['cape'] = cape
-    #cm['sf'] = surface_pressure
+
     cm['tcwv'] = css['tcwv'].squeeze() - srfc_clim['tcwv'].squeeze()
-    #cm['ef'] = ef_ano
     cm['t2'] = t2
     cm['div'] = div *1000
     cm['q'] = q
-    cm['w400'] = wwind_srfc
     srfc_clim.close()
     pl_clim.close()
     return cm
@@ -202,7 +190,7 @@ def file_loop(fi):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where((fi.values == 2)) #(fi.values >= 5) & (fi.values < 65)
+    pos = np.where((fi.values >= 1) & (fi.values <=5)) #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0):
         print('No blobs found')
@@ -265,8 +253,8 @@ def file_loop(fi):
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_SEP"+str(hour).zfill(2)+".p", "rb"))
-    dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_SEP_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_clim"+str(hour).zfill(2)+".p", "rb"))
+    dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_"+str(hour).zfill(2)+".p", "rb"))
     extent = (dic['lsta'].shape[1]-1)/2
     xlen = dic['lsta'].shape[1]
     ylen = dic['lsta'].shape[0]
@@ -376,16 +364,9 @@ def plot_gewex(h):
 
 def plot_doug(h):
     hour=h
-    chour=hour
-    # dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/large_scale/composite_backtrack_ERA_SEP"+str(hour).zfill(2)+".p", "rb"))
-    # dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_SEP_"+str(chour).zfill(2)+".p", "rb"))
-    dic = pkl.load(open(
-        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_JUN" + str(
-            hour).zfill(2) + ".p", "rb"))
-    dic2 = pkl.load(open(
-        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_JUN_" + str(
-            chour).zfill(2) + ".p", "rb"))
-
+    chour=17
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_clim"+str(hour).zfill(2)+".p", "rb"))
+    dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_"+str(chour).zfill(2)+".p", "rb"))
     extent = (dic['lsta'].shape[1]-1)/2
     xlen = dic['lsta'].shape[1]
     ylen = dic['lsta'].shape[0]
@@ -410,7 +391,7 @@ def plot_doug(h):
     contours = plt.contour((dic2['prob']/ dic2['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
     plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
     plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6 , dtype=int))
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 3 , dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
@@ -418,26 +399,26 @@ def plot_doug(h):
 
 
     ax1 = f.add_subplot(222)
-    plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r',levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['v950'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
-    contours = plt.contour((dic['t2'] / dic['cntp']), extend='both',levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], cmap='PuOr_r') #np.arange(-15,-10,0.5)
+    contours = plt.contour((dic['t2'] / dic['cntp']), extend='both', cmap='PuOr_r') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
     plt.plot(extent, extent, 'bo')
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3 - 300, dtype=int))
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
     plt.title('Shading: MSG LSTA, Contours: ERA5 T2m', fontsize=9)
 
     ax1 = f.add_subplot(223)
-    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='viridis') # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='g kg-1')
     contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-18,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     plt.plot(extent, extent, 'bo')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3- 300, dtype=int))
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
@@ -445,7 +426,7 @@ def plot_doug(h):
 
     ax1 = f.add_subplot(224)
  #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf(((dic['div'])/ dic['cntp']), extend='both',  cmap='RdBu_r') # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
     plt.plot(extent, extent, 'bo')
     # contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
@@ -454,7 +435,7 @@ def plot_doug(h):
     qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
                        labelpos='E', coordinates='figure')
 
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3- 300, dtype=int))
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
@@ -462,79 +443,7 @@ def plot_doug(h):
 
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/large_scale/'+str(hour).zfill(2)+'_JUN.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    plt.close()
-
-
-def plot_chris(h):
-    hour=h
-    chour=hour
-    # dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/large_scale/composite_backtrack_ERA_SEP"+str(hour).zfill(2)+".p", "rb"))
-    # dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_SEP_"+str(chour).zfill(2)+".p", "rb"))
-    dic = pkl.load(open(
-        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA" + str(
-            hour).zfill(2) + ".p", "rb"))
-    dic2 = pkl.load(open(
-        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_" + str(
-            chour).zfill(2) + ".p", "rb"))
-
-    extent = (dic['lsta'].shape[1]-1)/2
-    xlen = dic['lsta'].shape[1]
-    ylen = dic['lsta'].shape[0]
-
-    xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st=30
-    xquiv = xv[4::st, 4::st]
-    yquiv = yv[4::st, 4::st]
-
-    u = (dic['u950']/ dic['cntp'])[4::st, 4::st]
-    v = (dic['v950']/ dic['cntp'])[4::st, 4::st]
-
-
-    f = plt.figure(figsize=(12,5))
-
-
-
-    ax1 = f.add_subplot(121)
- #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
- #    plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=[-1.5,-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1,1.5]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
- #    plt.colorbar(label='K')
-    plt.contourf(((dic['w400']) / dic['cntp']), extend='both', cmap='RdBu_r', levels=np.arange(-0.1,0.11,0.01))
-    plt.colorbar(label='K')
-    plt.contour(((dic['div']) / dic['cntp']), extend='both', cmap='RdBu', levels=[-0.0075,-0.005, -0.0025, 0.0025,0.005,0.0075])
-
-    plt.plot(extent, extent, 'bo')
-    # contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    # plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
-    qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
-                       labelpos='E', coordinates='figure')
-
-    plt.title('Shading: LSTA, contours & vectors: 950hPa divergence & wind anomaly', fontsize=11)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9)  - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    ax1 = f.add_subplot(122)
-    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='g kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both', cmap='viridis') #np.arange(-15,-10,0.5)     contours = plt.contour((dic['shear'] / dic['cntp']), extend='both', cmap='viridis') #np.arange(-15,-10,0.5)
-
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    plt.plot(extent, extent, 'bo')
-    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-    plt.title('Shading: 950hPa q anomaly, Contours: 600hPa-925hPa wind shear ', fontsize=11)
-
-
-
-    plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_test.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 

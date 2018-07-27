@@ -8,13 +8,14 @@ import ipdb
 import pickle as pkl
 from collections import defaultdict
 import cartopy.crs as ccrs
+from utils import constants
 import cartopy
 import pdb
 
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    tthresh = '-10'
+    tthresh = '-40'
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA350_4-8N_14W-10E_'+tthresh+'/')
     print('Nb files', len(files))
     mdic = defaultdict(list)
@@ -75,7 +76,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt15k_shear.p',
                            'wb'))
 
 
@@ -91,9 +92,19 @@ def file_loop(f):
     h = dic['time.hour'].values
     m = dic['time.month'].values
     y = dic['time.year'].values
-    clat = np.min(dic.lat)+((np.max(dic.lat)-np.min(dic.lat))*0.5)
-    clon = np.min(dic.lon) + ((np.max(dic.lon) - np.min(dic.lon)) * 0.5)
-    t_thresh = -10
+
+    date = dic['time']
+
+    t_thresh = -40
+    pos = (outt<=t_thresh)
+
+    clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
+    clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
+
+
+    era = xr.open_dataset(constants.)
+
+
     tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
     pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
     ppmin = np.min(outp[(np.isfinite(outp)) & ((outt<=t_thresh))])
@@ -113,7 +124,7 @@ def file_loop(f):
 
     area = np.sum(outt<=t_thresh)
 
-    if  (pp>200) | (ppmin<0) : #(pp<0.1) (area*25 < 15000) | (area*25>800000)
+    if  (pp>200) | (ppmin<0) | (area*25 < 15000) : #(pp<0.1)  | (area*25>800000)
         return
 
     ao40 = np.sum(outt<=t_thresh)

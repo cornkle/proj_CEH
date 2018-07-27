@@ -3,7 +3,7 @@ import pyproj
 import numpy as np
 from scipy.interpolate import griddata
 import datetime as dt
-from eod import trmm, msg
+from eod import trmm_clover, msg
 import xarray as xr
 import pandas as pd
 import os
@@ -12,14 +12,14 @@ import glob
 import pdb
 from utils import constants, u_arrays as ua
 HOD = range(24)  # hours of day
-YRANGE = range(2004, 2010)#2015)
+YRANGE = range(2004, 2015)#2015)
 
 
 def run(tthreshold):
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
 
-    t = trmm.ReadWA(trmm_folder, yrange=YRANGE, area=[-15, 20, 5, 14])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
+    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-14, 12, 4, 9])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
     m = msg.ReadMsg(msg_folder)
 
     msg_zipped = zip(m.lon.flatten(), m.lat.flatten()) # (x,y)
@@ -31,14 +31,20 @@ def run(tthreshold):
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered
     cnt = 0
     cold_cnt = 0
-    for _y, _m, _d, _h, _mi in zip(t.dates.y, t.dates.m, t.dates.d, t.dates.h, t.dates.mi):
+    for _y, _m, _d, _h, _mi in zip(t.dates.dt.year, t.dates.dt.month, t.dates.dt.day, t.dates.dt.hour,
+                                   t.dates.dt.minute):
 
-        tdic = t.get_ddata(_y, _m, _d, _h, _mi, cut=[5, 14])
+        if (_h <10) | (_h>19):
+            continue
+
+        date = dt.datetime(_y, _m, _d, _h, _mi)
+        tdic = t.get_ddata(date, cut=[4, 8])
         if tdic['p'].max() < 30:
             continue
         #get closest minute
         dm = arr - _mi
         dm = dm[dm<0]
+
         try:
             ind = (np.abs(dm)).argmin()
         except ValueError:
@@ -81,6 +87,8 @@ def run(tthreshold):
 
         gt_lon = tdic['lon'].values[tdic['p'].values >= 30]
         gt_lat = tdic['lat'].values[tdic['p'].values >= 30]
+
+        pdb.set_trace()
 
 
         for tpoint in zip(gt_lon, gt_lat):

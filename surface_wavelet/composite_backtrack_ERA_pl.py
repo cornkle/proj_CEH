@@ -33,12 +33,12 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_CENTRE70_SMALL
+    file = constants.MCS_CENTRE70
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == 17 ) & ((msg['time.minute'] == 0) & (
+    msg = msg[((msg['time.hour'] >= 23 ) | (msg['time.hour'] <= 1 )) & ((msg['time.minute'] == 0) & (
         msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6)) ]
 
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
@@ -49,34 +49,35 @@ def composite(h):
     #    dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_ERA"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_pl_"+str(hour).zfill(2)+".p", "wb"))
 
 
-def cut_kernel(xpos, ypos, arr, dist, probs=False):
+def cut_kernel(xpos, ypos, expos, eypos, arr, dist, probs=False):
 
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
+    edist = int(dist/10)
+
     vdic = {}
+    cnt2 = 0
 
     for d in probs.data_vars:
-
-        var = u_arrays.cut_kernel(probs[d].values,xpos, ypos,dist)
+        #print(d)
+        var = u_arrays.cut_kernel_3d(probs[d].values,expos, eypos,edist)
+        var = np.mean(var[:,:, edist-1:edist+2], axis=2)
+        #var = np.mean(var[:, edist - 1:edist + 2, :], axis=1)
         vdic[d] = var
 
-    cnt2 = np.zeros_like(kernel)
-    cnt2[np.isfinite(vdic[list(vdic.keys())[0]])] = 1
 
+    cnt2 = np.zeros_like(vdic[list(vdic.keys())[0]])
+    cnt2[np.isfinite(vdic[list(vdic.keys())[0]])] = 1
 
     if (np.sum(np.isfinite(kernel)) < 2):
         return
 
     cnt = np.zeros_like(kernel)
     cnt[np.isfinite(kernel)] = 1
-
-
-    if kernel.shape != (dist*2+1, dist*2+1):
-        pdb.set_trace()
 
 
     return kernel,  cnt, cnt2, vdic
@@ -103,54 +104,33 @@ def get_previous_hours(date):
     file = constants.ERA5
 
     try:
-        cmm = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_pl.nc')
+        cmm = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_pls.nc')
     except:
         return None
 
-    try:
-        css = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_srfc.nc')
-    except:
-        return None
+    pl_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_pls.nc')
 
-
-    pl_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_pl.nc')
-    srfc_clim = xr.open_dataset(file + 'CLIM/ERA5_2008-2010_CLIM_'+str(edate.month)+'-'+str(ehour)+'_srfc.nc')
 
     cmm = cmm.sel(time=t1)
-    css = css.sel(time=t1)
-    # pl_clim = pl_clim.sel(month=cmm['time.month'].values)
-    # srfc_clim = srfc_clim.sel(month=cmm['time.month'].values)
 
-    cm = cmm['t'].sel(level=950).squeeze() - pl_clim['t'].sel(level=950).squeeze() #* 1000
+    cm = cmm['t'] - pl_clim['t']
 
     cm = cm.to_dataset()
 
-    shear =  (cmm['u'].sel(level=600).squeeze() - cmm['u'].sel(level=925).squeeze() ) #
+    vwind_srfc = cmm['v'] - pl_clim['v']
+    uwind_srfc = cmm['u'] - pl_clim['u']
+    div = cmm['d'] - pl_clim['d']
 
+    q = cmm['q'] - pl_clim['q']
 
-    vwind_srfc = cmm['v'].sel(level=950).squeeze() - pl_clim['v'].sel(level=950).squeeze()
-    uwind_srfc = cmm['u'].sel(level=950).squeeze() - pl_clim['u'].sel(level=950).squeeze()
-    div = cmm['d'].sel(level=950).squeeze()
-
-    cape = css['cape'].squeeze() - srfc_clim['cape'].squeeze()
-    surface_pressure = css['sp'].squeeze() / 100 - srfc_clim['sp'].squeeze() / 100
-    sl_pressure = css['msl'].squeeze() / 100 - srfc_clim['msl'].squeeze()/ 100
-    sh = css['ishf'].squeeze() - srfc_clim['ishf'].squeeze()
-    t2 = css['t2m'].squeeze() - srfc_clim['t2m'].squeeze()
-    q = cmm['q'].sel(level=950).squeeze() - pl_clim['q'].sel(level=950).squeeze()
-
-    cm['shear'] = shear
     cm['u950'] = uwind_srfc
     cm['v950'] = vwind_srfc
-    cm['cape'] = cape
-    cm['sf'] = surface_pressure
-    cm['slp'] = sl_pressure
-    cm['sh'] = sh
-    cm['t2'] = t2
+
     cm['div'] = div *1000
     cm['q'] = q
-    srfc_clim.close()
+
     pl_clim.close()
+
     return cm
 
 
@@ -202,17 +182,15 @@ def file_loop(fi):
 
     dist = 200
 
-    kernel2_sum = np.zeros((dist*2+1, dist*2+1))
-    cnt_sum = np.zeros((dist*2+1, dist*2+1))
-    cntp_sum = np.zeros((dist*2+1, dist*2+1))
-    edic = {}
+
 
     probs = get_previous_hours(date)
 
-    try:
-        probs_on_lsta = lsta.salem.transform(probs)
-    except RuntimeError:
-        return None
+
+    kernel2_sum = np.zeros((dist*2+1, dist*2+1))
+    cnt_sum = np.zeros((dist*2+1, dist*2+1))
+    cntp_sum = np.zeros((len(probs.level), int(dist/10)*2+1))
+    edic = {}
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -227,8 +205,18 @@ def file_loop(fi):
         xpos = int(xpos[0])
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
+
+
+        epoint = probs.sel(latitude=lat, longitude=lon, method='nearest')
+        elat = epoint['latitude'].values
+        elon = epoint['longitude'].values
+
+        expos = np.where(probs['longitude'].values == elon)
+        expos = int(expos[0])
+        eypos = np.where(probs['latitude'].values == elat)
+        eypos = int(eypos[0])
         try:
-            kernel2, cnt, cntp, vdic = cut_kernel(xpos, ypos, lsta_da, dist, probs=probs_on_lsta)
+            kernel2, cnt, cntp, vdic = cut_kernel(xpos, ypos, expos, eypos, lsta_da, dist, probs=probs)
         except TypeError:
             continue
 
@@ -243,8 +231,8 @@ def file_loop(fi):
             else:
                 edic[ks] = vdic[ks]
 
-    outlist = [kernel2_sum, cnt_sum, cntp_sum]
-    outnames = ['lsta',  'cnt', 'cntp']
+    outlist = [cntp_sum]
+    outnames = ['cntp']
     for ek in edic.keys():
         outnames.append(ek)
         outlist.append(edic[ek])
@@ -254,114 +242,173 @@ def file_loop(fi):
     return outlist, outnames
 
 
-def plot_gewex(h):
+
+def plot_doug(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_ERA"+str(hour).zfill(2)+".p", "rb"))
-    dic2 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_CMORPH_"+str(hour).zfill(2)+".p", "rb"))
-    extent = (dic['lsta'].shape[1]-1)/2
-    xlen = dic['lsta'].shape[1]
-    ylen = dic['lsta'].shape[0]
+    chour=17
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_pl_"+str(hour).zfill(2)+"NS.p", "rb"))
 
-    xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st=30
-    xquiv = xv[4::st, 4::st]
-    yquiv = yv[4::st, 4::st]
-
-    u = (dic['u950']/ dic['cntp'])[4::st, 4::st]
-    v = (dic['v950']/ dic['cntp'])[4::st, 4::st]
+    levels= [400,450,500,550,600,650,700,750,825,850,875,900,925,950,975]
 
 
-    f = plt.figure(figsize=(15, 8))
-    ax = f.add_subplot(231)
+    f = plt.figure(figsize=(10,8))
+    ax = f.add_subplot(221)
+    plt.contourf(np.arange(-20,21)*30, levels, (dic['u950'] / dic['cntp']), cmap='RdBu_r', levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('u wind', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
 
-    plt.contourf((dic['lsta'] / dic['cnt']), cmap='RdBu_r',  levels=[ -0.7,-0.6,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6, 0.7], extend='both') #-(rkernel2_sum / rcnt_sum)
-    #plt.plot(extent, extent, 'bo')
+
+    ax1 = f.add_subplot(222)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['v950'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-1.5,-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1.5]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('v wind', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(223)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='g kg-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('specific humidity', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(224)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['t'])/ dic['cntp']), extend='both',  cmap='RdBu_r', vmin=-0.5, vmax=0.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
-    #pdb.set_trace()
-
-    contours = plt.contour((dic2['prob']/ dic2['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='viridis') # #, levels=np.arange(1,5, 0.5)
-    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
-
-    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-
-    plt.title('23-01UTC | '+str(np.max(dic['cnt']))+' cores, LSTA & 06-06UTC antecedent rain', fontsize=9)
-
-
-    ax1 = f.add_subplot(232)
-    plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r',levels=[ -0.7,-0.6,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6, 0.7]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='s-1')
-    contours = plt.contour((dic['t2'] / dic['cntp']), extend='both',levels=[ -0.7,-0.6,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5,0.6, 0.7], cmap='RdBu') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
-    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    ax1 = f.add_subplot(233)
-    plt.contourf(((dic['cape'])/ dic['cntp']), extend='both',  cmap='RdBu') # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='J kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    ax1 = f.add_subplot(234)
-    plt.contourf(((dic['t'])/ dic['cntp']), extend='both',  cmap='RdBu') # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='s-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    qu = ax1.quiver(xquiv, yquiv, u, v, scale=30)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    ax1 = f.add_subplot(235)
-    plt.contourf(((dic['t2'])/ dic['cntp']), extend='both',  cmap='RdBu', levels=np.arange(-1,1.1,0.2)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='m s-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    qu = ax1.quiver(xquiv, yquiv, u, v, scale=30)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    ax1 = f.add_subplot(236)
-    plt.contourf(((dic['q'])/ dic['cntp']), extend='both',  cmap='RdBu') # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='m s-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    qu = ax1.quiver(xquiv, yquiv, u, v, scale=30)
-
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-
-    plt.title('ERA5 950hPa divergence (shading) & 700-950hPa wind shear', fontsize=9)
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('Divergence', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
 
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_NS_pl.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 
-def plot_all():
+def plot_doug_big(h):
+    hour=h
+    chour=17
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_pl_"+str(hour).zfill(2)+"NS.p", "rb"))
 
-    hours = [16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
+    levels= [400,450,500,550,600,650,700,750,825,850,875,900,925,950,975]
 
-    for h in hours:
-        plot_gewex(h)
 
+    f = plt.figure(figsize=(15,8))
+    ax = f.add_subplot(231)
+    plt.contourf(np.arange(-20,21)*30, levels, (dic['u950'] / dic['cntp']), cmap='RdBu_r', levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('u wind', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+
+    ax1 = f.add_subplot(232)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['v950'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-1.5,-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1.5]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('v wind', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(233)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='g kg-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('specific humidity', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(234)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['div'])/ dic['cntp']), extend='both',  cmap='RdBu_r', levels=np.arange(-0.005, 0.0051, 0.001)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='s-1')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('Divergence', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(235)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['t'])/ dic['cntp']), extend='both',  cmap='RdBu_r', levels=np.arange(-0.5,0.6,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='K')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
+    plt.title('temperature', fontsize=9)
+    plt.xlabel('South-North extent')
+    plt.ylabel('Pressure level (hPa)')
+
+
+    plt.tight_layout()
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_NS_pl_big.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.close()
+
+
+
+#np.arange(-20,21)*30, levels,
+
+def plot_doug_WE(h):
+    hour=h
+    chour=17
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_pl_"+str(hour).zfill(2)+"WE.p", "rb"))
+
+    levels= [400,450,500,550,600,650,700,750,825,850,875,900,925,950,975]
+
+
+    f = plt.figure(figsize=(10,8))
+    ax = f.add_subplot(221)
+    plt.contourf(np.arange(-20,21)*30, levels, (dic['u950'] / dic['cntp']), cmap='RdBu_r', levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.title('u wind', fontsize=9)
+    plt.xlabel('West-East extent')
+    plt.ylabel('Pressure level (hPa)')
+
+
+    ax1 = f.add_subplot(222)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['v950'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-1.5,-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1.5]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='m s-1')
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.title('v wind', fontsize=9)
+    plt.xlabel('West-East extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(223)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='g kg-1')
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.title('specific humidity', fontsize=9)
+    plt.xlabel('West-East extent')
+    plt.ylabel('Pressure level (hPa)')
+
+    ax1 = f.add_subplot(224)
+    plt.contourf(np.arange(-20,21)*30, levels,((dic['div'])/ dic['cntp']), extend='both',  cmap='RdBu_r', vmin=-0.004, vmax=0.004) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='K')
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.title('Divergence', fontsize=9)
+    plt.xlabel('West-East extent')
+    plt.ylabel('Pressure level (hPa)')
+
+
+    plt.tight_layout()
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_WE_pl.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.close()
+
+
+#np.arange(-20,21)*30, levels,

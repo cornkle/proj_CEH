@@ -24,31 +24,28 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for l in np.arange(17,23):
+    for l in [17,20]:
         print('Doing '+str(l))
         composite(l)
 
-def composite(h):
-    #pool = multiprocessing.Pool(processes=8)
 
+def composite(h):
 
     file = constants.MCS_CENTRE70
 
-    hour = h
-
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 23 ) |  (msg['time.hour'] <= 1 )) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6) ]
+    msg = msg[((msg['time.hour'] >= 17 ) &  (msg['time.hour'] <= 21 )) & (msg['time.minute'] == 0) & (
+        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] == 6) ]
 
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
 
-    dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
+    dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_CMORPH_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_JUN_"+str(h).zfill(2)+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
@@ -259,7 +256,7 @@ def file_loop(fi):
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_CMORPH_"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_SEP_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
@@ -283,7 +280,97 @@ def plot_gewex(h):
 
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/'+str(hour).zfill(2)+'_SEP.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.close()
+
+
+
+def plot_doug():
+
+    dic17 = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_17.p", "rb"))
+    dic20 = pkl.load(open(
+        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_20.p",
+        "rb"))
+    dic23 = pkl.load(open(
+        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_23.p",
+        "rb"))
+    dic2 = pkl.load(open(
+        "/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_02.p",
+        "rb"))
+
+    extent = (dic17['ano'].shape[1]-1)/2
+
+    f = plt.figure(figsize=(14, 10))
+    ax = f.add_subplot(221)
+
+    plt.contourf((dic17['ano'] / dic17['cnt']), cmap='RdBu_r',  levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    #plt.plot(extent, extent, 'bo')
+    plt.colorbar(label='K')
+    #pdb.set_trace()
+
+    contours = plt.contour((dic17['prob']/ dic17['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
+
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.title('JJAS 2008-2010, 17-1900 UTC | '+str(np.max(dic17['cnt']))+' cores', fontsize=12)
+
+    ax = f.add_subplot(222)
+
+    plt.contourf((dic20['ano'] / dic20['cnt']), cmap='RdBu_r',  levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    #plt.plot(extent, extent, 'bo')
+    plt.colorbar(label='K')
+    #pdb.set_trace()
+
+    contours = plt.contour((dic20['prob']/ dic20['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
+
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.title('20-2200 UTC | '+str(np.max(dic20['cnt']))+' cores', fontsize=12)
+
+
+    ax = f.add_subplot(223)
+
+    plt.contourf((dic23['ano'] / dic23['cnt']), cmap='RdBu_r',  levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    #plt.plot(extent, extent, 'bo')
+    plt.colorbar(label='K')
+    #pdb.set_trace()
+
+    contours = plt.contour((dic23['prob']/ dic23['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
+
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.title('23-0100 UTC | '+str(np.max(dic23['cnt']))+' cores', fontsize=12)
+
+
+    ax = f.add_subplot(224)
+
+    plt.contourf((dic2['ano'] / dic2['cnt']), cmap='RdBu_r',  levels=[-1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    #plt.plot(extent, extent, 'bo')
+    plt.colorbar(label='K')
+    #pdb.set_trace()
+
+    contours = plt.contour((dic2['prob']/ dic2['cntp'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
+
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.title('02-0300 UTC | '+str(np.max(dic2['cnt']))+' cores', fontsize=12)
+
+
+
+    plt.tight_layout()
+    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/CMORPH_previous_lsta_diurn.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 

@@ -55,7 +55,7 @@ def rewrite_ERA_latflip(file):
 
 def saveClimatology():
 
-    mf = xr.open_mfdataset('/localscratch/wllf030/cornkle/ERA5/ERA5_*_srfc.nc', concat_dim='time')
+    mf = xr.open_mfdataset('/localscratch/wllf030/cornkle/ERA5/ERA5_*_pls.nc', concat_dim='time')
     #mf['ymonth'] = ('time', [str(y) + '-' + str(m) for (y, m) in zip(mf['time.year'].values, mf['time.month'].values)])
 
     mf['monthHour'] = (
@@ -63,5 +63,5 @@ def saveClimatology():
     clim = mf.groupby('monthHour').mean(dim='time')
     for _, sl in clim.groupby('monthHour'):
 
-        sl.to_netcdf('/localscratch/wllf030/cornkle/ERA5/CLIM/ERA5_2008-2010_CLIM_'+str(sl.monthHour.values)+'_srfc.nc')
+        sl.to_netcdf('/localscratch/wllf030/cornkle/ERA5/CLIM/ERA5_2008-2010_CLIM_'+str(sl.monthHour.values)+'_pls.nc')
 

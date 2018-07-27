@@ -5,19 +5,17 @@ import pdb
 
 def run_arrays(nb_processors, func, data, dic_names):
 
-    # pool = multiprocessing.Pool(processes=nb_processors)
-    #
-    # res = pool.map(func, data)
-    # pool.close()
-    #
-    # res = [x for x in res if x is not None]
+    pool = multiprocessing.Pool(processes=nb_processors)
 
-    res = []
-    for d in data:
-        r = func(d)
-        res.append(r)
+    res = pool.map(func, data)
+    pool.close()
 
-    pdb.set_trace()
+    res = [x for x in res if x is not None]
+
+    # res = []
+    # for d in data:
+    #     r = func(d)
+    #     res.append(r)
 
     dic = {}
 

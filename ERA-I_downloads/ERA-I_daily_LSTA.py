@@ -10,9 +10,9 @@ server.retrieve({
     "param": "55.162/84.162/134.128/151.128/165.128/166.128/167.128/168.128/235.128",
     "step": "0",
     "stream": "oper",
-    "time": "12:00:00",
+    "time": "12:00:00/00:00:00",
     "type": "an",
     "area": "22/-12/8/12",
     "format": "netcdf",
-    "target": "/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTC_srfc.nc"
+    "target": "/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_srfc.nc"
 })

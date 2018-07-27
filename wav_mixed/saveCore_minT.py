@@ -51,15 +51,15 @@ def run():
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_MCSs_-50_JJAS_points_dominant_minT.nc'
+    savefile = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70minT_15k.nc'
 
     try:
         os.remove(savefile)
     except OSError:
         pass
     da.name = 'blob'
-    enc = {'blob': {'complevel': 5, 'zlib': True}}
-    da.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
+    #enc = {'blob': {'complevel': 5, 'zlib': True}}
+    da.to_netcdf(path=savefile)#, mode='w', encoding=enc, format='NETCDF4')
 
     print('Saved ' + savefile)
 
@@ -85,7 +85,7 @@ def file_loop(passit):
         print('Skip month')
         return
 
-    if not ((np.int(strr[8:10]) >= 17) & (np.int(strr[8:10]) <= 20)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
+    if not ((np.int(strr[8:10]) >= 17) | (np.int(strr[8:10]) <= 3)): #& (np.int(strr[8:10]) <= 19) ): #((np.int(strr[8:10]) > 3)): #not ((np.int(strr[8:10]) >= 16) & (np.int(strr[8:10]) <= 19) ): #& (np.int(strr[8:10]) < 18): #(np.int(strr[4:6]) != 6) & #(np.int(strr[8:10]) != 3) , (np.int(strr[8:10]) > 3)
         print('Skip hour')
         return
 
@@ -115,7 +115,7 @@ def file_loop(passit):
 
     figure = np.zeros_like(outt)
 
-    outt[outt > -40] = 0
+    outt[outt > -70] = 0
     outt[np.isnan(outt)] = 0
 
     labels, numL = label(outt)
@@ -123,8 +123,8 @@ def file_loop(passit):
     u, inv = np.unique(labels, return_inverse=True)
     n = np.bincount(inv)
 
-    badinds = u[(n < 1000)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
-    goodinds = u[(n >= 1000)]
+    badinds = u[(n < 600)]  # all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+    goodinds = u[(n >= 600)]
 
     for bi in badinds:
         inds = np.where(labels == bi)
@@ -141,7 +141,7 @@ def file_loop(passit):
         dummy[pos] = outt[pos]
         ismin = np.argmin(dummy)
 
-        if outt.flat[ismin] < -50:
+        if outt.flat[ismin] <= -70:
             figure.flat[ismin] = outt.flat[ismin]
 
     da = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]

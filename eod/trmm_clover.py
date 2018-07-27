@@ -18,8 +18,8 @@ import datetime as dt
 import pdb
 
 HOD = list(range(24))
-YRANGE = range(2004, 2014)
-MRANGE = range(6, 10)  # Jun - Sep
+YRANGE = range(2004, 2015)
+MRANGE = range(3, 6)  # Jun - Sep
 MTRESH = 0
 
 """
@@ -66,7 +66,7 @@ class ReadWA(object):
 
             tpath = os.path.join(trmm_folder, str(yr), str(mo).zfill(2))
             try:
-                files = uarr.locate('_rain_f4.gra', tpath)
+                files = uarr.locate('.7.gra', tpath)
             except OSError:
                 continue
 
@@ -81,9 +81,13 @@ class ReadWA(object):
             #  self.fpath=fdic['fpath']
             #  return
         for eachfile in rfiles:
-            rain_str = eachfile.replace('_rain_f4', '')
-            time_str = eachfile.replace('_rain_f4', '_time')
-            rr = np.fromfile(time_str, dtype=np.float32)  # seconds of day
+            rain_str = eachfile
+            time_str = eachfile.replace('.7.', '.7_time.')
+            try:
+                rr = np.fromfile(time_str, dtype=np.float32)  # seconds of day
+            except FileNotFoundError:
+                print(time_str+' missing, continue')
+                continue
 
             secmean = rr.mean()
             t = ut.sec_to_time(secmean)
@@ -142,9 +146,10 @@ class ReadWA(object):
         """
 
         pos = np.where(self.dates.dt.strftime('%Y-%m-%d_%H:%M') == date.strftime('%Y-%m-%d_%H:%M'))
-        pdb.set_trace()
+
         # print('Ind:', ind)
-        if not np.sum(pos) == 0:
+
+        if len(pos[0]) == 0:
             print('No data for date')
             return False
 

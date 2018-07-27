@@ -8,14 +8,15 @@ import ipdb
 import pickle as pkl
 from collections import defaultdict
 import cartopy.crs as ccrs
+from utils import constants
 import cartopy
 import pdb
 
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    tthresh = '-10'
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA350_4-8N_14W-10E_'+tthresh+'/')
+    tthresh = '-40'
+    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -50,8 +51,8 @@ def perSys():
             mdic['isnz'].append(v[18])
             mdic['clon'].append(v[19])
             mdic['p'].append(v[20])
-            mdic['pc'].append(v[21])
-            mdic['year'].append(v[22])
+            mdic['year'].append(v[21])
+            mdic['date'].append(v[22])
         except TypeError:
             continue
 
@@ -75,7 +76,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_CP4.p',
                            'wb'))
 
 
@@ -83,20 +84,26 @@ def file_loop(f):
     #print('Doing file: ' + f)
     dic = xr.open_dataset(f)
     res = []
-    outt = dic['tc_lag0'].values
-    outp = dic['p'].values
-    outpc = dic['pconv'].values
-    lon = dic['lon'].values
-    lat = dic['lat'].values
+    outt = dic['lw_out_PBLtop'].values
+    outp = dic['lsRain'].values * 3600
+    lon = dic['longitude'].values
+    lat = dic['latitude'].values
     h = dic['time.hour'].values
     m = dic['time.month'].values
     y = dic['time.year'].values
-    clat = np.min(dic.lat)+((np.max(dic.lat)-np.min(dic.lat))*0.5)
-    clon = np.min(dic.lon) + ((np.max(dic.lon) - np.min(dic.lon)) * 0.5)
-    t_thresh = -10
+
+    lons, lats = np.meshgrid(lon,lat)
+
+    date = dic['time']
+
+    t_thresh = 167  # -40C ~ 167 W m-2
+
+
+    clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
+    clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
+
     tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
     pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
-    ppmin = np.min(outp[(np.isfinite(outp)) & ((outt<=t_thresh))])
 
     isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
 
@@ -113,25 +120,22 @@ def file_loop(f):
 
     area = np.sum(outt<=t_thresh)
 
-    if  (pp>200) | (ppmin<0) : #(pp<0.1) (area*25 < 15000) | (area*25>800000)
-        return
 
     ao40 = np.sum(outt<=t_thresh)
     po30 = np.sum(outp[(np.isfinite(outp))&((outt<=t_thresh))]>30)
     isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
     isnz = np.sum((outp>0.1) & ((outt<=t_thresh)))
 
-    lon30 = lon[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lat30 = lat[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lonisfin = lon[(np.isfinite(outp)) & ((outt<=t_thresh))]
-    latisfin = lat[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    lon30 = lons[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
+    lat30 = lats[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
+    lonisfin = lons[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    latisfin = lats[(np.isfinite(outp)) & ((outt<=t_thresh))]
 
     latmin = lat.min()
     latmax = lat.max()
 
     p = outp[(np.isfinite(outp))&((outt<=t_thresh))]
-    pc = outpc[(np.isfinite(outpc)) & ((outt<=t_thresh))]
     outt = outt[(np.isfinite(outp)) & ((outt<=t_thresh))]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, pc, y)
+    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, y, date)
