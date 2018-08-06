@@ -141,7 +141,7 @@ def regrid_irregular_quick(x, y, new_x, new_y, data):
     return coll
 
 
-def griddata_comparison(data, x, y, new_x, new_y, isll=False):
+def griddata_lin(data, x, y, new_x, new_y, isll=False):
 
     """
     :param x: current x variables (1 or 2d, definitely 2d if irregular!)
@@ -174,7 +174,7 @@ def griddata_comparison(data, x, y, new_x, new_y, isll=False):
     shape = new_xs.shape
 
     # Interpolate using delaunay triangularization
-    data = griddata(points, data.flatten(), inter, method='nearest')
+    data = griddata(points, data.flatten(), inter, method='linear')
     data = data.reshape((shape[0], shape[1]))
 
     return data
