@@ -1,15 +1,11 @@
-
 import numpy as np
 from scipy.ndimage.measurements import label
 import xarray as xr
 import os
 import ipdb
-import matplotlib.pyplot as plt
 import glob
-from utils import constants
 from scipy.interpolate import griddata
 import pandas as pd
-import pyproj
 import pdb
 
 
@@ -48,6 +44,137 @@ def griddata_lin(data, x, y, new_x, new_y):
     data = data.reshape((shape[0], shape[1]))
 
     return data
+
+def cut_kernel(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 2:
+        raise IndexError('Cut kernel only allows 2D arrays.')
+
+    kernel = np.zeros((dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[1]:
+        xmax = kernel.shape[1]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[1])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[1])
+
+    if ypos + dist_from_point < array.shape[0]:
+        ymax = kernel.shape[0]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[0])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[0])
+
+    cutk = array[ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
+def cut_kernel_3d(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 3:
+        raise IndexError('Cut kernel3d only allows 3D arrays.')
+
+    kernel = np.zeros((array.shape[0], dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[2]:
+        xmax = kernel.shape[2]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[2])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[2])
+
+    if ypos + dist_from_point < array.shape[1]:
+        ymax = kernel.shape[1]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[1])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[1])
+
+    cutk = array[:, ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[:, ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
+
+def cut_box(xpos, ypos, arr, dist=None):
+    """
+
+    :param xpos: x coordinate in domain for kernel centre point
+    :param ypos: y coordinate in domain for kernel centre point
+    :param arr: numpy array (2d)
+    :param dist: distance from kernel centre point to kernel edge (total width = 2*dist+1)
+    :return: the kernel of dimensions (2*dist+1, 2*dist+1)
+    """
+
+    if dist == None:
+        'Distance missing. Please provide distance from kernel centre to edge (number of pixels).'
+        return
+    if arr.ndim == 3:
+        kernel = cut_kernel_3d(arr, xpos, ypos, dist)
+        if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            pdb.set_trace()
+    else:
+        kernel = cut_kernel(arr,xpos, ypos,dist)
+        if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            pdb.set_trace()
+
+
+
+    return kernel
 
 
 def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
