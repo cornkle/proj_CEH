@@ -8,24 +8,24 @@ import pdb
 
 def run(orig_names=False):
 
-    fpath = '/home/users/cornkle/runscript/fut_in'
-    outpath = '/home/users/cornkle/runscript/fut_out'
+    fpath = '/home/users/cornkle/runscript/in'
+    outpath = '/home/users/cornkle/runscript/out'
 
     local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
 
-    months = [3,5] # March-May
-    month_tag = 'MAM'
+    months = [3,11] # March-May
 
     dic = {
 
         't2' : ([temp_box], ['keep'], [], [12,3]),
         'lw_out_PBLtop' : ([local_box], ['keep'], [], []),
-        'u_pl' : ([temp_box], ['keep', 'keep'], [650, 850], [12,3]),
+        'v_pl' : ([temp_box], ['keep', 'keep'], [650,925], [12,3]),
+        'u_pl' : ([temp_box], ['keep', 'keep'], [650, 850,925], [12,3]),
         't_pl' : ([temp_box], ['keep'], [925], [12,3]),
         'omega_pl' : ([local_box], ['keep'], [650,300], []),
         'lsRain' : ([local_box], ['keep'], [], []),
-
+        'q_pl' : ([temp_box], ['keep', 'keep'], [650, 925], []),
     }
     keys = dic.keys()
 
@@ -46,7 +46,7 @@ def run(orig_names=False):
         for f in files:
 
             fname = os.path.basename(f)
-            outname = fname.replace(var, k+'_'+month_tag)
+            outname = fname.replace(var, k)
             outfile = outfolder + os.sep + outname
             if os.path.isfile(outfile):
                 print('File already exists, continue.')
