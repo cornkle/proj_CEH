@@ -7,6 +7,7 @@ Created on Tue Mar 15 17:27:16 2016
 
 import os, fnmatch
 import numpy as np
+from scipy.ndimage.measurements import label
 from math import sqrt
 import pdb
 import glob
@@ -247,16 +248,39 @@ def cut_kernel_3d(array, xpos, ypos, dist_from_point):
     return kernel
 
 
-def shift_lons(ds, lon_dim='lon'):
-    """ Shift longitudes from [0, 360] to [-180, 180] """
-    lons = ds[lon_dim].values
-    new_lons = np.empty_like(lons)
-    mask = lons > 180
-    new_lons[mask] = -(360. - lons[mask])
-    new_lons[~mask] = lons[~mask]
-    ds[lon_dim].values = new_lons
-    return ds
 
+def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
+    array[array >= thresh] = 0  # T threshold maskout
+    array[np.isnan(array)] = 0  # set ocean nans to 0
+
+    labels, numL = label(array)
+
+    u, inv = np.unique(labels, return_inverse=True)
+    n = np.bincount(inv)
+
+    goodinds = u[u!=0]
+
+    if min_area != None:
+        goodinds = u[(n>=min_area) & (u!=0)]
+        badinds = u[n<min_area]
+
+        for b in badinds:
+            pos = np.where(labels==b)
+            labels[pos]=0
+
+    if max_area != None:
+        goodinds = u[(n<=max_area)  & (u!=0)]
+        badinds = u[n>max_area]
+
+    if minmax_area != None:
+        goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
+        badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
+
+        for b in badinds:
+            pos = np.where(labels==b)
+            labels[pos]=0
+
+    return labels, goodinds
 
 
 

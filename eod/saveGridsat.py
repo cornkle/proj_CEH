@@ -8,67 +8,40 @@ import pdb
 import os
 import xarray as xr
 import numpy as np
-
-
-def saveNetcdf():
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_raw_binary/'
-    # msg_folder = '/users/global/cmt/GridSat/lscratch/extract/Africa'
-    pool = multiprocessing.Pool(processes=7)
-    files = glob.glob(msg_folder + '/*/*/irwin_cdr_*18.gra')
-
-    # res = pool.map(rewrite_data.rewriteGridsat_toNetcdf, files)
-    res = pool.map(rewrite_data.rewriteGridsat_extract18Z, files)
+from utils import u_arrays as ua
 
 
 def saveYearly():
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
 
-    years = np.arange(1982, 2017)  # list(next(os.walk(msg_folder))[1])
+    out = '/users/global/cornkle/mymachine/GRIDSAT/MCS18/'
+    infolder = '/users/global/cornkle/mymachine/GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
+
+    years = np.arange(2004, 2014)  # list(next(os.walk(msg_folder))[1])
 
     for y in years:
-
-        if os.path.isfile(msg_folder + 'gridsat_WA_' + str(y) + '.nc'):
+        da = None
+        if os.path.isfile(out + 'gridsat_WA_' + str(y) + '.nc'):
             continue
 
-        files = glob.glob(msg_folder + str(y) + '/*/irwin_cdr_*.nc')
+        files = glob.glob(infolder + str(y) + '/GRIDSAT-AFRICA_CP*.nc')
         files.sort()
-
-        da = xr.open_dataset(files[0])
-
-        for f in files[1::]:
+        for f in files:
             print('Doing ' + f)
 
-            da = xr.concat([da, xr.open_dataset(f)], dim='time')
-        enc = {'t': {'complevel': 5, 'shuffle': True, 'zlib': True}}
-        da.to_netcdf(msg_folder + 'gridsat_WA_' + str(y) + '.nc', encoding=enc)
+            df = xr.open_dataset(f)
+            if df['time.hour']!=18:
+                continue
 
+            df.rename({'irwin_cdr':'tir'}, inplace=True)
+            df['tir'].values = df['tir'].values-273.15
+            labels, goodinds = ua.blob_define(df['tir'].values, -70, minmax_area=[83,25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat?
+            df['tir'].values[labels==0] = 0
+            df['tir'].values[df['tir'].values<-110] = 0
+            try:
+                da = xr.concat([da, df ], dim='time')
+            except TypeError:
+                da = df.copy()
 
-def saveYearly18():
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/z18/'
-
-    years = np.arange(1982, 2017)  # list(next(os.walk(msg_folder))[1])
-
-    for y in years:
-
-        if os.path.isfile(msg_folder + 'gridsat_WA_' + str(y) + '.nc'):
-            continue
-
-        files = glob.glob(msg_folder + '/irwin_cdr_' + str(y) + '*.nc')
-        files.sort()
-
-        da = xr.open_dataset(files[0])
-
-        for f in files[1::]:
-            print('Doing ' + f)
-
-            da = xr.concat([da, xr.open_dataset(f)], dim='time')
-        # enc = {'t':{'complevel': 5, 'shuffle': True, 'zlib': True}}
-        da.to_netcdf(msg_folder + 'gridsat_WA_' + str(y) + '_18UTC.nc')
-
-
-def saveColdClimatology():
-    years = range(1984, 2016)
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-
-    for y in years:
-        da = xr.open_dataset(msg_folder + 'gridsat_WA_' + str(y) + '.nc')
+        enc = {'tir': {'complevel': 5, 'shuffle': True, 'zlib': True}}
+        da.to_netcdf(out + 'gridsat_WA_' + str(y) + '.nc', encoding=enc)
+        da.close()

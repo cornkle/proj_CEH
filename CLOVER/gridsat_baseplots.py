@@ -8,6 +8,7 @@ from utils import u_plot as up
 import cartopy.crs as ccrs
 import os
 import matplotlib as mpl
+from utils import constants as cnst
 from scipy.ndimage.measurements import label
 
 
@@ -15,7 +16,7 @@ def monthly(years):
 
     for y in years:
         y = str(y)
-        da = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + y + '.nc')
+        da = xr.open_dataset(cnst+'gridsat_WA_' + y + '.nc')
         da = da['t']
         da = da.where(da <= -80)
 
@@ -31,7 +32,7 @@ def monthly(years):
             ax.set_aspect('equal', 'box-forced')
 
         plt.suptitle(y)
-        plt.savefig('/users/global/cornkle/figs/cold_clouds/monthly_Tmean<-80/monthly_'+y+'.png')
+        plt.savefig('/users/global/cornkle/figs/CLOVER/GRIDSAT_cold_clouds/tests/monthly_'+y+'.png')
         plt.close('all')
 
 
@@ -39,18 +40,18 @@ def monthly(years):
 def climatology_month():
     years = np.arange(2005,2016)#2017)
 
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-    fname='gridsat_WA_cold_climatology_mean.nc'
+    msg_folder = cnst
+    fname='aggs/gridsat_WA_cold_climatology_mean.nc'
 
     if not os.path.isfile(msg_folder + fname):
-        da = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + str(2004) + '.nc')
+        da = xr.open_dataset(cnst+'gridsat_WA_' + str(2004) + '.nc')
         da = da['t']
         da = da.where(da <= -60)
 
         month = da.groupby('time.month').mean(dim='time')
         for y in years:
             y = str(y)
-            da = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + y + '.nc')
+            da = xr.open_dataset(cnst+'gridsat_WA_' + y + '.nc')
             da = da['t']
             da = da.where(da <= -60)
 
@@ -77,93 +78,86 @@ def climatology_month():
         ax.set_aspect('equal', 'box-forced')
 
 
-    plt.savefig('/users/global/cornkle/VERA/plots/leeds_june_2017/mean_t.png', dpi=300)
+    plt.savefig('/users/global/cornkle/figs/CLOVER/GRIDSAT_cold_clouds/tests/mean_t.png', dpi=300)
 
 
 def month():
     y1 = 1982
     y2 =2017#2017
-    years = np.arange(y1+1,y2)#2017)
+    years = list(range(1983,1985)) #+ list(range(2004,2014))
 
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-    fname='gridsat_WA_-70_monthly.nc'
+    msg_folder = cnst.GRIDSAT
+    fname='aggs/gridsat_WA_-70_monthly.nc'
 
     if not os.path.isfile(msg_folder + fname):
-        da = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + str(y1) + '.nc')
-        da['t'] = da['t'].where(da['t'] <= -70)
-
-
-        da = da.resample('m', dim='time', how='mean')
-
+        da = None
         for y in years:
             y = str(y)
-            da1 = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + y + '.nc')
+            da1 = xr.open_dataset(cnst.GRIDSAT+'gridsat_WA_' + y + '.nc')
             print('Doing '+y)
-            da1['t'] = da1['t'].where(da1['t'] <= -70)
+            da1['tir'] = da1['tir'].where(da1['tir'] <= -70)
 
-            da1 = da1.resample('m', dim='time', how='mean')
+            da1 = da1.resample(time='m').mean('time')
+            try:
+                da = xr.concat([da, da1], 'time')
+            except TypeError:
+                da = da1.copy()
 
-            da = xr.concat([da, da1], 'time')
-            da1.close()
 
-        enc = {'t': {'complevel': 5,  'zlib': True}}
+        enc = {'tir': {'complevel': 5,  'zlib': True}}
         da.to_netcdf(msg_folder + fname, encoding=enc)
 
 
     else:
         ds = xr.open_dataset(msg_folder + fname)
-        da = ds['t']
+        da = ds['tir']
     da.values[da.values==0]=np.nan
     da.sel(lat=slice(11, 20))
-    mean = da['t'].mean(dim=['lat', 'lon'])
+    mean = da['tir'].mean(dim=['lat', 'lon'])
 
     mean.plot()
 
-    plt.savefig('/users/global/cornkle/VERA/plots/leeds_june_2017/trend_mcs.png', dpi=300)
+    plt.savefig('/users/global/cornkle/figs/CLOVER/GRIDSAT_cold_clouds/tests/trend_mcs.png', dpi=300)
 
 
 def month_count():
     y1 = 1982
     y2 = 2017  # 2017
-    years = np.arange(y1 + 1, y2)  # 2017)
+    years = list(range(1983, 2003)) + list(range(2004,2014))
 
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-    fname = 'gridsat_WA_-40_monthly_count.nc'
+    msg_folder = cnst.GRIDSAT
+    fname = 'aggs/gridsat_WA_-70_monthly_count.nc'
 
     if not os.path.isfile(msg_folder + fname):
-        da = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + str(y1) + '.nc')
-
-        da['t'] = da['t'].where(da['t'] <= -40)
-        da['t'].values[da['t'].values <= -40] = 1
-
-        da = da.resample('m', dim='time', how='sum')
-
+        da = None
         for y in years:
             y = str(y)
-            da1 = xr.open_dataset('/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/gridsat_WA_' + y + '.nc')
+            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_' + y + '.nc')
             print('Doing ' + y)
-            da1['t'] = da1['t'].where(da1['t'] <= -40)
-            da1['t'].values[da1['t'].values <= -40] = 1
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108) )
+            da1['tir'].values[da1['tir'].values < -70] = 1
 
-            da1 = da1.resample('m', dim='time', how='sum')
+            da1 = da1.resample(time='m').sum('time')
+            try:
+                da = xr.concat([da, da1], 'time')
+            except TypeError:
+                da = da1.copy()
 
-            da = xr.concat([da, da1], 'time')
-            da1.close()
-
-        enc = {'t': {'complevel': 5, 'zlib': True}}
+        enc = {'tir': {'complevel': 5, 'zlib': True}}
         da.to_netcdf(msg_folder + fname, encoding=enc)
 
 
     else:
         ds = xr.open_dataset(msg_folder + fname)
-        da = ds['t']
+        da = ds['tir']
+    pdb.set_trace()
     da.values[da.values == 0] = np.nan
     da.sel(lat=slice(11, 20))
     mean = da['t'].mean(dim=['lat', 'lon'])
 
     mean.plot()
 
-    plt.savefig('/users/global/cornkle/VERA/plots/leeds_june_2017/trend_mcs.png', dpi=300)
+    plt.savefig('/users/global/cornkle/figs/CLOVER/GRIDSAT_cold_clouds/tests/trend_mcs.png', dpi=300)
 
 
 def hourly_count():
@@ -218,21 +212,22 @@ def hourly_count():
 
 
 def timeline_trend_count():
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-    fname = 'gridsat_WA_-70_monthly_count.nc'
+    msg_folder = cnst.GRIDSAT
+    fname = 'aggs/gridsat_WA_-70_monthly_count.nc'
 
     da = xr.open_dataarray(msg_folder + fname)
-    da = da.sel(lat=slice(8,12), lon=slice(-17, 20))
+    da = da.sel(lat=slice(4.5,8), lon=slice(-10, 15))
     #da=da.sel(lat=slice(5,10))
     #da[da==0]=np.nan
     mean = da.mean(dim=['lat', 'lon'])
     #mean = mean[(mean['time.month']==8)]
     f= plt.figure(figsize=(10,6))
-    for i in range(6,9):
+    for i in range(3,12):
         bla = mean[(mean['time.month'] == i)]
         bla.plot(label=str(i), marker='o')
-    plt.title('Average number of pixels <= -70C, 11-18N')
+    plt.title('Average number of pixels <= -70C, 4.5-8N')
     plt.legend()
+    plt.ylim(0,0.5)
    # plt.ylim(-76,-72)
 
 def timeline_trend_mean():

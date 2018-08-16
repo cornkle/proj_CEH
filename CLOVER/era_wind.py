@@ -49,24 +49,135 @@ def slp():
     #ma# p.append_colorbar(ax=ax)
 
 def scatter_AEJspeed_tgrad():
-    file = '/localscratch/wllf030/cornkle/ERA-I/ERA_u_wind_monthly_600hPa_79-2014.nc'
-    file2 = '/localscratch/wllf030/cornkle/ERA-I/ERA-Int-Monthly-2mTemp.nc'
-    file3 = '/localscratch/wllf030/cornkle/ERA-I/ERA_uv_wind_79-2014_925-850hPa.nc'
+    srfc = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_srfc.nc'
+    pl = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_pl.nc'
 
-    da = xr.open_dataset(file)
-    da2 = xr.open_dataset(file2)
-    da3 = xr.open_dataset(file3)
 
-    da = da['u'].isel(time=(da['time.month']==6))
-    da2 = da2['t2m'].isel(time=(da2['time.month']==6))
-    da3 = da3['u'].isel(time=(da3['time.month'] == 6))
+    da = xr.open_dataset(pl)
+    da2 = xr.open_dataset(srfc)
 
-    u = da.sel(latitude=slice(20, 5), longitude=slice(-10, 10)).mean(dim='longitude')
-    t2 = da2.sel(latitude=slice(20, 5), longitude=slice(-10, 10)).mean(dim='longitude')
-    u850 = da3.sel(latitude=slice(20, 5), longitude=slice(-10, 10), level=850).mean(dim='longitude')
+
+    da = da['u']
+    da2 = da2['t2m']
+
+    da = da[(da['time.month'] == 5 )] #& (da['time.month'] <= 5)]
+    da2 = da2[(da2['time.month'] == 5) ]#& (da2['time.month'] <= 5)]
+
+    u = da.sel(latitude=slice(17, 5), longitude=slice(-10, 15), level=650).mean(dim='longitude')
+    t2 = da2.sel(latitude=slice(17, 5), longitude=slice(-10, 15)).mean(dim='longitude')
+    u850 = da.sel(latitude=slice(17, 5), longitude=slice(-10, 15), level=925).mean(dim='longitude')
     #pdb.set_trace()
-    pos = np.where((u['latitude']>4.5) & (u['latitude']<14))
-    pos=pos[0]
+    pos = np.where((u['latitude']>=4.5) & (u['latitude']<14))
+    pos = pos[0]
+
+    lat = u['latitude'].values
+
+    print('North', u['latitude'][pos[0]:pos[0] + 4])
+    print('South', u['latitude'][pos[-1] - 4:pos[-1]])
+
+    tt = t2.values-273.15
+    shear = u-u850
+    pick = shear.sel(latitude=slice(9,7)).mean('latitude')
+
+    plt.figure()
+    plt.plot( t2['time.year'].values, pick)
+    plt.title('wind shear')
+
+    uplot = []
+    tplot = []
+    shearplot = []
+    wwind = []
+
+    plt.figure()
+    plt.contourf( lat[0:-1], t2['time.year'].values, tt[:, 0:-1]-tt[:, 1::], levels=np.arange(0,1.5,0.1), extend='both')
+    plt.title('T2 gradient x1-x0')
+    plt.colorbar()
+
+    plt.figure()
+    plt.contourf( lat, t2['time.year'].values, u-u850, levels=np.arange(-18,-5,1), extend='both')
+    plt.title('Wind shear x1-x0')
+    plt.colorbar()
+
+    plt.figure()
+    plt.contourf( lat, t2['time.year'].values, tt, levels=np.arange(25,30,0.25), extend='both')
+    plt.title('T2 in degC')
+    plt.colorbar()
+
+    plt.figure()
+    plt.contourf( lat, t2['time.year'].values, u, levels=np.arange(-18,-5,1), extend='both')
+    plt.title('uWind650hPa in degC')
+    plt.colorbar()
+
+    tgrads_north = np.mean((tt[:, pos])[:, 0:4], axis=1)
+    tgrads_south = np.mean((tt[:, pos])[:, -3::], axis=1)
+
+    plt.figure()
+    plt.plot( t2['time.year'].values, tgrads_north-tgrads_south)
+
+    for x in np.arange(u.shape[0]):
+
+        usingle = u[x, :].values
+        tsingle = t2[x,:].values-273.15
+        u850single = u850[x, :].values
+        minpos = np.argmin(usingle)
+        ustrength = np.mean(usingle[minpos-1:minpos+2])
+        u850strength = np.mean(u850single[minpos-1:minpos+2])
+
+        tgrad = np.mean( tsingle[minpos-2:minpos]) - np.mean(tsingle[minpos+1:minpos+3] ) #np.mean(tsingle[pos[0]:pos[0]+4] - tsingle[pos[-1]-4:pos[-1]]))
+
+
+        #print(ustrength, tgrad)
+
+        uplot.append(ustrength)
+        tplot.append(tgrad)
+        shearplot.append(ustrength-u850strength)
+        wwind.append(u850strength)
+
+        if x < 2:
+            plt.figure()
+            plt.plot(lat[0:-1], tsingle[1::]-tsingle[0:-1], 'r')
+            plt.plot(lat[0:-1], ((usingle-u850single) - np.mean(usingle-u850single))[0:-1], 'b')
+            plt.plot(lat[0:-1], ((usingle) - np.mean(usingle))[0:-1], 'g')
+
+    f = plt.figure()
+    f.add_subplot(131)
+    plt.scatter(tplot, uplot)
+    plt.xlabel('Temperature difference (meanT[16-17N]-meanT[8-9N])')
+    plt.ylabel('AEJ wind speed (Mean u-wind 9-16N, 600hPa)')
+    plt.title('ERA-Interim 1979-2014 [10W-10E], August')
+    f.add_subplot(132)
+    plt.scatter(tplot, shearplot)
+    plt.xlabel('Temperature difference (meanT[16-17N]-meanT[8-9N])')
+    plt.ylabel('Wind shear (Mean u-wind 9-16N | 600hPa - 850hPa)')
+    plt.title('ERA-Interim 1979-2014 [10W-10E], August')
+    f.add_subplot(133)
+    plt.scatter(tplot, wwind)
+    plt.xlabel('Temperature difference (meanT[16-17N]-meanT[8-9N])')
+    plt.ylabel('Monsoon wind (Mean u-wind 9-16N, 850hPa)')
+    plt.title('ERA-Interim 1979-2014 [10W-10E], August')
+
+
+
+def scatter_AEJspeed_tgrad_old():
+    srfc = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_srfc.nc'
+    pl = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_pl.nc'
+
+
+    da = xr.open_dataset(pl)
+    da2 = xr.open_dataset(srfc)
+
+
+    da = da['u']
+    da2 = da2['t2m']
+
+    da = da[(da['time.month'] == 6 )] #& (da['time.month'] <= 5)]
+    da2 = da2[(da2['time.month'] == 6) ]#& (da2['time.month'] <= 5)]
+
+    u = da.sel(latitude=slice(17, 5), longitude=slice(-10, 10), level=600).mean(dim='longitude')
+    t2 = da2.sel(latitude=slice(17, 5), longitude=slice(-10, 10)).mean(dim='longitude')
+    u850 = da.sel(latitude=slice(17, 5), longitude=slice(-10, 10), level=925).mean(dim='longitude')
+    pos = np.where((u['latitude'] > 4.5) & (u['latitude'] < 14))
+    pos = pos[0]
     print(u['latitude'][pos])
 
     uplot = []
@@ -75,23 +186,20 @@ def scatter_AEJspeed_tgrad():
     wwind = []
 
     for x in np.arange(u.shape[0]):
-
         usingle = u[x, :].values
-        tsingle = t2[x,:].values-273.15
+        tsingle = t2[x, :].values - 273.15
         u850single = u850[x, :].values
 
         ustrength = np.mean(usingle[pos])
         u850strength = np.mean(u850single[pos])
-        tgrad = np.mean( np.mean(tsingle[pos[0]:pos[0]+2] - tsingle[pos[-1]-2:pos[-1]]))
-
+        tgrad = np.mean(np.mean(tsingle[pos[0]:pos[0] + 2] - tsingle[pos[-1] - 2:pos[-1]]))
 
         print(ustrength, tgrad)
 
         uplot.append(ustrength)
         tplot.append(tgrad)
-        shearplot.append(ustrength-u850strength)
+        shearplot.append(ustrength - u850strength)
         wwind.append(u850strength)
-
 
     f = plt.figure()
     f.add_subplot(131)
@@ -112,6 +220,7 @@ def scatter_AEJspeed_tgrad():
     plt.savefig()
 
     f = plt.figure()
+
 
 
 

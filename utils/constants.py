@@ -50,3 +50,5 @@ TRMM5KM = '/users/global/cornkle/TRMMfiles/'
 TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 
 CMORPH = '/users/global/cornkle/data/OBS/CMORPH/CMORPH_nc/'
+
+GRIDSAT = '/users/global/cornkle/mymachine/GRIDSAT/MCS18/'
