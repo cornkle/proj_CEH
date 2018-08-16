@@ -40,7 +40,7 @@ def run(orig_names=False):
             if os.path.isfile(outfile):
                 print('File already exists, continue.')
                 continue
-            datestr = fname[-15:-8]
+            datestr = fname[-15:-7]
             print('Datestring', datestr)
 
             if (datestr!='20020510') & (datestr!='20020511') & (datestr!='20020512'):
