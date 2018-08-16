@@ -16,6 +16,7 @@ def run(orig_names=False):
 
     dic = constants.VARDIC
     keys = dic.keys()
+    print(keys)
 
     for k in keys:
 
