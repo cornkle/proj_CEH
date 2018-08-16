@@ -41,6 +41,7 @@ def run(orig_names=False):
                 print('File already exists, continue.')
                 continue
             datestr = fname[-15:-8]
+            print('Datestring', datestr)
 
             if (datestr!='20020510') & (datestr!='20020511') & (datestr!='20020512'):
                 continue
