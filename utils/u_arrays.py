@@ -5,12 +5,11 @@ Created on Tue Mar 15 17:27:16 2016
 @author: cornkle
 """
 
-import os, fnmatch
+import os
 import numpy as np
 from scipy.ndimage.measurements import label
-from math import sqrt
-import pdb
-import glob
+from utils import u_mann_kendall as mk
+
 
 def locate(pattern, root_path, exclude=None):
     strg = []
@@ -284,7 +283,19 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
 
 
 
+def linear_trend(x, eps=0.001, alpha=0.01):
 
+    #pf = np.polyfit(np.arange(len(x)), x, 1)
+    pf, slope, int, p, ind = mk.test(np.arange(len(x)),x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
+
+    # we need to return a dataarray or else xarray's groupby won't be happy
+
+    if ind == 1:
+        issig = slope
+    else:
+        issig = np.nan
+
+    return issig
 
 
 

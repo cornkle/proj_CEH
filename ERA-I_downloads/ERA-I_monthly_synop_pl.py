@@ -1,6 +1,6 @@
 from ecmwfapi import ECMWFDataServer
 import numpy as np
-import pdb
+
 y = np.arange(1979,2018,1)
 stri = ''
 
@@ -17,15 +17,14 @@ server.retrieve({
     "date": stri,
     "expver": "1",
     "grid": "0.75/0.75",
-    "levtype": "sfc",
-    "param": "81.162/134.128/137.128/164.128/165.128/166.128/167.128/168.128/207.128",
-    "stream": "moda",
+    "time": "00:00:00/06:00:00/12:00:00/18:00:00",
+    "levtype": "pl",
+    "param": "130.128/131.128/132.128/133.128/135.128/157.128", #"60.128/129.128/130.128/131.128/132.128/133.128/135.128/155.128/157.128",
+    "levelist": "200/250/300/350/400/450/500/550/600/650/700/750/800/850/900/925/950",
+    "stream": "mnth",
+    "step" : 0,
     "type": "an",
     "area": "34/-23/-42/55",
     "format": "netcdf",
-    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_srfc_full.nc"
+    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc"
 })
-
-
-
-

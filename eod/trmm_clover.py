@@ -19,7 +19,7 @@ import pdb
 
 HOD = list(range(24))
 YRANGE = range(2004, 2015)
-MRANGE = range(3, 6)  # Jun - Sep
+MRANGE = range(3, 8)  # Jun - Sep
 MTRESH = 0
 
 """
@@ -90,8 +90,11 @@ class ReadWA(object):
                 continue
 
             secmean = rr.mean()
-            t = ut.sec_to_time(secmean)
-
+            try:
+                t = ut.sec_to_time(secmean)
+            except ValueError:
+                print('ValueError sec to time')
+                continue
             if not t.hour in hod:
                 continue
 

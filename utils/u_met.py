@@ -12,6 +12,7 @@ boltzmann = 1.38064903*1e-23  # m2kg s-2K-1 (k)
 #Tb_lambda = 10.6*1e-6 # MSG window in micro metres
 Tb_lambda = 0.00032782597395146035
 Tconst = 0.7167381974248928    # 2 * kc / lambda**4 with OLR/Tb = 167 W m-2 / 233K
+sigma = 5.670373*1e-8 # W m-2K-2
 
 
 def u_v_to_ws_wd(u,v):
@@ -158,7 +159,7 @@ def theta(pz, t):
 
 
 def OLR_to_Tb(OLR):
-    return OLR / Tconst
+    return (OLR/sigma) ** 0.25
 
 def Tb_to_OLR(Tb):
-    return Tconst * Tb
+    return (Tb)**4 * sigma

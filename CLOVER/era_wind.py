@@ -1,12 +1,9 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
-import pdb
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy
-import pandas as pd
+from utils import u_darrays
 from utils import u_plot as up
+import pdb
 import salem
 
 
@@ -76,7 +73,13 @@ def scatter_AEJspeed_tgrad():
     print('South', u['latitude'][pos[-1] - 4:pos[-1]])
 
     tt = t2.values-273.15
+
+    tgrad = tt[:, 0:-3] - tt[:, 3::]
+    tgradmean = np.mean(tgrad,axis=0)
+
     shear = u-u850
+    mshear = np.mean(shear,axis=0)
+
     pick = shear.sel(latitude=slice(9,7)).mean('latitude')
 
     plt.figure()
@@ -89,12 +92,12 @@ def scatter_AEJspeed_tgrad():
     wwind = []
 
     plt.figure()
-    plt.contourf( lat[0:-1], t2['time.year'].values, tt[:, 0:-1]-tt[:, 1::], levels=np.arange(0,1.5,0.1), extend='both')
+    plt.contourf( lat[0:-3], t2['time.year'].values, tgrad-tgradmean, extend='both', cmap='RdBu')
     plt.title('T2 gradient x1-x0')
     plt.colorbar()
 
     plt.figure()
-    plt.contourf( lat, t2['time.year'].values, u-u850, levels=np.arange(-18,-5,1), extend='both')
+    plt.contourf( lat, t2['time.year'].values, shear-mshear, extend='both', cmap='RdBu')
     plt.title('Wind shear x1-x0')
     plt.colorbar()
 
@@ -528,3 +531,5 @@ def T2NorthSouth_trend():
         f.add_subplot(3,4,p)
         plt.plot(years, dic[p])
         plt.title(str(int(u[p-1]['time.month'].values)))
+
+

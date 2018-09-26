@@ -22,7 +22,7 @@ server.retrieve({
     "levelist": "200/250/300/350/400/450/500/550/600/650/700/750/800/850/900/925/950",
     "stream": "moda",
     "type": "an",
-    "area": "31/-22/3/36",
+    "area": "34/-23/-42/55",
     "format": "netcdf",
-    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_pl.nc"
+    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_pl_full.nc"
 })

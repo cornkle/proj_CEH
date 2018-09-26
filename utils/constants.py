@@ -1,6 +1,9 @@
 ########## FILE PATHS
 
-ERA_MONTHLY_TUVWZ_AFRICA = '/localscratch/wllf030/cornkle/ERA-I/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
+ERA_MONTHLY_PL = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_pl_full.nc'
+ERA_MONTHLY_SRFC = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_srfc_full.nc'
+ERA_MONTHLY_PL_SYNOP = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc'
+ERA_MONTHLY_SRFC_SYNOP = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc'
 ERA_DAILY_SURFACE =   '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc'
 ERA_DAILY_PL = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc'
 ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'

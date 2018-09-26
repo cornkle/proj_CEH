@@ -7,6 +7,7 @@ from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
+from utils import u_met
 
 # In[2]:
 
@@ -25,7 +26,6 @@ _perc = np.array(dic['pperc'])
 #_lon = np.array(dic['lonmax'])
 print('Number MCSs:', _p.size)
 
-pdb.set_trace()
 # In[4]:
 
 # pthresh = 200
@@ -47,7 +47,7 @@ print('Number MCSs:', p.size)
 
 # In[6]:
 
-bins=np.arange(80, 170, 5)   # compute probability per temperature range (1degC)
+bins=np.arange(-90, -30, 1)   # compute probability per temperature range (1degC)
 ppo30=np.where(p > 30)  
 to30=t[ppo30]   
 
@@ -92,7 +92,6 @@ rp = p.copy()[inds]
 # print(np.sum((rp>=30) & (rt<-60))/np.sum(rp>=30))
 
 
-
 # In[11]:
 
 path = '/users/global/cornkle/figs/CLOVER/CP4/'
@@ -102,12 +101,14 @@ ax1 = fig.add_subplot(121)
 xy = np.vstack([p,t])
 z = gaussian_kde(xy)(xy)
 test = rarea/1000 # z / (z.max() - z.min()) #sarea #z / (z.max() - z.min())
-mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r', s=20) # viridis_r
+mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r', s=20, vmin=0.5, vmax=200) # viridis_r
 #ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 325 km$^2$ )')
 ax1.set_ylabel('Max. precipitation (mm h$^{-1}$)')
-ax1.set_xlabel('Min. OLR (W m$^{-2}$)')
-#ax1.hlines(31, -95, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
-plt.text(-35, 18, '30 mm h$^{-1}$',  fontsize=12)
+ax1.set_xlabel('Min. temperature (1 $^{\degree}C$ bins)')
+ax1.hlines(31, -95, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
+plt.text(-55, 18, '30 mm h$^{-1}$',  fontsize=12)
+ax1.set_xlim(-90,-40)
+ax1.set_ylim(0,150)
 
 cbar = fig.colorbar(mappable)
 cbar.set_label('Area (10$^3$ km$^2$)')
@@ -116,10 +117,10 @@ cbar.set_label('Area (10$^3$ km$^2$)')
 
 ax1 = fig.add_subplot(122)
 ax1.scatter(center, histo, marker="o",color='#5ea1d4', s=30, zorder=2, edgecolor = 'black', linewidth=1)
-ax1.set_xlabel('Min. OLR (5 W m$^{-2}$ bins)')
+ax1.set_xlabel('Min. temperature ($^{\degree}C$)')
 ax1.set_ylabel('Probability (% | Extreme rain)')
 #plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
-
+ax1.set_xlim(-90,-40)
 fsiz = 14
 x = 0.02
 plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
@@ -128,7 +129,7 @@ plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure
                  textcoords='offset points')
 
 plt.tight_layout()
-plt.savefig(path+'scatter-40_gt324_tmean_area.png')
+plt.savefig(path+'scatter-40_gt5000_tmean_area.png')
 #plt.savefig(path+'scatter-10_gt324.pdf')
 plt.close('all')
 

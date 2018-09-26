@@ -51,3 +51,16 @@ class MidPointNorm(Normalize):
 def histo_frequency(data):
     weights = np.ones_like(data) / float(len(data))
     hist, h = np.histogram(data, bins=np.arange(0.1, 100 + 1, 1), weights=weights, range=(0.1, 100))
+    return hist, h
+
+
+def linear_trend(x):
+    pf = np.polyfit(np.arange(len(x)), x, 1)
+    return pf
+
+
+def fdr_threshold(pvalues, alpha=0.05):
+    """Computes the FDR threshod after Wilks (2016)."""
+    p = np.sort(np.asarray(pvalues).flatten())
+    n = len(p)
+    return np.max(np.where(p <= (np.arange(1, n+1) / n * alpha), p, 0))

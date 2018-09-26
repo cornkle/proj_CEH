@@ -17,7 +17,7 @@ VARDIC = {
     'convRain': ('05', '205', 'a', 'kg m-2s-1'),
     'totRain': ('05', '216', 'a', 'kg m-2s-1'),
     'lsRain': ('04', '203', 'a', 'kg m-2s-1'),
-    'lsRain_hFreq': ('04', '203', 'b', 'kg m-2s-1'),
+   # 'lsRain_hFreq': ('04', '203', 'b', 'kg m-2s-1'),
     'lowCloudFrac': ('09', '203', 'a', '1'),
     'mediumCloudFrac': ('09', '204', 'a', '1'),
     'highCloudFrac': ('09', '205', 'a', '1'),

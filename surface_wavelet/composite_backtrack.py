@@ -411,7 +411,7 @@ def plot_gewex_double(h):
     plt.contourf((dic['ano']/ dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.colorbar(label='K')
 
-    contours = plt.contour((dic['prob']/ dic['pcnt']) * 100, extend='both') # #, levels=np.arange(1,5, 0.5)
+    contours = plt.contour((dic['prob']/ dic['pcnt']) * 100, extend='both', levels=np.arange(25,101,5)) # #, levels=np.arange(1,5, 0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))

@@ -13,6 +13,15 @@ from utils import u_met
 import cartopy
 import pdb
 
+def dictionary():
+
+    return {
+        'hour' : [],
+        'month' : [],
+        'year' : [],
+
+    }
+
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
@@ -85,10 +94,13 @@ def file_loop(f):
     #print('Doing file: ' + f)
     dic = xr.open_dataset(f)
     res = []
-    out = dic['lw_out_PBLtop'].values
-    outt = u_met.OLR_to_Tb(out)
-    outt = outt-273.15
-    outp = dic['lsRain'].values * 3600
+    outt = dic['lw_out_PBLtop'].values
+    outp = dic['lsRain'].values
+    outu_srfc = dic['u_srfc'].values
+    outu_mid = dic['u_mid'].values
+    outshear = dic['shear'].values
+    outq = dic['q_pl'].values
+
     lon = dic['longitude'].values
     lat = dic['latitude'].values
     h = dic['time.hour'].values
@@ -99,46 +111,45 @@ def file_loop(f):
 
     date = dic['time']
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -60  # -40C ~ 167 W m-2
+    mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq)
 
+    if np.sum(mask) < 3:
+        return
+
+    area = np.sum(mask)*(4.4**2)
 
     clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
     clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
 
-    tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
-    pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
-
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-
-    if isfin < 3:
-        return
-
-    try:
-        pperc = outp[(outt<=t_thresh) & (outp>0.1)]
-    except IndexError:
-        pperc = np.nan
-    tmean = np.mean(outt[(np.isfinite(outp)) & (outt<=t_thresh)])
-
-    print(np.nanmax(outt))
-
-    area = np.sum(outt<=t_thresh)
+    tmin = np.min(outt[mask])
+    tmean = np.mean(outt[mask])
+    pmax = np.max(outp[mask])
+    pmean = np.mean(outp[mask])
+    qmax = np.max(outq[mask])
+    qmean = np.mean(outq[mask])
+    umax_srfc = np.max(outu_srfc[mask])
+    umean_srfc = np.mean(outu_srfc[mask])
+    umin_mid = np.min(outu_mid[mask])
+    umean_mid = np.mean(outu_mid[mask])
+    shear_min = np.min(outshear[mask])
+    shear_mean = np.mean(outshear[mask])
 
 
-    ao40 = np.sum(outt<=t_thresh)
-    po30 = np.sum(outp[(np.isfinite(outp))&((outt<=t_thresh))]>30)
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-    isnz = np.sum((outp>0.1) & ((outt<=t_thresh)))
-
-    lon30 = lons[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lat30 = lats[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lonisfin = lons[(np.isfinite(outp)) & ((outt<=t_thresh))]
-    latisfin = lats[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    ao60 = np.sum(outt[mask])
+    po30 = np.sum(outp[mask]>30)
+    isfin = np.sum(mask)
+    isnz = np.sum(outp[mask]>0.1)
 
     latmin = lat.min()
     latmax = lat.max()
 
-    p = outp[(np.isfinite(outp))&((outt<=t_thresh))]
-    outt = outt[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    p = outp[mask]
+    t = outt[mask]
+    q = outq[mask]
+    u_mid = outu_mid[mask]
+    u_srfc = outu_srfc[mask]
+    shear = outshear[mask]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, y, date)
+    return (h, m, y, lons, lats, date, area, clat, clon, tmin)

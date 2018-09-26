@@ -7,6 +7,7 @@ import glob
 from scipy.interpolate import griddata
 import pandas as pd
 import pdb
+import itertools
 
 
 def olr_to_bt(olr):
@@ -205,6 +206,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         h = (vars[v])[1]
         pl = (vars[v])[0]
+        derived = False
+        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc'):
+            derived = v
+            v = 'u_pl'
 
         try:
             filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
@@ -223,9 +228,13 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 shear = dar.sel(pressure=pl[0]).values - dar.sel(pressure=pl[1]).values
                 dar = dar.sum(dim='pressure').squeeze()
                 dar.values = shear
+                if derived:
+                    v = derived
 
             else:
                 dar = dar.sel(pressure=pl[0]).squeeze()
+            if derived:
+                v = derived
 
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
         regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
@@ -254,7 +263,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n > 258]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2)
+            goodinds = u[n > 52]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2)
             if not sum(goodinds) > 0:
                 return
 
@@ -303,19 +312,31 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 data_path = '/users/global/cornkle/data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = '/users/global/cornkle/data/CP4/ANCILS' # directory with seamask file inside
-out_path = '/users/global/cornkle/test'  # out directory to save MCS files
-box = [-10, 10, 4, 9]  # W- E , S - N geographical coordinates box
+out_path = '/users/global/cornkle/data/CP4/CLOVER/MCS_-60_1000km2'  # out directory to save MCS files
+box = [-13, 13, 4, 8.2]  # W- E , S - N geographical coordinates box
 datestring = '19990401'  # set this to date of file
 
-tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
+years = np.array(np.arange(1998,2007), dtype=str)
+months = np.array([ '05','10'])
+days = np.array(np.arange(1,32), dtype=str)
+
+
+tthresh = -60 # chosen temperature threshold, e.g. -50, -60, -70
 
 vars = {}   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], 18)
 vars['lsRain'] =  ([], 12)   # pressure levels, hour
-vars['u_pl'] = ([650, 850], 12) # should use 925 later
+vars['shear'] = ([650, 925], 12) # should use 925 later
+vars['u_mid'] = ([650], 12)
+vars['u_srfc'] = ([925], 12)
 vars['q_pl'] = ([925], 12)  # 925, 650 available
+datelist = []
+for y,m,d in itertools.product(years, months, days):
+    datelist.append(y+m+str(d).zfill(2))
 
-file_save(data_path, out_path, ancils_path, vars, datestring, box, tthresh)
+for d in datelist:
+    file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
+
 
 
 

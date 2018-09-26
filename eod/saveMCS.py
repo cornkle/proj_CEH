@@ -23,7 +23,7 @@ def saveMCS_WA15():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_tropWA' #meteosat_WA30'
 
-    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-14, 12, 4, 8])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
+    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-13, 13, 4, 8])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
     m = msg.ReadMsg(msg_folder)
 
     cnt = 0
@@ -34,7 +34,7 @@ def saveMCS_WA15():
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
     for _y, _m, _d, _h, _mi in zip(t.dates.dt.year,  t.dates.dt.month, t.dates.dt.day, t.dates.dt.hour, t.dates.dt.minute):
 
-        if (_h <10) | (_h>19):
+        if (_h <10) | (_h>21):
             continue
 
         date = dt.datetime(_y, _m, _d, _h, _mi)
@@ -91,7 +91,7 @@ def saveMCS_WA15():
         u, inv = np.unique(labels, return_inverse=True)
         n = np.bincount(inv)
 
-        goodinds = u[n > 39]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res
+        goodinds = u[n > 556]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res , 5000km2 = 556 pixel
         print(goodinds)
         if not sum(goodinds) > 0:
             continue
@@ -212,7 +212,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA350_4-8N_14W-10E_-40/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_-40_18UTC/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:

@@ -16,7 +16,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=5)
     tthresh = '-40'
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA350_4-8N_14W-10E_'+tthresh+'/')
+    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -76,7 +76,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt15k_shear.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k.p',
                            'wb'))
 
 
@@ -102,7 +102,7 @@ def file_loop(f):
     clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
 
 
-    era = xr.open_dataset(constants.)
+    #era = xr.open_dataset(constants.)
 
 
     tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
@@ -124,8 +124,8 @@ def file_loop(f):
 
     area = np.sum(outt<=t_thresh)
 
-    if  (pp>200) | (ppmin<0) | (area*25 < 15000) : #(pp<0.1)  | (area*25>800000)
-        return
+    # if  (pp>200) | (ppmin<0) | (area*25 < 15000) : #(pp<0.1)  | (area*25>800000)
+    #     return
 
     ao40 = np.sum(outt<=t_thresh)
     po30 = np.sum(outp[(np.isfinite(outp))&((outt<=t_thresh))]>30)

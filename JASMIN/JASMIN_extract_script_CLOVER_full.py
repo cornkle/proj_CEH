@@ -56,8 +56,10 @@ def run(orig_names=False):
                try:
                   da = cut['c03238'] # stupid t2 problem
                except KeyError:
-                  pdb.set_trace()
-
+                   try:
+                       da = cut['a04203']  # stupid precip_highres problem
+                   except KeyError:
+                       pdb.set_trace()
 
             da.name = k
             da.longitude.values = da.longitude.values-360

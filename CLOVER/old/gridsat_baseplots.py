@@ -222,12 +222,12 @@ def timeline_trend_count():
     mean = da.mean(dim=['lat', 'lon'])
     #mean = mean[(mean['time.month']==8)]
     f= plt.figure(figsize=(10,6))
-    for i in range(3,12):
+    for i in range(9,12):
         bla = mean[(mean['time.month'] == i)]
         bla.plot(label=str(i), marker='o')
     plt.title('Average number of pixels <= -70C, 4.5-8N')
     plt.legend()
-    plt.ylim(0,0.5)
+    plt.ylim(0,1)
    # plt.ylim(-76,-72)
 
 def timeline_trend_mean():

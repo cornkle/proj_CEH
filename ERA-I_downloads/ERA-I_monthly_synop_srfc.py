@@ -17,13 +17,15 @@ server.retrieve({
     "date": stri,
     "expver": "1",
     "grid": "0.75/0.75",
+    "time": "00:00:00/06:00:00/12:00:00/18:00:00",
     "levtype": "sfc",
     "param": "81.162/134.128/137.128/164.128/165.128/166.128/167.128/168.128/207.128",
-    "stream": "moda",
+    "stream": "mnth",
     "type": "an",
+    "step" : 0,
     "area": "34/-23/-42/55",
     "format": "netcdf",
-    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-2017_srfc_full.nc"
+    "target": "/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc"
 })
 
 
