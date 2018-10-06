@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import ma
 from matplotlib.colors import Normalize
+import pdb
 
 class MidPointNorm(Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
@@ -63,4 +64,5 @@ def fdr_threshold(pvalues, alpha=0.05):
     """Computes the FDR threshod after Wilks (2016)."""
     p = np.sort(np.asarray(pvalues).flatten())
     n = len(p)
+
     return np.max(np.where(p <= (np.arange(1, n+1) / n * alpha), p, 0))

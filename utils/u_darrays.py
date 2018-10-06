@@ -5,6 +5,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import bottleneck
 import scipy
+import pdb
 
 
 def shift_lons(ds, lon_dim='lon'):
@@ -35,6 +36,23 @@ def linear_trend_mk(x, eps=0.001, alpha=0.01):
     ds = xr.Dataset()
     ds['slope'] = xr.DataArray(issig,)
     ds['pval'] = xr.DataArray(p, )
+
+    return ds
+
+def linear_trend(x):
+
+    pf = np.polyfit(np.arange(len(x)), x, 1)
+    #pf, slope, int, p, ind = mk.test(np.arange(len(x)),x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
+
+    # we need to return a dataarray or else xarray's groupby won't be happy
+    slope = pf[0]
+
+    if np.nansum(x.values==0)>=10:
+            slope = np.nan
+
+    ds = xr.Dataset()
+    ds['slope'] = xr.DataArray(slope,)
+    ds['pval'] = xr.DataArray(np.nan, )
 
     return ds
 

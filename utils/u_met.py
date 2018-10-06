@@ -155,7 +155,9 @@ def theta_factor(pz):
 
 
 def theta(pz, t):
-    return (1000 / pz) ** 0.286 * t
+    ist = t + 273.15
+    ist = ((1000 / pz) ** 0.286) * ist
+    return  ist-273.15
 
 
 def OLR_to_Tb(OLR):

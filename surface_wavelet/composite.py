@@ -30,12 +30,12 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_POINTS_TMIN
+    file = constants.MCS_CENTRE70
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 17 ) | (msg['time.hour'] <= 19 ))  & (msg['time.minute'] == 0) & (
+    msg = msg[(msg['time.hour'] == 17 ) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] == 7) ]
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
@@ -45,88 +45,8 @@ def composite(h):
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
-    #
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_topo_"+str(hour).zfill(2)+".p", "wb"))
-    # extent = dic['ano'].shape[1]/2-1
-    #
-    # f = plt.figure(figsize=(14, 7))
-    # ax = f.add_subplot(231)
-    #
-    # plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r')
-    # plt.plot(extent, extent, 'bo')
-    #
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Regional anomaly, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(232)
-    #
-    # plt.contourf((dic['regional'] / dic['cnt']) - (dic['rregional'] / dic['rcnt']) , cmap='RdBu_r')
-    # plt.plot(extent, extent, 'bo')
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Regional anomaly', fontsize=10)
-    #
-    # ax = f.add_subplot(233)
-    #
-    # plt.contourf((dic['ano'] / dic['cnt']), cmap='viridis'  ) #-(rkernel2_sum / rcnt_sum) vmin=-0.6, vmax=0.6
-    # plt.plot(extent, extent, 'bo')
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Seasonal anomaly',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(234)
-    #
-    # plt.contourf((dic['ano'] / dic['cnt']) - (dic['rano'] / dic['rcnt']), cmap='RdBu_r',  vmin=-1.5, vmax=1.5)
-    # plt.plot(extent,extent, 'bo')
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Seasonal anomaly - random',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(235)
-    #
-    # plt.contourf(dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
-    # plt.plot(extent, extent, 'bo')
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Valid count',
-    #           fontsize=10)
-    #
-    # ax = f.add_subplot(236)
-    #
-    # plt.contourf(dic['rcnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
-    # plt.plot(extent,extent, 'bo')
-    # ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
-    # ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    # ax.set_xlabel('km')
-    # ax.set_ylabel('km')
-    # plt.colorbar(label='K')
-    # plt.title('Random valid count',
-    #           fontsize=10)
-    #
-    # plt.tight_layout()
-    # plt.show()
-    #
-    # plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/test/comp/'+str(hour).zfill(2)+'_small.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    # plt.close()
+
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_TEST_"+str(hour).zfill(2)+".p", "wb"))
 
 
 
