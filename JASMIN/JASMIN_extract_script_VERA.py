@@ -13,9 +13,9 @@ from utils import u_interpolate
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'
 
 ### 2d vars , xmh*.pc*.nc files
-vera_folder = '/home/users/cornkle/linked_vera' #'/users/global/cornkle/figs/VERA/bamba/w2018_bamba/'
+vera_folder = '/home/users/cornkle/linked_vera/' #'/users/global/cornkle/figs/VERA/bamba/w2018_bamba/'
 ancils = vera_folder + 'ancils/'   # where to find veg_past, veg_current and topography
-in_folder = vera_folder + 'intest/'
+#in_folder = vera_folder + 'intest/'
 out =  '/work/scratch/cornkle/vera_out/' ##vera_folder + 'outtest/'
 dummy_grid = vera_folder + 'dummy_grid.nc'   # this dummy grid is the big vera grid (ancils have no coord info)
 
@@ -149,6 +149,7 @@ def create_da(data, time, lat1d, lon1d, lat2d, lon2d, plevels=None):
 
 
 def run_datafiles():
+    print('start script')
     flist = []
 
     for tx, sx in itertools.product(timex, streamx):
@@ -159,9 +160,9 @@ def run_datafiles():
             time_dir = 'veg_current'
         if tx in past:
             time_dir = 'veg_1950'
-
-        flist.extend(glob.glob(in_folder + time_dir + os.sep +tx + os.sep + run_name + sx+ '*.nc'))
-
+        print(vera_folder + time_dir + os.sep +tx + os.sep + run_name + sx)
+        flist.extend(glob.glob(vera_folder + time_dir + os.sep +tx + os.sep + run_name + sx+ '*.nc'))
+    print('Created file list')
     #
     # dummy = xr.open_dataarray(dummy_grid)
     # lats = dummy.latitude_t.values
@@ -170,7 +171,8 @@ def run_datafiles():
     # start_lon =
 
     for f in flist:
-
+        
+        print('Doing ',f)
         fname = f.split(os.sep)[-1]
 
         run_name = fname.split('.')[0][0:-1]
