@@ -37,10 +37,10 @@ def trend_all():
     #q = da2['tcwv']
     t2d = da['t'].sel(level=925)
 
-    u925 = da['u'].sel(level=slice(850,925)).mean(dim='level')
+    u925 = da['v'].sel(level=925)#).mean(dim='level')  #slice(850
     u600 = da['u'].sel(level=slice(650, 700)).mean(dim='level')
 
-    shear = u600-u925
+    shear = u925
 
     q.values = q.values*1000
 
@@ -122,7 +122,7 @@ def trend_all():
         s_da = sheartrend_unstacked #xr.DataArray(sheartrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         ti_da = tirtrend_unstacked #xr.DataArray(tirtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
 
-        fp = fpath + 'ttrend_mktrend_-70C_coarse_'+str(m).zfill(2)+'.png'#'ttrend_synop_-70C_coarse_'+str(m).zfill(2)+'.png'
+        fp = fpath + 'ttrend_mktrend_-70C_coarse_vsurface'+str(m).zfill(2)+'.png'#'ttrend_synop_-70C_coarse_'+str(m).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(8, 5), dpi=300)
@@ -183,10 +183,10 @@ def trend_all_polyfit():
     #q = da2['tcwv']
     t2d = da['t'].sel(level=925)
 
-    u925 = da['u'].sel(level=slice(850,925)).mean(dim='level')
+    u925 = da['u'].sel(level=925)
     u600 = da['u'].sel(level=slice(650, 700)).mean(dim='level')
 
-    shear = u600-u925
+    shear = u925 #u600-
 
     q.values = q.values*1000
 
@@ -259,7 +259,7 @@ def trend_all_polyfit():
         ti_da = tirtrend_unstacked #xr.DataArray(tirtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
 
 
-        fp = fpath + 'ttrend_linear_-70C_coarse_'+str(m).zfill(2)+'.png' #'MCS_trend_10_TEST_mk.png'#
+        fp = fpath + 'ttrend_linear_-70C_coarse_u_srfc'+str(m).zfill(2)+'.png' #'MCS_trend_10_TEST_mk.png'#
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(8, 5), dpi=300)
@@ -284,7 +284,7 @@ def trend_all_polyfit():
 
         ax4 = f.add_subplot(224)
         map.set_data(ti_da)  # interp='linear'
-        map.set_plot_params(cmap='jet', extend='both') #levels=np.arange(20,101,20)
+        map.set_plot_params(cmap='Blues', extend='both') #levels=np.arange(20,101,20)
         map.visualize(ax=ax4, title='-70C frequency')
 
         plt.savefig(fp)
@@ -593,10 +593,10 @@ def corr_box():
     # q = da2['tcwv']
     t2 = da['t'].sel(level=925)
 
-    u925 = da['u'].sel(level=slice(850, 925)).mean(dim='level')
+    u925 = da['v'].sel(level=925)#.mean(dim='level') c#slice(850,
     u600 = da['u'].sel(level=slice(600, 650)).mean(dim='level')
 
-    shear = u600 - u925
+    shear =  u925
 
     q.values = q.values * 1000
 
@@ -659,9 +659,9 @@ def corr_box():
         return ds
 
     for m in months:
-        t2diff, t2year = array_juggling(t2, m, hour=12)
-        qdiff, qyear = array_juggling(q, m, hour=12)
-        shdiff, sheyear = array_juggling(shear, m, hour=12)
+        t2diff, t2year = array_juggling(t2, m, hour=12) #
+        qdiff, qyear = array_juggling(q, m, hour=12) #, hour=12
+        shdiff, sheyear = array_juggling(shear, m, hour=12) #, hour=12
         tirdiff, tiryear = array_juggling(tir, m)
 
         qcorr = corr(tirdiff, qdiff)
@@ -685,7 +685,7 @@ def corr_box():
 
         tplot = ((cloud['slope'].values) * 10. / tiryear.values) * 100.
 
-        fp = fpath + 'corr_synop_' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_synop_v_srfc' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(8, 5), dpi=300)
@@ -696,19 +696,19 @@ def corr_box():
         map.set_data(tcorr['r'].values)  # interp='linear'
         # map.set_contour(t2year.mean('year')-273.15)
 
-        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.8,-0.7,-0.6,-0.5, 0.5, 0.6, 0.7, 0.8])  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1),
         map.visualize(ax=ax1, title='t2')
 
         ax2 = f.add_subplot(222)
         map.set_data(qcorr['r'])  # interp='linear'
         # map.set_contour(qyear.mean('year'))
-        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.8,-0.7,-0.6,-0.5, 0.5, 0.6, 0.7, 0.8])  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1),
         map.visualize(ax=ax2, title='q')
 
         ax3 = f.add_subplot(223)
         map.set_data(shearcorr['r'])  # interp='linear'
         # map.set_contour(sheyear.mean('year'))
-        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.8,-0.7,-0.6,-0.5, 0.5, 0.6, 0.7, 0.8])  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='u-shear')
 
         ax4 = f.add_subplot(224)

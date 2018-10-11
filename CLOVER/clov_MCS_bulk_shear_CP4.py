@@ -35,8 +35,8 @@ def dictionary():
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    tthresh = '-40'
-    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-40_5000km2_JJAS')
+    tthresh = '-50'
+    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA_sahel')
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
@@ -71,7 +71,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4_JJASNORTH.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4_JA_sahel.p',
                            'wb'))
 
 
@@ -94,7 +94,7 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
 
     if np.sum(mask) < 3:

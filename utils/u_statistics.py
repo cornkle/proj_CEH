@@ -1,7 +1,10 @@
 import numpy as np
 from numpy import ma
 from matplotlib.colors import Normalize
-import pdb
+import scipy.stats as stats
+import statsmodels.api as sm
+import pandas as pd
+from sklearn import linear_model
 
 class MidPointNorm(Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
@@ -66,3 +69,97 @@ def fdr_threshold(pvalues, alpha=0.05):
     n = len(p)
 
     return np.max(np.where(p <= (np.arange(1, n+1) / n * alpha), p, 0))
+
+
+
+def cor(x, y):
+    """It is annoying that np.corrcoef returns a matrix, this returns a float."""
+
+    return np.corrcoef(x, y)[0, 1]
+
+
+def pcor(x, y, c):
+    """Partial correlation (r2) of x and y when the effect of C is removed.
+
+    Couldn't find a routine to do exactly this in statsmodels, so I
+    rolled my own. (F. Maussion)
+
+    y and x are the variables from which we want to compute the correlation,
+    when the effect of the controlling variables in C is removed.
+
+    The residuals after regressing X/Y on Ci are the parts of X/Y that
+    cannot be predicted by Ci. The partial correlation coefficient between
+    Y and X adjusted for Ci is the correlation between these two sets of
+    residuals.
+
+    Returns
+    -------
+    tuple (r2, pvalue)
+
+    """
+
+    # Degrees of freedom
+    if len(c.shape) == 1:
+        df = len(x) - 2 - 1
+    else:
+        df = len(x) - 2 - c.shape[1]
+
+    # Dont forget the constant
+    _c = sm.add_constant(c)
+    fity = sm.OLS(y, _c).fit()
+    fitx = sm.OLS(x, _c).fit()
+
+    r = cor(fitx.resid, fity.resid)
+    t = r / np.sqrt((1. - r ** 2) / df)
+    p_e = stats.t.sf(np.abs(t), df) * 2  # error probability (two tailed)
+
+    return r, p_e
+
+
+def multi_partial_correlation(input_df):
+    """
+    Returns the sample linear partial correlation coefficients between pairs of variables,
+    controlling for all other remaining variables
+
+    Parameters
+    ----------
+    input_df : array-like, shape (n, p)
+        Array with the different variables. Each column is taken as a variable.
+
+    Returns
+    -------
+    P : array-like, shape (p, p)
+        P[i, j] contains the partial correlation of input_df[:, i] and input_df[:, j]
+        controlling for all other remaining variables.
+    """
+    partial_corr_matrix = np.zeros((input_df.shape[1], input_df.shape[1]));
+    for i, column1 in enumerate(input_df):
+        for j, column2 in enumerate(input_df):
+            control_variables = np.delete(np.arange(input_df.shape[1]), [i, j]);
+            if i==j:
+                partial_corr_matrix[i, j] = 1;
+                continue
+            data_control_variable = input_df.iloc[:, control_variables]
+            data_column1 = input_df[column1].values
+            data_column2 = input_df[column2].values
+            fit1 = linear_model.LinearRegression(fit_intercept=True)
+            fit2 = linear_model.LinearRegression(fit_intercept=True)
+            fit1.fit(data_control_variable, data_column1)
+            fit2.fit(data_control_variable, data_column2)
+            residual1 = data_column1 - (np.dot(data_control_variable, fit1.coef_) + fit1.intercept_)
+            residual2 = data_column2 - (np.dot(data_control_variable, fit2.coef_) + fit2.intercept_)
+            partial_corr_matrix[i,j] = stats.pearsonr(residual1, residual2)[0]
+    return pd.DataFrame(partial_corr_matrix, columns = input_df.columns, index = input_df.columns)
+
+# # Generating data in our minion world
+# test_sample = 10000;
+# Math_score = np.random.randint(100,600, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Eng_score = np.random.randint(100,600, size=test_sample) - 10 * Math_score + 20 * np.random.random(size=test_sample)
+# Phys_score = Math_score * 5 - Eng_score + np.random.randint(100,600, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Econ_score = np.random.randint(100,200, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Hist_score = Econ_score + 100 * np.random.random(size=test_sample)
+#
+# minions_df = pd.DataFrame(np.vstack((Math_score, Eng_score, Phys_score, Econ_score, Hist_score)).T,
+#                           columns=['Math', 'Eng', 'Phys', 'Econ', 'Hist'])
+#
+# calculate_partial_correlation(minions_df)

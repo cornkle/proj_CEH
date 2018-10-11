@@ -18,13 +18,15 @@ def run(orig_names=False):
 
     dic = {
 
-        't2' : ([temp_box], ['keep'], [], [12,3]),
-        'lw_out_PBLtop' : ([local_box], ['keep'], [], []),
+        't2' : ([temp_box], ['keep'], [], [12,3,6]),
+        'u10': ([temp_box], ['keep'], [], [12,3,6]),
+        'v10': ([temp_box], ['keep'], [], [12,3,6]),
+        'lw_out_PBLtop' : ([temp_box], ['keep'], [], []),
         'v_pl' : ([temp_box], ['keep', 'keep'], [650,925], [12,3]),
         'u_pl' : ([temp_box], ['keep', 'keep'], [650, 850,925], [12,3]),
         't_pl' : ([temp_box], ['keep'], [925], [12,3]),
-        'omega_pl' : ([local_box], ['keep'], [650,300], []),
-        'lsRain' : ([local_box], ['keep'], [], []),
+        'omega_pl' : ([temp_box], ['keep'], [650,300], []),
+        'lsRain' : ([temp_box], ['keep'], [], []),
         'q_pl' : ([temp_box], ['keep', 'keep'], [650, 925], []),
     }
     keys = dic.keys()

@@ -190,7 +190,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
     landsea_path = glob.glob(ancils_dir+os.sep+'landseamask*.nc')[0]
     landsea = xr.open_dataset(landsea_path, decode_times=False)
     ls = landsea['lsm']
-
+    pdb.set_trace()
     ls.rlon.values = ls.rlon.values-360
     ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
     pos = np.where(ls_arr[0, 0, :, :] == 0)

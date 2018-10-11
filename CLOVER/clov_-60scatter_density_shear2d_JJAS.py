@@ -182,9 +182,17 @@ qlist = []
 outprob = np.zeros((nbs,nbq))
 outperc = np.zeros((nbs,nbq))
 outval = np.zeros((nbs,nbq))
+corrlist = []
 
-for issh, shl in enumerate(shearbins[0:-1]):
-    for isq, qql in enumerate(qbins[0:-1]):
+for isq, qql in enumerate(qbins[0:-1]):
+
+    possi = np.where((qq >= qql) & (qq < qbins[isq + 1]))
+    r, p = stats.pearsonr(pp[possi], sh[possi])
+    if p> 0.05:
+        r = np.nan
+    corrlist.append(r)
+
+    for issh, shl in enumerate(shearbins[0:-1]):
 
         poss = np.where((sh >= shl) & (sh < shearbins[issh+1]) & (qq>=qql) & (qq < qbins[isq+1]))
         print('bigger than',shl )
@@ -252,5 +260,13 @@ ax5.set_ylabel('Q')
 ax5.set_xlabel('Shear')
 cbar = fig.colorbar(mappable, ticks=np.linspace(40,80,11))
 cbar.set_label('90th centile')
+
+
+pdb.set_trace()
+
+
+plt.figure()
+plt.plot(qbins[0:-1],corrlist)
+plt.show()
 
 

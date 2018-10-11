@@ -16,8 +16,8 @@ import pdb
 def perSys():
 
     pool = multiprocessing.Pool(processes=5)
-    tthresh = '-60'
-    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-60_1000km2')
+    tthresh = '-50'
+    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA_sahel')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -77,7 +77,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4_JA_sahel.p',
                            'wb'))
 
 
@@ -99,12 +99,12 @@ def file_loop(f):
 
     date = dic['time']
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -50  # -40C ~ 167 W m-2
 
 
     clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
     clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
-
+    pdb.set_trace()
     tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
     pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
 
