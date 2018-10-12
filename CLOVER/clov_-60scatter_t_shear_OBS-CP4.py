@@ -8,176 +8,394 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils import u_statistics as ustat
 import pdb
+import itertools
+from utils import u_plot as uplot
 import scipy.stats as stats
+import numpy.ma as ma
+from utils import u_statistics as u_stat
+import pandas as pd
 
 # In[2]:
 
+obs = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain_gt5k_-40thresh_OBSera.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-60_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
+cc=11
 
-fig = plt.figure(figsize=(12, 6))
-cc=0.8
-
-t = np.array(dic['pmax'])
-p = np.array(dic['shearmin']) * (-1)
+pp = np.array(dic['pmax'])
+sh = np.array(dic['shear']) * (-1)
+umin = np.array(dic['u650']) * (-1)
+umax = np.array(dic['u925'])
+qq = np.array(dic['q925']) * 1000
+tt = np.array(dic['tmin'])
 month = np.array(dic['month'])
-pos = np.where((t >= 1) & (p >= 4) & (month<=8))  #
+area = np.array(dic['area'])*(4.4**2)
+lat = np.array(dic['clat'])
 
-t = t[pos]
-p = p[pos]
+#
+# pos = np.where((rainy_area>=1) &  (pp >= 0.01) & (month==10) )
+#
+# # plt.figure()
+# # plt.hist(umin[pos], bins=10, range=(3,30))
+# # plt.title('smaller')
+# # plt.show()
+# #
+# fig = plt.figure()
+# ax1 = fig.add_subplot(121)
+# plt.scatter(umin[pos], rainy_area[pos]*(4.4**2))
+# plt.title('')
+# plt.ylabel('rainy area')
+# plt.xlabel('u650hPa')
+# plt.show()
+#
+# ax2 = fig.add_subplot(122)
+# plt.scatter(umin[pos], area[pos])
+# plt.title('')
+# plt.ylabel('storm area')
+# plt.xlabel('u650hPa')
+# plt.show()
 
-xy = np.vstack([t, p])
-z = gaussian_kde(xy)(xy)
-test = z / (z.max() - z.min())
 
-r = stats.pearsonr(t, p)
 
-bins = np.percentile(p[p>=8], np.arange(0,101,10))#np.arange(4, 29, 2)  # compute probability per temperature range (1degC)
+pos = np.where( (pp >= 1) & ((month==10)))# np.where((pp >= 3) & (sh >= 8) &  (sh <= 30) &  (area<=700000) & ((month<=5) | (month>=10)) & (lat>=5) )   # 5 + 10 look nicest
+
+tt = tt[pos]
+pp = pp[pos]
+qq = qq[pos]
+shi = sh[pos]
+sh = umax[pos]
+umin = umin[pos]
+umax = umax[pos]
+lats = lat[pos]
+area = area[pos]
+
+
+#new_array = np.vstack([tt,pp,qq,shi,sh,umin,umax]).T
+struct = { 'qq' : qq,  'umax': umax, 'umin': umin, 'pp' : pp}
+pd_frame = pd.DataFrame(data=struct) #,
+
+parray = u_stat.multi_partial_correlation(pd_frame)
+
+
+struct = {'pp' : pp, 'qq' : qq, 'sh': shi}
+pd_frame = pd.DataFrame(data=struct) #,
+
+psarray = u_stat.multi_partial_correlation(pd_frame)
+
+#new_array = np.vstack([tt,pp,qq,shi,sh,umin,umax]).T
+struct = { 'qq' : qq,  'umax': umax, 'umin': umin, 'tt' : tt}
+pd_frame = pd.DataFrame(data=struct) #,
+
+tarray = u_stat.multi_partial_correlation(pd_frame)
+
+
+struct = {'tt' : tt, 'qq' : qq, 'sh': shi}
+pd_frame = pd.DataFrame(data=struct) #,
+
+tsarray = u_stat.multi_partial_correlation(pd_frame)
+
+print(parray)
+print(psarray)
+print(tarray)
+print(tsarray)
+
+# tr = tt[tt<=-60]
+# pr = pp[tt<=-60]
+#
+# print('TTPP', stats.pearsonr(tr,pr))
+
+
+# plt.figure()
+# plt.hist(umin, bins=10, range=(3,30))
+# plt.title('bigger')
+# plt.show()
+#
+# plt.figure()
+# plt.scatter(area,pp)
+# plt.title('bigger')
+# plt.show()
+
+pall = (np.array(dic['p']))[pos]
+
+
+nbs= 7
+nbq= 7
+nba = 7
+pdb.set_trace()
+
+shearbins = np.percentile(shi[(shi>=8) & (shi<=30)], np.linspace(0,100,nbs))
+
+realshearbins = np.percentile(shi[(shi>=8) & (shi<=30)], np.linspace(0,100,nbs))
+
+#np.percentile(p[(p>=7) & (p<=29)], np.arange(0,101,10)) #np.percentile(p[p>=8], np.arange(0,101,10)) #np.linspace(p[p>=8].min(), p[p>=8].max(),nbshear)
+qbins = np.linspace(15.5,18.5, nbq) #np.linspace(16,19, nbq)#np.linspace(16,19, nbq) #np.percentile(qq[(qq>=16) & (qq<=19)], np.linspace(0,100,nbq))
+
 shearlist = []
 pprob = []
 plist = []
 #ax5 = fig.add_subplot(236)
-plt.figure()
-colours = [ 'b', 'b',  'c', 'c', 'g', 'g', 'r', 'r', 'k', 'k']
 
-for id, c in enumerate(bins[0:-1]):
-    pos = np.where((p >= c) & (p < bins[id+1]))
-    print('bigger than',c * 2 )
-    print('smaller than', bins[id+1])
+colours = [ 'b', 'b',  'c', 'c', 'g', 'g', 'r', 'r', 'k', 'k']
+for id, c in enumerate(shearbins[0:-1]):
+    posi = np.where((sh >= c) & (sh < shearbins[id+1]))
+    print('bigger than',c )
+    print('smaller than', shearbins[id+1])
 
     try:
-        cmean = np.percentile(t[pos], 90)
+        cmean = np.percentile(pp[posi], 90)
     except IndexError:
         cmean = np.nan
 
-    H, binz = np.histogram(t[pos], bins=np.arange(1,111,10))
-    #H, bins = ustat.histo_frequency(t[pos])
+    H, binz = np.histogram(pp[posi], bins=np.arange(1,111,10))
 
-    plt.plot(binz[0:-1]+(binz[1::]-binz[0:-1]), H, 'o-',  label=str(c)+'-'+str(bins[id+1]) , color=colours[id])
-
-    prob = np.sum(t[pos]>=60) / np.sum(t[pos]>=1)
+    prob = np.sum(pp[posi]>=20) / np.sum(pp[posi]>=1)
     pprob.append(prob)
     plist.append(cmean)
-    shearlist.append(((bins[id+1])-c)/2)
+    shearlist.append(((shearbins[id+1])-c)/2)
 
-plt.xlabel('Maximum rainfall intensity')
-plt.ylabel('Number of storms')
-plt.plot()
-plt.legend()
-xtick = bins[0:-1]
 
-xtickwidth= (bins[1::]-bins[0:-1])
+xtick = shearbins[0:-1]
+xtickwidth= (shearbins[1::]-shearbins[0:-1])
 
-# bins=np.arange(4, 29, 2)  # compute probability per temperature range (1degC)
-# ppo30=np.where(t > 50)
-# to30=p[ppo30]
-#
-# H1, bins1 = np.histogram(to30, bins=bins, range=(t.min(), t.max()))
-# H, bins = np.histogram(t, bins=bins, range=(t.min(), t.max()))
-# H=H.astype(float)
-# H1=H1.astype(float)
-# histo=H1/H*100.
-# width = 0.7 * (bins[1] - bins[0])
-# center = (bins[:-1] + bins[1:]) / 2
-#
-# print('Bins included, [bin[', bins[0:11])
-# print('Fraction of <-80s to be >30', np.sum(H1[0:11])/np.sum(H[0:11]))
-#
-# print('Bins included, [bin[', bins[-31::])
-# print('Fraction of >-40s to be >30', np.sum(H1[-31::])/np.sum(H[-31::]))
-#
-# # In[7]:
-#
-# H, xedges, yedges = np.histogram2d(t, p, bins=(25, 25))
-# hh = (H / np.sum(H))*100.
-# np.sum(hh)
+fig = plt.figure(figsize=(25, 45), dpi=70)
 
-ax1 = fig.add_subplot(231)
+ax1 = fig.add_subplot(331)
 
-#rarea/1000 # z / (z.max() - z.min()) #sarea #
-mappable = ax1.scatter(p, t, c=test, edgecolor='', cmap='viridis_r', s=20) # viridis_r
-#ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 325 km$^2$ )')
+xy = np.vstack([sh, pp])
+z = gaussian_kde(xy)(xy)
+test = z / (z.max() - z.min())
+
+r = u_stat.pcor(sh,pp, qq)
+
+mappable = ax1.scatter(sh, pp, c=test, edgecolor='', cmap='viridis_r', s=20) # viridis_r
 ax1.set_ylabel('Max. rainfall (mm h$^{-1}$)')
-ax1.set_xlabel('Max. u-shear')
-ax1.set_title('Pearsonr: '+str(np.round(r[0], decimals=2)))
+ax1.set_xlabel('u925hPa')
+ax1.set_title('P-corr. u925hPa/rain | q removed: '+str(np.round(r[0], decimals=2)), fontsize=cc)
+ax1.tick_params(direction='in')
 cbar = fig.colorbar(mappable)
 cbar.set_label('Density')
-#plt.text(0.03, 0.9, 'a', transform=ax1.transAxes, fontsize=20)
 
+print('Partial correlation umin_mid:', u_stat.pcor(umin,pp, qq) )
+####################################################################################
+ax2 = fig.add_subplot(332)
 
-ax2 = fig.add_subplot(232)
-t = np.array(dic['tmin'])
-p = np.array(dic['shearmin'])*(-1)
-
-xy = np.vstack([t,p])
+xy = np.vstack([pp,qq])
 z = gaussian_kde(xy)(xy)
 test = z / (z.max() - z.min())
 
-r = stats.pearsonr(t,p)
-mappable = ax2.scatter(p, t, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
-
-ax2.set_ylabel('Min. temperature ($^{\degree}C$)')
-ax2.set_xlabel('Max. u-shear')
-ax2.set_title('Pearsonr: '+str(np.round(r[0], decimals=2)))
+r = u_stat.pcor(qq,pp, sh)
+print(r)
+mappable = ax2.scatter(qq, pp, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
+ax2.set_xlim(14, 20)
+ax2.set_ylabel('Max. rainfall')
+ax2.set_xlabel('max. q925hPa')
+ax2.set_title('P-corr. q/rain | u925hPa removed: '+str(np.round(r[0], decimals=2)), fontsize=cc)
+ax2.tick_params(direction='in')
 cbar = fig.colorbar(mappable)
 cbar.set_label('Density')
 
 
-ax3 = fig.add_subplot(233)
+###################################################################################
 
-t = np.array(dic['qmax'])
-p = np.array(dic['shearmin'])*(-1)
+ax3 = fig.add_subplot(333)
 
-xy = np.vstack([t,p])
+xy = np.vstack([qq,shi])
 z = gaussian_kde(xy)(xy)
 test = z / (z.max() - z.min())
 
-r = stats.pearsonr(t,p)
-mappable = ax3.scatter(p, t, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
+r = u_stat.pcor(qq,shi, umin)
+mappable = ax3.scatter(shi, qq, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
 
-ax3.set_ylabel('max. q')
-ax3.set_xlabel('Max. u-shear')
-ax3.set_ylim(0.012, 0.022)
-ax3.set_title('Pearsonr: '+str(np.round(r[0], decimals=2)))
+ax3.set_ylabel('max. q925hPa')
+ax3.set_xlabel('Max. u925hPa')
+ax3.set_ylim(14, 20)
+ax3.tick_params(direction='in')
+ax3.set_title('P-corr. q/u925hPa | u600hPa removed: '+str(np.round(r[0], decimals=2)), fontsize=cc)
 cbar = fig.colorbar(mappable)
 cbar.set_label('Density')
 
-ax4 = fig.add_subplot(234)
+ax3 = fig.add_subplot(334)
 
-ax4.bar(xtick, plist, xtickwidth, align='edge', ec='black')
-ax4.set_xlabel('u-shear bins (deciles)')
-ax4.set_ylabel('99th centile rain')
+xy = np.vstack([qq,umin])
+z = gaussian_kde(xy)(xy)
+test = z / (z.max() - z.min())
+r = u_stat.pcor(qq,umin, sh)
 
-ax4 = fig.add_subplot(235)
+mappable = ax3.scatter(umin, qq, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
+
+ax3.set_ylabel('max. q925hPa')
+ax3.set_xlabel('Min. u600hPa')
+ax3.set_ylim(14, 20)
+ax3.tick_params(direction='in')
+ax3.set_title('P-corr. q/u600hPa | u925hPa removed: '+str(np.round(r[0], decimals=2)), fontsize=cc)
+cbar = fig.colorbar(mappable)
+cbar.set_label('Density')
+
+ax3 = fig.add_subplot(335)
+
+xy = np.vstack([pp,umin])
+z = gaussian_kde(xy)(xy)
+test = z / (z.max() - z.min())
+r = u_stat.pcor(pp,umin, qq)
+
+rr = stats.pearsonr(pp,umin)
+
+mappable = ax3.scatter(umin, pp, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
+
+ax3.set_ylabel('Max. rain')
+ax3.set_xlabel('u650hPa')  #'Max wind shear (600hPa-925hPa)'
+ax3.tick_params(direction='in')
+ax3.set_title('P-corr. u650hPa/rain|u925hPa removed: '+str(np.round(r[0], decimals=2)), fontsize=cc)
+cbar = fig.colorbar(mappable)
+cbar.set_label('Density')
+
+ax3 = fig.add_subplot(336)
+
+xy = np.vstack([tt,umin])
+z = gaussian_kde(xy)(xy)
+test = z / (z.max() - z.min())
+r = stats.pearsonr(tt,umin)
+
+mappable = ax3.scatter(umin, tt, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
+
+ax3.set_ylabel('Min T')
+ax3.set_xlabel('Max. u925hPa')
+ax3.set_title('P-corr. u925hPa/minT|q removed: '+str(np.round(r[0], decimals=2)))
+cbar = fig.colorbar(mappable)
+cbar.set_label('Density')
+
+####################################################################################
+ax4 = fig.add_subplot(337)
 
 ax4.bar(xtick, pprob, xtickwidth, align='edge', ec='black')
-ax4.set_xlabel('u-shear bins (deciles)')
+ax4.set_xlabel('Max. u925hPa bins (equally populated)')
 ax4.set_ylabel('Probability Rainfall > 60mm h-1')
+ax4.set_title('')
 
 
-# ax5 = fig.add_subplot(236)
-# t = np.array(dic['tmin'])
-# p = np.array(dic['pmax'])
-#
-# pos = np.where((p >= 1))
-# t = t[pos]
-# p = p[pos]
-#
-# xy = np.vstack([t,p])
-# z = gaussian_kde(xy)(xy)
-# test = z / (z.max() - z.min())
-#
-# r = stats.pearsonr(t,p)
-# mappable = ax5.scatter(t, p, c=test, edgecolor='', cmap='viridis_r', s=15) # viridis_r
-#
-# ax5.set_ylabel('Min. temperature ($^{\degree}C$)')
-# ax5.set_xlabel('Max. rain')
-# ax5.set_title('Pearsonr: '+str(np.round(r[0], decimals=2)))
-# cbar = fig.colorbar(mappable)
-# cbar.set_label('Density')
-#
+#####################################################################################
 
-plt.tight_layout()
+pp = np.array(dic['pmax'])
+sh = np.array(dic['u925'])# * (-1)
+qq = np.array(dic['q925']) * 1000
+tt = np.array(dic['tmin'])
+
+tt = tt[pos]
+pp = pp[pos]
+qq = qq[pos]
+sh = sh[pos]
+
+sheardiff = shearbins[0:-1]+((shearbins[1::]-shearbins[0:-1])/2)[0]
+qdiff= qbins[0:-1] + ((qbins[1::]-qbins[0:-1])/2)[0]
+
+shlist = []
+qlist = []
+
+outprob = np.zeros((nbs,nbq))
+outperc = np.zeros((nbs,nbq))
+outval = np.zeros((nbs,nbq))
+outshi = np.zeros((nbs,nbq))
+
+corrlist = []
+stdlist = []
+
+for isq, qql in enumerate(qbins[0:-1]):
+
+    possi = np.where((qq >= qql) & (qq < qbins[isq + 1]))
+    r, p = u_stat.pcor(pp[possi], sh[possi], qq[possi])
+
+    # if p> 0.05:
+    #     r = np.nan
+    corrlist.append(r)
+
+    # plt.figure()
+    # plt.hist(pp[possi],range=(1,100))
+    # plt.ylim(0,110)
+    # plt.show()
+
+    for issh, shl in enumerate(shearbins[0:-1]):
+
+        poss = np.where((sh >= shl) & (sh < shearbins[issh+1]) & (qq>=qql) & (qq < qbins[isq+1]))
+        print('bigger than',shl )
+        print('smaller than', shearbins[issh+1])
+
+        pallt = np.concatenate(pall[poss])
 
 
+
+        try:
+            cmean = np.percentile(pp[poss], 90)
+        except IndexError:
+            cmean = np.nan
+
+        prob = np.sum(pp[poss]>=30) / np.sum(pp[poss]>=1)
+
+
+        print('Rainy pixel number', pallt.size)
+
+
+        outprob[issh,isq] = prob
+        outperc[issh,isq] = cmean
+        outval[issh,isq] = len(poss[0])
+
+    for issh, shl in enumerate(realshearbins[0:-1]):
+
+        poss = np.where((shi >= shl) & (shi < realshearbins[issh + 1]) & (qq >= qql) & (qq < qbins[isq + 1]))
+
+        try:
+            cmean = np.percentile(pp[poss], 90)
+        except IndexError:
+            cmean = np.nan
+
+        outshi[issh, isq] = cmean
+
+plt.figure()
+plt.imshow(outperc, cmap='viridis', vmin=30, vmax=80)
+plt.show()
+
+# X, Y = np.meshgrid(shearbins,areabins/1000)
+#
+# Zm = ma.masked_where(np.isnan(outarea),outarea)
+#
+# cmapp = uplot.discrete_cmap(10, base_cmap='RdBu')
+# ax5 = fig.add_subplot(33)
+# mappable = ax5.pcolormesh(X, Y, Zm.T, cmap=cmapp, vmin=30, vmax=40) # viridis_r
+#
+# ax5.set_ylabel('Area (10$^3$km$^2$)')
+# ax5.set_xlabel('Shear')
+# cbar = fig.colorbar(mappable, ticks=np.linspace(30,45,11))
+# # cbar.set_label('90th centile')
+
+X, Y = np.meshgrid(shearbins,qbins)
+cmapp = uplot.discrete_cmap(10, base_cmap='RdBu')
+ax5 = fig.add_subplot(339)
+#outperc[outval<30] = np.nan
+Zm = ma.masked_where(np.isnan(outperc),outperc)
+mappable = ax5.pcolormesh(X, Y, Zm.T, cmap=cmapp, vmin=40, vmax=70) # viridis_r
+
+ax5.set_ylabel('Max. q925hPa')
+ax5.set_xlabel('Max. u925hPa (equally populated)')
+ax5.set_title('')
+cbar = fig.colorbar(mappable, ticks=np.linspace(40,70,11)) # ticks=np.linspace(30,45,11)
+cbar.set_label('90th centile max. rain')
+
+# ax5 = fig.add_subplot(235)
+# Zm = ma.masked_where(np.isnan(outval),outval)
+# mappable = ax5.pcolormesh(X, Y, Zm.T, cmap=cmapp)#, vmin=30, vmax=40) # viridis_r
+#
+# ax5.set_ylabel('Area (10$^3$km$^2$)')
+# ax5.set_xlabel('Shear')
+# cbar = fig.colorbar(mappable)#, ticks=np.linspace(30,45,11))
+# cbar.set_label('90th centile')
+
+
+xtick = qbins[0:-1]
+xtickwidth= (qbins[1::]-qbins[0:-1])
+
+ax5 = fig.add_subplot(338)
+#ax5.plot(qbins[0:-1],np.array(corrlist), '-o')
+ax5.bar(xtick, np.array(corrlist), xtickwidth, align='edge', ec='black')
+ax5.set_ylabel('p-corr (Max. rain/u925hPa | q removed')
+ax5.set_xlabel('Max. q925hPa (g/kg) | 0.5 bins')
+ax5.set_title('')
 
