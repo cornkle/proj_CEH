@@ -5,9 +5,10 @@ ERA_MONTHLY_SRFC = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_1979-201
 ERA_MONTHLY_PL_SYNOP = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc'
 ERA_MONTHLY_SRFC_SYNOP = '/localscratch/wllf030/cornkle/ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc'
 ERA_DAILY_SURFACE =   '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc.nc'
-ERA_DAILY_PL = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl.nc'
-ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
-ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
+
+ERA_DAILY_PL12UTC = '/localscratch/wllf030/cornkle/ERA-I/daily_2004-2014_pl.nc'
+# ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
+# ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
 ERA5 = '/localscratch/wllf030/cornkle/ERA5/'
 
 

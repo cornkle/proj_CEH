@@ -1,61 +1,63 @@
 import numpy as np
 import xarray as xr
 from utils import u_arrays as ua
-from scipy import ndimage
 import matplotlib.pyplot as plt
 import multiprocessing
-import ipdb
 import pickle as pkl
 from collections import defaultdict
-import cartopy.crs as ccrs
 from utils import constants
-import cartopy
 import pdb
+
+
+def dictionary():
+
+    dic = {}
+    vars = ['hour', 'month', 'year', 'area',
+            'lon', 'lat', 'clon', 'clat',
+            'tmin', 'tmean',
+            'pmax', 'pmean',
+            'q925', 'q650',
+            'u925', 'u650',
+            'v925', 'v650',
+            'w925', 'w650',
+            'rh925','rh650',
+            't925', 't650',
+            'div925','div650',
+            'pv925', 'pv650',
+            'shear',
+            'pgt30', 'pgt01'
+            'isvalid',
+             't', 'p' ]
+
+    for v in vars:
+        dic[v] = []
+    return dic
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=4)
     tthresh = '-40'
     files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
+
     print('Nb files', len(files))
-    mdic = defaultdict(list)
+    mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
     pool.close()
     #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
+    #
+    # for f in files:
+    #     file_loop(f)
 
     #
-    p=[]
-    t=[]
+    #res = [item for sublist in res for item in sublist]  # flatten list of lists
 
+    keys = mdic.keys()
     for v in res:
-        try:
-            mdic['tmin'].append(v[0])
-            mdic['pmax'].append(v[1])
-            mdic['area'].append(v[2])
-            mdic['ao60'].append(v[3])
-            mdic['tmean'].append(v[4])
-            mdic['pperc'].extend(v[5])
-            mdic['clat'].append(v[6])
-            mdic['po30'].append(v[7])
-            mdic['isfin'].append(v[8])
-            mdic['t'].append(v[9])
-            mdic['lon30'].extend(v[10])
-            mdic['lat30'].extend(v[11])
-            mdic['lonisfin'].extend(v[12])
-            mdic['latisfin'].extend(v[13])
-            mdic['hour'].append(v[14])
-            mdic['month'].append(v[15])
-            mdic['latmin'].append(v[16])
-            mdic['latmax'].append(v[17])
-            mdic['isnz'].append(v[18])
-            mdic['clon'].append(v[19])
-            mdic['p'].append(v[20])
-            mdic['pc'].append(v[21])
-            mdic['year'].append(v[22])
-        except TypeError:
-            continue
-
+        for k in keys:
+            try:
+                mdic[k].append(v[k])
+            except TypeError:
+                continue
 
         # if v[2]*25 > 1000000:
         #     tplt = v[9]
@@ -68,7 +70,6 @@ def perSys():
             # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
 
 
-
     # f = plt.figure()
     # siz = 3
     #
@@ -76,73 +77,107 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k.p',
+
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera.p',
                            'wb'))
 
 
 def file_loop(f):
-    #print('Doing file: ' + f)
+    print('Doing file: ' + f)
     dic = xr.open_dataset(f)
+    era = xr.open_dataset(constants.ERA_DAILY_PL12UTC)
+
+    getera =np.where((era['time.day']==dic['time.day']) & (era['time.month']==dic['time.month']) & (era['time.year']==dic['time.year']))
+    try:
+        era_day = era.isel(time=int(getera[0]))
+    except TypeError:
+        print('Era missing')
+        return
+
+    out = dictionary()
     res = []
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
     outpc = dic['pconv'].values
-    lon = dic['lon'].values
-    lat = dic['lat'].values
-    h = dic['time.hour'].values
-    m = dic['time.month'].values
-    y = dic['time.year'].values
 
-    date = dic['time']
+    tminpos = np.where(dic['tc_lag0'].values == np.nanmin(dic['tc_lag0'].values)) # era position close to min temp
+    if len(tminpos[0])>1:
+        ptmax = np.nanmax((dic['p'].values)[tminpos])
+        if ptmax > 0:
+            prpos = np.where((dic['p'].values)[tminpos] == ptmax)
+            tminpos = ((tminpos[0])[prpos], (tminpos[1])[prpos] )
+        else:
+            tminpos = ((tminpos[0])[0], (tminpos[1])[0])
 
-    t_thresh = -40
-    pos = (outt<=t_thresh)
+    elon = dic['lon'].values[tminpos]
+    elat = dic['lat'].values[tminpos]
 
-    clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
-    clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
-
-
-    #era = xr.open_dataset(constants.)
+    e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
+    e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
 
 
-    tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
-    pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
-    ppmin = np.min(outp[(np.isfinite(outp)) & ((outt<=t_thresh))])
+    out['lon'] = dic['lon'].values
+    out['lat'] = dic['lat'].values
+    out['hour'] = dic['time.hour'].item()
+    out['month'] = dic['time.month'].item()
+    out['year'] = dic['time.year'].item()
+    out['date'] = dic['time'].values
+
+    t_thresh = -40  # -40C ~ 167 W m-2
+    mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
+
+    if np.sum(mask) < 3:
+        return
+
+    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
+    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
     isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
 
     if isfin < 3:
         return
 
+    print(np.nanmax(outt[mask]))   # can be bigger than cutout threshold because of interpolation to 5km grid after cutout
+
+    out['area'] = np.sum(mask)*(4.4**2)
+
+    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
+    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
+
+    out['tmin'] = np.min(outt[mask])
+    out['tmean'] = np.mean(outt[mask])
+    out['pmax'] = np.max(outp[mask])
+    out['pmean'] = np.mean(outp[mask])
     try:
-        pperc = outp[(outt<=t_thresh) & (outp>0.1)]
-    except IndexError:
-        pperc = np.nan
-    tmean = np.mean(outt[(np.isfinite(outp)) & (outt<=t_thresh)])
+        out['q925'] =float(e925['q'])
+    except TypeError:
+        pdb.set_trace()
+    out['q650'] = float(e650['q'])
+    out['v925'] = float(e925['v'])
+    out['v650'] = float(e925['v'])
+    out['u925'] = float(e925['u'])
+    out['u650'] = float(e650['u'])
+    out['w925'] = float(e925['w'])
+    out['w650'] = float(e650['w'])
+    out['rh925'] = float(e925['r'])
+    out['rh650'] = float(e650['r'])
+    out['t925'] = float(e925['t'])
+    out['t650'] = float(e650['t'])
+    out['pv925'] = float(e925['pv'])
+    out['pv650'] = float(e650['pv'])
+    out['div925'] = float(e925['d'])
+    out['div650'] = float(e650['d'])
 
-    print(np.nanmax(outt))
 
-    area = np.sum(outt<=t_thresh)
+    out['shear'] = float(e650['u']-e925['u'])
 
-    # if  (pp>200) | (ppmin<0) | (area*25 < 15000) : #(pp<0.1)  | (area*25>800000)
-    #     return
-
-    ao40 = np.sum(outt<=t_thresh)
-    po30 = np.sum(outp[(np.isfinite(outp))&((outt<=t_thresh))]>30)
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-    isnz = np.sum((outp>0.1) & ((outt<=t_thresh)))
-
-    lon30 = lon[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lat30 = lat[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lonisfin = lon[(np.isfinite(outp)) & ((outt<=t_thresh))]
-    latisfin = lat[(np.isfinite(outp)) & ((outt<=t_thresh))]
-
-    latmin = lat.min()
-    latmax = lat.max()
-
-    p = outp[(np.isfinite(outp))&((outt<=t_thresh))]
-    pc = outpc[(np.isfinite(outpc)) & ((outt<=t_thresh))]
-    outt = outt[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    out['pgt30'] = np.sum(outp[mask]>30)
+    out['isvalid'] = np.sum(mask)
+    out['pgt01'] = np.sum(outp[mask]>0.1)
+    #
+    out['p'] = outp[mask]
+    out['t'] = outt[mask]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, pc, y)
+
+    return out

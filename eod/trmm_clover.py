@@ -19,7 +19,7 @@ import pdb
 
 HOD = list(range(24))
 YRANGE = range(2004, 2015)
-MRANGE = range(3, 8)  # Jun - Sep
+MRANGE = range(9, 11)  # Jun - Sep
 MTRESH = 0
 
 """

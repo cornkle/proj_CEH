@@ -251,7 +251,7 @@ def trend_all_polyfit():
         t2trend_unstacked = t2trend*10. # warming over decade
         qtrend_unstacked = qtrend * 10.  # warming over decade
         sheartrend_unstacked = sheartrend * 10.  # warming over decade
-        tirtrend_unstacked = ((tirtrend.values)*10. ) * 100. #/ tirm_mean.values
+        tirtrend_unstacked = ((tirtrend.values)*10. ) * 100. / tirm_mean.values
 
         t_da = t2trend_unstacked #xr.DataArray(t2trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         q_da = qtrend_unstacked #xr.DataArray(qtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])

@@ -37,6 +37,9 @@ def saveMCS_WA15():
         if (_h <10) | (_h>21):
             continue
 
+        if (_m<9) | (_m>10):
+            continue
+
         date = dt.datetime(_y, _m, _d, _h, _mi)
 
         tdic = t.get_ddata(date, cut=[4, 8])

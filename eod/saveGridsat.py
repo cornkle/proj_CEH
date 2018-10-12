@@ -35,13 +35,14 @@ def saveYearly():
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
             df['tir'].values = df['tir'].values-273.15
-            labels, goodinds = ua.blob_define(df['tir'].values, -70, minmax_area=[83, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat?
+            labels, goodinds = ua.blob_define(df['tir'].values, -70, minmax_area=[83, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
             df['tir'].values[labels==0] = 0
             df['tir'].values[df['tir'].values<-110] = 0
             try:
                 da = xr.concat([da, df ], dim='time')
             except TypeError:
                 da = df.copy()
+
 
         enc = {'tir': {'complevel': 5, 'shuffle': True, 'zlib': True}}
         da.to_netcdf(out + filename, encoding=enc)
