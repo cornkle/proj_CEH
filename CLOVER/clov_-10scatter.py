@@ -1,5 +1,6 @@
 import seaborn as sns
 import pickle as pkl
+from utils import constants_lappi as cnst
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
@@ -10,7 +11,7 @@ import pdb
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-40_zeroRain.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
 
 # In[3]:
@@ -48,8 +49,8 @@ print('Number MCSs:', p.size)
 # In[6]:
 
 bins=np.arange(-90, -30, 1)   # compute probability per temperature range (1degC)
-ppo30=np.where(p > 30)  
-to30=t[ppo30]   
+ppo30=np.where(p > 30)
+to30=t[ppo30]
 
 H1, bins1 = np.histogram(to30, bins=bins, range=(t.min(), t.max()))
 H, bins = np.histogram(t, bins=bins, range=(t.min(), t.max()))
@@ -95,7 +96,7 @@ rp = p.copy()[inds]
 
 # In[11]:
 
-path = '/users/global/cornkle/figs/CLOVER/TRMM_MSG/'
+path = cnst.network_data + 'figs/CLOVER/TRMM_MSG/'
 fig = plt.figure(figsize=(10, 3.5), dpi=300)
 cc=0.8
 ax1 = fig.add_subplot(121)
@@ -132,4 +133,3 @@ plt.tight_layout()
 plt.savefig(path+'scatter-40_gt5000_tmin_area.png')
 #plt.savefig(path+'scatter-10_gt324.pdf')
 plt.close('all')
-

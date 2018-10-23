@@ -6,7 +6,7 @@ sns.set_style("ticks")
 from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import u_statistics as ustat
+from utils import u_statistics as ustat, constants_lappi as cnst
 import pdb
 import itertools
 from utils import u_plot as uplot
@@ -17,8 +17,8 @@ import pandas as pd
 
 # In[2]:
 
-obs = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain_gt5k_-40thresh_OBSera.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-60_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+obs = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-40_zeroRain_gt5k_-40thresh_OBSera.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-60_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
 cc=11
 
@@ -398,4 +398,3 @@ ax5.bar(xtick, np.array(corrlist), xtickwidth, align='edge', ec='black')
 ax5.set_ylabel('p-corr (Max. rain/u925hPa | q removed')
 ax5.set_xlabel('Max. q925hPa (g/kg) | 0.5 bins')
 ax5.set_title('')
-

@@ -448,4 +448,3 @@ def plot_all():
 
     for h in hours:
         plot_gewex_double(h)
-

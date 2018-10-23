@@ -39,8 +39,8 @@ def trend_all():
     #q = da2['tcwv']
     t2d = da['t'].sel(level=925)
 
-    u925 = da['v'].sel(level=925)#).mean(dim='level')  #slice(850
-    u600 = da['u'].sel(level=slice(650, 700)).mean(dim='level')
+    u925 = da['u'].sel(level=925)#).mean(dim='level')  #slice(850
+    u600 = da['u'].sel(level=650)
 
     shear = u600-u925
 
@@ -68,19 +68,18 @@ def trend_all():
     shear = xr.DataArray(shear, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
     #months = np.arange(1,13)
-    months=[3,10]
+    months=[3,4,5,10]
 
     dicm = {}
-    dicmean = {}
 
     def array_juggling(data, month, hour=None):
 
         m = month
 
         if hour!=None:
-            data = data[(data['time.month'] == m) & (data['time.hour'] == hour)]
+            data = data[((data['time.month'] >= 3) & (data['time.month'] <= 5)) & (data['time.hour'] == hour)]
         else:
-            data = data[(data['time.month'] == m)]
+            data = data[(data['time.month'] >= 3) & (data['time.month'] <= 5)]
         data_years = data.groupby('time.year').mean(axis=0)
 
         # stack lat and lon into a single dimension called allpoints
@@ -91,14 +90,12 @@ def trend_all():
         dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=0.05, eps=0.0001)
 
         ddtrend = dtrend['slope']
-        pthresh = 0.05
-        # try:
-        #     pthresh = us.fdr_threshold(dtrend['pval'].values[np.isfinite(dtrend['pval'].values)], alpha=0.05)
-        #     ddtrend.values[(dtrend['pval'].values > pthresh) | np.isnan(dtrend['pval'].values)] = np.nan
-        # except ValueError:
-        #     ddtrend.values = ddtrend.values*np.nan
-        #     pthresh = np.nan
-        ddtrend.values[(dtrend['pval'].values > pthresh) | np.isnan(dtrend['pval'].values)] = np.nan
+        try:
+            pthresh = us.fdr_threshold(dtrend['pval'].values[np.isfinite(dtrend['pval'].values)], alpha=0.05)
+            ddtrend.values[(dtrend['pval'].values > pthresh) | np.isnan(dtrend['pval'].values)] = np.nan
+        except ValueError:
+            ddtrend.values = ddtrend.values*np.nan
+            pthresh = np.nan
         print('p value threshold', pthresh)
 
         # unstack back to lat lon coordinates
@@ -121,14 +118,13 @@ def trend_all():
         tirtrend_unstacked = ((tirtrend.values)*10. / tirm_mean.values) * 100.
 
         dicm[m] = tirtrend_unstacked
-        dicmean[m] = tirm_mean
 
         t_da = t2trend_unstacked #xr.DataArray(t2trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         q_da = qtrend_unstacked #xr.DataArray(qtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         s_da = sheartrend_unstacked #xr.DataArray(sheartrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         ti_da = tirtrend_unstacked #xr.DataArray(tirtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
 
-        fp = fpath + 'ttrend_mktrend_-70C_coarse_vsurface'+str(m).zfill(2)+'.png'#'ttrend_synop_-70C_coarse_'+str(m).zfill(2)+'.png'
+        fp = fpath + 'ttrend_mktrend_-70C_coarse_FIRSTSEASON'+str(m).zfill(2)+'.png'#'ttrend_synop_-70C_coarse_'+str(m).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(8, 5), dpi=300)
@@ -162,9 +158,6 @@ def trend_all():
     pkl.dump(dicm,
              open(cnst.network_data + 'data/CLOVER/saves/storm_frac.p',
                   'wb'))
-    pkl.dump(dicmean,
-                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean.p',
-                      'wb'))
 
 def trend_all_polyfit():
     srfc = cnst.ERA_MONTHLY_SRFC
@@ -193,8 +186,8 @@ def trend_all_polyfit():
     #q = da2['tcwv']
     t2d = da['t'].sel(level=925)
 
-    u925 = da['v'].sel(level=925)#).mean(dim='level')  #slice(850
-    u600 = da['u'].sel(level=slice(650, 700)).mean(dim='level')
+    u925 = da['u'].sel(level=925)#).mean(dim='level')  #slice(850
+    u600 = da['u'].sel(level=650)
 
     shear = u600-u925
 
@@ -261,8 +254,7 @@ def trend_all_polyfit():
         t2trend_unstacked = t2trend*10. # warming over decade
         qtrend_unstacked = qtrend * 10.  # warming over decade
         sheartrend_unstacked = sheartrend * 10.  # warming over decade
-        tirtrend_unstacked = (((tirtrend.values)*10. ) / tirm_mean.values)*100
-
+        tirtrend_unstacked = ((tirtrend.values)*10. ) * 100. / tirm_mean.values
 
         t_da = t2trend_unstacked #xr.DataArray(t2trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
         q_da = qtrend_unstacked #xr.DataArray(qtrend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
@@ -587,8 +579,7 @@ def corr_box():
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
     dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac.p', 'rb'))
-    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean.p', 'rb'))
-    dicmean[10].max()
+
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
     da = da.sel(longitude=slice(-18, 40), latitude=slice(0, 25))  # latitude=slice(36, -37))
@@ -601,14 +592,14 @@ def corr_box():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=925) #.mean(dim='level')
+    q = da['q'].sel(level=slice(850, 925)).mean(dim='level')
     # q = da2['tcwv']
     t2 = da['t'].sel(level=925)
 
-    u925 = da['u'].sel(level=925)#.mean(dim='level') c#slice(850,
-    u600 = da['u'].sel(level=650)#.mean(dim='level')
+    u925 = da['v'].sel(level=925)#.mean(dim='level') c#slice(850,
+    u600 = da['u'].sel(level=slice(600, 650)).mean(dim='level')
 
-    shear =  u600-u925
+    shear =  u925
 
     q.values = q.values * 1000
 
@@ -616,7 +607,7 @@ def corr_box():
     tir = t2.salem.lookup_transform(tir)
 
     months = np.arange(1, 13)
-    months = [3,10]
+    months = [3,4,5,6,10]
 
     def array_juggling(data, month, hour=None):
 
@@ -683,56 +674,50 @@ def corr_box():
 
         # pthresh = us.fdr_threshold(qcorr['pval'].values[np.isfinite(qcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        pthresh = 0.05
+        pthresh = 0.01
         #cloud['slope'].values[cloud['pval'].values > pthresh] = np.nan
-        qcorr['r'].values[qcorr['pval'].values > pthresh] = 0
+        qcorr['r'].values[qcorr['pval'].values > pthresh] = np.nan
 
         # pthresh = us.fdr_threshold(shearcorr['pval'].values[np.isfinite(shearcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        shearcorr['r'].values[shearcorr['pval'].values > pthresh] = 0
+        shearcorr['r'].values[shearcorr['pval'].values > pthresh] = np.nan
 
         # pthresh = us.fdr_threshold(tcorr['pval'].values[np.isfinite(tcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        tcorr['r'].values[tcorr['pval'].values > pthresh] = 0
+        tcorr['r'].values[tcorr['pval'].values > pthresh] = np.nan
 
         tplot = ((cloud['slope'].values) * 10. / tiryear.values) * 100.
 
-        fp = fpath + 'corr_SYNOP_box' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_synop_v_srfc' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
-        f = plt.figure(figsize=(13,7), dpi=300)
+        f = plt.figure(figsize=(8, 5), dpi=300)
         ax1 = f.add_subplot(221)
         # map.set_shapefile(rivers=True)
         # bla = ma.masked_invalid(tcorr['r'].values)
 
         map.set_data(tcorr['r'].values, interp='linear')  # interp='linear'
-        contours = map.set_contour(t2year-273.15, interp='linear', levels=np.arange(24,37,4), cmap='inferno')
+        # map.set_contour(t2year.mean('year')-273.15)
 
-        #plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
-
-        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax1, title='925hP temperature')
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1),
+        map.visualize(ax=ax1, title='t2')
 
         ax2 = f.add_subplot(222)
         map.set_data(qcorr['r'],interp='linear')  # interp='linear'
-        map.set_contour(qyear,interp='linear', levels=np.arange(5,19,3), cmap='inferno')
-
-        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax2, title='925hPa Spec. humidity')
+        # map.set_contour(qyear.mean('year'))
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1),
+        map.visualize(ax=ax2, title='q')
 
         ax3 = f.add_subplot(223)
         map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
-        map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,3), cmap='inferno')
-        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1)
-        map.visualize(ax=ax3, title='600-925hPa Zonal wind shear')
+        # map.set_contour(sheyear.mean('year'))
+        map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-0.7,0.71,0.1))  # levels=np.arange(-0.5,0.51,0.1)
+        map.visualize(ax=ax3, title='u-shear')
 
         ax4 = f.add_subplot(224)
-        map.set_contour(dicmean[m], interp='linear', levels=[0.1,0.5,1,2.5], cmap='inferno')
-        map.set_data(dicm[m])  #
-
-
-        map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.visualize(ax=ax4, title='-70C cloud cover change', cbar_title='$\%$ decade-1')
+        map.set_data(dicm[m])  # interp='linear'
+        map.set_plot_params(cmap='Blues', extend='both', levels=np.arange(0.1,0.8,0.1))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
+        map.visualize(ax=ax4, title='-70C frequency')
 
         plt.tight_layout()
         plt.savefig(fp)
