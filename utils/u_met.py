@@ -156,7 +156,7 @@ def theta_factor(pz):
 
 def theta(pz, t):
     ist = t + 273.15
-    ist = ((1000 / pz) ** 0.286) * ist
+    ist =  ist * ((1000 / pz) ** 0.286)
     return  ist-273.15
 
 
