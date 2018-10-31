@@ -289,7 +289,7 @@ tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
 vars = {}   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], 18)
-vars['lsRain'] =  ([], 12)   # pressure levels, hour
+vars['lsRain'] =  ([], 18)   # pressure levels, hour
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
