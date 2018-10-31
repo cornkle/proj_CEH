@@ -14,20 +14,20 @@ def run(orig_names=False):
     local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
 
-    months = [3,11] # March-May
+    months = [3,4,5,6,7,8,9,10] # March-May
 
     dic = {
 
-        't2' : ([temp_box], ['keep'], [], [12,3,6]),
-        'u10': ([temp_box], ['keep'], [], [12,3,6]),
-        'v10': ([temp_box], ['keep'], [], [12,3,6]),
-        'lw_out_PBLtop' : ([temp_box], ['keep'], [], []),
-        'v_pl' : ([temp_box], ['keep', 'keep'], [650,925], [12,3]),
-        'u_pl' : ([temp_box], ['keep', 'keep'], [650, 850,925], [12,3]),
-        't_pl' : ([temp_box], ['keep'], [925], [12,3]),
-        'omega_pl' : ([temp_box], ['keep'], [650,300], []),
-        'lsRain' : ([temp_box], ['keep'], [], []),
-        'q_pl' : ([temp_box], ['keep', 'keep'], [650, 925], []),
+       # 't2' : ([temp_box], ['keep'], [], [12,3,6]),
+       # 'u10': ([temp_box], ['keep'], [], [12,3,6]),
+       # 'v10': ([temp_box], ['keep'], [], [12,3,6]),
+       # 'lw_out_PBLtop' : ([temp_box], ['keep'], [], []),
+        'v_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12]),
+        'u_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12]),
+        't_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12]),
+      #  'omega_pl' : ([temp_box], ['keep'], [650,300], [12,3,6]),
+      #  'lsRain' : ([temp_box], ['keep'], [], []),
+        'q_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12]),
     }
     keys = dic.keys()
 
@@ -48,7 +48,7 @@ def run(orig_names=False):
         for f in files:
 
             fname = os.path.basename(f)
-            outname = fname.replace(var, k)
+            outname = fname.replace(var, k+'_fullPL_')
             outfile = outfolder + os.sep + outname
             if os.path.isfile(outfile):
                 print('File already exists, continue.')
