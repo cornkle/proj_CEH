@@ -225,6 +225,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         dbox = ds.copy(deep=True)
 
+        if np.nanmin(dbox['lw_out_PBLtop'].values[inds]) > -70:
+            continue
+
         # for v in dbox.data_vars:
         #     (dbox[v].values)[mask] = np.nan
 
