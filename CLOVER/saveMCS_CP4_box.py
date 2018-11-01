@@ -132,7 +132,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
     landsea_path = glob.glob(ancils_dir+os.sep+'landseamask*.nc')[0]
     landsea = xr.open_dataset(landsea_path, decode_times=False)
     ls = landsea['lsm']
-    pdb.set_trace()
+
     ls.rlon.values = ls.rlon.values-360
     ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
     pos = np.where(ls_arr[0, 0, :, :] == 0)
@@ -205,7 +205,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 52]  # defines minimum MCS size e.g. 258 pix at 4.4km is 5000km2, 52 pix is 1000km2
+            goodinds = u[n >= 258]  # defines minimum MCS size e.g. 258 pix at 4.4km is 5000km2, 52 pix is 1000km2
             if not sum(goodinds) > 0:
                 return
 
@@ -215,7 +215,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         ds[v] = da
 
-        print('Saved ', v)
+        print('Written ', v)
 
     for gi in goodinds:
         if (gi == 0):  # index 0 is always background, ignore!
@@ -224,6 +224,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         #mask = np.where(labels!=gi)
 
         dbox = ds.copy(deep=True)
+
+        if np.nanmin(dbox['lw_out_PBLtop'].values[inds]) > -70:
+            continue
 
         # for v in dbox.data_vars:
         #     (dbox[v].values)[mask] = np.nan
@@ -235,19 +238,24 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         midlat = latmin + (latmax-latmin)/2
         midlon = lonmin + (lonmax-lonmin)/2
 
-        point = dbox.sel(lat=lat, lon=lon, method='nearest')
-        plat = point['lat'].values
-        plon = point['lon'].values
+        point = dbox.sel(latitude=midlat, longitude=midlon, method='nearest')
+        plat = point['latitude'].values
+        plon = point['longitude'].values
 
-        xpos = np.where(dbox['lon'].values == plon)
+        xpos = np.where(dbox['longitude'].values == plon)
         xpos = int(xpos[0])
-        ypos = np.where(dbox['lat'].values == plat)
+        ypos = np.where(dbox['latitude'].values == plat)
         ypos = int(ypos[0])
 
-        dist=69 # ca 300km i.e. 69 *4.4km
+        distx=45 # ca 200km i.e. 45 *4.4km
+        disty = 18 # ca 80km i.e 18*4.4
+
         try:
-            ds_box = dbox.isel(latitude=slice(ypos-dist,ypos+dist), longitude=slice(xpos-dist, xpos+dist))
+            ds_box = dbox.isel(latitude=slice(ypos-disty,ypos+disty+1), longitude=slice(xpos-distx, xpos+distx+1))
         except IndexError:
+            continue
+
+        if (len(ds_box.latitude) != disty*2+1) | (len(ds_box.longitude) != distx*2+1):
             continue
 
         savefile = out_dir + os.sep + pd.Timestamp(date).strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
@@ -267,21 +275,21 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 ### Inputs:
 
-data_path = '/users/global/cornkle/data/CP4/CLOVER/CP4hist'  # CP4 data directory
-ancils_path = '/users/global/cornkle/data/CP4/ANCILS' # directory with seamask file inside
-out_path = '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA'  # out directory to save MCS files
-box = [-13, 13, 10, 19]  # W- E , S - N geographical coordinates box
+data_path = '/users/global/cornkle/shared/data/CP4/CLOVER/CP4hist'  # CP4 data directory
+ancils_path = '/users/global/cornkle/shared/data/CP4/ANCILS' # directory with seamask file inside
+out_path = '/users/global/cornkle/shared/data/CP4/CLOVER/test'  # out directory to save MCS files
+box = [-13, 13, 4.5, 10]  # W- E , S - N geographical coordinates box
 datestring = '19990401'  # set this to date of file
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = np.array([ '07', '08'])
+months = np.array(['10'])
 days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
 vars = {}   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], 18)
-vars['lsRain'] =  ([], 12)   # pressure levels, hour
+vars['lsRain'] =  ([], 18)   # pressure levels, hour
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
