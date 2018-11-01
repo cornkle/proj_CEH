@@ -14,10 +14,11 @@ import scipy.stats as stats
 import numpy.ma as ma
 from utils import u_statistics as u_stat
 import pandas as pd
+from utils import constants as cnst
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-50_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-50_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
 cc=11
 
@@ -31,15 +32,17 @@ month = np.array(dic['month'])
 area = np.array(dic['area'])*(4.4**2)
 lat = np.array(dic['clat'])
 
-rainy_area= []
-new_area = []
-for isp in dic['p']:
-    all = np.isfinite(dic['t'])
-    num = np.sum(isp>=0.01)
-    rainy_area.append(num)
-    new_area.append(all)
-new_area = np.array(new_area)
-new_area = np.array(new_area)
+dummy = (umax)#/(sh) * 100
+
+# rainy_area= []
+# new_area = []
+# for isp in dic['p']:
+#     all = np.isfinite(dic['t'])
+#     num = np.sum(isp>=0.01)
+#     rainy_area.append(num)
+#     new_area.append(all)
+# new_area = np.array(new_area)
+# new_area = np.array(new_area)
 #
 # pos = np.where((rainy_area>=1) &  (pp >= 0.01) & (month==10) )
 #
@@ -64,14 +67,14 @@ new_area = np.array(new_area)
 # plt.show()
 
 
-
-pos = np.where( (pp >= 1) & ((month==3) | (month==5)))# np.where((pp >= 3) & (sh >= 8) &  (sh <= 30) &  (area<=700000) & ((month<=5) | (month>=10)) & (lat>=5) )   # 5 + 10 look nicest
+#& (dummy<75) & (dummy>-150)
+pos = np.where( (pp >= 8)  & (dummy<12) )# np.where((pp >= 3) & (sh >= 8) &  (sh <= 30) &  (area<=700000) & ((month<=5) | (month>=10)) & (lat>=5) )   # 5 + 10 look nicest
 
 tt = tt[pos]
 pp = pp[pos]
 qq = qq[pos]
 shi = sh[pos]
-sh = umax[pos]
+sh = dummy[pos]
 umin = umin[pos]
 umax = umax[pos]
 lats = lat[pos]
@@ -287,8 +290,13 @@ ax4.set_title('')
 
 pp = np.array(dic['pmax'])
 sh = np.array(dic['umax_srfc'])# * (-1)
+dummy = np.array(dic['shearmin'])
 qq = np.array(dic['qmax']) * 1000
 tt = np.array(dic['tmin'])
+
+sh = sh#/(dummy) *-100
+
+sh
 
 tt = tt[pos]
 pp = pp[pos]
@@ -359,9 +367,9 @@ for isq, qql in enumerate(qbins[0:-1]):
 
         outshi[issh, isq] = cmean
 
-plt.figure()
-plt.imshow(outperc, cmap='viridis', vmin=30, vmax=80)
-plt.show()
+# plt.figure()
+# plt.imshow(outperc, cmap='viridis', vmin=30, vmax=80)
+# plt.show()
 
 # X, Y = np.meshgrid(shearbins,areabins/1000)
 #
@@ -409,3 +417,4 @@ ax5.set_ylabel('p-corr (Max. rain/u925hPa | q removed')
 ax5.set_xlabel('Max. q925hPa (g/kg) | 0.5 bins')
 ax5.set_title('')
 
+plt.show()

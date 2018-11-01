@@ -14,7 +14,7 @@ import scipy.stats as stats
 import numpy.ma as ma
 from utils import u_statistics as u_stat
 import pandas as pd
-from utils import constants_lappi as cnst
+from utils import constants as cnst
 
 
 # In[2]:
