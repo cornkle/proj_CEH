@@ -78,7 +78,7 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
+    pkl.dump(mdic, open('/users/global/cornkle/shared/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
                            'wb'))
 
 
@@ -113,9 +113,9 @@ def file_loop(f):
     elat = dic['lat'].values[tminpos]
 
     #e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
-    e925 = era_day.sel(latitude=elat, longitude=elon, level=slice(800,925), method='nearest').mean('level')
+    e925 = era_day.sel(level=slice(900,925)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
     #e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
-    e650 = era_day.sel(latitude=elat, longitude=elon, level=slice(700,550), method='nearest').mean('level')
+    e650 = era_day.sel(level=slice(600,650)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
 
 
     out['lon'] = dic['lon'].values
