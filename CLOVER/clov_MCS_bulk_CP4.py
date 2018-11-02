@@ -4,11 +4,10 @@ from utils import u_arrays as ua
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import multiprocessing
-import ipdb
 import pickle as pkl
 from collections import defaultdict
 import cartopy.crs as ccrs
-from utils import constants
+from utils import constants as cnst
 from utils import u_met
 import cartopy
 import pdb
@@ -17,7 +16,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=5)
     tthresh = '-50'
-    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA_sahel')
+    files = ua.locate(".nc", cnst.network_data + 'data/CP4/CLOVER/MCS_-50_1000km2')
     print('Nb files', len(files))
     mdic = defaultdict(list)
     res = pool.map(file_loop, files)
@@ -58,26 +57,8 @@ def perSys():
             continue
 
 
-        # if v[2]*25 > 1000000:
-        #     tplt = v[9]
-        #     tplt[np.where(tplt==np.nan)]=0
-            # f = plt.figure()
-            # ax = plt.axes(projection=ccrs.PlateCarree())
-            # plt.contourf(v[10], v[11], tplt, transform=ccrs.PlateCarree())
-            # ax.coastlines()
-            # plt.colorbar()
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
 
-
-
-    # f = plt.figure()
-    # siz = 3
-    #
-    # ax = f.add_subplot(1, 1, 1)
-    # plt.scatter(mdic['tmin'], mdic['pmax'])
-    # plt.title('bulk', fontsize=9)
-
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4_JA_sahel.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_-50_1000km2_fullPL.p',
                            'wb'))
 
 
@@ -104,7 +85,7 @@ def file_loop(f):
 
     clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
     clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
-    pdb.set_trace()
+
     tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
     pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
 

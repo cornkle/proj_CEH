@@ -13,7 +13,7 @@ from utils import u_plot as uplot
 import scipy.stats as stats
 import numpy.ma as ma
 import pickle as pkl
-from utils import constants_lappi as cnst
+from utils import constants as cnst
 
 # In[2]:
 
@@ -33,8 +33,8 @@ for r in range(3,11):
 
     pos = np.where((pp >= 1) & (sh >= 5) &  (sh <= 30) & (month==r) & (clat<=9) )   # 5 + 10 look nicest
     try:
-        print(r, np.percentile(tt[pos], 50))
-        tmin_CP4.append(np.percentile(tt[pos], 50))
+        print(r, np.percentile(tt[pos], 10))
+        tmin_CP4.append(np.percentile(tt[pos], 10))
     except IndexError:
         tmin_CP4.append(np.nan)
         continue
@@ -58,8 +58,8 @@ for r in range(3,11):
 
     pos = np.where((pp >= 1) & (sh >= 5) &  (sh <= 30) & (month==r) & (clat<=9))   # 5 + 10 look nicest
     try:
-        print('OBS', r, np.percentile(tt[pos], 50))
-        tmin_OBS.append(np.percentile(tt[pos], 50))
+        print('OBS', r, np.percentile(tt[pos], 5))
+        tmin_OBS.append(np.percentile(tt[pos], 5))
     except IndexError:
         tmin_OBS.append(np.nan)
         continue

@@ -37,7 +37,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-40'
-    files = ua.locate(".nc", '/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
+    files = ua.locate(".nc", '/users/global/cornkle/shared/MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
 
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
@@ -78,7 +78,7 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
 
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera.p',
+    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
                            'wb'))
 
 
@@ -112,8 +112,10 @@ def file_loop(f):
     elon = dic['lon'].values[tminpos]
     elat = dic['lat'].values[tminpos]
 
-    e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
-    e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
+    #e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
+    e925 = era_day.sel(latitude=elat, longitude=elon, level=slice(800,925), method='nearest').mean('level')
+    #e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
+    e650 = era_day.sel(latitude=elat, longitude=elon, level=slice(700,550), method='nearest').mean('level')
 
 
     out['lon'] = dic['lon'].values

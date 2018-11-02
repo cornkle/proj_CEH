@@ -32,7 +32,7 @@ month = np.array(dic['month'])
 area = np.array(dic['area'])*(4.4**2)
 lat = np.array(dic['clat'])
 
-dummy = (umax)#/(sh) * 100
+dummy = (umax)*qq/(umin)* * 100
 
 # rainy_area= []
 # new_area = []
