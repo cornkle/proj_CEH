@@ -78,42 +78,42 @@ def cor(x, y):
     return np.corrcoef(x, y)[0, 1]
 
 
-def pcor(x, y, c):
-    """Partial correlation (r2) of x and y when the effect of C is removed.
-
-    Couldn't find a routine to do exactly this in statsmodels, so I
-    rolled my own. (F. Maussion)
-
-    y and x are the variables from which we want to compute the correlation,
-    when the effect of the controlling variables in C is removed.
-
-    The residuals after regressing X/Y on Ci are the parts of X/Y that
-    cannot be predicted by Ci. The partial correlation coefficient between
-    Y and X adjusted for Ci is the correlation between these two sets of
-    residuals.
-
-    Returns
-    -------
-    tuple (r2, pvalue)
-
-    """
-
-    # Degrees of freedom
-    if len(c.shape) == 1:
-        df = len(x) - 2 - 1
-    else:
-        df = len(x) - 2 - c.shape[1]
-
-    # Dont forget the constant
-    _c = sm.add_constant(c)
-    fity = sm.OLS(y, _c).fit()
-    fitx = sm.OLS(x, _c).fit()
-
-    r = cor(fitx.resid, fity.resid)
-    t = r / np.sqrt((1. - r ** 2) / df)
-    p_e = stats.t.sf(np.abs(t), df) * 2  # error probability (two tailed)
-
-    return r, p_e
+# def pcor(x, y, c):
+#     """Partial correlation (r2) of x and y when the effect of C is removed.
+#
+#     Couldn't find a routine to do exactly this in statsmodels, so I
+#     rolled my own. (F. Maussion)
+#
+#     y and x are the variables from which we want to compute the correlation,
+#     when the effect of the controlling variables in C is removed.
+#
+#     The residuals after regressing X/Y on Ci are the parts of X/Y that
+#     cannot be predicted by Ci. The partial correlation coefficient between
+#     Y and X adjusted for Ci is the correlation between these two sets of
+#     residuals.
+#
+#     Returns
+#     -------
+#     tuple (r2, pvalue)
+#
+#     """
+#
+#     # Degrees of freedom
+#     if len(c.shape) == 1:
+#         df = len(x) - 2 - 1
+#     else:
+#         df = len(x) - 2 - c.shape[1]
+#
+#     # Dont forget the constant
+#     _c = sm.add_constant(c)
+#     fity = sm.OLS(y, _c).fit()
+#     fitx = sm.OLS(x, _c).fit()
+#
+#     r = cor(fitx.resid, fity.resid)
+#     t = r / np.sqrt((1. - r ** 2) / df)
+#     p_e = stats.t.sf(np.abs(t), df) * 2  # error probability (two tailed)
+#
+#     return r, p_e
 
 
 def multi_partial_correlation(input_df):

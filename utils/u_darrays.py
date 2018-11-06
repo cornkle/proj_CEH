@@ -18,41 +18,41 @@ def shift_lons(ds, lon_dim='lon'):
     ds[lon_dim].values = new_lons
     return ds
 
-def linear_trend_mk(x, eps=0.001, alpha=0.01):
+def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_missing=None):
 
     #pf = np.polyfit(np.arange(len(x)), x, 1)
     pf, slope, int, p, ind = mk.test(np.arange(len(x)),x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
 
     # we need to return a dataarray or else xarray's groupby won't be happy
 
-    if ind == 1:
-        issig = slope
-    else:
-        issig = np.nan
 
-    if np.nansum(x.values==0)>=10:
+    if nb_missing is not None:
+        if np.nansum(x.values==0)>=10:
             p = np.nan
-
-    ds = xr.Dataset()
-    ds['slope'] = xr.DataArray(issig,)
-    ds['pval'] = xr.DataArray(p, )
-
-    return ds
-
-def linear_trend(x):
-
-    pf = np.polyfit(np.arange(len(x)), x, 1)
-    #pf, slope, int, p, ind = mk.test(np.arange(len(x)),x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
-
-    # we need to return a dataarray or else xarray's groupby won't be happy
-    slope = pf[0]
-
-    if np.nansum(x.values==0)>=10:
             slope = np.nan
 
     ds = xr.Dataset()
     ds['slope'] = xr.DataArray(slope,)
-    ds['pval'] = xr.DataArray(np.nan, )
+    ds['pval'] = xr.DataArray(p, )
+    ds['ind'] = xr.DataArray(ind)
+
+    return ds
+
+def linear_trend_lingress(x, nb_missing=None):
+
+    slope, intercept, r, p, std_err = stats.linregress(np.arange(len(x)), x)
+
+    # we need to return a dataarray or else xarray's groupby won't be happy
+
+    if nb_missing is not None:
+        if np.nansum(x.values==0)>=10:
+            p = np.nan
+            slope = np.nan
+
+    ds = xr.Dataset()
+    ds['slope'] = xr.DataArray(slope,)
+    ds['pval'] = xr.DataArray(p, )
+    ds['r'] = xr.DataArray(r,)
 
     return ds
 
@@ -68,21 +68,13 @@ def flip_lat(ds):
 
 
 
+################### correlation computation with quick parallel dask usage
 def covariance_gufunc(x, y):
     return ((x - x.mean(axis=-1, keepdims=True))
             * (y - y.mean(axis=-1, keepdims=True))).mean(axis=-1)
 
-def pearson_correlation_gufunc_old(x, y):
-    return covariance_gufunc(x, y) / (x.std(axis=-1) * y.std(axis=-1))
-
-
 def pearson_correlation_gufunc(x, y):
-    r, p = scipy.stats.pearsonr(x,y)
-    return r
-
-def pearson_p_gufunc(x, y):
-    r, p = scipy.stats.pearsonr(x,y)
-    return p
+    return covariance_gufunc(x, y) / (x.std(axis=-1) * y.std(axis=-1))
 
 def spearman_correlation_gufunc(x, y):
     x_ranks = bottleneck.rankdata(x, axis=-1)
@@ -103,27 +95,4 @@ def pearson_correlation(x, y, dim):
         dask='parallelized',
         output_dtypes=[float])
 
-def pearson_p(x, y, dim):
-    return xr.apply_ufunc(
-        pearson_p_gufunc, x, y,
-        input_core_dims=[[dim], [dim]],
-        dask='parallelized',
-        output_dtypes=[float])
 
-
-def pearson_corr(x, y):
-
-    #pf = np.polyfit(np.arange(len(x)), x, 1)
-    r, p = scipy.stats.pearsonr(x,y)
-
-    # we need to return a dataarray or else xarray's groupby won't be happy
-
-    if np.nansum(x.values==0)>=10:
-            p = np.nan
-            r = np.nan
-
-    ds = xr.Dataset()
-    ds['r'] = xr.DataArray(r,)
-    ds['pval'] = xr.DataArray(p, )
-
-    return ds

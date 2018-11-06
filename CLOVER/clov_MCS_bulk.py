@@ -113,9 +113,9 @@ def file_loop(f):
     elat = dic['lat'].values[tminpos]
 
     #e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
-    e925 = era_day.sel(level=slice(900,925)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e925 = era_day.sel(level=slice(900,850)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
     #e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
-    e650 = era_day.sel(level=slice(600,650)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e650 = era_day.sel(level=slice(600,700)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
 
 
     out['lon'] = dic['lon'].values
