@@ -13,6 +13,7 @@ import pandas as pd
 from utils import constants as cnst
 import multiprocessing
 import glob
+import pickle as pkl
 
 
 def dictionary():
@@ -45,25 +46,9 @@ def perSys():
     for r in res:
         merged.update(r)
 
-    #
-    #
-    # for f in files:
-    #     file_loop(f)
+    test = pd.DataFrame.from_dict(merged, orient='index')
 
-    #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
-
-    # keys = mdic.keys()
-    # for v in res:
-    #     for k in keys:
-    #         try:
-    #             mdic[k].append(v[k])
-    #         except TypeError:
-    #             continue
-
-
-
-    pkl.dump(mdic, open('/users/global/cornkle/shared/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
+    pkl.dump(test, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p',
                            'wb'))
 
 
