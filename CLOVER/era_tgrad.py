@@ -205,16 +205,16 @@ def tgrad_shear_trend():
     da = u_darrays.flip_lat(da)
     da = da.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))#latitude=slice(36, -37))
 
-    u925 = da['u'].sel(level=slice(850, 925)).mean(dim='level')#).mean(dim='level')  #slice(850
-    u600 = da['u'].sel(level=slice(550, 700)).mean(dim='level')
+    u925 = da['u'].sel(level=925)#(level=slice(850, 925)).mean(dim='level')#).mean(dim='level')  #slice(850
+    u600 = da['u'].sel(level=650)#(level=slice(550, 650)).mean(dim='level')
 
     qq925 = da['q'].sel(level=slice(850,925)).mean(dim='level')
-    qq600 = da['q'].sel(level=slice(550, 700)).mean(dim='level')
+    qq600 = da['q'].sel(level=slice(550, 650)).mean(dim='level')
 
     mcs_temp = xr.open_dataset(mcs)
     mcs_temp = mcs_temp['tir']
-    months = [3,4,5,6,7,8,9,10]
-    mnames = {3 : 'March', 4 : 'April', 5 : 'May', 6:'June', 7:'July', 8:'August', 9 : 'September', 10 : 'October'}
+    months = [2,3,4,5,6,7,8,9,10,11]
+    mnames = {2:'February', 3 : 'March', 4 : 'April', 5 : 'May', 6:'June', 7:'July', 8:'August', 9 : 'September', 10 : 'October', 11:'November'}
 
     mcs_change = []
     shear_change = []
@@ -222,14 +222,17 @@ def tgrad_shear_trend():
 
     for m in months:
 
-        tsouth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(Tgrad_lat[m-1]-1.25, Tgrad_lat[m-1]-0.25))
-        tnorth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(Tgrad_lat[m-1]+0.25, Tgrad_lat[m-1]+1.25))
+        tsouthlice = slice(Tgrad_lat[m-1]-1.25, Tgrad_lat[m-1]-0.25)
+        tnorthslice = slice(Tgrad_lat[m-1]+0.25, Tgrad_lat[m-1]+1.25)
+
+        tsouth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(5,8))
+        tnorth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(11,18))
 
         south = tsouth[(tsouth['time.month']==m)]
         north = tnorth[(tnorth['time.month']==m)]
         ulow = u925[(u925['time.month']==m)]
         uhigh = u600[(u600['time.month']==m)]
-        mcs_month = mcs_temp[mcs_temp['time.month']==m]
+        mcs_month = mcs_temp[mcs_temp['time.month']==m]#*(-1)
         qlow = qq925[(qq925['time.month']==m)]
         qmid = qq600[(qq600['time.month'] == m)]
         ##da = da.sel(longitude=slice(-18,51), latitude=slice(36, -37))
@@ -247,10 +250,13 @@ def tgrad_shear_trend():
 
         tgrad = ((north_peryear-south_peryear)[4::])
         shear = (u600_peryear-u925_peryear)[4::] # -q_peryear[4::]#
+        q = qlow_peryear[4::]*1000
 
         r = stats.pearsonr(shear.values[1::]-shear.values[0:-1],mcs_month.values[1::]-mcs_month.values[0:-1])
+        rq = stats.pearsonr(q.values[1::]-q.values[0:-1],mcs_month.values[1::]-mcs_month.values[0:-1])
         tshear_cor = stats.pearsonr(shear.values[1::]-shear.values[0:-1],tgrad.values[1::]-tgrad.values[0:-1])
 
+        #sslope, sint = ustats.linear_trend(shear)
         sslope, sint = ustats.linear_trend(shear)
         mslope, mint = ustats.linear_trend(mcs_month)
 
@@ -264,8 +270,8 @@ def tgrad_shear_trend():
         ax = f.add_subplot(111)
         ax.plot(tgrad.year, shear, 'x-', label='Zonal wind shear 600-925hPa', color='k')
         ax.plot(tgrad.year, sint + x*sslope, '--', color='k')
-        ax.set_ylim(-10,-5)
-        #ax.set_ylim(10, 60)
+        ax.set_ylim(-14,-6)
+        #ax.set_ylim(9.8, 10)
         ax1 = ax.twinx()
         ax1.plot(mcs_month['time.year'],mcs_month, 'o-', label='Mean MCS temp.', color='r')
         ax1.plot(tgrad.year, mint + x*mslope, '--', color='r')
@@ -273,9 +279,9 @@ def tgrad_shear_trend():
         shearline = lines.Line2D([],[], color='k', label='Zonal wind shear 600-925hPa', linestyle='solid', marker='x', markersize=5)
         ax1.set_ylabel('degC')
         ax.set_ylabel('m s-1')
-        ax.set_title(mnames[m]+' | Corr.:'+ str(np.round(rr, decimals=2)) + '| Tgrad/Shear corr: ' + str(np.round(tshear_cor[0], decimals=2)))
+        ax.set_title(mnames[m]+' | Corr.:'+ str(np.round(rr, decimals=2)) +'|' + str(np.round(rq[0], decimals=2)) + '| Tgrad/Shear corr: ' + str(np.round(tshear_cor[0], decimals=2)))
         if m==3:
-            ax.legend(handles=[mcsline, shearline])
+            ax.legend(handles=[mcsline, shearline], loc='lower left')
         f.savefig(out + 'trend_timeseries_'+str(m)+'.png')
 
         plt.close('all')
@@ -285,8 +291,7 @@ def tgrad_shear_trend():
         #plt.close('all')
 
     plt.figure()
-    plt.plot([3,4,5,6,7,8,9,10], tgrad_change, 'ro-', label='tgrad')
-    plt.plot([3,4,5,6,7,8,9,10], shear_change, 'ko-', label='u600')
-    plt.plot([3,4,5,6,7,8,9,10], mcs_change, 'bo-', label='mcs mean temp')
+    plt.plot([2,3,4,5,6,7,8,9,10,11], tgrad_change, 'ro-', label='tgrad')
+    plt.plot([2,3,4,5,6,7,8,9,10,11], shear_change, 'ko-', label='u600')
+    plt.plot([2,3,4,5,6,7,8,9,10,11], mcs_change, 'bo-', label='mcs mean temp')
     plt.legend()
-

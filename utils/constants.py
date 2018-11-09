@@ -5,9 +5,11 @@ if os.path.isdir('/home/ck/DIR/'):
     ext_drive = '/home/ck/DIR/'
     local_data = ext_drive + 'mymachine/'
     network_data = ext_drive + 'cornkle/'
+    elements_drive = '/media/ck/Elements/Obs_Data/'
 else:
     local_data = '/localscratch/wllf030/cornkle/'
     network_data = '/users/global/cornkle/shared/'
+    elements_drive = '/media/ck/Elements/Obs_Data/'
 
 
 ERA_MONTHLY_PL = local_data + 'ERA-I/monthly/monthly_1979-2017_pl_full.nc'
@@ -66,3 +68,8 @@ TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 CMORPH = network_data + 'data/OBS/CMORPH/CMORPH_nc/'
 
 GRIDSAT = local_data + 'GRIDSAT/MCS18/'
+GRIDSAT_RAW = local_data + 'GRIDSAT/'
+CHIRPS = network_data + 'data/OBS/THEO_CHIRPS/'
+
+TRMM_DAILY = elements_drive + 'TRMM/data/daily/aggregated/'
+TRMM_MONTHLY = elements_drive + 'TRMM/data/monthly/aggregated/'

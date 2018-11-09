@@ -126,6 +126,3 @@ def run():
         file_save(data_path, out_path, ancils_path, d, tthresh, storm_dic, box=box)
 
     return storm_dic
-
-
-

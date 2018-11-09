@@ -18,7 +18,7 @@ import datetime as dt
 import pdb
 
 HOD = list(range(24))
-YRANGE = range(2004, 2014)
+YRANGE = range(2004, 2015)
 MRANGE = range(6, 10)  # Jun - Sep
 MTRESH = 0
 
