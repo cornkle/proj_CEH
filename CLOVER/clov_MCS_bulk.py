@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import pickle as pkl
 from collections import defaultdict
-from utils import constants
+from utils import constants as cnst
 import pdb
 
 
@@ -37,7 +37,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-40'
-    files = ua.locate(".nc", '/users/global/cornkle/shared/MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
+    files = ua.locate(".nc", cnst.network_data + 'MCSfiles/WA5000_4-8N_13W-13E_'+tthresh+'_18UTC/')
 
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
@@ -78,14 +78,14 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
 
-    pkl.dump(mdic, open('/users/global/cornkle/shared/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt5k_-40thresh_OBSera_thicklayer.p',
                            'wb'))
 
 
 def file_loop(f):
     print('Doing file: ' + f)
     dic = xr.open_dataset(f)
-    era = xr.open_dataset(constants.ERA_DAILY_PL12UTC)
+    era = xr.open_dataset(cnst.ERA_DAILY_PL12UTC)
 
     getera =np.where((era['time.day']==dic['time.day']) & (era['time.month']==dic['time.month']) & (era['time.year']==dic['time.year']))
     try:
@@ -113,9 +113,9 @@ def file_loop(f):
     elat = dic['lat'].values[tminpos]
 
     #e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
-    e925 = era_day.sel(level=slice(900,850)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e925 = era_day.sel(level=slice(925,900)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
     #e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
-    e650 = era_day.sel(level=slice(600,700)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e650 = era_day.sel(level=slice(600,601)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
 
 
     out['lon'] = dic['lon'].values

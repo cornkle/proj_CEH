@@ -177,13 +177,17 @@ def tgrad_shear_trend():
 
     srfc = cnst.ERA_MONTHLY_SRFC
     pl = cnst.ERA_MONTHLY_PL
-    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc'
-    out = cnst.network_data + 'figs/CLOVER/'
+    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc'
+    out = cnst.network_data + 'figs/CLOVER/months/'
 
+    #
+    # box = [-10,10,5.5,8]
+    # tpick = [-10,10,6,25]
+    # Tlons = [-10,10]
 
-    box = [-10,10,5.5,8]
-    tpick = [-10,10,6,25]
-    Tlons = [-10,10]
+    box = [18,30,-22,-10]
+    tpick = [18,30,-30,-20]
+    Tlons = [18,30]
 
     dam = xr.open_dataset(srfc)
     dam = u_darrays.flip_lat(dam)
@@ -213,8 +217,8 @@ def tgrad_shear_trend():
 
     mcs_temp = xr.open_dataset(mcs)
     mcs_temp = mcs_temp['tir']
-    months = [2,3,4,5,6,7,8,9,10,11]
-    mnames = {2:'February', 3 : 'March', 4 : 'April', 5 : 'May', 6:'June', 7:'July', 8:'August', 9 : 'September', 10 : 'October', 11:'November'}
+    months = [1,2,3,4,5,6,7,8,9,10,11,12]
+    mnames = {1:'January',2:'February', 3 : 'March', 4 : 'April', 5 : 'May', 6:'June', 7:'July', 8:'August', 9 : 'September', 10 : 'October', 11:'November', 12:'December'}
 
     mcs_change = []
     shear_change = []
@@ -258,7 +262,15 @@ def tgrad_shear_trend():
 
         #sslope, sint = ustats.linear_trend(shear)
         sslope, sint = ustats.linear_trend(shear)
-        mslope, mint = ustats.linear_trend(mcs_month)
+        try:
+            mslope, mint = ustats.linear_trend(mcs_month)
+        except:
+            continue
+
+        mr = stats.pearsonr(np.arange(len(mcs_month)), mcs_month)
+        print(m, mr)
+        if mr[1]>0.01:
+            continue
 
         mcs_change.append(mcs_month[-5::].mean()-mcs_month[0:5].mean())
         shear_change.append(shear[-5::].mean()-shear[0:5].mean())
@@ -270,7 +282,7 @@ def tgrad_shear_trend():
         ax = f.add_subplot(111)
         ax.plot(tgrad.year, shear, 'x-', label='Zonal wind shear 600-925hPa', color='k')
         ax.plot(tgrad.year, sint + x*sslope, '--', color='k')
-        ax.set_ylim(-14,-6)
+        ax.set_ylim(-8,0)
         #ax.set_ylim(9.8, 10)
         ax1 = ax.twinx()
         ax1.plot(mcs_month['time.year'],mcs_month, 'o-', label='Mean MCS temp.', color='r')

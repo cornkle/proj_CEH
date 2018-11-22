@@ -57,7 +57,7 @@ def month_mean():
     years = list(range(1983,2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
+    fname = 'aggs/gridsat_WA_-50_monthly_mean_SA.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -70,7 +70,9 @@ def month_mean():
             #da1['tir'].values[da1['tir'].values < -70] = 1
 
             da_res = da1.resample(time='m').mean('time')
-            boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-13,13)).resample(time='m').mean()
+            WA_box = [-13,13,4.5,8]
+            SA_box = [20,30,-30,-10]
+            boxed = da1['tir'].sel(lat=slice(SA_box[2],SA_box[3]), lon=slice(SA_box[0],SA_box[1])).resample(time='m').mean()
 
             try:
                 da = xr.concat([da, da_res], 'time')
@@ -86,10 +88,10 @@ def month_mean():
         # pkl.dump(np.array(boxed),
         #          open('/users/global/cornkle/data/CLOVER/saves/box_13W-13E-4-8N_meanT-50_from5000km2.p',
         #               'wb'))
-        pdb.set_trace()
-        enc = {'tir': {'complevel': 5, 'zlib': True}}
 
-        da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2.nc')
+        enc = {'tir': {'complevel': 5, 'zlib': True}}
+        pdb.set_trace()
+        da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc')
 
         da.to_netcdf(msg_folder + fname, encoding=enc)
 

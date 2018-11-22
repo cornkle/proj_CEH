@@ -13,26 +13,28 @@ import pickle as pkl
 
 def corr_box():
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
-    pl = cnst.ERA_MONTHLY_PL_SYNOP
+    pl = cnst.ERA_MONTHLY_PL_SYNOP # _SYNOP
     mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count.nc'
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC.p', 'rb'))
-    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC.p', 'rb'))
+    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_PANAFRICA.p', 'rb'))
+    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_PANAFRICA.p', 'rb'))
 
-    mcsbox = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc'
+    mcsbox = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc'
     mcs_temp = xr.open_dataset(mcsbox)
     mcs_temp = mcs_temp['tir']
 
+    box=[-18,55,-35,35]
+
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
-    da = da.sel(longitude=slice(-18, 40), latitude=slice(0, 25))  # latitude=slice(36, -37))
+    da = da.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))  # latitude=slice(36, -37))
     da2 = xr.open_dataset(srfc)
     da2 = u_darrays.flip_lat(da2)
-    da2 = da2.sel(longitude=slice(-18, 40), latitude=slice(0, 25))  # latitude=slice(36, -37))
+    da2 = da2.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))  # latitude=slice(36, -37))
     da3 = xr.open_dataset(mcs)
-    da3 = da3.sel(lon=slice(-18, 40), lat=slice(0, 25))
+    da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2], box[3]))
 
     lons = da.longitude
     lats = da.latitude
@@ -42,15 +44,16 @@ def corr_box():
     u925 = da['u'].sel(level=slice(850, 925)).mean('level')
     u600 = da['r'].sel(level=slice(690, 700)).mean('level')
 
-    shear = u600#-u925 # u600-
+    shear = u600-u925 # u600-
 
     q.values = q.values * 1000
 
     tir = da3['tir']
     tir = t2.salem.lookup_transform(tir)
 
+
     months = np.arange(1, 13)
-    months = [2,3,4,5,6,7,8,9,10,11]
+    months = [1,2,3,4,5,6,7,8,9,10,11,12]
 
     def array_juggling(data, month, hour=None):
 
@@ -65,10 +68,10 @@ def corr_box():
 
         data_mean = data.mean(axis=0)
 
-        # diff = xr.DataArray(data_years.values[1::, :, :] - data_years.values[0:-1, :, :],
-        #                     coords=[data_years.year[1::], data.latitude, data.longitude], dims=['year','latitude', 'longitude'] )
-        diff = xr.DataArray(data_years.values, coords=[data_years.year, data.latitude, data.longitude],
-                            dims=['year', 'latitude', 'longitude'])
+        diff = xr.DataArray(data_years.values[1::, :, :] - data_years.values[0:-1, :, :],
+                            coords=[data_years.year[1::], data.latitude, data.longitude], dims=['year','latitude', 'longitude'] )
+        # diff = xr.DataArray(data_years.values, coords=[data_years.year, data.latitude, data.longitude],
+        #                     dims=['year', 'latitude', 'longitude'])
         # unstack back to lat lon coordinates
         return diff, data_mean
 
@@ -82,13 +85,14 @@ def corr_box():
         if bsingle:
             bb = b
         else:
-            bb = b.sel(latitude=slice(4, 8), longitude=slice(-10, 11)).mean(dim=['latitude', 'longitude'])
+            bb = b.sel(latitude=slice(-18, -9), longitude=slice(16, 30)).mean(dim=['latitude', 'longitude'])
 
         for lat in a.latitude.values:
             for lon in a.longitude.values:
                 aa = a.sel(latitude=lat, longitude=lon)
                 if bsingle:
                     r, p = stats.pearsonr(aa.values, bb)
+
                     pf = np.polyfit(aa.values, bb, 1)
                 else:
                     r, p = stats.pearsonr(aa.values, bb.values)
@@ -116,11 +120,15 @@ def corr_box():
 
         mcs_month = mcs_temp[mcs_temp['time.month'] == m]
 
-        #tirdiff = mcs_month.values#[1::]-mcs_month.values[0:-1]
+        tirdiff = mcs_month.values[1::]-mcs_month.values[0:-1]
 
-        qcorr = corr(qdiff, tirdiff, bsingle=False)
-        shearcorr = corr(shdiff, tirdiff, bsingle=False)
-        tcorr = corr(t2diff, tirdiff, bsingle=False)
+        bs = True
+        try:
+            qcorr = corr(qdiff, tirdiff, bsingle=bs)
+        except:
+            continue
+        shearcorr = corr(shdiff, tirdiff, bsingle=bs)
+        tcorr = corr(t2diff, tirdiff, bsingle=bs)
 
         # pthresh = us.fdr_threshold(qcorr['pval'].values[np.isfinite(qcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
@@ -139,7 +147,7 @@ def corr_box():
         dicm[m][dicm[m]==0] = np.nan
 
 
-        fp = fpath + 'corr_SYNOP_box_' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_box_SYNOP_SA' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(13,7), dpi=300)

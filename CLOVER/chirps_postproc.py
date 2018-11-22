@@ -69,7 +69,7 @@ def month_mean():
             da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
             #da1['tir'].values[da1['tir'].values < -70] = 1
 
-            da_res = da1.resample(time='m').mean('time')
+            da_res = da1.resample(time='m').count('time')
             boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-13,13)).resample(time='m').mean()
 
             try:
@@ -97,11 +97,20 @@ def month_mean():
 def trend_rainfall():
 
     ts = xr.open_mfdataset(cnst.CHIRPS + "*.nc")
-    tst = xr.open_mfdataset(cnst.TRMM_MONTHLY + "*.nc")
-    res = ts.resample(time='m').mean('time')
-    trend = res['rainfall'][res['time.month'] == 5].sel(longitude=slice(-13,13), latitude=slice(4.3,8.5))
 
-    plt.imshow(trend[4,:,:], origin='lower')
-    ttrend = trend.mean(['latitude', 'longitude'])
-    trend
-    plt.plot(trend['time.year'], ttrend)
+    pl = cnst.ERA_MONTHLY_PL_SYNOP
+
+    res = ts.resample(time='m').max('time') # ts.where(ts['rainfall']>=20).notnull().resample(time='m').sum('time') #
+    resmean = ts.resample(time='m').mean('time') #ts.where(ts['rainfall']>=0.1).notnull().resample(time='m').sum('time') #.count(ts['rainfall']>1,dim='time')
+    resmean
+
+    trend = res['rainfall'][(res['time.month'] == 10) & (res['time.year'] >= 1990)].sel(longitude=slice(-10,10), latitude=slice(4.3,8.5))
+    trendmean = resmean['rainfall'][resmean['time.month'] == 10 & (res['time.year'] >= 1990)].sel(longitude=slice(-10,10), latitude=slice(4.3,8.5))
+
+    mapp = plt.imshow(trend[10,:,:], origin='lower', vmin=0, vmax=20)
+
+    mtrend = trend.max(['latitude', 'longitude'])
+    mmtrend = trendmean.max(['latitude', 'longitude'])
+
+
+    plt.plot(trend['time.year'], mtrend)

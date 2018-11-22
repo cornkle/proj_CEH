@@ -6,9 +6,10 @@ import ipdb
 import glob
 from scipy.interpolate import griddata
 import pandas as pd
-import pdb
+import ipdb
 import itertools
-
+from collections import OrderedDict
+from utils import constants as cnst
 
 def olr_to_bt(olr):
     sigma = 5.670373e-8
@@ -190,7 +191,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
     landsea_path = glob.glob(ancils_dir+os.sep+'landseamask*.nc')[0]
     landsea = xr.open_dataset(landsea_path, decode_times=False)
     ls = landsea['lsm']
-    pdb.set_trace()
+
     ls.rlon.values = ls.rlon.values-360
     ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
     pos = np.where(ls_arr[0, 0, :, :] == 0)
@@ -211,16 +212,22 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             derived = v
             v = 'u_pl'
 
-        try:
-            filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
-        except IndexError:
-            print('No file found, return')
-            return
-        arr = xr.open_dataset(filepath)
+        # try:
+        #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
+        # except IndexError:
+        #     print('No file found, return')
+        #     return
+
+        filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
+
+        arr = xr.open_mfdataset(filepath, autoclose=True)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-
-        dar = dar[dar['time.hour']==h].squeeze()
+        dar = dar.sel(time=datestring, method='nearest')
+        #ipdb.set_trace()
+        if int(dar['time.hour'])!=h:
+            print('Wrong hour')
+            return
 
         if 'pressure' in dar.coords:
             dar.values[dar.values==0] = np.nan # potential missing value maskout
@@ -263,11 +270,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 52]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2)
+            goodinds = u[n >= 16]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
                 return
 
-        if v == 'lsRain':
+        if (v == 'lsRain') | (v == 'totRain'):
             da.values = da.values*3600  # rain to mm/h
             da.attrs['units'] = 'mm h-1'
 
@@ -303,28 +310,26 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         print('Saved ' + savefile)
 
 
-
         print('Saved MCS no.'+str(gi)+ ' as netcdf.')
-
 
 
 ### Inputs:
 
-data_path = '/users/global/cornkle/data/CP4/CLOVER/CP4hist'  # CP4 data directory
-ancils_path = '/users/global/cornkle/data/CP4/ANCILS' # directory with seamask file inside
-out_path = '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA'  # out directory to save MCS files
-box = [-13, 13, 10, 19]  # W- E , S - N geographical coordinates box
+data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
+ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamask file inside
+out_path = cnst.network_data + 'data/CP4/CLOVER'  # out directory to save MCS files
+box = [-12, 12, 4.5, 8.5]  # W- E , S - N geographical coordinates box
 datestring = '19990401'  # set this to date of file
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = np.array([ '07', '08'])
+months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
 days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
-vars = {}   # dictionary which contains info on pressure level and hour extraction for wanted variables
+vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], 18)
-vars['lsRain'] =  ([], 12)   # pressure levels, hour
+vars['totRain'] =  ([], 18)   # pressure levels, hour # totRain for CP25, lsRain for CP
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
@@ -332,10 +337,11 @@ vars['q_pl'] = ([925], 12)  # 925, 650 available
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))
+files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
 
-for d in datelist:
+dummy = xr.open_mfdataset(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc', autoclose=True)
+
+time = dummy['lw_out_PBLtop'][dummy['time.hour']==18].time
+
+for d in time:
     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
-
-
-
-

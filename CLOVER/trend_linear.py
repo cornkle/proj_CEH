@@ -93,12 +93,12 @@ def trend_all():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=slice(850,925)).mean('level')
-    t2d = da['t'].sel(level=slice(850, 925)).mean('level')
-    u925 = da['u'].sel(level=slice(850, 925)).mean('level')
-    u600 = da['u'].sel(level=slice(550,700)).mean('level')
+    q = da['q'].sel(level=slice(924,925)).mean('level')
+    t2d = da['t'].sel(level=slice(924, 925)).mean('level')
+    u925 = da['u'].sel(level=slice(924, 925)).mean('level')
+    u600 = da['u'].sel(level=slice(600,601)).mean('level')
 
-    shear = u600#-u925
+    shear = u600-u925
 
     q.values = q.values*1000
 

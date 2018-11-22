@@ -23,7 +23,6 @@ def dictionary():
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat',
             'tmin', 'tmean', 't10', 't90']
 
-
     for v in vars:
         dic[v] = []
     return dic
@@ -33,7 +32,7 @@ def perSys():
     pool = multiprocessing.Pool(processes=5)
     tthresh = '-50'
 
-    files = glob.glob(cnst.GRIDSAT + '/gridsat_WA_-50_*.nc')
+    files = glob.glob(cnst.CP4_PATH + '/gridsat_WA_-50_*.nc')
 
     print('Nb files', len(files))
     #mdic = dictionary() #defaultdict(list)
@@ -58,27 +57,30 @@ def file_loop(f):
 
     df = xr.open_dataset(f)
     df = df.sel(lat=slice(-4,25), lon=slice(-18,20))
-
     for d in df['tir']:
 
         labels, goodinds = ua.blob_define(d.values, -50, minmax_area=[83, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
-
         for g in goodinds:
 
             if g==0:
                 continue
 
+
+
             pos = np.where(labels==g)
+
             dic = dictionary()
 
             ts = pd.to_datetime(d['time'].values)
             date = ts.strftime('%Y-%m-%d_%H:%M:%S')
 
             dic['date'] = ts
+
+
             dic['month'] = int(d['time.month'])
             dic['year'] = int(d['time.year'])
 
-            storm = d.values[pos]
+            storm = d[pos]
 
             dic['area'] = storm.size
             dic['70area'] = np.sum(storm<=-70)
