@@ -18,7 +18,7 @@ ERA_MONTHLY_PL_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_pl_fu
 ERA_MONTHLY_SRFC_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc'
 ERA_DAILY_SURFACE =   local_data + 'ERA-I/daily_2006-2010_12UTCsrfc.nc'
 
-ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_2004-2014_pl.nc'
+ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_1983-2014_pl.nc'
 # ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
 # ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
 ERA5 = local_data + 'ERA5/'

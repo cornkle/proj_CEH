@@ -177,7 +177,7 @@ def tgrad_shear_trend():
 
     srfc = cnst.ERA_MONTHLY_SRFC
     pl = cnst.ERA_MONTHLY_PL
-    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc'
+    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc'
     out = cnst.network_data + 'figs/CLOVER/months/'
 
     #

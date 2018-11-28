@@ -79,7 +79,7 @@ def trend_all():
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    box=[-18,55,-35,35]#[-18,40,0,25]
+    box=[-18,40,0,25] #[-18,55,-35,35]#
 
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
@@ -121,7 +121,7 @@ def trend_all():
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
     shear = xr.DataArray(shear, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months=[1, 2,3,4,5,6,7,8,9,10,11,12]
+    months=[3, 10]
 
     dicm = {}
     dicmean = {}
@@ -152,15 +152,18 @@ def trend_all():
         sheartrend_unstacked = sheartrend * 10.  # warming over decade
         tirtrend_unstacked = ((tirtrend.values)*10. / tirm_mean.values) * 100.
 
-        dicm[m[0]] = tirtrend_unstacked
-        dicmean[m[0]] = tirm_mean
+        tirtrend_out = xr.DataArray(tirtrend_unstacked, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
+        tirmean_out = xr.DataArray(tirm_mean, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
+
+        dicm[m[0]] = tirtrend_out
+        dicmean[m[0]] = tirmean_out
 
         t_da = t2trend_unstacked
         q_da = qtrend_unstacked
         s_da = sheartrend_unstacked
         ti_da = tirtrend_unstacked
 
-        fp = fpath + 'trend_mk_-70C_synop_sig_PANAFRICA_sig_'+str(m[0]).zfill(2)+'.png'
+        fp = fpath + 'trend_mk_-70C_synop_sig_TEST_'+str(m[0]).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         # f = plt.figure(figsize=(8, 5), dpi=300)
@@ -232,9 +235,9 @@ def trend_all():
         plt.close('all')
 
     pkl.dump(dicm,
-             open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_PANAFRICA.p',
+             open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_test.p',
                   'wb'))
 
     pkl.dump(dicmean,
-                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_PANAFRICA.p',
+                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_test.p',
                       'wb'))

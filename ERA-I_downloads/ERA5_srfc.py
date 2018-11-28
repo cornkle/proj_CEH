@@ -1,10 +1,11 @@
 from ecmwfapi import ECMWFDataServer
+from utils import constants as cnst
 
 
 
 def download(year,month):
     server = ECMWFDataServer()
-    file = "/prj/AMMA2050/ERA5/surface/ERA5_"+str(year)+"_"+str(month).zfill(2)+"_srfc.nc"
+    file = cnst.local_data + "ERA5/ERA5_"+str(year)+"_"+str(month).zfill(2)+"_srfc.nc"
     server.retrieve({
         "class": "ea",
         "dataset": "era5",
@@ -23,6 +24,6 @@ def download(year,month):
     })
 
 
-for y in range(2006,2008):
+for y in range(2000,2006):
     for m in range(1,13):
        download(y,m)

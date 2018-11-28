@@ -18,14 +18,15 @@ def corr_box():
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_PANAFRICA.p', 'rb'))
-    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_PANAFRICA.p', 'rb'))
+    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC.p', 'rb'))
+    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC.p', 'rb'))
 
-    mcsbox = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc'
+    mcsbox = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc'
     mcs_temp = xr.open_dataset(mcsbox)
     mcs_temp = mcs_temp['tir']
 
-    box=[-18,55,-35,35]
+    #box=[-18,55,-35,35]
+    box = [-18, 40, 0, 25]
 
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
@@ -39,10 +40,10 @@ def corr_box():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=slice(690, 700)).mean('level')
-    t2 = da['t'].sel(level=slice(850, 925)).mean('level')
-    u925 = da['u'].sel(level=slice(850, 925)).mean('level')
-    u600 = da['r'].sel(level=slice(690, 700)).mean('level')
+    q = da['q'].sel(level=925)#(level=slice(690, 700)).mean('level')
+    t2 = da['t'].sel(level=925)#(level=slice(850, 925)).mean('level')
+    u925 = da['u'].sel(level=925)#(level=slice(850, 925)).mean('level')
+    u600 = da['u'].sel(level=600)#level=slice(690, 700)).mean('level')
 
     shear = u600-u925 # u600-
 
@@ -53,7 +54,7 @@ def corr_box():
 
 
     months = np.arange(1, 13)
-    months = [1,2,3,4,5,6,7,8,9,10,11,12]
+    months = [3,10]
 
     def array_juggling(data, month, hour=None):
 
@@ -68,10 +69,10 @@ def corr_box():
 
         data_mean = data.mean(axis=0)
 
-        diff = xr.DataArray(data_years.values[1::, :, :] - data_years.values[0:-1, :, :],
-                            coords=[data_years.year[1::], data.latitude, data.longitude], dims=['year','latitude', 'longitude'] )
-        # diff = xr.DataArray(data_years.values, coords=[data_years.year, data.latitude, data.longitude],
-        #                     dims=['year', 'latitude', 'longitude'])
+        # diff = xr.DataArray(data_years.values[1::, :, :] - data_years.values[0:-1, :, :],
+        #                     coords=[data_years.year[1::], data.latitude, data.longitude], dims=['year','latitude', 'longitude'] )
+        diff = xr.DataArray(data_years.values, coords=[data_years.year, data.latitude, data.longitude],
+                            dims=['year', 'latitude', 'longitude'])
         # unstack back to lat lon coordinates
         return diff, data_mean
 
@@ -85,7 +86,7 @@ def corr_box():
         if bsingle:
             bb = b
         else:
-            bb = b.sel(latitude=slice(-18, -9), longitude=slice(16, 30)).mean(dim=['latitude', 'longitude'])
+            bb = b.sel(latitude=slice(4.5, 8), longitude=slice(-10, 11)).mean(dim=['latitude', 'longitude'])
 
         for lat in a.latitude.values:
             for lon in a.longitude.values:
@@ -97,7 +98,6 @@ def corr_box():
                 else:
                     r, p = stats.pearsonr(aa.values, bb.values)
                     pf = np.polyfit(aa.values, bb.values, 1)
-
 
 
                 slope = pf[0]
@@ -113,6 +113,7 @@ def corr_box():
         return ds
 
     for m in months:
+
         t2diff, t2year = array_juggling(t2, m, hour=12) #
         qdiff, qyear = array_juggling(q, m, hour=12) #, hour=12
         shdiff, sheyear = array_juggling(shear, m, hour=12) #, hour=12
@@ -120,9 +121,9 @@ def corr_box():
 
         mcs_month = mcs_temp[mcs_temp['time.month'] == m]
 
-        tirdiff = mcs_month.values[1::]-mcs_month.values[0:-1]
+        #tirdiff = mcs_month.values[1::]-mcs_month.values[0:-1]
 
-        bs = True
+        bs = False
         try:
             qcorr = corr(qdiff, tirdiff, bsingle=bs)
         except:
@@ -130,24 +131,25 @@ def corr_box():
         shearcorr = corr(shdiff, tirdiff, bsingle=bs)
         tcorr = corr(t2diff, tirdiff, bsingle=bs)
 
+
         # pthresh = us.fdr_threshold(qcorr['pval'].values[np.isfinite(qcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
         pthresh = 0.05
         #cloud['slope'].values[cloud['pval'].values > pthresh] = np.nan
-        qcorr['r'].values[qcorr['pval'].values > pthresh] = 0
+        #qcorr['r'].values[qcorr['pval'].values > pthresh] = 0
 
         # pthresh = us.fdr_threshold(shearcorr['pval'].values[np.isfinite(shearcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        shearcorr['r'].values[shearcorr['pval'].values > pthresh] = 0
+        #shearcorr['r'].values[shearcorr['pval'].values > pthresh] = 0
 
         # pthresh = us.fdr_threshold(tcorr['pval'].values[np.isfinite(tcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        tcorr['r'].values[tcorr['pval'].values > pthresh] = 0
+        #tcorr['r'].values[tcorr['pval'].values > pthresh] = 0
 
         dicm[m][dicm[m]==0] = np.nan
 
-
-        fp = fpath + 'corr_box_SYNOP_SA' + str(m).zfill(2) + '.png'
+        print('plot')
+        fp = fpath + 'corr_box_SYNOP_TEST' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(13,7), dpi=300)
@@ -155,7 +157,7 @@ def corr_box():
         # map.set_shapefile(rivers=True)
         # bla = ma.masked_invalid(tcorr['r'].values)
 
-        map.set_data(tcorr['r'].values, interp='linear')  # interp='linear'
+        map.set_data(tcorr['r'], interp='linear')  # interp='linear'
         contours = map.set_contour(t2year-273.15, interp='linear', levels=np.arange(24,37,4), cmap='inferno')
 
         #plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
@@ -172,14 +174,14 @@ def corr_box():
 
         ax3 = f.add_subplot(223)
         map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
+        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])
         map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,3), cmap='inferno')
-        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1)
+          # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='600-925hPa Zonal wind shear')
 
         ax4 = f.add_subplot(224)
         map.set_contour(dicmean[m], interp='linear', levels=[0.1,0.5,1,2.5], cmap='inferno')
         map.set_data(dicm[m])  #
-
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
         map.visualize(ax=ax4, title='-70C cloud cover change', cbar_title='$\%$ decade-1')
