@@ -33,8 +33,8 @@ def run_hours():
 def composite(hour):
     pool = multiprocessing.Pool(processes=5)
 
-    file = constants.MCS_CENTRE70
-    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet/large_scale'
+    file = constants.MCS_POINTS_DOM
+    path = '/users/global/cornkle/figs/LSTA-bullshit/AGU' #corrected_LSTA/wavelet/large_scale
 
     hour = hour
 

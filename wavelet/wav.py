@@ -54,7 +54,7 @@ class wavelet(object):
         """
 
         wav_coeffs = w2d.cwt2d(data, self.res, self.res, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
-        wav_coeffs_pure = wav_coeffs.copy()
+        wav_coeffs_pure = np.real(wav_coeffs.copy())
         if le_thresh!=None:
             wav_coeffs[np.real(wav_coeffs <= le_thresh)] = fill
 
@@ -67,4 +67,3 @@ class wavelet(object):
         # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - we emphasize small scales more.
 
         return wav_coeffs_pure, norm_power
-

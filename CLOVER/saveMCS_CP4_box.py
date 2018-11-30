@@ -94,8 +94,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
         arr = xr.open_mfdataset(filepath, autoclose=True)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-        dar = dar.sel(time=datestring, method='nearest')
-        #ipdb.set_trace()
+        pdt = pd.to_datetime(datestring.values)
+        pdt = pdt.replace(hour=h)
+        dar = dar.sel(time=pdt, method='nearest')
+        ipdb.set_trace()
         if int(dar['time.hour'])!=h:
             print('Wrong hour')
             return

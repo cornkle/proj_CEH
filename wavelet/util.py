@@ -39,6 +39,7 @@ DATASETS = {
 
 def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
 
+
     dic = {}
 
     if dataset in DATASETS:
@@ -49,7 +50,7 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
         return
 
     #2D continuous wavelet analysis:
-    #TIR   
+    #TIR
     tir=t.copy()
     tir[tir>0] = 0
     tir = tir - np.mean(tir)
@@ -60,7 +61,7 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
     #Precip
     coeffsPCP, powerPCP = obj.calc_coeffs(p, le_thresh=0, fill=-0.01)
-        
+
     dic['t']=powerTIR
     dic['p']=powerPCP
     dic['scales'] = obj.scales
@@ -68,7 +69,7 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
     return dic
 
 
-def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+def applyHat(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
     dic = {}
 
@@ -80,14 +81,14 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
         return
 
     tir = t.copy()
-    tir[tir > 0] = 0
-    tir = tir - np.mean(tir)
+    #tir[tir > 0] = 0
+    tir = tir #- np.mean(tir)
 
     obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
 
-    dic['t'] = powerTIR
+    dic['power'] = powerTIR
     dic['scales'] = obj.scales
     dic['res'] = obj.res
     dic['coeffs'] = coeffsTIR
@@ -99,8 +100,12 @@ def LSTA_maxPowerScale(t, dx=None, dist=None, start=None, nb=None, dataset=None)
     """
     Calculates dominant scale per pixel in an image i.e. it scans each scale column in the 3d wavelet
      power spectrum and identifies maximum power.
-    :param t:
-    :param dt:
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
     :return:
     """
     dic = {}
@@ -156,12 +161,12 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
     Calculates local power maxima in a 2d image within a scale column
     allowing superimposed maxima detection i.e. preferential pick
      of small scales
-    :param t:
-    :param dx:
-    :param dist:
-    :param start:
-    :param nb:
-    :param dataset:
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
     :return:
     """
 
@@ -217,7 +222,17 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
 #
 #
 #
-def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom=None):
+def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom=False):
+    """
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
+    :param dom: boolean, true if dominant scale should additionally be returned in the dictionary
+    :return: wavelet dictionary
+    """
 
     def dom_get(wseries, tpoint, scales):
 

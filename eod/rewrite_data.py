@@ -11,7 +11,7 @@ import numpy as np
 import os
 from utils import u_arrays as uarr
 import pandas as pd
-from utils import u_time as ut, u_interpolate as uint
+from utils import u_time as ut, u_interpolate as uint, constants as cnst
 import datetime as dt
 from utils import u_grid
 import xarray as xr
@@ -33,59 +33,59 @@ def rewriteMsgLonLat_WA():
     lon.shape = llShape
 
     llsavefile = '/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon'
-    np.savez(llsavefile,lon=lon,lat=lat)    
-    
+    np.savez(llsavefile,lon=lon,lat=lat)
+
 
 #========================================================================================
 # Reads Chris' METEOSAT cell table files, gives them a header and just reads columns
-# of interest for comparison with TRMM. Creates an easy to read object. 
+# of interest for comparison with TRMM. Creates an easy to read object.
 
 # Table files: every 15/30 minutes, identified single systems with a random number
-# Columns: 5-area (km2), 6/7-lat/lon, 8-min col number (start at 1), 
+# Columns: 5-area (km2), 6/7-lat/lon, 8-min col number (start at 1),
 # 12 - mean T of cell, 13 -Temp treshold to identify cell
 #========================================================================================
 def parseCellTab(tab):
-     
+
     dt.datetime.strptime('2004_0601_1315', '%Y_%m%d_%H%M')
-  #  parser = lambda date: pd.datetime.strptime(date, '%Y_%m%d_%h%M')    
+  #  parser = lambda date: pd.datetime.strptime(date, '%Y_%m%d_%h%M')
 
     df = pd.read_csv(tab, sep='\s+', header=None, converters={'Mday': lambda x: str(x)}, names=["Year", "Mday", "Slot", "Pixel", "Area", "Lat", "Lon", "Mincol", "a", "b", "c", "Temp", "Tresh"])
-    
+
     sec = df["Slot"]*30.*60.
     t = ut.sec_to_time(sec[0])
     df["Hour"] = df["Slot"]*0+t.hour
     df["Minute"] = df["Slot"]*0+t.minute
     df["Hour"] = df.Hour.map("{:02}".format)
     df["Minute"] = df.Minute.map("{:02}".format)
-    
+
     small=df.loc[:, ["Pixel", "Area", "Lat", "Lon", "Mincol", "Temp", "Tresh"]]
-    
-    small["Date"] = df.Year.astype(str).str.cat(df.Mday.astype(str), sep='_') 
+
+    small["Date"] = df.Year.astype(str).str.cat(df.Mday.astype(str), sep='_')
     small["Date"] = small.Date.astype(str).str.cat(df.Hour.astype(str), sep='_')
-    small["Date"] = small.Date.astype(str).str.cat(df.Minute.astype(str), sep='') 
+    small["Date"] = small.Date.astype(str).str.cat(df.Minute.astype(str), sep='')
     small["Date"] = pd.to_datetime(small["Date"], format='%Y_%m%d_%H%M')
-    
-    return small 
-    
-    
+
+    return small
+
+
 #=========================================================================================
-# Rewrites the METEOSAT cell table files from parseCellTables() object to nice *.txt files. 
+# Rewrites the METEOSAT cell table files from parseCellTables() object to nice *.txt files.
 #=========================================================================================
 def rewriteCellTab():
 
-    path = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/"    
+    path = "/users/global/cornkle/data/OBS/meteosat/bigcell_area_table/"
     out = path + 'rewrite/'
     print(out)
     os.system('rm '+out+'*.txt')
     ok=uarr.locate("*.txt", path)
-    
+
     for a in ok:
         print('Doing '+a)
         tab = parseCellTab(a)
         minute=tab["Date"][0].minute
         hour=tab["Date"][0].hour
-        tab.to_csv(out+'cell_40c_'+str(hour).zfill(2)+str(minute).zfill(2)+'_JJAS.txt')    
-    
+        tab.to_csv(out+'cell_40c_'+str(hour).zfill(2)+str(minute).zfill(2)+'_JJAS.txt')
+
 #========================================================================================
 # Rewrites 350x728 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
@@ -151,7 +151,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
 #  nx : pixel in x direction
 #========================================================================================
 
-def rewriteLSTA_toNetcdf(file, write=False):
+def rewriteLSTA_toNetcdf(file, interp, write=None):
 
     out = file.replace('lsta_raw_binary_new', 'lsta_netcdf_new')
     if '.gz' in out:
@@ -165,7 +165,7 @@ def rewriteLSTA_toNetcdf(file, write=False):
     #     print('File exists, continue: ', out)
     #     return
 
-    ll = np.load('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
+    ll = np.load(cnst.network_data + 'data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
 
     blat = ll['lat']
     blon = ll['lon']
@@ -192,32 +192,33 @@ def rewriteLSTA_toNetcdf(file, write=False):
 
     lat_regular = np.arange(latmin + 10*dist, latmax - 10*dist , dist)
     lon_regular = np.arange(lonmin , lonmax  , dist)
-    #
-    # # interpolation weights for new grid
-    # inds, weights, shape = uint.interpolation_weights(blon,blat, lon_regular,
-    #                                                   lat_regular)
 
-    ds = xr.Dataset(coords={'time':  date,
-                                             'lat':  lat_regular,
-                                             'lon': lon_regular})
+    ds = xr.Dataset(coords={'time':  date,'lat':  interp['y'],'lon': interp['x']})
 
     if rrShape[0]*rrShape[1]*2 == rr.size:
         rr2 = rr[int(rr.size/2)::].copy()
         rr2.shape = rrShape
-        rr2_regridded = uint.griddata_comparison(rr2, blon, blat, lon_regular, lat_regular)
+        #rr2_regridded = uint.interpolate_data(rr2, interp['inds'], interp['weights'], interp['shape'])
+        rr2_regridded = uint.griddata_int(rr2, blon, blat, lon_regular, lat_regular, isll=False, method='nearest')
+
 
         ds['NbSlot'] = (('time', 'lat', 'lon'), rr2_regridded[None, ...])
 
         rr3 = rr[0:int(rr.size/2)].copy()
         rr3.shape = rrShape
         rr3[rr3 == -999] = np.nan
-        rr3_regridded = uint.griddata_comparison(rr3, blon, blat, lon_regular, lat_regular)
+
+        #rr3_regridded = uint.interpolate_data(rr3, interp['inds'], interp['weights'], interp['shape'])
+        rr3_regridded = uint.griddata_int(rr3, blon, blat, lon_regular, lat_regular, isll=False, method='nearest')
 
         ds['LSTA'] = (('time', 'lat', 'lon'), rr3_regridded[None, ...])
+
     else:
         rr.shape = rrShape
         rr[rr == -999] = np.nan
-        rr_regridded = uint.griddata_comparison(rr, blon, blat, lon_regular, lat_regular)
+        #rr_regridded = uint.interpolate_data(rr, interp['inds'], interp['weights'], interp['shape'])
+        rr_regridded = uint.griddata_int(rr, blon, blat, lon_regular, lat_regular, isll=False, method='nearest')
+
         ds['LSTA'] = (('time', 'lat', 'lon'), rr_regridded[None, ...])
 
 
@@ -232,7 +233,7 @@ def rewriteLSTA_toNetcdf(file, write=False):
     # if addVar:
     #     ds['NbSlot'] = (('time', 'lat', 'lon'), rr2[None, ...])
 
-    if write:
+    if write is not None:
         try:
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}

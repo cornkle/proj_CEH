@@ -15,6 +15,7 @@ matplotlib.rc('ytick', labelsize=10)
 import pdb
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
+from utils import constants as cnst
 
 def diurnal_loop():
 
@@ -48,7 +49,7 @@ def cut_kernel(zpos, ypos, xpos, da):
 
 def composite(hour):
     #hour = 18
-    mds = xr.open_mfdataset('/users/global/cornkle/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_*.nc', autoclose=True)
+    mds = xr.open_mfdataset(cnst.network_data + '/data/OBS/MSG_LSTA/lsta_netcdf/lsta_daily_*.nc', autoclose=True)
     mds = mds.sel(lat=slice(10,17), lon=slice(-10,10))
     #mds = mds.isel(time=slice(150,300))
     pos = np.where((mds['cell'].values==hour) )
@@ -94,19 +95,10 @@ def composite(hour):
 
 
     dic = { 'all' : all,
-            'point' : point,
+            'point' : point}
 
-    }
-    pdb.set_trace()
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/histo_test"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/P_LSTA_givenCore/histo_test"+str(hour).zfill(2)+".p", "wb"))
 
-    #
-    # plt.figure()
-    # nball, bins, v = plt.hist(all, bins=np.arange(-10,10,1), normed=True, edgecolor='k', color=None, alpha=0.3)
-    # nbpoint, bins, v = plt.hist(point, bins=np.arange(-10,10,1), normed=True,edgecolor='k', color=None, alpha=0.3)
-
-
-    #return nball, nbpoint, bins
 
 def plot():
 
@@ -238,4 +230,3 @@ def plot_diurn():
     plt.tight_layout()
     plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')  # transform=ax.transAxes,
-

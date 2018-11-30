@@ -10,7 +10,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
-from utils import constants as cnst
+from utils import constants as cnst, u_interpolate as uint
 
 def saveNetcdf():
 
@@ -56,19 +56,34 @@ def saveDailyBlobs():
 
 def saveNetcdf_blobs():
 
-    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary_new'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = cnst.network_data + 'data/OBS/MSG_LSTA/lsta_raw_binary_new'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     td = pd.Timedelta('16 hours')
     files = glob.glob(modis_folder + '/lsta_daily_*.gra') #2*.gra')
 
-    msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
     msg = xr.open_dataarray(msgfile)
 
+    ll = np.load(cnst.network_data + 'data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
+    blat = ll['lat']
+    blon = ll['lon']
 
+    latmin = np.min(blat)
+    latmax = np.max(blat)
+    lonmin = -9.98 #np.min(blon)
+    lonmax = 9.98 #np.max(blon)
+    dist = np.round(np.float(np.mean(blon[0,:][1::] - blon[0,:][0:-1])), decimals=4)
+
+    lat_regular = np.arange(latmin + 10*dist, latmax - 10*dist , dist)
+    lon_regular = np.arange(lonmin , lonmax  , dist)
+
+    inds, weights, shape = uint.interpolation_weights(blon, blat, lon_regular, lat_regular)
+    int_input = {'x' : lon_regular, 'y' : lat_regular, 'inds' : inds, 'weights' : weights, 'shape' : shape}
 
     for f in files:
-        ds,out = rewrite_data.rewriteLSTA_toNetcdf(f, write=False)
+
+        ds,out = rewrite_data.rewriteLSTA_toNetcdf(f, int_input)
         ds['LSTA'].values[ds['LSTA'].values < -800] = np.nan
-        ds['LSTA'].values = ds['LSTA'].values - np.nanmean(ds['LSTA'].values)
+        #ds['LSTA'].values = ds['LSTA'].values - np.nanmean(ds['LSTA'].values)
 
         m = msg[(msg['time']-td).values==ds['time'].values]
         m = m.sel(lat=slice(10.3,19.7), lon=slice(-9.7,9.7))
