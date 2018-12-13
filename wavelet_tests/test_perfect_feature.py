@@ -15,17 +15,17 @@ def ellipse_simple():
     matplotlib.rc('xtick', labelsize=10)
     matplotlib.rc('ytick', labelsize=10)
 
-    ellipse = np.zeros((100,100))
+    ellipse = np.zeros((100,100))+20
 
     ycirc, xcirc = ua.draw_ellipse(10,10,4, 4)
     yycirc, xxcirc = ua.draw_ellipse(25, 50, 10, 10)
 
 
-    ellipse[ycirc,xcirc] = 20
-    ellipse[yycirc, xxcirc] = 20
+    ellipse[ycirc,xcirc] = 30
+    ellipse[yycirc, xxcirc] = 30
 
 
-    wav = util.waveletLSTA_power(ellipse, 1)
+    wav = util.applyHat(ellipse, dataset='METSRFC')
     lab = 'power'
     wll = wav[lab]
 
@@ -35,8 +35,10 @@ def ellipse_simple():
     f = plt.figure()
     plt.imshow(ellipse)
 
+
     f = plt.figure()
     plt.imshow(wll[0,:,:])
+
 
     print('Small scale max', np.max(np.abs(wll[0,:,:])))
 
@@ -44,15 +46,17 @@ def ellipse_simple():
     plt.imshow(wll[1, :, :])
     print('Mid scale max', np.max(np.abs(wll[1, :, :])))
 
+
     f = plt.figure()
     plt.imshow(wll[2, :, :])
     print('Large scale max', np.max(np.abs(wll[2, :, :])))
+
 
     f = plt.figure()
 
     plt.contourf(np.arange(wll.shape[1]),wav['scales'],wll[:,60,:])
     plt.colorbar()
-
+    plt.show()
     print((np.max(wll[1, :, :])-np.max(wll[0,:,:])) / np.max(wll[1, :, :]))
 
 def ellipse():

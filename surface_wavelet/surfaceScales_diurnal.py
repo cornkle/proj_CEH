@@ -12,7 +12,7 @@ import matplotlib
 import multiprocessing
 import pdb
 import pandas as pd
-from utils import constants
+from utils import constants as cnst
 import pickle as pkl
 import statsmodels.stats.proportion as prop
 
@@ -53,11 +53,11 @@ def loop():
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/dominant_scales_save/scales.p", "rb"))
+    dic = pkl.load( open(cnst.network_data + "figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
 
     bin = np.array(dic['bin'])
     center = bin[0:-1] + (bin[1::]-bin[0:-1])
-    pdb.set_trace()
+
     data = dic['blob']- (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
     db = dic['blobc']
     filler = np.zeros_like(db)
@@ -89,7 +89,7 @@ def plot():
     ax1 = ax.twinx()
     ax1.set_yticks(np.arange(dic['blob'].shape[0])+1, minor=False)
     ax1.set_yticklabels(dic['nblobs'])
-
+    plt.show()
     print(np.sum(dic['blobc']>0)/np.sum(dic['nblobs']))
 
     print(np.sum(np.isfinite(dic['blobc'])))

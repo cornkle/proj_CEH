@@ -4,12 +4,12 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
+import ipdb
 import os
 import xarray as xr
 import numpy as np
 import pandas as pd
-from utils import constants, u_met
+from utils import constants as cnst, u_met
 from scipy.interpolate import griddata
 
 
@@ -54,8 +54,12 @@ def rewrite_ERA_latflip(file):
 
 
 def saveClimatology():
+    flist = []
+    for y in range(2006,2011):
+        fs = glob.glob(cnst.local_data + '/ERA5/pressure_levels/ERA5_*'+str(y)+'*_pl.nc')
+        flist.extend(fs)
 
-    mf = xr.open_mfdataset('/localscratch/wllf030/cornkle/ERA5/ERA5_*_pls.nc', concat_dim='time')
+    mf = xr.open_mfdataset(flist, concat_dim='time')
     #mf['ymonth'] = ('time', [str(y) + '-' + str(m) for (y, m) in zip(mf['time.year'].values, mf['time.month'].values)])
 
     mf['monthHour'] = (
@@ -63,5 +67,4 @@ def saveClimatology():
     clim = mf.groupby('monthHour').mean(dim='time')
     for _, sl in clim.groupby('monthHour'):
 
-        sl.to_netcdf('/localscratch/wllf030/cornkle/ERA5/CLIM/ERA5_2008-2010_CLIM_'+str(sl.monthHour.values)+'_pls.nc')
-
+        sl.to_netcdf(cnst.local_data + '/ERA5/CLIM/ERA5_2006-2010_CLIM_'+str(sl.monthHour.values)+'_pl.nc')

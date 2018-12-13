@@ -10,9 +10,9 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
+import ipdb
 import pandas as pd
-from wavelet import wutil
+from wavelet import util as wutil
 from utils import u_arrays, constants as cnst, u_met
 from scipy.stats import ttest_ind as ttest
 from scipy.interpolate import griddata
@@ -33,7 +33,7 @@ def run_hours():
 def composite(hour):
     pool = multiprocessing.Pool(processes=5)
 
-    file = constants.MCS_POINTS_DOM
+    file = cnst.MCS_POINTS_DOM #MCS_TMIN #
     path = cnst.network_data + '/figs/LSTA-bullshit/AGU' #corrected_LSTA/wavelet/large_scale
 
     hour = hour
@@ -42,14 +42,15 @@ def composite(hour):
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
-    msg = msg.sel(lat=slice(10.2,18.5), lon=slice(-9.7, 9.7))
-
+    msg = msg.sel(lat=slice(10.2,19.3), lon=slice(-9.7, 9.7))
     res = pool.map(file_loop, msg)
     pool.close()
+    print('return parallel')
+    # res = []
+    # for m in msg[0:30]:
+    #     out = file_loop(m)
+    #     res.append(out)
 
-    # for m in msg[2:5]:
-    #     file_loop(m)
-    # return
     res = [x for x in res if x is not None]
 
     snpos_list = []
@@ -58,6 +59,14 @@ def composite(hour):
     rsnpos_list = []
     rwepos_list = []
 
+    vkernel_list = []
+    rkernel_list = []
+
+    vkernel_cnt = []
+    rkernel_cnt = []
+
+    lsta_list = []
+
     for r in res:
         snpos_list.append(np.squeeze(r[0]))
         wepos_list.append(np.squeeze(r[1]))
@@ -65,11 +74,21 @@ def composite(hour):
         rsnpos_list.append(np.squeeze(r[2]))
         rwepos_list.append(np.squeeze(r[3]))
 
-        scales = r[4]
+        vkernel_list.append(r[4])
+        rkernel_list.append(r[5])
 
+        scales = r[6]
 
-    dic = collections.OrderedDict([('SN-pos' , [snpos_list_dry, rsnpos_list_dry]),
-                                   ('WE-pos' , [wepos_list_dry, rwepos_list_dry]),
+        vkernel_cnt.append(r[7])
+        rkernel_cnt.append(r[8])
+
+        lsta_list.append(r[9])
+
+    dic = collections.OrderedDict([('SN-pos' , [snpos_list, rsnpos_list]),
+                                   ('WE-pos' , [wepos_list, rwepos_list]),
+                                   ('kernel' , [vkernel_list, rkernel_list]),
+                                   ('lsta' , [lsta_list]),
+                                   ('cnt' , [vkernel_cnt, rkernel_cnt]),
                                    ('scales' , scales)])
 
     keys = list(dic.keys())
@@ -78,136 +97,54 @@ def composite(hour):
         if l == 'scales':
             continue
         (dic[l])[0] = np.squeeze(np.vstack((dic[l])[0]))
-        (dic[l])[1] = np.squeeze(np.vstack((dic[l])[1]))
+        try:
+            (dic[l])[1] = np.squeeze(np.vstack((dic[l])[1]))
+        except IndexError:
+            continue
+
+    dic['nbcores'] = dic['SN-pos'][0].shape[0]
+    dic['nbrcores'] = dic['SN-pos'][1].shape[0]
 
     for l in keys:
-        if l == 'scales':
+        if (l == 'scales') | (l == 'lsta'):
             continue
-        nsstat, nspvalue = ttest(dic[l][0], dic[l][1], axis=0, equal_var=False, nan_policy='omit')
+
+        a =  dic[l][0]
+        b =  dic[l][1]
+        sa = a.shape
+        sb = b.shape
+        #if 'pos' in l:
+        #    a = (a.swapaxes(0,1).reshape(sa[1], sa[0]*sa[2]).T/np.nanstd(dic[l][0], axis=(0,2))).T.reshape(sa[1], sa[0],sa[2]).swapaxes(0,1)
+        #    b = (b.swapaxes(0,1).reshape(sb[1], sb[0]*sb[2]).T/np.nanstd(dic[l][1], axis=(0,2))).T.reshape(sb[1], sb[0], sb[2]).swapaxes(0,1)
+
+        nsstat, nspvalue = ttest(a, b, axis=0, equal_var=False, nan_policy='omit')
         mask = nspvalue < 0.05
         dic[l].append(mask)
 
-    nsstat, nspvalue = ttest(dic['SN-pos'][0], dic['SN-pos'][1], axis=0, equal_var=False, nan_policy='omit')
-    mask = nspvalue < 0.05
-    dic['SN_mask']   = mask
-
-    nsstat, nspvalue = ttest(dic['WE-pos'][0], dic['WE-pos'][1], axis=0, equal_var=False, nan_policy='omit')
-    mask = nspvalue < 0.05
-    dic['WE_mask']   = mask
+        if 'pos' in l:
+            dic[l].append(np.nanstd(dic[l][0], axis=(0,2)))
+            dic[l].append(np.nanstd(dic[l][1], axis=(0,2)))
 
     for l in keys:
         if l == 'scales':
             continue
+        if 'pos' in l:
+            (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
+            (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
+        else:
+            (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
+            try:
+                (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
+            except IndexError:
+                continue
 
-        (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-        (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
 
-
-    pkl.dump(dic, open(path+"/coeffs_test_withzero"+str(hour)+"UTC.p", "wb"))
+    pkl.dump(dic, open(path+"/coeffs_test_nans_stdkernel"+str(hour)+"UTC.p", "wb"))
     print('Save file written!')
 
 
 
-def plot(hour):
-
-    path = cnst.network_data + 'figs/LSTA-bullshit/AGU'
-    dic = pkl.load(open(path+"/coeffs_test_withzero"+str(hour)+"UTC.p", "rb"))
-
-    scales = dic['scales']
-    sn_mask = dic['SN-dw_mask']
-    we_mask = dic['WE-dw_mask']
-    del dic['scales']
-    del dic['SN-dw_mask']
-    del dic['WE-dw_mask']
-
-    keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
-
-    # for l in keys:
-    #     if keys == 'scales':
-    #         continue
-    #     (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-    #     (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-
-    l=0
-    dist=100
-
-    snblob = (dic[keys[l]])[0]#-(dic[keys[l+2]])[0]
-    snrandom = (dic[keys[l]])[1]#-(dic[keys[l+2]])[1]
-    snmask = (dic[keys[l]])[2]#-(dic[keys[l+2]])[2]
-
-    weblob = (dic[keys[l+1]])[0]#-(dic[keys[l+3]])[0]
-    werandom = (dic[keys[l+1]])[1]#-(dic[keys[l+3]])[1]
-    wemask = (dic[keys[l+1]])[2]#-(dic[keys[l+3]])[2]
-
-    l=2
-    dist=100
-
-    wet_snblob = (dic[keys[l]])[0]#-(dic[keys[l+2]])[0]
-    wet_snrandom = (dic[keys[l]])[1]#-(dic[keys[l+2]])[1]
-    wet_snmask = (dic[keys[l]])[2]#-(dic[keys[l+2]])[2]
-
-    wet_weblob = (dic[keys[l+1]])[0]#-(dic[keys[l+3]])[0]
-    wet_werandom = (dic[keys[l+1]])[1]#-(dic[keys[l+3]])[1]
-    wet_wemask = (dic[keys[l+1]])[2]#-(dic[keys[l+3]])[2]
-
-    f = plt.figure(figsize=(9, 9))
-    ax = f.add_subplot(221)
-
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales , (snblob  - snrandom) - (wet_snblob-wet_snrandom)  , cmap='RdBu_r', vmin = -0.3, vmax=0.3)
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('Scales')
-
-    plt.title('South-North scales, Nb cores: ' + str(cnt) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
-              fontsize=10)
-
-    ax = f.add_subplot(222)
-
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3,scales,   (weblob - werandom) - (wet_weblob-wet_werandom)   , cmap='RdBu_r', levels = [-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wemask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-
-    plt.title('West-East scales', fontsize=10)
-
-
-    ax = f.add_subplot(223)
-
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob - wet_snblob,  cmap='RdBu_r', vmin = -0.4, vmax=0.4) #, vmin = -0.1, vmax=0.1)
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wet_snmask, colors='none', hatches='.', levels=[0.5, 1],
-                 linewidth=0.25)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('Scales')
-
-    plt.title('South-North scales, Nb cores: ' + str(cnt) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
-              fontsize=10)
-
-    ax = f.add_subplot(224)
-
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob - wet_weblob   , cmap='RdBu_r', vmin = -0.4, vmax=0.4) # vmin = -0.1, vmax=0.1)
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wet_wemask, colors='none', hatches='.', levels=[0.5, 1],
-                 linewidth=0.25)
-
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-
-    plt.title('West-East scales', fontsize=10)
-
-    plt.tight_layout()
-    #plt.savefig(path + '/lsta_hours_'+keys[l]+'_'+str(hour)+'.png')
-    plt.show()
-
-
 def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
-
 
     dist = 100
 
@@ -216,29 +153,42 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
-    #kernel3 = kernel - np.nanmean(kernel)
-
-    if kernel.shape != (arr.shape[0], 201, 201):
+    if kernel.shape != (arr.shape[0], 2*dist+1, 2*dist+1):
         return
 
     if rotate:
         kernel = u_met.era_wind_rotate3d(kernel, date, lat, lon, level=850, ref_angle=270)
-    #
-    # f = plt.figure()
-    # plt.imshow(kernel[0,:,:], origin='lower')
 
-
-    wav_ns = np.median(kernel[:,:, 99:102], axis=2) #kernel[:,:,50] #
+    with np.errstate(invalid='ignore'):
+        wav_ns = np.nanmean(kernel[:,:, 99:102], axis=2) #kernel[:,:,50] #
     # if np.sum(np.isfinite(wav_ns)) < 0.2 * wav_ns.size:
     #     return
-    wav_we = np.median(kernel[:,99:102,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,99:102,:], axis=1) #kernel[:,50,:] #
 
-    return wav_ns, wav_we
+
+
+    return wav_ns, wav_we, kernel[[1,4,6,10], :, :]
+
+
+def cut_kernel_lsta(xpos, ypos, arr, date, lat, lon):
+
+    dist = 100
+
+    kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
+
+    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
+        return
+
+    if kernel.shape != (2*dist+1, 2*dist+1):
+        return
+
+    return kernel
 
 
 def file_loop(fi):
 
-    print('Doing day: ', fi)
+
+    print('Doing day: ', fi.time)
 
     date = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
@@ -257,17 +207,20 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
-    topo = xr.open_dataset(constants.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0]) + abs(grad[1])
 
     lsta_da = lsta['LSTA'].squeeze()
+
+    #### remove mean from LSTA
+
     # f = plt.figure()
     # plt.imshow(lsta_da, origin='lower')
 
@@ -275,19 +228,20 @@ def file_loop(fi):
         print('Not enough valid')
         return None
 
-    # lsta_da.values[np.isnan(lsta_da.values)] = 0
-    #
-    lsta_da.values[ttopo.values >= 400] = np.nan
+    lsta_da.values[np.isnan(lsta_da.values)] = 0
+
+    lsta_da.values[ttopo.values >= 450] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
-    pos = np.where((fi.values >= 5) & (fi.values < 65))#(fi.values >= 5) & (fi.values < 65))
+    pos = np.where((fi.values >= 5) & (fi.values < 65)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0):
         print('No blobs found')
         return None
 
-    wav_input = lsta_da.values
+    wav_input = lsta_da.values.copy()
     points = np.where(np.isfinite(wav_input))
     inter1 = np.where(np.isnan(wav_input))
+
     # interpolate over sea from land points
     wav_input[inter1] = 0  #halfway between minus and plus rather than interpolate
 
@@ -304,62 +258,40 @@ def file_loop(fi):
 
     wavpos = wutil.applyHat(wav_input, dataset='METSRFC')
 
-    npos = wavpos['coeffs'] < 0
-    wlpos['power'][npos] = wavpos['power'][npos]* (-1)
+    wavarr = wavpos['coeffs'].copy()
 
-    # wlpos_dry[:,inter1[0], inter1[1]]=np.nan
-    # wlpos_wet[:, inter1[0], inter1[1]] = np.nan
-    #wlpos[np.abs(wlpos)<3] = np.nan
+    for inds, wava in enumerate(wavarr):
+        wava[inter1] = np.nan
+        wavarr[inds,:,:] = wava/np.nanstd(wava)
+        #wavarr[inds, inter1[0], inter1[1]] = np.nan
 
-    xfi = fi.shape[1]
-    randx = np.random.randint(0,xfi,100)
-    if np.min(pos[0]) == 0:
-        ymin = np.min(pos[0])
-    else:
-        ymin = np.min(pos[0])-1
-    if np.max(pos[0]) == fi.shape[0]-1:
-        ymax = np.max(pos[0])
-    else:
-        ymax = np.max(pos[0])+1
-    randy = np.random.randint(ymin,ymax,100)
-    posr = (randy, randx)
-
-##############################Random loop
+    # xfi = fi.shape[1]
+    # randx = np.random.randint(0,xfi,20)
+    # if np.min(pos[0]) == 0:
+    #     ymin = np.min(pos[0])
+    # else:
+    #     ymin = np.min(pos[0])-1
+    # if np.max(pos[0]) == fi.shape[0]-1:
+    #     ymax = np.max(pos[0])
+    # else:
+    #     ymax = np.max(pos[0])+1
+    # randy = np.random.randint(-10,11,20)
+    #
+    # posr = (randy, randx)
 
     rnspos = []
     rwepos = []
-
-    for y, x in zip(posr[0], posr[1]):
-
-        lat = fi['lat'][y]
-        lon = fi['lon'][x]
-
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
-        plat = point['lat'].values
-        plon = point['lon'].values
-
-        xpos = np.where(lsta_da['lon'].values == plon)
-        xpos = int(xpos[0])
-        ypos = np.where(lsta_da['lat'].values == plat)
-        ypos = int(ypos[0])
-
-        try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
-        except TypeError:
-            print('Kernel random error')
-            continue
-
-        rnspos.append(wavpos_ns)  # north-south wavelet
-        rwepos.append(wavpos_we)  # west-east wavelet
+    rkernel = []
+    lsta = []
 
 
-###############################Blob loop
+    ###############################Blob loop
 
     nspos = []
     wepos = []
+    vkernel = []
 
     for y, x in zip(pos[0], pos[1]):
-
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
@@ -373,28 +305,71 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
 
+        try:
+            wavpos_ns, wavpos_we, vvkernel = cut_kernel(xpos, ypos, wavarr, daybefore, plon, plat, rotate=False)
+        except TypeError:
+            print('Kernel error')
+            continue
 
         try:
-            wavpos_ns, wavpos_we = cut_kernel(xpos, ypos, wlpos_dry, daybefore, plon, plat, rotate=False)
+            lsta_kernel = cut_kernel_lsta(xpos, ypos, wav_input, daybefore, plon, plat)
         except TypeError:
             print('Kernel error')
             continue
 
         nspos.append(wavpos_ns)  # north-south wavelet
         wepos.append(wavpos_we)  # west-east wavelet
+        vkernel.append(vvkernel)
+        lsta.append(lsta_kernel)
 
+        ##### random
 
+        randx = np.array(np.linspace(50,fi.shape[1]-50, 5), dtype='int16') #np.random.randint(0, fi.shape[1], 10)
+        randy = np.random.randint(-10, 11, 9)
+        #ipdb.set_trace()
+        for ry, rx in zip(randy, randx):
+
+            if y+ry < 0: ry= ry*-1
+            if y+ry > fi.shape[0]-1: ry = ry*-1
+            try:
+                lat = fi['lat'][ry+y]
+            except IndexError:
+                ipdb.set_trace()
+            lon = fi['lon'][rx]
+
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+            plat = point['lat'].values
+            plon = point['lon'].values
+
+            xpos = np.where(lsta_da['lon'].values == plon)
+            xpos = int(xpos[0])
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
+
+            try:
+                wavpos_ns, wavpos_we, rrkernel = cut_kernel(xpos, ypos, wavarr, daybefore, plon, plat, rotate=False)
+            except TypeError:
+                print('Kernel random error')
+                continue
+
+            rnspos.append(wavpos_ns)  # north-south wavelet
+            rwepos.append(wavpos_we)  # west-east wavelet
+            rkernel.append(rrkernel)
 
     if nspos == []:
         print('NorthSouth empty')
         return None
 
-    if (len(nspos_list_dry) == 1) | (len(rnspos_list_dry) == 1):
+    if (len(nspos) == 1) | (len(rnspos) == 1):
         print('NorthSouth 1')
         return None
     else:
+
         nspos_sum = np.squeeze(np.stack(nspos, axis=0))
         wepos_sum = np.squeeze(np.stack(wepos, axis=0))
+        vkernel_sum = np.nansum(np.stack(vkernel, axis=0), axis=0)[np.newaxis,...]
+        vkernel_cnt = np.sum(np.isfinite(np.stack(vkernel, axis=0)), axis=0)[np.newaxis,...]
+        lsta_sum = np.nansum(np.stack(lsta, axis=0), axis=0)[np.newaxis,...]
 
         # nspos_sum = ((nspos_sum - np.nanmin(nspos_sum, axis=2)[..., None]) /
         #         (np.nanmax(nspos_sum, axis=2) - np.nanmin(nspos_sum, axis=2))[..., None])
@@ -404,6 +379,8 @@ def file_loop(fi):
 
         rnspos_sum = np.squeeze(np.stack(rnspos, axis=0))
         rwepos_sum = np.squeeze(np.stack(rwepos, axis=0))
+        rkernel_sum = np.nansum(np.stack(rkernel, axis=0), axis=0)[np.newaxis,...]
+        rkernel_cnt = np.sum(np.isfinite(np.stack(rkernel, axis=0)), axis=0)[np.newaxis,...]
 
 
     scales = wavpos['scales']
@@ -411,229 +388,9 @@ def file_loop(fi):
     print('Returning')
 
     return (nspos_sum, wepos_sum,
-            scales,
-            rnspos_sum, rwepos_sum)
+            rnspos_sum, rwepos_sum, vkernel_sum, rkernel_sum, scales, vkernel_cnt, rkernel_cnt, lsta_sum)
 # rcns_sum, rcwe_sum, cns_sum, cwe_sum,
 
 
 if __name__ == "__main__":
     run_hours()
-
-
-def plot_gewex():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
-
-    f = plt.figure(figsize=(12,7))
-
-
-    for id, h in enumerate([18,21,0,3]):
-
-        dic = pkl.load(open(path + "/test_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
-
-        scales = dic['scales']
-        sn_mask = dic['SN-dw_mask']
-        we_mask = dic['WE-dw_mask']
-        del dic['scales']
-        del dic['SN-dw_mask']
-        del dic['WE-dw_mask']
-
-        keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
-
-
-        l = 0
-        dist = 100
-
-        snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
-        snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
-
-        weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
-        wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
-
-        snmask_r = ~snmask
-        wemask_r = ~wemask
-        we_mask_r = ~we_mask
-        sn_mask_r = ~sn_mask
-        l = 2
-        dist = 100
-
-        wet_snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        wet_snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
-        wet_snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
-
-        wet_weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        wet_werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
-        wet_wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
-
-        ax = f.add_subplot(2,4, id+1)
-
-        rand=False
-        if rand:
-            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
-
-            b= (weblob - werandom) - (wet_weblob-wet_werandom)
-        else:
-            a = (snblob  - wet_snblob )
-
-            b = (weblob - wet_weblob )
-            # b[b < 0] -= 0.03
-            # we_mask[b<-0.05]=1
-
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
-       # plt.colorbar(label='Power difference (Dry-wet)')
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, sn_mask, colors='none', hatches='.', levels=[0.5, 1],
-                     linewidth=0.25)
-        ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
-
-
-        #ax.set_xlabel('Cross-section (km)')
-        if id ==0:
-            ax.set_ylabel('Scales (km)')
-
-        plt.title('South-North | ' + str(h).zfill(2) + '00UTC',
-                  fontsize=10)
-
-        ax = f.add_subplot(2,4,id+4+1)
-
-        mp1 = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales,
-                    b , cmap='RdBu_r',
-                     levels=[-0.3, -0.2, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.2, 0.3], extend='both')
-       # plt.colorbar(label='Power difference (Dry-wet)')
-
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, we_mask, colors='none', hatches='.',
-                     levels=[0.5, 1], linewidth=0.1)
-
-        ax.set_xlabel('Cross-section (km)')
-        ax.set_xticks(np.array([-3, -2, -1,  0, 1,2, 3])*100)
-        #ax.set_xticklabels([-3, -2, -1, -0.5, 0,  0.5,1,2, 3])
-        if id == 0:
-            ax.set_ylabel('Scales (km)')
-
-        plt.title('West-East | ' + str(h).zfill(2) + '00UTC', fontsize=10)
-
-    plt.tight_layout()
-
-    f.subplots_adjust(right=0.87)
-    cax = f.add_axes([0.89, 0.57, 0.02, 0.38])
-    cbar = f.colorbar(mp1, cax)
-    cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
-
-    cax = f.add_axes([0.89, 0.08, 0.02, 0.38])
-    cbar = f.colorbar(mp1, cax)
-    cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
-
-
-    plt.show()
-
-def plot_gewex2():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
-
-    f = plt.figure(figsize=(12,7))
-
-
-    for id, h in enumerate([18,21,0,3]):
-
-        dic = pkl.load(open(path + "/c_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
-
-        scales = dic['scales']
-        sn_mask = dic['SN-dw_mask']
-        we_mask = dic['WE-dw_mask']
-        del dic['scales']
-        del dic['SN-dw_mask']
-        del dic['WE-dw_mask']
-
-        keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
-
-
-        l = 0
-        dist = 100
-
-        snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
-        snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
-
-        weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
-        wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
-
-        snmask_r = ~snmask
-        wemask_r = ~wemask
-        we_mask_r = ~we_mask
-        sn_mask_r = ~sn_mask
-        l = 2
-        dist = 100
-
-        wet_snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        wet_snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
-        wet_snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
-
-        wet_weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        wet_werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
-        wet_wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
-
-        ax = f.add_subplot(2,4, id+1)
-
-        rand=False
-        if rand:
-            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
-
-            b= (weblob - werandom) - (wet_weblob-wet_werandom)
-        else:
-            a = (snblob  - wet_snblob )
-
-            b = (weblob - wet_weblob )
-            # b[b < 0] -= 0.03
-            # we_mask[b<-0.05]=1
-
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
-       # plt.colorbar(label='Power difference (Dry-wet)')
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, sn_mask, colors='none', hatches='.', levels=[0.5, 1],
-                     linewidth=0.25)
-        ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
-
-
-        #ax.set_xlabel('Cross-section (km)')
-        if id ==0:
-            ax.set_ylabel('Scales (km)')
-
-        plt.title('South-North | ' + str(h).zfill(2) + '00UTC',
-                  fontsize=10)
-
-        ax = f.add_subplot(2,4,id+4+1)
-
-        mp1 = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales,
-                    b , cmap='RdBu_r',
-                     levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
-       # plt.colorbar(label='Power difference (Dry-wet)')
-
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, we_mask, colors='none', hatches='.',
-                     levels=[0.5, 1], linewidth=0.1)
-
-        ax.set_xlabel('Cross-section (km)')
-        ax.set_xticks(np.array([-3, -2, -1,  0, 1,2, 3])*100)
-        #ax.set_xticklabels([-3, -2, -1, -0.5, 0,  0.5,1,2, 3])
-        if id == 0:
-            ax.set_ylabel('Scales (km)')
-
-        plt.title('West-East | ' + str(h).zfill(2) + '00UTC', fontsize=10)
-
-    plt.tight_layout()
-
-    f.subplots_adjust(right=0.87)
-    cax = f.add_axes([0.89, 0.57, 0.02, 0.38])
-    cbar = f.colorbar(mp1, cax)
-    cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
-
-    cax = f.add_axes([0.89, 0.08, 0.02, 0.38])
-    cbar = f.colorbar(mp1, cax)
-    cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
-
-
-    plt.show()

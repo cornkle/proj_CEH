@@ -46,7 +46,7 @@ def composite(h):
 
     msg = msg.sel(lat=slice(10.9,19.5), lon=slice(-9.8,9.8))
 
-    dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'pcnt']) #'rano', 'rregional', 'rcnt',
+    dic = u_parallelise.run_arrays(7,file_loop,msg[0:50],['ano', 'regional', 'cnt',  'prob', 'pcnt']) #'rano', 'rregional', 'rcnt',
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
@@ -232,7 +232,6 @@ def file_loop(fi):
     if np.sum(probs_on_lsta>1) != 0:
         'Stopp!!'
         pdb.set_trace()
-
 
 
     for y, x in zip(pos[0], pos[1]):

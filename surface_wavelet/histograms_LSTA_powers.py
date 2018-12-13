@@ -26,9 +26,9 @@ def diurnal_loop():
     res = pool.map(composite, h)
     pool.close()
 
-def cut_kernel(ypos, xpos, da):
+def cut_kernel(ypos, xpos, da, shift):
 
-    pixshift = 0
+    pixshift = shift
     xpos = xpos+pixshift
 
     mdist = 2
@@ -36,10 +36,11 @@ def cut_kernel(ypos, xpos, da):
     try:
         kernel = ua.cut_kernel(da,xpos, ypos,mdist)
     except ValueError:
-        ipdb.set_trace()
+        #ipdb.set_trace()
+        return
 
     if kernel.shape != (mdist*2+1, mdist*2+1):
-        ipdb.set_trace()
+        print(kernel.shape)
         return
     try:
         lpoint = np.nanmean(kernel)
@@ -51,11 +52,11 @@ def cut_kernel(ypos, xpos, da):
     return lpoint
 
 
-def composite(hour):
+def composite(hour, extract_scale, shift):
     #hour = 18
     flist = glob.glob(cnst.network_data + '/data/OBS/MSG_LSTA/lsta_netcdf_new/lsta_daily_*.nc')
     #ipdb.set_trace()
-    flist = flist[0:500]
+    #flist = flist[0:500]
 
     print('Doing with hour ', hour)
 
@@ -82,7 +83,6 @@ def composite(hour):
             print('No blobs found')
             continue
 
-
         lsta = cur_mds['LSTA'].squeeze()
         shape = lsta.shape
 
@@ -98,8 +98,10 @@ def composite(hour):
         coeff_all = wav['coeffs']
 
         coeff_all[:,inter[0], inter[1]] = np.nan
-        sc_int = (np.isclose(wav['scales'], 30, atol=2))
-
+        print(wav['scales'])
+        print(extract_scale)
+        sc_int = (np.isclose(wav['scales'], extract_scale, atol=2)) #which scale to extract
+        print('sc_int', sc_int)
         isscale = (wav['scales'])[sc_int]
         print('chosen scale', isscale)
 
@@ -110,23 +112,23 @@ def composite(hour):
             print('Doing pos', y, x)
 
             try:
-                lpoint = cut_kernel(y, x, coeff)
+                lpoint = cut_kernel(y, x, coeff, shift)
             except TypeError:
                 continue
 
             print(lpoint)
             point.append(lpoint)
 
-            randx = np.random.randint(0, shape[1], 20)
-            randy = np.random.randint(-10, 11, 20)
+            randx = np.array(np.linspace(5,shape[1]-5, 40), dtype='int16') #np.random.randint(0, shape[1], 20)
+            randy = np.random.randint(-15, 16, 40)
 
             for ry, rx in zip(randy, randx):
 
-                if y+ry < 0: ry=0
-                if y+ry > shape[0]-1: ry = shape[0]-1
+                if y+ry < 0: ry=ry*-1
+                if y+ry > shape[0]-1: ry = ry*-1
 
                 try:
-                    apoint = cut_kernel(y+ry, rx, coeff)
+                    apoint = cut_kernel(y+ry, rx, coeff, shift)
                 except TypeError:
                     continue
 
@@ -139,16 +141,17 @@ def composite(hour):
     #all = all[np.isfinite(all)]
     #point = point[np.isfinite(point)]
 
-
     dic = { 'random' : all,
             'mcs' : point}
-
-    pkl.dump(dic, open(cnst.network_data + "figs/LSTA-bullshit/AGU/histo_test"+str(hour).zfill(2)+".p", "wb"))
+    fileout = cnst.network_data + "figs/LSTA-bullshit/AGU/histo_scale" + str(extract_scale) + '_shift' + str(shift) + '_hour'+str(hour).zfill(2)+".p"
+    pkl.dump(dic, open(fileout, "wb"))
     return dic
+    print('Dic written: '+ fileout)
+
 
 def plot():
 
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/AGU/histo_shift003.p", "rb"))
+    dic = pkl.load(open(cnst.network_data + "figs/LSTA-bullshit/AGU/histo_scale" + str(extract_scale) + '_shift' + str(shift) + '_hour'+str(hour).zfill(2)+".p", "rb"))
 
     all = dic['all']
 
@@ -199,9 +202,8 @@ def plot():
 
     # ((np.sum(point >= np.percentile(all, 75)) / point.size) -0.25) / 0.25
 
-
-
     return nball, nbpoint, bins
+
 
 
 def plot_diurn():

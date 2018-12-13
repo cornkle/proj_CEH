@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants
-
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
+import ipdb
 import pickle as pkl
 
 
@@ -22,35 +22,34 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for l in np.arange(16,24):
+    for l in np.arange(8,15):
         print('Doing '+str(l))
         composite(l)
 
 def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
-
-    file = constants.MCS_CENTRE70
+    path = cnst.network_data + '/figs/LSTA-bullshit/AGU'
+    file = cnst.MCS_POINTS_DOM
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == 17 ) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] == 7) ]
+    msg = msg[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
 
     msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
 
-
-    dic = u_parallelise.run_arrays(1,file_loop,msg,['ano', 'regional', 'cnt'])#, 'rano', 'rregional', 'rcnt'])
+    dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt'])#, 'rano', 'rregional', 'rcnt'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
+    print('File written')
+    pkl.dump(dic, open(path + "/composite_SLOT_"+str(hour).zfill(2)+".p", "wb"))
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_TEST_"+str(hour).zfill(2)+".p", "wb"))
 
 
-
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False):
+def cut_kernel(xpos, ypos, arr, date, lon, lat, t, slot_da, parallax=False, rotate=False):
 
     if parallax:
         km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
@@ -64,6 +63,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
     dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
+    #slot_kernel = u_arrays.cut_kernel(slot_da,xpos, ypos,dist)
 
     if rotate:
         kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
@@ -79,10 +79,12 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
     cnt = np.zeros_like(kernel)
     cnt[np.isfinite(kernel)] = 1
 
+    # slot_kernel[np.isnan(kernel)] = 0
+
     if kernel.shape != (201, 201):
         pdb.set_trace()
 
-    return kernel, kernel3, cnt
+    return kernel, kernel3, slot_kernel
 
 
 
@@ -106,30 +108,31 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         print('LSTA file missing')
         return None
     print('Doing '+ 'lsta_daily_' + fdate + '.nc')
 
-    topo = xr.open_dataset(constants.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0])+abs(grad[1])
 
 
     lsta_da = lsta['LSTA'].squeeze()  # should be LSTA
-    # slot_da = lsta['NbSlot'].squeeze()
+    #### remove mean from LSTA_NEW
+
+    slot_da = lsta['NbSlot'].squeeze()
     # lsta_da.values[slot_da.values>15] = np.nan # just to test cases with clouds
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.1:
         print('Not enough valid')
         return None
 
-    #lsta_da.values[np.isnan(lsta_da.values)] = 0
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where((fi.values < -20) )  #(fi.values >= 5) & (fi.values < 65), fi.values<-40
+    pos = np.where((fi.values >= 5) & (fi.values < 65) )  #(fi.values >= 5) & (fi.values < 65), fi.values<-40
 
     if (np.sum(pos) == 0):  #| (len(pos[0]) < 3)
         print('No blobs found')
@@ -190,7 +193,7 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, parallax=False, rotate=False)
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, slot_da, parallax=False, rotate=False)
         except TypeError:
             continue
 
@@ -222,7 +225,8 @@ def file_loop(fi):
 
 def plot(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_topo_"+str(hour).zfill(2)+".p", "rb"))
+    path = cnst.network_data + '/figs/LSTA-bullshit/AGU'
+    dic = pkl.load(open(path + "/composite_TEST_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = dic['ano'].shape[1]/2-1
 
@@ -300,37 +304,39 @@ def plot(h):
               fontsize=10)
 
     plt.tight_layout()
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/0-'+str(hour).zfill(2)+'_allplots.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig(cnst.network_data + "/figs/LSTA-bullshit/AGU/" + +str(hour).zfill(2)+'_allplots.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.close()
 
 def plot_gewex(h):
     hour=h
-    dic = pkl.load(open("/users/global/cornkle/figs/LSTA-bullshit/scales/new_LSTA/Tmin_test/composite_topo_"+str(hour).zfill(2)+".p", "rb"))
+    path = cnst.network_data + '/figs/LSTA-bullshit/AGU'
+    dic = pkl.load(open(path + "/composite_SLOT_"+str(hour).zfill(2)+".p", "rb"))
 
     extent = (dic['ano'].shape[1]-1)/2
 
     f = plt.figure(figsize=(7, 5))
     ax = f.add_subplot(111)
-
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=[-1, -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5, 1], extend='both') #-(rkernel2_sum / rcnt_sum)
+    print(dic['ano'].shape)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r', extend='both') #-(rkernel2_sum / rcnt_sum)  levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5]
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     plt.colorbar(label='K')
+
     plt.title(str(hour).zfill(2)+'00 UTC | '+str(np.max(dic['cnt']))+' cores', fontsize=17)
 
 
     plt.tight_layout()
-    #plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/GEWEX/'+str(hour).zfill(2)+'_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    #plt.close()
+
+    plt.savefig(path +'/lsta_' + str(hour).zfill(2)+'_single_SLOT.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.close()
 
 
 def plot_all():
 
-    hours = [16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
+    hours = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
     for h in hours:
-        plot(h)
-
+        plot_gewex(h)

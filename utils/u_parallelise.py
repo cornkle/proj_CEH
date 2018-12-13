@@ -34,6 +34,7 @@ def era_run_arrays(nb_processors, func, data):
 
     res = pool.map(func, data)
     pool.close()
+    print('Returned from parallel')
 
     res = [x for x in res if x is not None]
     dic = {}
@@ -49,6 +50,7 @@ def era_run_arrays(nb_processors, func, data):
             dic[l] = np.nansum(np.squeeze(vars[:,id,...]), axis=0)
 
     return dic
+
 
 def run_mixed(nb_processors, func, data, dic_names):
 

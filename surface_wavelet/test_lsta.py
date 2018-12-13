@@ -22,18 +22,18 @@ from scipy import ndimage
 def lsta():
 
     msgf = xr.open_mfdataset(constants.LSTA_NEW + '*.nc')
-    msg = msgf['LSTA']
+    msg = msgf#['LSTA']
     #msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
-    msg = msg[ (msg['time.month']==6) ]
+    #msg = msg[ (msg['time.month']==9) ]
 
     #msg = msg.where(msg>-900)
 
-    dat = msg.mean(dim='time')
+    dat = (msg['LSTA']).sum(dim='time') / msg['NbSlot'].sum(dim='time') #- msg.mean(dim=['lat', 'lon'])
     # t = msg.values
     # count = msgf['NbSlot'].values
     # mean = np.nansum(t * count, axis=0)/ np.nansum(count, axis=0)
     f = plt.figure()
-    dat.plot.contourf(cmap='RdBu_r', vmin=-1, vmax=1)
+    dat.plot.contourf(cmap='RdBu_r',  extend='both', vmin=-1, vmax=1) #vmin=-1, vmax=1,
 
     # f = plt.figure()
     # plt.contourf(mean, cmap='RdBu_r', vmin=-1, vmax=1)
@@ -41,6 +41,7 @@ def lsta():
     dat = dat.mean(dim='lon')
     f = plt.figure()
     dat.plot()
+    plt.show()
 
 
 def blobs():

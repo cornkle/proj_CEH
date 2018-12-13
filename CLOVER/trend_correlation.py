@@ -40,7 +40,7 @@ def corr_box():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=925)#(level=slice(690, 700)).mean('level')
+    q = da['r'].sel(level=925)#(level=slice(690, 700)).mean('level')
     t2 = da['t'].sel(level=925)#(level=slice(850, 925)).mean('level')
     u925 = da['u'].sel(level=925)#(level=slice(850, 925)).mean('level')
     u600 = da['u'].sel(level=600)#level=slice(690, 700)).mean('level')
@@ -149,7 +149,7 @@ def corr_box():
         dicm[m][dicm[m]==0] = np.nan
 
         print('plot')
-        fp = fpath + 'corr_box_SYNOP_TEST' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_box_SYNOP_RH' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(13,7), dpi=300)
