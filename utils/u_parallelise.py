@@ -28,7 +28,7 @@ def run_arrays(nb_processors, func, data, dic_names):
     return dic
 
 
-def era_run_arrays(nb_processors, func, data):
+def era_run_arrays(nb_processors, func, data, dic):
 
     pool = multiprocessing.Pool(processes=nb_processors)
 
@@ -37,7 +37,7 @@ def era_run_arrays(nb_processors, func, data):
     print('Returned from parallel')
 
     res = [x for x in res if x is not None]
-    dic = {}
+    #dic = {}
 
     rres = []
     dic_names = (res[0])[1]
@@ -47,6 +47,9 @@ def era_run_arrays(nb_processors, func, data):
 
     vars = np.array(rres)
     for id, l in enumerate(dic_names):
+        try:
+            dic[l] = dic[l] + np.nansum(np.squeeze(vars[:,id,...]), axis=0)
+        except KeyError:
             dic[l] = np.nansum(np.squeeze(vars[:,id,...]), axis=0)
 
     return dic

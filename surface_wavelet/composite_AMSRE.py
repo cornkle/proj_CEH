@@ -13,7 +13,7 @@ import multiprocessing
 import pdb
 import pandas as pd
 from scipy import ndimage
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
 import pickle as pkl
 import salem
 
@@ -28,7 +28,7 @@ def loop():
         composite(l)
 
 def composite(h):
-    file = constants.MCS_POINTS_DOM
+    file = cnst.MCS_POINTS_DOM
 
     hour = h
 
@@ -84,7 +84,7 @@ def composite(h):
 
     ax = f.add_subplot(234)
 
-    plt.contourf((dic['ano'] / dic['cnt']) - (dic['rano'] / dic['rcnt']), cmap='RdBu',  vmin=-2, vmax=2)
+    plt.contourf( (dic['rano'] / dic['rcnt']), cmap='RdBu',  vmin=-2, vmax=2)
     plt.plot(extent,extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -120,8 +120,8 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/scales/new/composites_lsta/test/sm_day/'+str(hour).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    plt.close()
+    plt.savefig(cnst.network_data + 'figs/LSTA-bullshit/AGU/'+'AMSRE_' + str(hour).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.show()
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False):
@@ -174,7 +174,7 @@ def file_loop(fi):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    lsta = xr.open_dataset(constants.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
+    lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
     lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
@@ -182,7 +182,7 @@ def file_loop(fi):
 
     lsta_da = lsta['SM'].squeeze()
 
-    topo = xr.open_dataset(constants.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
     ttopo = lsta_da.salem.lookup_transform(ttopo)
 
@@ -287,4 +287,3 @@ def file_loop(fi):
     print('Returning')
 
     return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
-

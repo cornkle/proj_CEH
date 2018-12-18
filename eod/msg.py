@@ -32,7 +32,7 @@ class ReadMsg(object):
             lpath = uarr.locate('lon.npz', msg_folder, exclude = None)
         except:
             print('Not a directory or no msg lat/lon found')
-            quit()
+            return
 
         mpath = os.path.join(msg_folder, 'msg_raw_binary')
 

@@ -14,7 +14,7 @@ import salem
 import pdb
 
 
-def quick_map_xr(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
+def quick_map_xr(xar, save = None, title=None, **kwargs):
 
     f = plt.figure(figsize=(10, 6), dpi=300)
     if not cmap:
@@ -115,3 +115,35 @@ def savefig(savepath, filename, filetype):
 
     plt.savefig(savepath+os.sep+filename+str(start).zfill(2)+'.'+filetype)
 
+
+## a clean way of plotting - use matplotlib functions directly:
+
+def draw_map(data, lon, lat, title=None,  mask_sig=None, quiver=None, contour=None, cbar_label=None, **kwargs):
+    f=plt.figure(figsize=(15,7))  # this opens a plot window
+    ax = f.add_subplot(111, projection=ccrs.PlateCarree())  # this opens a new plot axis
+    mapp = ax.contourf(lon, lat, data, transform=ccrs.PlateCarree(), **kwargs)  # this is the actual plot
+
+    ## mask for significance indicator
+    if mask_sig is not None:
+         plt.contourf(lon, lat, mask_sig, colors='none', hatches='.',
+                     levels=[0.5, 1], linewidth=0.1)
+
+    ## quiver list
+    if quiver is not None:
+        qu = ax.quiver(quiver['x'], quiver['y'], quiver['u'], quiver['v'], scale=quiver['scale'])
+    ## additional contour on plot
+    if contour is not None:
+        ax.contour(contour['x'], contour['y'], contour['data'], levels=contour['levels'], cmap=contour['cmap'] )
+
+
+    ax.coastlines()   ## adds coastlines
+    # Gridlines
+    xl = ax.gridlines(draw_labels=True);   # adds latlon grid lines
+    xl.xlabels_top = False   ## labels off
+    xl.ylabels_right = False
+    plt.title(title)
+    # Countries
+    ax.add_feature(cartopy.feature.BORDERS, linestyle='--'); # adds country borders
+    cbar = plt.colorbar(mapp)  # adds colorbar
+    cbar.set_label(cbar_label)
+    plt.show()

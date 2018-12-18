@@ -68,6 +68,34 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
     dic['res'] = obj.res
     return dic
 
+def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    #2D continuous wavelet analysis:
+    #TIR
+    tir=t.copy()
+    tir[tir>0] = 0
+    tir = tir - np.mean(tir)
+
+    obj = wav.wavelet(dx, dist, nb, start=start)
+
+    #TIR
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
+
+    dic['t']=powerTIR
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    return dic
+
 
 def applyHat(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
