@@ -1,6 +1,6 @@
 import numpy as np
 import xarray as xr
-from utils import u_mann_kendall as mk
+from utils import u_mann_kendall as mk, u_arrays as ua
 from scipy import stats
 import matplotlib.pyplot as plt
 import bottleneck
@@ -96,3 +96,42 @@ def pearson_correlation(x, y, dim):
         output_dtypes=[float])
 
 
+def cut_box(arr, xpos=None, ypos=None, dist=None):
+    """
+
+    :param xpos: x coordinate in domain for kernel centre point
+    :param ypos: y coordinate in domain for kernel centre point
+    :param arr: numpy array (2d)
+    :param dist: distance from kernel centre point to kernel edge (total width = 2*dist+1)
+    :return: the kernel of dimensions (2*dist+1, 2*dist+1)
+    """
+
+    if dist == None:
+        'Distance missing. Please provide distance from kernel centre to edge (number of pixels).'
+        return
+
+    if arr.ndim == 2:
+        kernel = ua.cut_kernel(arr.values,xpos, ypos,dist)
+        if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            ipdb.set_trace()
+    elif arr.ndim == 3:
+        kernel = ua.cut_kernel_3d(arr.values,xpos, ypos,dist)
+
+        if kernel.shape != (arr.shape[0], dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            ipdb.set_trace()
+    else:
+        print('Dimension of array not supported, please check')
+        ipdb.set_trace()
+
+    if arr.ndim == 3:
+        try:
+            levels = arr.level.values
+        except AttributeError:
+            levels = arr.pressure.values
+
+        return xr.DataArray(kernel, dims=['level','y','x'],
+                            coords={'level' : arr.level.values})
+    else:
+        return xr.DataArray(kernel, dims=['y','x'])

@@ -247,6 +247,33 @@ def cut_kernel_3d(array, xpos, ypos, dist_from_point):
     return kernel
 
 
+def cut_box(xpos, ypos, arr, dist=None):
+    """
+
+    :param xpos: x coordinate in domain for kernel centre point
+    :param ypos: y coordinate in domain for kernel centre point
+    :param arr: numpy array (2d)
+    :param dist: distance from kernel centre point to kernel edge (total width = 2*dist+1)
+    :return: the kernel of dimensions (2*dist+1, 2*dist+1)
+    """
+
+    if dist == None:
+        'Distance missing. Please provide distance from kernel centre to edge (number of pixels).'
+        return
+    if arr.ndim == 3:
+        kernel = cut_kernel_3d(arr, xpos, ypos, dist)
+        if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            pdb.set_trace()
+    else:
+        kernel = cut_kernel(arr,xpos, ypos,dist)
+        if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            pdb.set_trace()
+
+
+
+    return kernel
 
 def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
     array[array >= thresh] = 0  # T threshold maskout
@@ -296,11 +323,3 @@ def linear_trend(x, eps=0.001, alpha=0.01):
         issig = np.nan
 
     return issig
-
-
-
-
-
-
-
-

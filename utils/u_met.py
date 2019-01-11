@@ -3,16 +3,6 @@ from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
 from utils import constants
-import pdb
-
-
-planck_const = 6.62607004*1e-34 # m2 kg s-1 (h)
-c = 299792458 # speed of light m s-1
-boltzmann = 1.38064903*1e-23  # m2kg s-2K-1 (k)
-#Tb_lambda = 10.6*1e-6 # MSG window in micro metres
-Tb_lambda = 0.00032782597395146035
-Tconst = 0.7167381974248928    # 2 * kc / lambda**4 with OLR/Tb = 167 W m-2 / 233K
-sigma = 5.670373*1e-8 # W m-2K-2
 
 
 def u_v_to_ws_wd(u,v):
@@ -160,8 +150,6 @@ def theta(pz, t):
     return  ist-273.15
 
 
-def OLR_to_Tb(OLR):
-    return (OLR/sigma) ** 0.25
-
-def Tb_to_OLR(Tb):
-    return (Tb)**4 * sigma
+def olr_to_bt(olr):
+    sigma = 5.670373e-8
+    return ((olr/sigma)**0.25)-273.15

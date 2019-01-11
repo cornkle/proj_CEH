@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from utils import u_grid, u_arrays as ua
 import ipdb
 import pandas as pd
-from utils import constants as cnst
+from utils import constants as cnst, u_met
 import multiprocessing
 import glob
 import pickle as pkl
@@ -29,23 +29,28 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=6)
     tthresh = '-50'
 
-    files = glob.glob(cnst.CP4_PATH + '/gridsat_WA_-50_*.nc')
+    files = glob.glob(cnst.CP4_PATH + 'CLOVER/CP4hist/lw_out_PBLtop/*.nc')
 
     print('Nb files', len(files))
     #mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
     pool.close()
 
+    # for f in files:
+    #     res = file_loop(f)
+    #     ipdb.set_trace()
+
     merged = {}
     for r in res:
-        merged.update(r)
+        if r is not None:
+            merged.update(r)
 
     test = pd.DataFrame.from_dict(merged, orient='index')
 
-    pkl.dump(test, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p',
+    pkl.dump(test, open(cnst.CLOVER_SAVES + 'StormLoc_CP4hist_-50_5000km_WA.p',
                            'wb'))
 
 
@@ -56,16 +61,24 @@ def file_loop(f):
     ydic = {}
 
     df = xr.open_dataset(f)
-    df = df.sel(lat=slice(-4,25), lon=slice(-18,20))
-    for d in df['tir']:
+    df = df.sel(latitude=slice(-4,13), longitude=slice(-18,20))
+    if (int(df['time.month'][0]) < 9) & (int(df['time.month'][0]) > 6):
+         print('return')
+         return
 
-        labels, goodinds = ua.blob_define(d.values, -50, minmax_area=[83, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
+    df = df['lw_out_PBLtop'][df['time.hour'] == 18]
+
+    for d in df:
+
+        print('Read data')
+
+        d.values = u_met.olr_to_bt(d.values)
+        #ipdb.set_trace()
+        labels, goodinds = ua.blob_define(d.values, -50, minmax_area=[258, 40000], max_area=None) # 4.4*4.4km: 258 pixel = 5000km2, 40000 pixel = 350000km2
         for g in goodinds:
 
             if g==0:
                 continue
-
-
 
             pos = np.where(labels==g)
 
@@ -80,14 +93,14 @@ def file_loop(f):
             dic['month'] = int(d['time.month'])
             dic['year'] = int(d['time.year'])
 
-            storm = d[pos]
+            storm = d.values[pos]
 
             dic['area'] = storm.size
             dic['70area'] = np.sum(storm<=-70)
-            dic['minlon'] = np.min(d.lon.values[pos[1]])
-            dic['minlat'] = np.min(d.lat.values[pos[0]])
-            dic['maxlon'] = np.max(d.lon.values[pos[1]])
-            dic['maxlat'] = np.max(d.lat.values[pos[0]])
+            dic['minlon'] = np.min(d.longitude.values[pos[1]])
+            dic['minlat'] = np.min(d.latitude.values[pos[0]])
+            dic['maxlon'] = np.max(d.longitude.values[pos[1]])
+            dic['maxlat'] = np.max(d.latitude.values[pos[0]])
             dic['clon'] = dic['minlon'] + (dic['maxlon'] - dic['minlon'])/2
             dic['clat'] = dic['minlat'] + (dic['maxlat'] - dic['minlat'])/2
             dic['tmin'] = np.min(storm)

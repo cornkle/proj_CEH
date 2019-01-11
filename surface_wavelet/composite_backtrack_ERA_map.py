@@ -32,7 +32,6 @@ def diurnal_loop():
 def composite(h, eh):
     #pool = multiprocessing.Pool(processes=8)
 
-
     file = cnst.MCS_CENTRE70
 
     hour = h
@@ -49,7 +48,6 @@ def composite(h, eh):
     #ipdb.set_trace()
     # for ids in range(0,len(msg), 50):
     #     dic = u_parallelise.era_run_arrays(1,file_loop,msg[ids:ids+50], dic) #'rano', 'rregional', 'rcnt',
-
 
     res = []
     for mm in msg:

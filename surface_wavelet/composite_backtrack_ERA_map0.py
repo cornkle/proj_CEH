@@ -45,11 +45,9 @@ def composite(h, eh):
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
     msg.attrs['eh'] = eh
     msg.attrs['refhour'] = h
-    dic = {}
-    #ipdb.set_trace()
-    # for ids in range(0,len(msg), 50):
-    #     dic = u_parallelise.era_run_arrays(1,file_loop,msg[ids:ids+50], dic) #'rano', 'rregional', 'rcnt',
-
+    dic = OrderedDict()
+    for sk in ['lsta',  'cnt', 'cntp', 'cntm', 'probmsg']:
+        dic['lsta']
 
     res = []
     for mm in msg:
@@ -64,7 +62,6 @@ def composite(h, eh):
     dic_names = (res[0])[1]
     for r in res:
         rres.append(np.array(r[0]))
-
 
     vars = np.array(rres)
     for id, l in enumerate(dic_names):
