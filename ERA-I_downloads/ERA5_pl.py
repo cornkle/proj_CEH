@@ -25,7 +25,7 @@ def download(year, month):
     })
 
 
-for y in range(2001,2018):
+for y in range(2012,2018):
     for m in range(1, 13):
         file = "/prj/AMMA2050/ERA5/pressure_levels/ERA5_" + str(y) + "_" + str(m).zfill(2) + "_pl.nc"
         if os.path.isfile(file):
