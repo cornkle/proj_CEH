@@ -64,7 +64,7 @@ def run():
 
             ds = xr.concat(res, 'time')
             path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            savefile = path + 'test_size2_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)
@@ -254,19 +254,19 @@ def file_loop(passit):
 
     isnan = np.isnan(savet)
     savet[isnan]=0
-    new_savet = (savet*100).astype(int)
+    new_savet = (savet*100).astype(np.int16)
 
-    ds['blobs'] = xr.DataArray(figure, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
+    ds['blobs'] = xr.DataArray(figure.astype(np.int16), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon']) #[np.newaxis, :]
     ds['tir'] = xr.DataArray(new_savet, coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
  #   ds['tir_w'] = xr.DataArray(outt, coords={'time': date, 'lat': lat[:, 0], 'lon': lon[0, :]}, dims=['lat', 'lon'])
-    ds['power15-19km'] = xr.DataArray((np.mean(wav['t'][0:5,:,:], axis=0)*100).astype(int), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
-    ds['power32-38km'] = xr.DataArray((np.mean(wav['t'][13:17, :, :], axis=0)*100).astype(int), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
-    ds['power80-90km'] = xr.DataArray((np.mean(wav['t'][29:32, :, :], axis=0)*100).astype(int), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
-    ds['power160-170km'] = xr.DataArray((np.mean(wav['t'][-5:-3, :, :], axis=0)*100).astype(int), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
+    ds['power15-19km'] = xr.DataArray((np.mean(wav['t'][0:5,:,:], axis=0)*100).astype(np.uint16), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
+    ds['power32-38km'] = xr.DataArray((np.mean(wav['t'][13:17, :, :], axis=0)*100).astype(np.uint16), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
+    ds['power80-90km'] = xr.DataArray((np.mean(wav['t'][29:32, :, :], axis=0)*100).astype(np.uint16), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
+    ds['power160-170km'] = xr.DataArray((np.mean(wav['t'][-5:-3, :, :], axis=0)*100).astype(np.uint16), coords={'time': date, 'lat': lat[:,0], 'lon':lon[0,:]}, dims=['lat', 'lon'])
 
 
-    ds.attrs['radii']=(np.ceil(wav['scales'] / 2. / 5.)).astype(int)
-    ds.attrs['scales_rounded'] = np.round(wav['scales']).astype(int)
+    ds.attrs['radii']=(np.ceil(wav['scales'] / 2. / 5.)).astype(np.uint8)
+    ds.attrs['scales_rounded'] = np.round(wav['scales']).astype(np.uint8)
     ds.attrs['scales_original'] = wav['scales']
     ds.attrs['cutout_T'] = t_thresh_size
     ds.attrs['core_minT'] = core_min
