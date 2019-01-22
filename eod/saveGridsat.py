@@ -31,11 +31,11 @@ def saveYearly():
             print('Doing ' + f)
 
             df = xr.open_dataset(f)
-            if df['time.hour']!=18:
+            if (df['time.hour']<=15) | (df['time.hour']>=21):
                 continue
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
-            df['tir'].values = df['tir'].values-273.15
+            df['tir'].values = (np.round(df['tir'].values-273.15, decimals=2)*100).astype(np.int16)
             labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2, 17 pix is 1000
             df['tir'].values[labels==0] = 0
             df['tir'].values[df['tir'].values<-110] = 0
@@ -78,11 +78,11 @@ def loop(y):
 
         df = xr.open_dataset(f)
 
-        if df['time.hour'] != 18:
+        if (df['time.hour']<=15) | (df['time.hour']>=21):
             continue
 
         df.rename({'irwin_cdr': 'tir'}, inplace=True)
-        df['tir'].values = df['tir'].values - 273.15
+        df['tir'].values = (np.round(df['tir'].values-273.15, decimals=2)*100).astype(np.int16)
         labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
                                           max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
         df['tir'].values[labels == 0] = 0

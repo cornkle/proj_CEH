@@ -75,7 +75,7 @@ def trend_all():
 
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count.nc'
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-60_monthly_count.nc'
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
@@ -93,9 +93,9 @@ def trend_all():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=slice(924,925)).mean('level')
-    t2d = da['t'].sel(level=slice(924, 925)).mean('level')
-    u925 = da['u'].sel(level=slice(924, 925)).mean('level')
+    q = da['q'].sel(level=slice(850,851)).mean('level')
+    t2d = da['t'].sel(level=slice(850,851)).mean('level')
+    u925 = da['u'].sel(level=slice(850,851)).mean('level')
     u600 = da['u'].sel(level=slice(600,601)).mean('level')
 
     shear = u600-u925
@@ -163,7 +163,7 @@ def trend_all():
         s_da = sheartrend_unstacked
         ti_da = tirtrend_unstacked
 
-        fp = fpath + 'trend_mk_-70C_synop_sig_TEST_'+str(m[0]).zfill(2)+'.png'
+        fp = fpath + 'trend_mk_-70C_synop_sig_'+str(m[0]).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         # f = plt.figure(figsize=(8, 5), dpi=300)
