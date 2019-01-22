@@ -148,16 +148,16 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-70_monthly_count.nc'
+    fname = 'aggs/gridsat_WA_-60_monthly_count.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
         for y in years:
             y = str(y)
-            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_' + y + '.nc')
+            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
             print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108))
-            da1['tir'].values[da1['tir'].values < -70] = 1
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -60) & (da1['tir'] >= -108))
+            da1['tir'].values[da1['tir'].values < -60] = 1
 
             da1 = da1.resample(time='m').sum('time')
             try:

@@ -112,10 +112,10 @@ def file_loop(f):
     elon = dic['lon'].values[tminpos]
     elat = dic['lat'].values[tminpos]
 
-    #e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
-    e925 = era_day.sel(level=slice(925,900)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
-    #e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
-    e650 = era_day.sel(level=slice(600,601)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e925 = era_day.sel(latitude=elat, longitude=elon, level=925, method='nearest')
+    elow = era_day.sel(level=slice(925,850)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
+    e650 = era_day.sel(latitude=elat, longitude=elon, level=650, method='nearest')
+    emid = era_day.sel(level=slice(600,700)).mean('level').sel(latitude=elat, longitude=elon , method='nearest')
 
 
     out['lon'] = dic['lon'].values
@@ -169,6 +169,8 @@ def file_loop(f):
     out['pv650'] = float(e650['pv'])
     out['div925'] = float(e925['d'])
     out['div650'] = float(e650['d'])
+    out['q_low'] = float(elow['q'])
+    out['q_mid'] = float(emid['q'])
 
 
     out['shear'] = float(e650['u']-e925['u'])

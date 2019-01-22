@@ -46,13 +46,13 @@ def composite(h, eh):
     msg.attrs['refhour'] = h
     dic = {}
     #ipdb.set_trace()
-    # for ids in range(0,len(msg), 50):
-    #     dic = u_parallelise.era_run_arrays(1,file_loop,msg[ids:ids+50], dic) #'rano', 'rregional', 'rcnt',
+    for ids in range(0,len(msg), 50):
+        dic = u_parallelise.era_run_arrays(1,file_loop,msg[ids:ids+50], dic) #'rano', 'rregional', 'rcnt',
 
-    res = []
-    for mm in msg:
-        out =file_loop(mm)
-        res.append(out)
+    # res = []
+    # for mm in msg:
+    #     out =file_loop(mm)
+    #     res.append(out)
 
     print('Returned from parallel')
 

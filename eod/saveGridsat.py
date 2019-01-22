@@ -4,22 +4,23 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
+import ipdb
 import os
 import xarray as xr
 import numpy as np
 from utils import u_arrays as ua
+from utils import constants as cnst
 
 
 def saveYearly():
 
-    out = '/users/global/cornkle/mymachine/GRIDSAT/MCS18/'
-    infolder = '/users/global/cornkle/mymachine/GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
+    out = cnst.local_data + 'GRIDSAT/MCS18/'
+    infolder = cnst.local_data + 'GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
 
-    years = np.arange(1983,2018)  # list(next(os.walk(msg_folder))[1])
+    years = np.arange(1984,2018)  # list(next(os.walk(msg_folder))[1])
 
     for y in years:
-        filename = 'gridsat_WA_' + str(y) + '.nc'
+        filename = 'gridsat_WA_-40_1000km2' + str(y) + '.nc'
         da = None
         if os.path.isfile(out + filename):
             continue
@@ -35,7 +36,7 @@ def saveYearly():
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
             df['tir'].values = df['tir'].values-273.15
-            labels, goodinds = ua.blob_define(df['tir'].values, -70, minmax_area=[83, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
+            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2, 17 pix is 1000
             df['tir'].values[labels==0] = 0
             df['tir'].values[df['tir'].values<-110] = 0
             try:
@@ -53,7 +54,7 @@ def saveYearly():
 def saveYearly_parallel():
 
 
-    years = np.arange(1983, 2018)  # list(next(os.walk(msg_folder))[1])
+    years = np.arange(1984, 2018)  # list(next(os.walk(msg_folder))[1])
 
     pool = multiprocessing.Pool(processes=4)
 
@@ -63,9 +64,9 @@ def saveYearly_parallel():
 
 def loop(y):
 
-    out = '/users/global/cornkle/mymachine/GRIDSAT/MCS18/'
-    infolder = '/users/global/cornkle/mymachine/GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
-    filename = 'gridsat_WA_-50_' + str(y) + '.nc'
+    out = cnst.local_data + 'GRIDSAT/MCS18/'
+    infolder = cnst.local_data + 'GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
+    filename = 'gridsat_WA_-40_1000km2_' + str(y) + '.nc'
     da = None
     if os.path.isfile(out + filename):
         return
@@ -76,12 +77,13 @@ def loop(y):
         print('Doing ' + f)
 
         df = xr.open_dataset(f)
+
         if df['time.hour'] != 18:
             continue
 
         df.rename({'irwin_cdr': 'tir'}, inplace=True)
         df['tir'].values = df['tir'].values - 273.15
-        labels, goodinds = ua.blob_define(df['tir'].values, -50, minmax_area=[83, 25000],
+        labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
                                           max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
         df['tir'].values[labels == 0] = 0
         df['tir'].values[df['tir'].values < -110] = 0

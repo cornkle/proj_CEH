@@ -79,7 +79,7 @@ def trend_all():
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    box=[-18,40,0,25] #[-18,55,-35,35]#
+    box=[-18,55,-35,35]#  [-18,40,0,25] #
 
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
