@@ -11,7 +11,6 @@ import numpy as np
 from utils import u_arrays as ua
 from utils import constants as cnst
 
-
 def saveYearly():
 
     out = cnst.local_data + 'GRIDSAT/MCS18/'
@@ -35,15 +34,16 @@ def saveYearly():
                 continue
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
-            df['tir'].values = (np.round(df['tir'].values-273.15, decimals=2)*100).astype(np.int16)
-            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000], max_area=None) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2, 17 pix is 1000
-            df['tir'].values[labels==0] = 0
-            df['tir'].values[df['tir'].values<-110] = 0
+            df['tir'].values = (df['tir'].values-273.15
+            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+            df['tir'].values[labels == 0] = 0
+            df['tir'].values[df['tir'].values < -110] = 0
+            df['tir'].values = (np.round(df['tir'].values, decimals=2)*100).astype(np.int16)
             try:
                 da = xr.concat([da, df ], dim='time')
             except TypeError:
                 da = df.copy()
-
 
         enc = {'tir': {'complevel': 5, 'shuffle': True, 'zlib': True}}
         da.to_netcdf(out + filename, encoding=enc)
@@ -82,11 +82,12 @@ def loop(y):
             continue
 
         df.rename({'irwin_cdr': 'tir'}, inplace=True)
-        df['tir'].values = (np.round(df['tir'].values-273.15, decimals=2)*100).astype(np.int16)
+        df['tir'].values = (df['tir'].values-273.15
         labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
                                           max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
         df['tir'].values[labels == 0] = 0
         df['tir'].values[df['tir'].values < -110] = 0
+        df['tir'].values = (np.round(df['tir'].values, decimals=2)*100).astype(np.int16)
         try:
             da = xr.concat([da, df], dim='time')
         except TypeError:

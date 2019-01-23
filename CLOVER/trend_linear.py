@@ -121,7 +121,7 @@ def trend_all():
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
     shear = xr.DataArray(shear, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months=[3, 10]
+    months=[1,2,3,4,5,6,7,8,9, 10,11,12]
 
     dicm = {}
     dicmean = {}
@@ -132,7 +132,7 @@ def trend_all():
         if len([m])==1:
             m = [m]
 
-        sig = True
+        sig = False
 
         t2trend, t2mean = calc_trend(t2, m, hour=12, method=method, sig=sig, wilks=False)
         t2_mean = t2mean.mean(axis=0)
@@ -163,7 +163,7 @@ def trend_all():
         s_da = sheartrend_unstacked
         ti_da = tirtrend_unstacked
 
-        fp = fpath + 'trend_mk_-70C_synop_sig_'+str(m[0]).zfill(2)+'.png'
+        fp = fpath + 'trend_mk_-70C_synop_'+str(m[0]).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         # f = plt.figure(figsize=(8, 5), dpi=300)
