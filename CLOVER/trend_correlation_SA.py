@@ -14,7 +14,7 @@ import pickle as pkl
 def corr_box():
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP # _SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-60_monthly_count_-50base.nc'  # -70count
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_-50base.nc'  # -70count
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
@@ -25,8 +25,8 @@ def corr_box():
     mcs_temp = xr.open_dataset(mcsbox)
     mcs_temp = mcs_temp['tir']
 
-    box=[-18,55,-35,35]
-    #box = [-18, 40, 0, 25]
+    box=[-18,55,-35,35]#[-10,55,-35,0]
+
 
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
@@ -50,7 +50,7 @@ def corr_box():
     u600 = da['u'].sel(level=slice(600,650)).mean('level')
     #u600 = u600[u600['time.hour']==12]
 
-    shear = u600-u925 # u600-
+    shear = u600#-u925 # u600-
 
     q.values = q.values * 1000
 
@@ -59,7 +59,7 @@ def corr_box():
 
 
     months = np.arange(1, 13)
-    months = [1,2,3,4,5,6,7,8,9, 10,11,12]
+    months = [1]#,2,3,4,5,6,7,8,9, 10,11,12]
 
     def array_juggling(data, month, hour=None):
 
@@ -89,7 +89,7 @@ def corr_box():
         ds['slope'] = a.copy(deep=True).sum('year') * np.nan
 
         #corr_box = [-10,11,4.5,8]
-        corr_box = [13,25,-23,-10]
+        corr_box = [25,35,-28,-10]#West: [13,25,-23,-10]
 
         if bsingle:
             bb = b
@@ -153,11 +153,11 @@ def corr_box():
         # pthresh = us.fdr_threshold(tcorr['pval'].values[np.isfinite(tcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
         #tcorr['r'].values[tcorr['pval'].values > pthresh] = 0
-    
+
         dicm[m].values[dicm[m].values==0] = np.nan
 
         print('plot')
-        fp = fpath + 'corr_box_SYNOP_SAWest_-50base' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_box_SYNOP_SAEast_-50base_u600' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(13,7), dpi=300)

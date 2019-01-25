@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import xarray as xr
-import pdb
+import ipdb
 import matplotlib.pyplot as plt
 import cartopy
 from utils import u_plot as up
@@ -58,7 +58,7 @@ def month_mean():
 
     msg_folder = cnst.GRIDSAT
     fname = 'aggs/gridsat_WA_-50_monthly_mean_SA.nc'
-
+    #ipdb.set_trace()
     if not os.path.isfile(msg_folder + fname):
         da = None
         da_box = None
@@ -71,7 +71,7 @@ def month_mean():
 
             da_res = da1.resample(time='m').mean('time')
             WA_box = [-13,13,4.5,8]
-            SA_box = [20,30,-30,-10]
+            SA_box = [12,25,-23,-10] #[20,30,-30,-10]
             boxed = da1['tir'].sel(lat=slice(SA_box[2],SA_box[3]), lon=slice(SA_box[0],SA_box[1])).resample(time='m').mean()
 
             try:
@@ -90,8 +90,8 @@ def month_mean():
         #               'wb'))
 
         enc = {'tir': {'complevel': 5, 'zlib': True}}
-        pdb.set_trace()
-        da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2_SA.nc')
+
+        da_box.to_netcdf(msg_folder + 'aggs/box_12-25E-23-10S_meanT-50_from5000km2_SA.nc')
 
         da.to_netcdf(msg_folder + fname, encoding=enc)
 
@@ -148,7 +148,7 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-60_monthly_count.nc'
+    fname = 'aggs/gridsat_WA_-70_monthly_count_-50base.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -156,8 +156,8 @@ def month_count():
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
             print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -60) & (da1['tir'] >= -108))
-            da1['tir'].values[da1['tir'].values < -60] = 1
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108))
+            da1['tir'].values[da1['tir'].values < -70] = 1
 
             da1 = da1.resample(time='m').sum('time')
             try:

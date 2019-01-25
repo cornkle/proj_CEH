@@ -27,9 +27,10 @@ def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_missing=None):
 
 
     if nb_missing is not None:
-        if np.nansum(x.values==0)>=10:
+        if np.nansum(x.values==0)>=nb_missing:
             p = np.nan
             slope = np.nan
+            ind = 0
 
     ds = xr.Dataset()
     ds['slope'] = xr.DataArray(slope,)
@@ -45,7 +46,7 @@ def linear_trend_lingress(x, nb_missing=None):
     # we need to return a dataarray or else xarray's groupby won't be happy
 
     if nb_missing is not None:
-        if np.nansum(x.values==0)>=10:
+        if np.nansum(x.values==0)>=nb_missing:
             p = np.nan
             slope = np.nan
 

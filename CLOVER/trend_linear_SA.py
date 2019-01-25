@@ -79,7 +79,7 @@ def trend_all():
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    box=[-18,55,-35,35]#  [-18,40,0,25] #
+    box=[-10,55,-35,0]#  [-18,40,0,25] #
 
     da = xr.open_dataset(pl)
     da = u_darrays.flip_lat(da)
@@ -240,9 +240,9 @@ def trend_all():
         plt.close('all')
 
     pkl.dump(dicm,
-             open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC.p',
+             open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_SA.p',
                   'wb'))
 
     pkl.dump(dicmean,
-                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC.p',
+                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_SA.p',
                       'wb'))
