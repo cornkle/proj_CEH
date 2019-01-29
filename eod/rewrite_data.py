@@ -22,7 +22,7 @@ from scipy.ndimage.measurements import label
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
 def rewriteMsgLonLat_WA():
-    llFile = '/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.gra'
+    llFile = cnst.network_data + 'data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.gra'
 
     llShape = (580,1640)
     llMDI = np.float32(13.5)
@@ -32,7 +32,25 @@ def rewriteMsgLonLat_WA():
     lat.shape = llShape
     lon.shape = llShape
 
-    llsavefile = '/users/global/cornkle/data/OBS/meteosat_WA30/MSG_1640_580_lat_lon'
+    llsavefile = cnst.network_data + 'data/OBS/meteosat_WA30/MSG_1640_580_lat_lon'
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+
+#========================================================================================
+# Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
+#========================================================================================
+def rewriteMFGLonLat_WA():
+    llFile = cnst.network_data + 'data/OBS/MFG/msat_grid_463x1094.gra'
+
+    llShape = (463,1094)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lon = ll[0:463*1094]
+    lat = ll[463*1094:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = cnst.network_data + 'data/OBS/MFG/MFG_1094_463_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
 

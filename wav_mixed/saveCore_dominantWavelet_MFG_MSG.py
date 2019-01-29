@@ -17,34 +17,42 @@ import matplotlib.pyplot as plt
 import pdb
 from scipy.ndimage.measurements import label
 from utils import constants as cnst
+import pickle as pkl
+import ipdb
 
 
 
 def run():
 
-    msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
-    #msg_folder
+    #msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
+    ext_drive = '/media/ck/Seagate/DIR/'
+    local_data = ext_drive + 'mymachine/'
+    network_data = ext_drive + 'cornkle/'
+
+    msg_folder = network_data + 'data/OBS/meteosat_WA30'
 
     for yy in range(2013,2014):   # (2004,2016)
 
         for mm in [9]:
 
-            pool = multiprocessing.Pool(processes=6)
+            pool = multiprocessing.Pool(processes=5)
 
             m = msg.ReadMsg(msg_folder, y1=yy, y2=yy, months=[mm])
             files  = m.fpath
 
-            mdic = m.read_data(files[0], llbox=[-15, 1.5, 5, 11.5])  #[-14, 2.5, 4, 11.5]
+            gridll = pkl.load( open (cnst.network_data + 'data/OBS/saves/VERA_msg_latlon_18W12E_1N17N.p', 'rb'))
+
+            mdic = m.read_data(files[0], llbox=[-25, 20, 0, 25])  #[-14, 2.5, 4, 11.5]
 
             # make salem grid
-            grid = u_grid.make(mdic['lon'].values, mdic['lat'].values, 5000)
+            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 5000)
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
             gridd = (inds,weights,shape, grid)
 
             files_str = []
 
             for f in files:
-                files_str.append(f[0:-6])
+                files_str.append(f[0:-4])
 
             files_str = np.unique(files_str)
 
@@ -54,17 +62,18 @@ def run():
             #
             res = pool.map(file_loop, passit)
 
+            # res=[]
             # for l in passit:
             #
-            #     test = file_loop(l)
+            #     res.append(file_loop(l))
 
             pool.close()
 
             res = [x for x in res if x is not None]
 
             ds = xr.concat(res, 'time')
-            path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'test_size2_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            path =  cnst.network_data + 'MCSfiles/VERA_blobs/'#'/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
+            savefile = path + 'test_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)
@@ -77,10 +86,7 @@ def run():
             enc = {var: comp for var in ds.data_vars}
 
             ds.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
-
             print('Saved ' + savefile)
-
-
 
 def file_loop(passit):
 
@@ -93,15 +99,13 @@ def file_loop(passit):
     m = passit[1]
     file = passit[2]
 
-    #min = ['00', '30']
+    strr = file.split(os.sep)[-1]
 
-    strr = files.split(os.sep)[-1]
-
-    if ((np.int(strr[4:6]) != 9) & (np.int(strr[4:6]) != 6)):
+    if (np.int(strr[4:6]) != 9):
         print('Skip month')
         return
 
-    if (((strr[-6:-5]) != '00') & ((strr[-6:-5]) != '30'):
+    if ((strr[-2::]) != '00') & ((strr[-2::]) != '30'):
         print('Skip minute')
         return
 
@@ -111,11 +115,11 @@ def file_loop(passit):
 
     lon, lat = grid.ll_coordinates
 
-    #file = files+min+'.gra'
+    file = file +'.gra'
 
     print('Doing file: ' + file)
     try:
-        mdic = m.read_data(file, llbox=[-15, 1.5, 5, 11.5])
+        mdic = m.read_data(file, llbox=[-25, 20, 0, 25])
     except FileNotFoundError:
         print('File not found')
         return
@@ -223,28 +227,6 @@ def file_loop(passit):
 
     figure[np.isnan(outt)] = 0
 
-    # f = plt.figure()
-    # plt.contourf(outt)
-    # plt.contour(figure)
-
-    # figure[figure == 0] = np.nan
-    # f = plt.figure()
-    # f.add_subplot(111)
-    # plt.imshow(outt, cmap='inferno')
-    # plt.imshow(figure, cmap='viridis')
-    # plt.colorbar()
-    # plt.plot(xxx, yyy, 'yo', markersize=3)
-    # ax = f.add_subplot(132, projection=ccrs.PlateCarree())
-    # plt.contourf(lon, lat, figure, cmap='viridis', transform=ccrs.PlateCarree())
-    # ax.coastlines()
-    # ax.add_feature(cartopy.feature.BORDERS, linestyle='--');
-    #
-    # plt.colorbar()
-    # f.add_subplot(131)
-    # plt.imshow(outt, cmap='inferno')
-    #
-    #
-    #plt.show()
 
     hour = mdic['time.hour']
     minute = mdic['time.minute' ]
@@ -276,6 +258,7 @@ def file_loop(passit):
     ds.attrs['core_minT'] = core_min
     ds.attrs['cutout_minPixelNb'] = pix_nb
 
+    ds = ds.sel(lat=slice(3.5,16), lon=slice(-17,10))     #[-14, 2.5, 4, 11.5] cutout to remove dodgy boundaries
 
     print('Did ', file)
 

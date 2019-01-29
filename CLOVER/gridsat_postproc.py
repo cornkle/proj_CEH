@@ -57,43 +57,69 @@ def month_mean():
     years = list(range(1983,2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-50_monthly_mean_SA.nc'
+    fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
     #ipdb.set_trace()
-    if not os.path.isfile(msg_folder + fname):
-        da = None
-        da_box = None
+    #if not os.path.isfile(msg_folder + fname):
+    da = None
+    da_box = None
+    hov_box = None
+    for y in years:
+        y = str(y)
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
+        print('Doing ' + y)
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
+        #da1['tir'].values[da1['tir'].values == 0] = np.nan
+
+        da_res = da1.resample(time='m').mean('time')
+        WA_box = [-13,13,4.5,8]
+        SAW_box = [12,25,-23,-10] #[20,30,-30,-10]
+        SAE_box = [25,33,-28,-10]
+        boxed = da1['tir'].sel(lat=slice(WA_box[2],WA_box[3]), lon=slice(WA_box[0],WA_box[1])).resample(time='m').mean()
+        hov_boxed = da1['tir'].sel(lat=slice(WA_box[2],WA_box[3]), lon=slice(WA_box[0],WA_box[1])).resample(time='m').mean('lon')
+
+        try:
+            da = xr.concat([da, da_res], 'time')
+        except TypeError:
+            da = da_res.copy()
+
+        try:
+            da_box = xr.concat([da_box, boxed], 'time')
+        except TypeError:
+            da_box = boxed.copy()
+
+        try:
+            hov_box = xr.concat([hov_box, hov_boxed], 'time')
+        except TypeError:
+            hov_box = hov_boxed.copy()
+
+def month_mean_hov():
+
+        years = list(range(1983,2018))
+
+        msg_folder = cnst.GRIDSAT
+        fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
+
+        hov_box = None
         for y in years:
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
             print('Doing ' + y)
             da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
-            #da1['tir'].values[da1['tir'].values < -70] = 1
 
-            da_res = da1.resample(time='m').mean('time')
-            WA_box = [-13,13,4.5,8]
-            SA_box = [12,25,-23,-10] #[20,30,-30,-10]
-            boxed = da1['tir'].sel(lat=slice(SA_box[2],SA_box[3]), lon=slice(SA_box[0],SA_box[1])).resample(time='m').mean()
+            WA_box = [-10,10,4.5,20]
+            SA_box = [25,33,-28,-10]
+            hov_boxed = da1['tir'].sel(lat=slice(SA_box[2],SA_box[3]), lon=slice(SA_box[0],SA_box[1])).resample(time='m').mean(['lon','time'])
+
+            out = xr.DataArray(hov_boxed.values, coords={'month':hov_boxed['time.month'].values, 'lat':hov_boxed.lat}, dims=['month', 'lat'])
+
 
             try:
-                da = xr.concat([da, da_res], 'time')
+                hov_box = xr.concat([hov_box, out], 'year')
             except TypeError:
-                da = da_res.copy()
+                hov_box = out.copy()
 
-            try:
-                da_box = xr.concat([da_box, boxed], 'time')
-            except TypeError:
-                da_box = boxed.copy()
-
-
-        # pkl.dump(np.array(boxed),
-        #          open('/users/global/cornkle/data/CLOVER/saves/box_13W-13E-4-8N_meanT-50_from5000km2.p',
-        #               'wb'))
-
-        enc = {'tir': {'complevel': 5, 'zlib': True}}
-
-        da_box.to_netcdf(msg_folder + 'aggs/box_12-25E-23-10S_meanT-50_from5000km2_SA.nc')
-
-        da.to_netcdf(msg_folder + fname, encoding=enc)
+        hov_box.year.values = hov_box.year.values+years[0]
+        hov_box.to_netcdf(msg_folder + 'aggs/SAbox_meanT-50_hov_5000km2.nc')
 
 
 

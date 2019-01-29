@@ -177,17 +177,17 @@ def tgrad_shear_trend():
 
     srfc = cnst.ERA_MONTHLY_SRFC
     pl = cnst.ERA_MONTHLY_PL
-    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc'
-    out = cnst.network_data + 'figs/CLOVER/months/'
+    mcs = cnst.GRIDSAT + 'aggs/box_13W-13E-4-8N_meanT-50_from5000km2.nc' #box_25-33E-28-10S_meanT-50_from5000km2.nc'#box_13W-13E-4-8N_meanT-50_from5000km2.nc'
+    out = cnst.network_data + 'figs/CLOVER/timeseries/'
 
     #
-    # box = [-10,10,5.5,8]
-    # tpick = [-10,10,6,25]
-    # Tlons = [-10,10]
+    box = [-10,10,5.5,8]
+    tpick = [-10,10,6,25]
+    Tlons = [-10,10]
 
-    box = [18,30,-22,-10]
-    tpick = [18,30,-30,-20]
-    Tlons = [18,30]
+    # box = [18,30,-22,-10]
+    # tpick = [18,30,-30,-20]
+    # Tlons = [18,30]
 
     dam = xr.open_dataset(srfc)
     dam = u_darrays.flip_lat(dam)
@@ -262,15 +262,20 @@ def tgrad_shear_trend():
 
         #sslope, sint = ustats.linear_trend(shear)
         sslope, sint = ustats.linear_trend(shear)
+        sslope, sint, sr, sp, sstd_err = stats.linregress(np.arange(len(shear)), shear)
         try:
-            mslope, mint = ustats.linear_trend(mcs_month)
+            #mslope, mint = ustats.linear_trend(mcs_month)
+            mslope, mint, mrr, mp, mstd_err = stats.linregress(np.arange(len(mcs_month)), mcs_month)
+
         except:
             continue
 
         mr = stats.pearsonr(np.arange(len(mcs_month)), mcs_month)
-        print(m, mr)
-        if mr[1]>0.01:
-            continue
+        print(m, mr, mrr, mslope)
+        sig = 'SIG'
+        if mr[1]>0.05:
+            #continue
+            sig = 'not_sig'
 
         mcs_change.append(mcs_month[-5::].mean()-mcs_month[0:5].mean())
         shear_change.append(shear[-5::].mean()-shear[0:5].mean())
@@ -282,6 +287,7 @@ def tgrad_shear_trend():
         ax = f.add_subplot(111)
         ax.plot(tgrad.year, shear, 'x-', label='Zonal wind shear 600-925hPa', color='k')
         ax.plot(tgrad.year, sint + x*sslope, '--', color='k')
+        ax.text(0.5,0.8, 'MCS: '+ sig +'_' + str(np.round(mslope,decimals=2)*10) + ' p-val: ' + str(np.round(mp, decimals=2)), transform=ax.transAxes)
         ax.set_ylim(-8,0)
         #ax.set_ylim(9.8, 10)
         ax1 = ax.twinx()
@@ -294,7 +300,7 @@ def tgrad_shear_trend():
         ax.set_title(mnames[m]+' | Corr.:'+ str(np.round(rr, decimals=2)) +'|' + str(np.round(rq[0], decimals=2)) + '| Tgrad/Shear corr: ' + str(np.round(tshear_cor[0], decimals=2)))
         if m==3:
             ax.legend(handles=[mcsline, shearline], loc='lower left')
-        f.savefig(out + 'trend_timeseries_'+str(m)+'.png')
+        f.savefig(out + 'timeseries_WA'+str(m)+'.png')
 
         plt.close('all')
 
@@ -302,8 +308,8 @@ def tgrad_shear_trend():
 
         #plt.close('all')
 
-    plt.figure()
-    plt.plot([2,3,4,5,6,7,8,9,10,11], tgrad_change, 'ro-', label='tgrad')
-    plt.plot([2,3,4,5,6,7,8,9,10,11], shear_change, 'ko-', label='u600')
-    plt.plot([2,3,4,5,6,7,8,9,10,11], mcs_change, 'bo-', label='mcs mean temp')
-    plt.legend()
+    # plt.figure()
+    # plt.plot([2,3,4,5,6,7,8,9,10,11], tgrad_change, 'ro-', label='tgrad')
+    # plt.plot([2,3,4,5,6,7,8,9,10,11], shear_change, 'ko-', label='u600')
+    # plt.plot([2,3,4,5,6,7,8,9,10,11], mcs_change, 'bo-', label='mcs mean temp')
+    # plt.legend()

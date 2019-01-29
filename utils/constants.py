@@ -7,9 +7,14 @@ if os.path.isdir('/home/ck/DIR/'):
     network_data = ext_drive + 'cornkle/'
     elements_drive = '/media/ck/Elements/Obs_Data/'
 else:
-    local_data = '/localscratch/wllf030/cornkle/'
-    network_data = '/users/global/cornkle/shared/'
-    elements_drive = '/media/ck/Elements/Obs_Data/'
+    if os.path.isdir('/localscratch/wllf030/cornkle/'):
+        local_data = '/localscratch/wllf030/cornkle/'
+        network_data = '/users/global/cornkle/shared/'
+        elements_drive = '/media/ck/Elements/Obs_Data/'
+    else:
+        ext_drive = '/media/ck/Seagate/DIR/'
+        local_data = ext_drive + 'mymachine/'
+        network_data = ext_drive + 'cornkle/'
 
 
 ERA_MONTHLY_PL = local_data + 'ERA-I/monthly/monthly_1979-2017_pl_full.nc'
