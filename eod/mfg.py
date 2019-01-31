@@ -104,7 +104,10 @@ class ReadMfg(object):
         rr = np.fromfile(self.dpath, dtype=rrMDI.dtype)
         rr.shape = rrShape
 
-        rr = rr.astype(np.int32) - 173
+        if np.sum(rr) == 0:
+            rr = rr
+        else:
+            rr = rr - 173
 
         if llbox:
             i, j = np.where(
@@ -155,19 +158,26 @@ class ReadMfg(object):
 
         rr = np.fromfile(file, dtype=rrMDI.dtype)
         rr.shape = rrShape
-        rr = rr.astype(np.int32) #- 173
+
+        rr = rr.astype(np.int32)
+
+        if np.sum(rr) == 0:
+            rr = rr
+        else:
+            rr = rr - 173
+
+        rr[rr==-173] = 0
 
         if llbox:
             i, j = np.where(
                 (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
-            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+            rr = rr[:, i.min():i.max() + 1, j.min():j.max() + 1]
         else:
             blat = self.lat
             blon = self.lon
-        rr = rr
-
+        #ipdb.set_trace()
         str = file.split(os.sep)[-2]
         curr_date = []
         for hour in range(24):
