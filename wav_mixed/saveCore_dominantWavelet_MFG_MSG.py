@@ -25,13 +25,13 @@ import ipdb
 def run(datastring):
 
     #msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
-    ext_drive = '/media/ck/Seagate/DIR/'#
-    local_data = ext_drive + 'mymachine/'
-    network_data = ext_drive + 'cornkle/'
+    #ext_drive = '/media/ck/Seagate/DIR/'#
+    #local_data = ext_drive + 'mymachine/'
+    #network_data = ext_drive + 'cornkle/'
 
-    msg_folder = network_data + 'data/OBS/meteosat_WA30'
+    #msg_folder = network_data + 'data/OBS/meteosat_WA30'
 
-    for yy in range(1999,2002):   # (2004,2016)
+    for yy in range(1986,2006):   # (2004,2016)
 
         for mm in [9]:
             #
@@ -44,11 +44,11 @@ def run(datastring):
                 msg_folder = cnst.network_data + '/data/OBS/MFG/'
                 m = mfg.ReadMfg(msg_folder, y1=yy, y2=yy, months=[mm])
             else:
-                #msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
-                ext_drive = '/media/ck/Seagate/DIR/'#
-                local_data = ext_drive + 'mymachine/'
-                network_data = ext_drive + 'cornkle/'
-                msg_folder = network_data + 'data/OBS/meteosat_WA30'
+                msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
+                #ext_drive = '/media/ck/Seagate/DIR/'#
+                #local_data = ext_drive + 'mymachine/'
+                #network_data = ext_drive + 'cornkle/'
+                #msg_folder = network_data + 'data/OBS/meteosat_WA30'
                 m = msg.ReadMsg(msg_folder, y1=yy, y2=yy, months=[mm])
 
             files  = m.fpath
@@ -88,8 +88,8 @@ def run(datastring):
             res = [x for x in res if x is not None]
 
             ds = xr.concat(res, 'time')
-            path =  cnst.network_data + 'MCSfiles/VERA_blobs/'#'/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'test_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
+            savefile = path + 'cores_MFG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)

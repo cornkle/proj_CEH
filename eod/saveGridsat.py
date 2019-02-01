@@ -34,7 +34,7 @@ def saveYearly():
                 continue
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
-            df['tir'].values = (df['tir'].values-273.15
+            df['tir'].values = df['tir'].values-273.15
             labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
             df['tir'].values[labels == 0] = 0
@@ -54,7 +54,7 @@ def saveYearly():
 def saveYearly_parallel():
 
 
-    years = np.arange(1984, 2018)  # list(next(os.walk(msg_folder))[1])
+    years = np.arange(1983, 2018)  # list(next(os.walk(msg_folder))[1])
 
     pool = multiprocessing.Pool(processes=4)
 
@@ -66,7 +66,7 @@ def loop(y):
 
     out = cnst.local_data + 'GRIDSAT/MCS18/'
     infolder = cnst.local_data + 'GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
-    filename = 'gridsat_WA_-40_1000km2_' + str(y) + '.nc'
+    filename = 'gridsat_WA_-40_1000km2_15-21UTC' + str(y) + '.nc'
     da = None
     if os.path.isfile(out + filename):
         return
@@ -82,7 +82,7 @@ def loop(y):
             continue
 
         df.rename({'irwin_cdr': 'tir'}, inplace=True)
-        df['tir'].values = (df['tir'].values-273.15
+        df['tir'].values = df['tir'].values-273.15
         labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
                                           max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
         df['tir'].values[labels == 0] = 0
