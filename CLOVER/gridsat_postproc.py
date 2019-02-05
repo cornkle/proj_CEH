@@ -161,7 +161,7 @@ def month_mean_climatology():
         # pkl.dump(np.array(boxed),
         #          open('/users/global/cornkle/data/CLOVER/saves/box_13W-13E-4-8N_meanT-50_from5000km2.p',
         #               'wb'))
-        pdb.set_trace()
+
         enc = {'tir': {'complevel': 5, 'zlib': True}}
 
         da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2.nc')
@@ -174,13 +174,13 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-70_monthly_count_-50base.nc'
+    fname = 'aggs/gridsat_WA_-70_monthly_count_-40base_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
         for y in years:
             y = str(y)
-            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
+            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
             print('Doing ' + y)
             da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108))
             da1['tir'].values[da1['tir'].values < -70] = 1

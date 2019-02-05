@@ -30,12 +30,12 @@ def saveYearly():
             print('Doing ' + f)
 
             df = xr.open_dataset(f)
-            if (df['time.hour']<=15) | (df['time.hour']>=21):
+            if (df['time.hour']<15) | (df['time.hour']>21):
                 continue
 
             df.rename({'irwin_cdr':'tir'}, inplace=True)
             df['tir'].values = df['tir'].values-273.15
-            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[17, 25000],
+            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[16, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
             df['tir'].values[labels == 0] = 0
             df['tir'].values[df['tir'].values < -110] = 0
