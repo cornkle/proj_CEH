@@ -14,18 +14,18 @@ import pickle as pkl
 def corr_box():
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP # _SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_-50base.nc'  # -70count
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-65_monthly_count_-40base_1000km2.nc'  # -70count
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
-    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_test.p', 'rb'))
-    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_test.p', 'rb'))
+    dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_SA.p', 'rb'))
+    dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_SA.p', 'rb'))
 
-    mcsbox = cnst.GRIDSAT + 'aggs/box_12-25E-23-10S_meanT-50_from5000km2_SA.nc' # box_13W-13E-4-8N_meanT-50_from5000km2.nc'
+    mcsbox = cnst.GRIDSAT + 'aggs/SAboxWest_meanT-40_1000km2.nc' # box_13W-13E-4-8N_meanT-50_from5000km2.nc'
     mcs_temp = xr.open_dataset(mcsbox)
     mcs_temp = mcs_temp['tir']
 
-    box=[-18,55,-35,35]#[-10,55,-35,0]
+    box=[-10,55,-35,0]#[-18,55,-35,35]#[-10,55,-35,0]
 
 
     da = xr.open_dataset(pl)
@@ -41,13 +41,13 @@ def corr_box():
     lats = da.latitude
 
 
-    q = da['q'].sel(level=slice(800,850)).mean('level')
+    q = da['q'].sel(level=slice(800)).mean('level')
     #q = q[q['time.hour']==12]
-    t2 = da['t'].sel(level=slice(800,850)).mean('level')
+    t2 = da2['t2m']#.sel(level=slice(800)).mean('level')
     #t2 = t2[t2['time.hour']==12]
-    u925 = da['u'].sel(level=slice(800,850)).mean('level')
+    u925 = da['u'].sel(level=slice(800)).mean('level')
     #u925 = u925[u925['time.hour']==12]
-    u600 = da['u'].sel(level=slice(600,650)).mean('level')
+    u600 = da['u'].sel(level=slice(500,550)).mean('level')
     #u600 = u600[u600['time.hour']==12]
 
     shear = u600#-u925 # u600-
@@ -59,7 +59,7 @@ def corr_box():
 
 
     months = np.arange(1, 13)
-    months = [1]#,2,3,4,5,6,7,8,9, 10,11,12]
+    months = [1,12]
 
     def array_juggling(data, month, hour=None):
 
@@ -157,7 +157,7 @@ def corr_box():
         dicm[m].values[dicm[m].values==0] = np.nan
 
         print('plot')
-        fp = fpath + 'corr_box_SYNOP_SAEast_-50base_u600' + str(m).zfill(2) + '.png'
+        fp = fpath + 'corr_box_SYNOP_SAWest_-50base_' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(13,7), dpi=300)
@@ -171,28 +171,28 @@ def corr_box():
         #plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax1, title='925hP temperature')
+        map.visualize(ax=ax1, title='2m temperature')
 
         ax2 = f.add_subplot(222)
         map.set_data(qcorr['r'],interp='linear')  # interp='linear'
         map.set_contour(qyear,interp='linear', levels=np.arange(5,19,3), cmap='inferno')
 
         map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax2, title='925hPa Spec. humidity')
+        map.visualize(ax=ax2, title='800hPa Spec. humidity')
 
         ax3 = f.add_subplot(223)
         map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
         map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])
         map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,3), cmap='inferno')
           # levels=np.arange(-0.5,0.51,0.1)
-        map.visualize(ax=ax3, title='600-925hPa Zonal wind shear')
+        map.visualize(ax=ax3, title='500-800hPa Zonal wind shear')
 
         ax4 = f.add_subplot(224)
         map.set_contour(dicmean[m], interp='linear', levels=[0.1,0.5,1,2.5], cmap='inferno')
         map.set_data(dicm[m])  #
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.visualize(ax=ax4, title='-70C cloud cover change', cbar_title='$\%$ decade-1')
+        map.visualize(ax=ax4, title='-65C cloud cover change', cbar_title='$\%$ decade-1')
 
         plt.tight_layout()
         plt.savefig(fp)

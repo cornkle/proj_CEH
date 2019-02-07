@@ -57,7 +57,7 @@ def month_mean():
     years = list(range(1983,2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
+
     #ipdb.set_trace()
     #if not os.path.isfile(msg_folder + fname):
     da = None
@@ -65,17 +65,16 @@ def month_mean():
     hov_box = None
     for y in years:
         y = str(y)
-        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
         print('Doing ' + y)
-        da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -40) & (da1['tir'] >= -108) )
         #da1['tir'].values[da1['tir'].values == 0] = np.nan
 
         da_res = da1.resample(time='m').mean('time')
         WA_box = [-13,13,4.5,8]
-        SAW_box = [12,25,-23,-10] #[20,30,-30,-10]
+        SAW_box = [15,25,-26,-18] #[20,30,-30,-10]
         SAE_box = [25,33,-28,-10]
-        boxed = da1['tir'].sel(lat=slice(WA_box[2],WA_box[3]), lon=slice(WA_box[0],WA_box[1])).resample(time='m').mean()
-        hov_boxed = da1['tir'].sel(lat=slice(WA_box[2],WA_box[3]), lon=slice(WA_box[0],WA_box[1])).resample(time='m').mean('lon')
+        boxed = da1['tir'].sel(lat=slice(SAW_box[2],SAW_box[3]), lon=slice(SAW_box[0],SAW_box[1])).resample(time='m').mean()
 
         try:
             da = xr.concat([da, da_res], 'time')
@@ -87,10 +86,10 @@ def month_mean():
         except TypeError:
             da_box = boxed.copy()
 
-        try:
-            hov_box = xr.concat([hov_box, hov_boxed], 'time')
-        except TypeError:
-            hov_box = hov_boxed.copy()
+        da_box.to_netcdf(msg_folder + 'aggs/SAboxWest_meanT-40_1000km2.nc')
+        #da.to_netcdf(msg_folder + 'aggs/SAb_meanT-40_1000km2.nc')
+
+
 
 def month_mean_hov():
 
@@ -174,7 +173,7 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-70_monthly_count_-40base_1000km2.nc'
+    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -182,8 +181,9 @@ def month_count():
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
             print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108))
-            da1['tir'].values[da1['tir'].values < -70] = 1
+            da1['tir'].values = da1['tir'].values/100
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -65) & (da1['tir'] >= -108))
+            da1['tir'].values[da1['tir'].values < -65] = 1
 
             da1 = da1.resample(time='m').sum('time')
             try:

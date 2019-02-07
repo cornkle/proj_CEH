@@ -75,7 +75,7 @@ def trend_all():
 
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-60_monthly_count_-50base.nc'
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-65_monthly_count_-40base_1000km2.nc'
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
@@ -93,17 +93,22 @@ def trend_all():
     lons = da.longitude
     lats = da.latitude
 
-    q = da['q'].sel(level=slice(800,850)).mean('level')
+    q = da['q'].sel(level=slice(800)).mean('level')
 
     q = q[q['time.hour']==12]
-    t2d = da['t'].sel(level=slice(800,850)).mean('level')
+    #t2d = da['t'].sel(level=slice(800,850)).mean('level')
+    t2d = da2['t2m']
     t2d = t2d[t2d['time.hour']==12]
-    u925 = da['u'].sel(level=slice(800,850)).mean('level')
+    u925 = da['u'].sel(level=slice(800)).mean('level')
     u925 = u925[u925['time.hour']==12]
-    u600 = da['u'].sel(level=slice(600,650)).mean('level')
+    u600 = da['u'].sel(level=slice(500,550)).mean('level')
     u600 = u600[u600['time.hour']==12]
+    # v600 = da['v'].sel(level=slice(600,650)).mean('level')
+    # v600 = v600[v600['time.hour']==12]
 
-    shear = u600-u925
+    shear = u600#-u925
+    # u6 = u600
+    # v6 = v600
 
     q.values = q.values*1000
 
@@ -112,6 +117,8 @@ def trend_all():
     tir = grid.lookup_transform(da3['tir'])
     q = grid.lookup_transform(q)
     shear = grid.lookup_transform(shear)
+    # u6 = grid.lookup_transform(u6)
+    # v6 = grid.lookup_transform(v6)
 
     # tir = t2d.salem.lookup_transform(da3['tir'])
     # t2 = t2d
@@ -119,14 +126,18 @@ def trend_all():
     # q = q
     # shear = shear
 
+    xx, yy = grid.xy_coordinates
+
     grid = grid.to_dataset()
 
     t2 = xr.DataArray(t2, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
     q = xr.DataArray(q, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
     shear = xr.DataArray(shear, coords=[t2d['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
+    # u6 = xr.DataArray(u6, coords=[t2d['time'], grid['y'], grid['x']], dims=['time', 'latitude', 'longitude'])
+    # v6 = xr.DataArray(v6, coords=[t2d['time'], grid['y'], grid['x']], dims=['time', 'latitude', 'longitude'])
 
-    months=[1,2,3,4,5,6,7,8,9, 10,11,12]
+    months=[1,12]
 
     dicm = {}
     dicmean = {}
@@ -160,6 +171,9 @@ def trend_all():
         tirtrend_out = xr.DataArray(tirtrend_unstacked, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
         tirmean_out = xr.DataArray(tirm_mean, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
 
+        # u6mean = u6[u6['time.month'] ==m].mean('time')
+        # v6mean = v6[v6['time.month'] == m].mean('time')
+
         dicm[m[0]] = tirtrend_out
         dicmean[m[0]] = tirmean_out
 
@@ -168,7 +182,7 @@ def trend_all():
         s_da = sheartrend_unstacked
         ti_da = tirtrend_unstacked
 
-        fp = fpath + 'trend_mk_-60C_synop_-50base'+str(m[0]).zfill(2)+'_sig.png'
+        fp = fpath + 'trend_mk_-70C_synop_-50base'+str(m[0]).zfill(2)+'.png'
         map = shear.salem.get_map()
 
         # f = plt.figure(figsize=(8, 5), dpi=300)
@@ -211,20 +225,32 @@ def trend_all():
         #plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         map.set_plot_params(levels=np.linspace(-0.5,0.5,10), cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax1, title='925hP temperature')
+        map.visualize(ax=ax1, title='2m temperature')
 
         ax2 = f.add_subplot(222)
         map.set_data(q_da,interp='linear')  # interp='linear'
         map.set_contour(q_mean,interp='linear', levels=np.arange(5,19,3), cmap='inferno')
 
         map.set_plot_params(levels=np.linspace(-0.5,0.5,10), cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        map.visualize(ax=ax2, title='925hPa Spec. humidity')
+        map.visualize(ax=ax2, title='800hPa Spec. humidity')
 
         ax3 = f.add_subplot(223)
         map.set_data(s_da, interp='linear')  # interp='linear'
-        map.set_contour(shear_mean, interp='linear', levels=np.arange(-10,1,3), cmap='inferno')
+        map.set_contour(shear_mean, interp='linear', levels=np.arange(-10,1,4), cmap='inferno')
+        #plt.clabel(cntr, inline=1, fontsize=10)
         map.set_plot_params(levels=np.linspace(-1,1,10), cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
-        map.visualize(ax=ax3, title='600-925hPa Zonal wind shear')
+        map.visualize(ax=ax3, title='500-800hPa Zonal wind shear')
+
+        # # Quiver only every 7th grid point
+        # u = u6mean[4::7, 4::7]
+        # v = v6mean[4::7, 4::7]
+
+        # transform their coordinates to the map reference system and plot the arrows
+
+        # xx, yy = np.meshgrid(xx, yy)
+        # qu = ax3.quiver(xx, yy, u.values, v.values)
+        # # qk = plt.quiverkey(qu, 0.7, 0.95, 50, '50 m s$^{-1}$',
+        # #                    labelpos='E', coordinates='figure')
 
         ax4 = f.add_subplot(224)
         map.set_contour(tirm_mean, interp='linear', levels=[0.1,0.5,1,2.5], cmap='inferno')
@@ -233,7 +259,7 @@ def trend_all():
 
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.visualize(ax=ax4, title='-70C cloud cover change', cbar_title='$\%$ decade-1')
+        map.visualize(ax=ax4, title='-65C cloud cover change', cbar_title='$\%$ decade-1')
 
         plt.tight_layout()
         plt.savefig(fp)

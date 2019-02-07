@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import xarray as xr
-import pdb
+import ipdb
 import matplotlib.pyplot as plt
 import cartopy
 from utils import u_plot as up
@@ -10,6 +10,7 @@ import os
 import matplotlib as mpl
 from utils import constants as cnst
 from scipy.ndimage.measurements import label
+
 
 
 def monthly(years):
@@ -213,7 +214,7 @@ def hourly_count():
 
 def timeline_trend_count():
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-70_monthly_count.nc'
+    fname = 'aggs/gridsat_WA_-70_monthly_count_-40base_1000km2.nc'
 
     da = xr.open_dataarray(msg_folder + fname)
     da = da.sel(lat=slice(4.5,8), lon=slice(-10, 15))
@@ -222,13 +223,45 @@ def timeline_trend_count():
     mean = da.mean(dim=['lat', 'lon'])
     #mean = mean[(mean['time.month']==8)]
     f= plt.figure(figsize=(10,6))
-    for i in range(9,12):
+    for i in range(3,6):
         bla = mean[(mean['time.month'] == i)]
         bla.plot(label=str(i), marker='o')
     plt.title('Average number of pixels <= -70C, 4.5-8N')
     plt.legend()
-    plt.ylim(0,1)
+    #plt.ylim(0,3)
    # plt.ylim(-76,-72)
+
+
+def timeline_trend_count_SA():
+    msg_folder = cnst.GRIDSAT
+    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_1000km2.nc'
+    fname2 = 'aggs/gridsat_WA_-40_monthly_count_-40base_1000km2.nc'
+
+
+    da = xr.open_dataarray(msg_folder + fname)
+    da2 = xr.open_dataarray(msg_folder + fname2)
+    #[25,33,-28,-10]  , West[15,25,-26,-18]
+    da = da.sel(lat=slice(-25,-18), lon=slice(18, 22))# (lat=slice(-28,-10), lon=slice(25, 33))
+    da2 = da2.sel(lat=slice(-25,-18), lon=slice(18, 22))  #[25,33,-28,-10]
+    #da=da.sel(lat=slice(5,10))
+    #da[da==0]=np.nan
+    mean = da.mean(dim=['lat', 'lon'])
+    mean2 = da2.mean(dim=['lat', 'lon'])
+    #mean = mean[(mean['time.month']==8)]
+    f= plt.figure(figsize=(10,6))
+    for i in [12,1]:
+        bla = mean[(mean['time.month'] == i)]
+        bla.plot(label=str(i), marker='o')
+    plt.title('Average number of pixels <= -70C, SouthA 10-28S, 25-35E')
+    f = plt.figure(figsize=(10, 6))
+    for i in [12,1]:
+        bla2 = mean2[(mean2['time.month'] == i)]
+        bla2.plot(label=str(i), marker='o')
+    plt.title('Average number of pixels <= -40C, SouthA 10-28S, 25-35E')
+
+
+    plt.legend()
+
 
 def timeline_trend_mean():
     msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
@@ -289,66 +322,78 @@ def trend_map():
 
 def t_ratio():
 
-    msg_folder = '/users/global/cornkle/data/OBS/gridsat/gridsat_netcdf/'
-    fname = 'gridsat_WA_-70_monthly_count.nc'
+    msg_folder = cnst.local_data + 'GRIDSAT/MCS18/aggs/'
+    fname = 'gridsat_WA_-70_monthly_count_-40base_1000km2.nc'
     da70 = xr.open_dataarray(msg_folder + fname)
-    fname = 'gridsat_WA_-40_monthly_count.nc'
+    fname = 'gridsat_WA_-50_monthly_count_-40base_1000km2.nc'
     da40 = xr.open_dataarray(msg_folder + fname)
 
     da70.values[da70.values == 0] = np.nan
     da40.values[da40.values == 0] = np.nan
-    da70.sel(lat=slice(11, 20))
-    da40.sel(lat=slice(11, 20))
+
     #ratio = da70/da40
 
-    msg40 = da40[(da40['time.year'] >= 2007) & (da40['time.year'] <= 2015)]
-    msg70 = da70[(da70['time.year'] >= 2007) & (da70['time.year'] <= 2015)]
+    msg40 = da40[(da40['time.year'] >= 2007) & (da40['time.year'] <= 2017)]
+    msg70 = da70[(da70['time.year'] >= 2007) & (da70['time.year'] <= 2017)]
 
-    mfg40 = da40[(da40['time.year'] >= 1990) & (da40['time.year'] <= 2005)]
-    mfg70 = da70[(da70['time.year'] >= 1990) & (da70['time.year'] <= 2005)]
+    mfg40 = da40[(da40['time.year'] >= 1984) & (da40['time.year'] <= 2000)]
+    mfg70 = da70[(da70['time.year'] >= 1984) & (da70['time.year'] <= 2000)]
 
     # f = plt.figure(figsize=(10, 6))
     # ax = f.add_subplot(111)
 
-    msg40 = msg40.groupby('time.season').sum(dim='time')
-    msg70 = msg70.groupby('time.season').sum(dim='time')
+    msg40 = msg40.groupby('time.month').sum(dim='time')#('time.season').sum(dim='time')
+    msg70 = msg70.groupby('time.month').sum(dim='time')
 
-    mfg40 = mfg40.groupby('time.season').sum(dim='time')
-    mfg70 = mfg70.groupby('time.season').sum(dim='time')
+    mfg40 = mfg40.groupby('time.month').sum(dim='time')
+    mfg70 = mfg70.groupby('time.month').sum(dim='time')
 
     msg_ratio = msg70/msg40*100
-    mfg_ratio = mfg70 / mfg40*100
+    mfg_ratio = mfg70 /mfg40*100
 
-    simple = msg_ratio.plot(x='lon', y='lat', col='season', col_wrap=2, cmap='viridis', transform=ccrs.PlateCarree(),
-                        subplot_kws={'projection': ccrs.PlateCarree()}, vmax=20)
+    # msg_ratio.values[np.isinf(msg_ratio).values] = np.nan
+    # mfg_ratio.values[np.isinf(mfg_ratio).values] = np.nan
 
-    for ax in simple.axes.flat:
-        ax.coastlines()
-        ax.gridlines()
-        ax.set_extent([-17.5, 30, -6, 20])
-        ax.set_aspect('equal', 'box-forced')
-        ax.set_title('MSG')
-
-    simple = mfg_ratio.plot(x='lon', y='lat', col='season', col_wrap=2, cmap='viridis', transform=ccrs.PlateCarree(),
-                        subplot_kws={'projection': ccrs.PlateCarree()}, vmax=20)
+    simple = msg40.plot(x='lon', y='lat', col='month', col_wrap=3, cmap='viridis', transform=ccrs.PlateCarree(),
+                        subplot_kws={'projection': ccrs.PlateCarree()}, vmin=5, vmax=50)
 
     for ax in simple.axes.flat:
         ax.coastlines()
         ax.gridlines()
-        ax.set_extent([-17.5, 30, -6, 20])
+        ax.set_extent([-17.5, 55, -35, -5])
         ax.set_aspect('equal', 'box-forced')
-        ax.set_title('MFG')
+
+
+    # simple = msg_ratio.plot(x='lon', y='lat', col='month', col_wrap=3, cmap='viridis', transform=ccrs.PlateCarree(),
+    #                     subplot_kws={'projection': ccrs.PlateCarree()}, vmax=70)
+    #
+    # for ax in simple.axes.flat:
+    #     ax.coastlines()
+    #     ax.gridlines()
+    #     ax.set_extent([-17.5, 55, -35, -5])
+    #     ax.set_aspect('equal', 'box-forced')
+    #     #ax.set_title('MSG')
+    #
+    # simple = mfg_ratio.plot(x='lon', y='lat', col='month', col_wrap=3, cmap='viridis', transform=ccrs.PlateCarree(),
+    #                     subplot_kws={'projection': ccrs.PlateCarree()}, vmax=70)
+    #
+    # for ax in simple.axes.flat:
+    #     ax.coastlines()
+    #     ax.gridlines()
+    #     ax.set_extent([-17.5, 55, -35, -5])
+    #     ax.set_aspect('equal', 'box-forced')
+    #     #ax.set_title('MFG')
 
     ratio = (msg_ratio-mfg_ratio)
 
 
-    simple = ratio.plot(x='lon', y='lat', col='season', col_wrap=2, cmap='RdBu', transform=ccrs.PlateCarree(),
-                        subplot_kws={'projection': ccrs.PlateCarree()}, vmax=10, vmin=-10, levels=[-15,-10,-5,5,10,15])
+    simple = ratio.plot(x='lon', y='lat', col='month', col_wrap=3, cmap='RdBu', transform=ccrs.PlateCarree(),
+                        subplot_kws={'projection': ccrs.PlateCarree()},  levels=[-25,-15,-10, -5, 5, 10,15, 25])
 
     for ax in simple.axes.flat:
         ax.coastlines()
         ax.gridlines()
-        ax.set_extent([-17.5, 30, -6, 20])
+        ax.set_extent([-17.5, 55, -35, -5])
         ax.set_aspect('equal', 'box-forced')
 
 
