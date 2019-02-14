@@ -9,6 +9,7 @@ from utils import u_statistics as us
 from scipy import stats
 import numpy.ma as ma
 import pickle as pkl
+import shapely.geometry as shpg
 
 
 def corr_box():
@@ -48,9 +49,9 @@ def corr_box():
     u925 = da['u'].sel(level=slice(800)).mean('level')
     #u925 = u925[u925['time.hour']==12]
     u600 = da['u'].sel(level=slice(500,550)).mean('level')
-    #u600 = u600[u600['time.hour']==12]
+    v600 = da['v'].sel(level=slice(500,550)).mean('level')
 
-    shear = u600#-u925 # u600-
+    shear = u925 # u600-
 
     q.values = q.values * 1000
 
@@ -89,7 +90,7 @@ def corr_box():
         ds['slope'] = a.copy(deep=True).sum('year') * np.nan
 
         #corr_box = [-10,11,4.5,8]
-        corr_box = [25,35,-28,-10]#West: [13,25,-23,-10]
+        corr_box = [16,24,-24,-18]#West: [13,25,-23,-10]
 
         if bsingle:
             bb = b
@@ -125,6 +126,8 @@ def corr_box():
         t2diff, t2year = array_juggling(t2, m, hour=12) #
         qdiff, qyear = array_juggling(q, m, hour=12) #, hour=12
         shdiff, sheyear = array_juggling(shear, m, hour=12) #, hour=12
+        vdiff, vyear = array_juggling(v600, m, hour=12)  # , hour=12
+        udiff, uyear = array_juggling(u600, m, hour=12)  # , hour=12
         tirdiff, tiryear = array_juggling(tir, m)  # average frequency change
 
         mcs_month = mcs_temp[mcs_temp['time.month'] == m] # meanT box average change
@@ -159,8 +162,16 @@ def corr_box():
         print('plot')
         fp = fpath + 'corr_box_SYNOP_SAWest_-50base_' + str(m).zfill(2) + '.png'
         map = shear.salem.get_map()
+        #xx, yy = map.grid.xy_coordinates
 
-        f = plt.figure(figsize=(13,7), dpi=300)
+        # transform their coordinates to the map reference system and plot the arrows
+        xx, yy = map.grid.transform(shear.longitude.values, shear.latitude.values,
+                                     crs=shear.salem.grid.proj)
+
+        xx, yy = np.meshgrid(xx,yy)
+
+        #ipdb.set_trace()
+        f = plt.figure(figsize=(15,8), dpi=200)
         ax1 = f.add_subplot(221)
         # map.set_shapefile(rivers=True)
         # bla = ma.masked_invalid(tcorr['r'].values)
@@ -182,14 +193,35 @@ def corr_box():
 
         ax3 = f.add_subplot(223)
         map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
-        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4,0.4,0.5,0.6,0.7])
-        map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,3), cmap='inferno')
+        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4, 0.4,0.5,0.6,0.7])
+        map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,6), cmap='inferno')
+        cs = ax3.contour(sheyear, interp='linear', levels=np.arange(-10,1,6), cmap='inferno')
+        plt.clabel(cs, inline=1, fontsize=10)
+
+        # Quiver only every 7th grid point
+        u = uyear[4::7, 4::7]
+        v = vyear[4::7, 4::7]
+
+        xx = xx[4::7, 4::7]
+        yy = yy[4::7, 4::7]
+
+
+        qu = ax3.quiver(xx, yy, u.values, v.values, scale=50)
+
           # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='500-800hPa Zonal wind shear')
 
         ax4 = f.add_subplot(224)
         map.set_contour(dicmean[m], interp='linear', levels=[0.1,0.5,1,2.5], cmap='inferno')
+
         map.set_data(dicm[m])  #
+        #ax4.axhspan(-26,18)  #[15,25,-26,-18]
+        coord = [16,24,-24,-18]
+        geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
+        map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
+        # ax4.axvline(x=25, ymin=-26, ymax=-18)
+        # ax4.axhline(y=-26, xmin=15, xmax=25)
+        # ax4.axhline(y=-18, xmin=15, xmax=25)
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
         map.visualize(ax=ax4, title='-65C cloud cover change', cbar_title='$\%$ decade-1')

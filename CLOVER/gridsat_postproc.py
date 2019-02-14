@@ -74,7 +74,8 @@ def month_mean():
         WA_box = [-13,13,4.5,8]
         SAW_box = [15,25,-26,-18] #[20,30,-30,-10]
         SAE_box = [25,33,-28,-10]
-        boxed = da1['tir'].sel(lat=slice(SAW_box[2],SAW_box[3]), lon=slice(SAW_box[0],SAW_box[1])).resample(time='m').mean()
+        box = SAW_box
+        boxed = da1['tir'].sel(lat=slice(box[2],box[3]), lon=slice(box[0],box[1])).resample(time='m').mean()
 
         try:
             da = xr.concat([da, da_res], 'time')
@@ -85,7 +86,7 @@ def month_mean():
             da_box = xr.concat([da_box, boxed], 'time')
         except TypeError:
             da_box = boxed.copy()
-
+        da_box.attrs['box'] = box
         da_box.to_netcdf(msg_folder + 'aggs/SAboxWest_meanT-40_1000km2.nc')
         #da.to_netcdf(msg_folder + 'aggs/SAb_meanT-40_1000km2.nc')
 
