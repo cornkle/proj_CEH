@@ -31,7 +31,7 @@ def run(datastring):
 
     #msg_folder = network_data + 'data/OBS/meteosat_WA30'
 
-    for yy in range(2007,2009):   # (2004,2016)MSG, (1983,2006) MFG
+    for yy in range(2004,2005):   # (2004,2016)MSG, (1983,2006) MFG
 
         for mm in [9]:
             #
@@ -56,12 +56,16 @@ def run(datastring):
             mdic = m.read_data(files[0], llbox=[-25, 20, 2, 25])  #[-14, 2.5, 4, 11.5]
 
             # make salem grid
+            grid3k = u_grid.make(gridll['lon'].values, gridll['lat'].values, 3000)
             grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 5000)
-            inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
 
+            inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid3k)
 
+            k3_on_k5, lut = grid.lookup_transform(grid3k.ll_coordinates[0], grid=grid3k, return_lut=True)
 
-            gridd = (inds,weights,shape, grid)
+            gridd = (inds, weights, shape, grid3k, grid, lut)
+
+            ipdb.set_trace()
 
             files_str = []
 
@@ -112,7 +116,9 @@ def file_loop(passit):
     inds_inter = gridd[0]
     weights_inter = gridd[1]
     shape_inter = gridd[2]
-    grid_inter = gridd[3]
+    grid3k_inter = gridd[3]
+    grid_inter = gridd[4]
+    lut_inter = gridd[5]
 
     m = passit[1]
     file = passit[2]
@@ -161,7 +167,8 @@ def file_loop(passit):
 
     #test = timeslice.copy(deep=True)
     try:
-        outt = u_int.interpolate_data(timeslice.values, inds_inter, weights_inter, shape_inter)
+        outt_dummy = u_int.interpolate_data(timeslice.values, inds_inter, weights_inter, shape_inter)
+        outt = grid_inter.lookup_transform(outt_dummy, grid=grid3k_inter, return_lut=False)
         print('Interpolated')
     except ValueError:
         print('Interpolation value error!!')

@@ -90,6 +90,44 @@ def month_mean():
         da_box.to_netcdf(msg_folder + 'aggs/SAboxWest_meanT-40_1000km2.nc')
         #da.to_netcdf(msg_folder + 'aggs/SAb_meanT-40_1000km2.nc')
 
+def month_mean_daily():
+
+    years = list(range(1983,2018))
+
+    msg_folder = cnst.GRIDSAT
+
+    #ipdb.set_trace()
+    #if not os.path.isfile(msg_folder + fname):
+    da = None
+    da_box = None
+    hov_box = None
+    for y in years:
+        y = str(y)
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
+        print('Doing ' + y)
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -40) & (da1['tir'] >= -108) )
+        #da1['tir'].values[da1['tir'].values == 0] = np.nan
+
+        da_res = da1.resample(time='d').mean('time')
+        WA_box = [-13,13,4.5,8]
+        SAW_box = [16,24,-24,-18] #[20,30,-30,-10]
+        SAE_box = [25,33,-28,-10]
+        box = SAW_box
+        boxed = da1['tir'].sel(lat=slice(box[2],box[3]), lon=slice(box[0],box[1])).resample(time='m').mean()
+
+        try:
+            da = xr.concat([da, da_res], 'time')
+        except TypeError:
+            da = da_res.copy()
+
+        try:
+            da_box = xr.concat([da_box, boxed], 'time')
+        except TypeError:
+            da_box = boxed.copy()
+        da_box.attrs['box'] = box
+        da_box.to_netcdf(msg_folder + 'aggs/SAboxWest_meanT-40_1000km2.nc')
+        #da.to_netcdf(msg_folder + 'aggs/SAb_meanT-40_1000km2.nc')
+
 
 
 def month_mean_hov():
@@ -174,7 +212,7 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_1000km2.nc'
+    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -194,6 +232,37 @@ def month_count():
 
         enc = {'tir': {'complevel': 5, 'zlib': True}}
         da.to_netcdf(msg_folder + fname, encoding=enc)
+
+
+def month_count_sum():
+
+    years = list(range(1983, 2018))
+
+    msg_folder = cnst.GRIDSAT
+
+    for y in years:
+        y = str(y)
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
+        print('Doing ' + y)
+        da1['tir'].values = da1['tir'].values/100
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -65) & (da1['tir'] >= -108))
+        da1['tir'].values[da1['tir'].values<=-65] = 1
+
+        da1 = da1.resample(time='m').sum('time')
+
+        fname = '/gridsat_WA_-40_1000km2_15-21UTC' + y + '_monthSum.nc'
+        enc = {'tir': {'complevel': 5, 'zlib': True}}
+        da1.to_netcdf(msg_folder + fname, encoding=enc)
+
+
+def month_count_concat():
+    msg_folder = cnst.GRIDSAT
+    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    da = xr.open_mfdataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC*_monthSum.nc')
+
+    enc = {'tir': {'complevel': 5, 'zlib': True}}
+    da.to_netcdf(msg_folder + fname, encoding=enc)
+
 
 
     # else:
