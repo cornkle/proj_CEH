@@ -31,15 +31,15 @@ def run(datastring):
 
     #msg_folder = network_data + 'data/OBS/meteosat_WA30'
 
-    for yy in range(1986,2006):   # (2004,2016)
+    for yy in range(2004,2006):   # (2004,2016)
 
-        for mm in [9]:
+        for mm in [6,7,8,9]:
             #
             # yy = 1999
             # mm = 9
             # datastring = 'mfg'
 
-            pool = multiprocessing.Pool(processes=5)
+            pool = multiprocessing.Pool(processes=3)
             if datastring == 'mfg':
                 msg_folder = cnst.network_data + '/data/OBS/MFG/'
                 m = mfg.ReadMfg(msg_folder, y1=yy, y2=yy, months=[mm])
@@ -58,7 +58,7 @@ def run(datastring):
             mdic = m.read_data(files[0], llbox=[-25, 20, 2, 25])  #[-14, 2.5, 4, 11.5]
 
             # make salem grid
-            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 5000)
+            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 10000)
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
             gridd = (inds,weights,shape, grid)
 
@@ -89,7 +89,7 @@ def run(datastring):
 
             ds = xr.concat(res, 'time')
             path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'cores_MFG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            savefile = path + 'cores_10k_MFG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)
@@ -119,15 +119,9 @@ def file_loop(passit):
 
 
     if tag == 'mfg':
-        strr = file.split(os.sep)[-2]
-        if (np.int(strr[4:6]) != 9):
-            print('Skip month')
-            return
+            print(' month')
     else:
         strr = file.split(os.sep)[-1]
-        if (np.int(strr[4:6]) != 9):
-            print('Skip month')
-            return
 
         if ((strr[-2::]) != '00') & ((strr[-2::]) != '30'):
             print('Skip minute')
@@ -218,7 +212,7 @@ def file_loop(passit):
             kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
             outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
 
-        wav = util.waveletT(outt, dataset='METEOSAT5K')
+        wav = util.waveletT(outt, dataset='METEOSAT10K')
 
         outt[nogood] = np.nan
 

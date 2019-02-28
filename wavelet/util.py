@@ -33,6 +33,8 @@ def _create_dic(dx, dist, start, nb):
 DATASETS = {
     'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),
     'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 1),
+    'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
+    'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
     'METSRFC': _create_dic(3, 0.45, 9, 10) # nb =14 also tested
 }
