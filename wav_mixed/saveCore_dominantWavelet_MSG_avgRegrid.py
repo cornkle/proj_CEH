@@ -41,11 +41,11 @@ def run(datastring):
 
             pool = multiprocessing.Pool(processes=5)
 
-            #msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
-            ext_drive = '/media/ck/Seagate/DIR/'#
+            msg_folder = cnst.network_data + 'data/OBS/meteosat_WA30'
+            #ext_drive = '/media/ck/Seagate/DIR/'#
             #local_data = ext_drive + 'mymachine/'
-            network_data = ext_drive + 'cornkle/'
-            msg_folder = network_data + 'data/OBS/meteosat_WA30'
+            #network_data = ext_drive + 'cornkle/'
+            #msg_folder = network_data + 'data/OBS/meteosat_WA30'
 
             m = msg.ReadMsg(msg_folder, y1=yy, y2=yy, months=[mm])
 
@@ -57,15 +57,13 @@ def run(datastring):
 
             # make salem grid
             grid3k = u_grid.make(gridll['lon'].values, gridll['lat'].values, 3000)
-            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 5000)
+            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 8000)
 
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid3k)
 
             k3_on_k5, lut = grid.lookup_transform(grid3k.ll_coordinates[0], grid=grid3k, return_lut=True)
 
             gridd = (inds, weights, shape, grid3k, grid, lut)
-
-            ipdb.set_trace()
 
             files_str = []
 
@@ -78,7 +76,7 @@ def run(datastring):
             files_str = np.unique(files_str)
 
             passit = []
-            for f in files_str[0:50]:
+            for f in files_str:
                 passit.append((gridd,m, f,datastring))
 
             #res = pool.map(file_loop, passit)
@@ -93,8 +91,8 @@ def run(datastring):
             res = [x for x in res if x is not None]
 
             ds = xr.concat(res, 'time')
-            path =  cnst.network_data + 'MCSfiles/VERA_blobs/' #'/prj/vera/cores/'
-            savefile = path + 'cores_MSG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            path =  '/prj/vera/cores/' #cnst.network_data + 'MCSfiles/VERA_blobs/' #'/prj/vera/cores/'
+            savefile = path + 'cores_avgInter8k_MSG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)
@@ -221,7 +219,7 @@ def file_loop(passit):
         kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
         outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
 
-    wav = util.waveletT(outt, dataset='METEOSAT5K')
+    wav = util.waveletT(outt, dataset='METEOSAT8K')
 
     outt[nogood] = np.nan
 
