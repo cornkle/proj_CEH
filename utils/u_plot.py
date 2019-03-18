@@ -12,6 +12,8 @@ import numpy as np
 import os
 import salem
 import pdb
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
 
 
 def quick_map_xr(xar, save = None, title=None, **kwargs):
@@ -106,6 +108,15 @@ def discrete_cmap(N, base_cmap=None):
 
     #return base.from_list(cmap_name, color_list, N)
     return plt.cm.get_cmap(base_cmap, N)
+
+
+def discrete_cmap_norm(levels, cmap):
+
+    # pick the desired colormap, sensible levels, and define a normalization
+    # instance which takes data values and translates those into levels.
+    cmap = plt.get_cmap(cmap)
+    norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
+    return norm
 
 def savefig(savepath, filename, filetype):
 
