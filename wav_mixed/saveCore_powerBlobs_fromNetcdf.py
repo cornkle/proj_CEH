@@ -15,7 +15,7 @@ import glob
 
 def run():
 
-    met_folder = cnst.network_data + '/data/vera_test/'
+    met_folder = '/prj/vera/cores/' #cnst.network_data + '/data/vera_test/'
 
     pool = multiprocessing.Pool(processes=5)
 
@@ -93,12 +93,17 @@ def find_scales_dominant(wav, outt, core_min=None, no_good=None, dataset=None):
     if 'MFG' in dataset:
         smaller = -17
         thresh_p = np.sum((wav['scales'] + smaller) ** .5)
-        power_img[(power_img < np.percentile(power_img[power_img > 1], 25)) | (power_img < (thresh_p))] = 0
+        try:
+            power_img[(power_img < np.percentile(power_img[power_img > 1], 25)) | (power_img < (thresh_p))] = 0
+        except IndexError:
+            return
     else:
         smaller = -8
         thresh_p = np.sum((wav['scales'] + smaller) ** .5)
-        power_img[(power_img < np.percentile(power_img[power_img > 1], 25)) | (power_img < (thresh_p))] = 0
-
+        try:
+            power_img[(power_img < np.percentile(power_img[power_img > 1], 25)) | (power_img < (thresh_p))] = 0
+        except IndexError:
+            return
 
     labels, numL = label(power_img)
     u, inv = np.unique(labels, return_inverse=True)
@@ -119,14 +124,17 @@ def file_loop(passit):
 
     ds = xr.open_dataset(passit)
 
-    ds['tir'].values = ds['tir'] / 100
+    ds['tir'].values = ds['tir']
 
     bloblist = []
     tirlist = []
     lat = ds.lat
     lon = ds.lon
 
-    for day in ds['tir']:
+    for ids, day in enumerate(ds['tir']):
+
+        print('id', ids)
+
         date = day.time
         day.values = day / 100
         if np.sum(day.values) == 0:
@@ -136,9 +144,13 @@ def file_loop(passit):
         power = util.waveletT(img, dataset='METEOSAT5K_vera')
         power_mfg = find_scales_dominant(power, img, no_good=nogood, core_min=-50, dataset=passit)
 
+        if power_mfg is None:
+            continue
+
+        new_savet = (day.values*100).astype(np.int16)
         bloblist.append(xr.DataArray(power_mfg.astype(np.int16), coords={'time': date, 'lat': lat, 'lon': lon},
                                      dims=['lat', 'lon']))  # [np.newaxis, :])
-        tirlist.append(xr.DataArray(day.values, coords={'time': date, 'lat': lat, 'lon': lon}, dims=['lat', 'lon']))
+        tirlist.append(xr.DataArray(new_savet, coords={'time': date, 'lat': lat, 'lon': lon}, dims=['lat', 'lon']))
 
     ds_mfg = xr.Dataset()
     ds_mfg['blobs'] = xr.concat(bloblist, 'time')
@@ -146,7 +158,7 @@ def file_loop(passit):
     ds_mfg.sel(lat=slice(5, 12), lon=slice(-13, 13))
 
 
-    savefile = passit.replace('core_', 'corePower_')
+    savefile = passit.replace('cores_', 'coresPower_')
 
     try:
         os.remove(savefile)
@@ -154,7 +166,7 @@ def file_loop(passit):
         pass
 
     comp = dict(zlib=True, complevel=5)
-    enc = {var: comp for var in ds.data_vars}
+    enc = {var: comp for var in ds_mfg.data_vars}
 
     ds_mfg.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
 
