@@ -32,7 +32,7 @@ def _create_dic(dx, dist, start, nb):
 ############ Frequently used datasets
 DATASETS = {
     'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),
-    'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 3),  #28     0.5
+    'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 2),  #28     0.5
     'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),

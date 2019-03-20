@@ -6,15 +6,11 @@ from wavelet import util
 from eod import msg, mfg
 import xarray as xr
 import os
-from utils import u_grid
-from scipy.interpolate import griddata
 from scipy import ndimage
 from utils import u_arrays as ua
 import multiprocessing
 from utils import u_grid, u_interpolate as u_int
 import datetime as dt
-import matplotlib.pyplot as plt
-import pdb
 from scipy.ndimage.measurements import label
 from utils import constants as cnst
 import pickle as pkl
@@ -58,7 +54,7 @@ def run(datastring):
             mdic = m.read_data(files[0], llbox=[-25, 20, 2, 25])  #[-14, 2.5, 4, 11.5]
 
             # make salem grid
-            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 8000)
+            grid = u_grid.make(gridll['lon'].values, gridll['lat'].values, 5000)
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
             gridd = (inds,weights,shape, grid)
 
@@ -89,7 +85,7 @@ def run(datastring):
 
             ds = xr.concat(res, 'time')
             path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'cores_8k_MFG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+            savefile = path + 'cores_powerTest_MFG_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)
