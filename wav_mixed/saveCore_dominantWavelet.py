@@ -95,13 +95,13 @@ def file_loop(passit):
 
     #min = ['00', '30']
 
-    strr = files.split(os.sep)[-1]
+    strr = file.split(os.sep)[-1]
 
     if ((np.int(strr[4:6]) != 9) & (np.int(strr[4:6]) != 6)):
         print('Skip month')
         return
 
-    if (((strr[-6:-5]) != '00') & ((strr[-6:-5]) != '30'):
+    if ((strr[-6:-5]) != '00') & ((strr[-6:-5]) != '30'):
         print('Skip minute')
         return
 

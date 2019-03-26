@@ -210,7 +210,7 @@ def tgrad_shear_trend():
     da = da.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))#latitude=slice(36, -37))
 
     u925 = da['u'].sel(level=925)#(level=slice(850, 925)).mean(dim='level')#).mean(dim='level')  #slice(850
-    u600 = da['u'].sel(level=650)#(level=slice(550, 650)).mean(dim='level')
+    u600 = da['u'].sel(level=700)#(level=slice(550, 650)).mean(dim='level')
 
     qq925 = da['q'].sel(level=slice(850,925)).mean(dim='level')
     qq600 = da['q'].sel(level=slice(550, 650)).mean(dim='level')

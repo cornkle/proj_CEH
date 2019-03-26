@@ -6,12 +6,10 @@ from wavelet import util
 from eod import msg, mfg
 import xarray as xr
 import os
-from scipy import ndimage
-from utils import u_arrays as ua
+from wav_mixed import powerBlob_utils
 import multiprocessing
 from utils import u_grid, u_interpolate as u_int
 import datetime as dt
-from scipy.ndimage.measurements import label
 from utils import constants as cnst
 import pickle as pkl
 import ipdb
@@ -94,92 +92,6 @@ def run(datastring):
             print('Saved ' + savefile)
 
 
-def filter_img(inarr):
-
-        outt = inarr.copy()
-        print('outmin', np.nanmin(outt), np.nanmax(outt))
-
-        t_thresh_size = -40
-        t_thresh_cut = -50
-
-        outt[outt >= t_thresh_size] = 0
-        outt[np.isnan(outt)] = 0
-
-        labels, numL = label(outt)
-
-        u, inv = np.unique(labels, return_inverse=True)
-        n = np.bincount(inv)
-
-        pix_nb = 28
-
-        badinds = u[(
-                    n < pix_nb)]  # all blobs with more than 1000 pixels = 25,000km2 (meteosat regridded 5km), 200pix = 5000km2, 8pix = 200km2
-        # scale 30km, radius 15km ca. 700km2 circular area equals 28 pix
-
-        for bi in badinds:
-            inds = np.where(labels == bi)
-            outt[inds] = 0
-
-        outt[outt >= t_thresh_cut] = 150
-
-        grad = np.gradient(outt)
-        outt[outt == 150] = np.nan
-
-        nogood = np.isnan(outt)  # filters edge maxima later, no maxima in -40 edge area by definition!
-
-        # tdiff = np.nanmax(outt) - np.nanmin(outt)  # define background temperature for image
-        # if tdiff > 28:  # temp difference of 28 degrees
-        #     xmin = 15
-        # else:
-        #     xmin = 10
-
-        xmin = 10
-        outt[nogood] = t_thresh_cut - xmin
-        nok = np.where(abs(grad[0]) > 80)
-        d = 2
-        i = nok[0]
-        j = nok[1]
-        # edge smoothing for wavelet application
-        for ii, jj in zip(i, j):
-            kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
-            outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 3, mode='nearest')
-
-        return outt, nogood, t_thresh_size, t_thresh_cut, pix_nb
-
-
-def find_scales_dominant(wav, outt, core_min=None, no_good=None, dataset=None):
-    outt[no_good] = np.nan
-
-    arr = np.array(wav['scales'], dtype=str)
-
-    wll = wav['t']
-
-    power_img = np.sum(wll, axis=0)
-    power_img[no_good] = 0
-
-    if dataset == 'mfg':
-        smaller = -20
-        thresh_p = np.sum((wav['scales'] + smaller) ** .5)
-        power_img[(power_img < np.percentile(power_img[power_img > 0.001], 25)) | (power_img < (thresh_p))] = 0
-    if dataset == 'msg':
-        smaller = -12
-        thresh_p = np.sum((wav['scales'] + smaller) ** .5)
-        power_img[(power_img < np.percentile(power_img[power_img > 0.001], 25)) | (power_img < (thresh_p))] = 0
-
-    labels, numL = label(power_img)
-    u, inv = np.unique(labels, return_inverse=True)
-
-    for inds in u:
-        if inds == 0:
-            continue
-
-        arr = power_img.copy()
-        arr[np.where(labels != inds)] = 0
-
-        power_img.flat[np.argmax(arr)] = -999
-
-    return power_img
-
 
 
 def file_loop(passit):
@@ -239,13 +151,13 @@ def file_loop(passit):
             continue
 
 
-        outt, nogood, t_thresh_size, t_thresh_cut, pix_nb = filter_img(outt.values)
+        outt, nogood, t_thresh_size, t_thresh_cut, pix_nb = powerBlob_utils.filter_img(outt.values, 5)
 
         wav = util.waveletT(outt, dataset='METEOSAT5K_vera')
         core_min=-50
         outt[nogood] = np.nan
 
-        power_msg = find_scales_dominant(wav, outt, no_good=nogood, core_min=-50, dataset='mfg')
+        power_msg = powerBlob_utils.find_scales_dominant(wav, nogood, dataset='mfg')
 
         hour = timeslice['time.hour']
         minute = timeslice['time.minute']
