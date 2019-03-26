@@ -17,14 +17,14 @@ def run():
 
     met_folder = '/prj/vera/cores/' #cnst.network_data + '/data/vera_test/'
 
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=6)
 
-    files = glob.glob(met_folder + 'cores_-40_700km2*.nc')
+    files = glob.glob(met_folder + 'cores_*-40_700km2*.nc')
 
-    #res = pool.map(file_loop, files)
+    res = pool.map(file_loop, files)
 
-    for f in files:
-        file_loop(f)
+    #for f in files:
+    #    file_loop(f)
 
     return
 
