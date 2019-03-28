@@ -40,7 +40,7 @@ def rewriteMsgLonLat_WA():
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
 def rewriteMFGLonLat_WA():
-    llFile = cnst.network_data + 'data/OBS/MFG/msat_grid_463x1094.gra'
+    llFile = cnst.network_data + 'data/OBS/MFG_JJAS/msat_grid_463x1094.gra'
 
     llShape = (463,1094)
     llMDI = np.float32(13.5)
@@ -50,7 +50,24 @@ def rewriteMFGLonLat_WA():
     lat.shape = llShape
     lon.shape = llShape
 
-    llsavefile = cnst.network_data + 'data/OBS/MFG/MFG_1094_463_lat_lon'
+    llsavefile = cnst.network_data + 'data/OBS/MFG_JJAS/MFG_1094_463_lat_lon'
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+#========================================================================================
+# Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
+#========================================================================================
+def rewriteMFG_MAMON_LonLat_WA():
+    llFile = cnst.network_data + 'data/OBS/MFG_MAMON/msat_grid_336x914.gra'
+
+    llShape = (336,914)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    lon = ll[0:336*914]
+    lat = ll[336*914:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = cnst.network_data + 'data/OBS/MFG_MAMON/MFG_336_914_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
 
