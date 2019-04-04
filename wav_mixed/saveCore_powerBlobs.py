@@ -16,19 +16,28 @@ import ipdb
 
 filepath = {
 
-    'MFG_JJAS' : [cnst.network_data + '/data/OBS/MFG_JJAS/', [6,7,8,9], (1982,2005)],
-    'MFG_MAMON' : [cnst.network_data +'/data/OBS/MFG_MAMON/', [3,4,5,10,11], (1982,2003)],
+    'MFG_JJAS' : [cnst.network_data + '/data/OBS/MFG_JJAS/', [6,7,8,9], (1982,1986)], # 1982,2005
+    'MFG_MAMON' : [cnst.network_data +'/data/OBS/MFG_MAMON/', [3,4,5,10,11], (1982,1986)], # 1982,2003
     'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2004,2017)],
     'MSG_MAMON' : [cnst.network_data +'/data/OBS/MSG_tropWA/', [3,4,5,10,11], (2004,2015)],
 }
 
-def run(dataset):
+def run(dataset, CLOBBER=False):
 
     for yy in range((filepath[dataset])[2][0],((filepath[dataset])[2][1])+1):   # (2004,2016)
 
         for mm in (filepath[dataset])[1]:
 
+
             tag = dataset[0:3].upper()
+
+            path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
+            savefile = path + 'coresPower_'+tag.upper()+'_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+
+            if not CLOBBER:
+                if os.path.isfile(savefile):
+                    print('File exists, continue!')
+                    continue
 
             pool = multiprocessing.Pool(processes=3)
             print('Reading '+filepath[dataset][0])
@@ -74,13 +83,11 @@ def run(dataset):
             pool.close()
 
             res = [x for x in res if x is not None]
+
             try:
                 ds = xr.concat(res, 'time')
             except ValueError:
                 return
-
-            path =  '/prj/vera/cores/' # cnst.network_data + 'MCSfiles/VERA_blobs/'
-            savefile = path + 'coresPower_'+tag.upper()+'_-40_700km2_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             try:
                 os.remove(savefile)

@@ -17,6 +17,9 @@ else:
         network_data = ext_drive + 'cornkle/'
 
 
+ANCILS = network_data + 'data/ancils_python/'
+
+
 ERA_MONTHLY_PL = local_data + 'ERA-I/monthly/monthly_1979-2017_pl_full.nc'
 ERA_MONTHLY_SRFC = local_data + 'ERA-I/monthly/monthly_1979-2017_srfc_full.nc'
 ERA_MONTHLY_PL_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc'
