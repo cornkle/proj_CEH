@@ -20,6 +20,7 @@ from utils import constants as cnst
 # path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'
 
 path = cnst.network_data + 'MCSfiles/old_MSG_blobmaps_forIleaps_VERA/'
+path = '/prj/vera/cores/'
 figpath = cnst.network_data + 'figs/VERA/chris_egu'
 
 hours = '18-19'
@@ -32,15 +33,17 @@ lst = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_
 lossyear = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_lossyear_10N_010W.tif'
 vegfra = cnst.local_data + 'obs_data/LandCover/evergreen_trees.tif'
 
-if not os.path.isfile(path+'blob_map_35km_'+tstring+'_sum_MAMJ_'+hours+'UTC_2006.nc'):
+file_out = 'blob_map_2012-2015_day.nc'
+file_in = path+'coresPower_MSG*'
 
-    #ds3 = xr.open_mfdataset(file3)
-    ds18 = xr.open_dataarray(file18)
+if not os.path.isfile(file_out):
+
+    ds18 = xr.open_mfdataset(file_in)
+    #ds18 = xr.open_dataarray(file18)
     print('Starting to write nc files')
 
     ds18 = ds18.sel(lon=slice(-10, 10), lat=slice(4,9))
 
-    #ds3_hist = ds3['power'][(ds3['time.hour']==3) & (ds3['time.year']<=1995)].sum(dim='time')
     ds18_hist = ds18[(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 17) & (ds18['time.year']>=2005) & (ds18['time.year']<=2009)].sum(dim='time')
     ds18_hist.values = ds18_hist.values/5
     ds18_hist.to_netcdf(path + 'blob_map_35km_'+tstring+'_sum_MAMJ_'+hours+'UTC_2006.nc')
@@ -64,7 +67,7 @@ tdummy2 = xr.open_mfdataset(cnst.network_data + 'data/MODIS/LST_MOD11C3/clim/201
 # coord = [-8.55,-5,5,7.7,6.1,6.5, -7.6, -7.4]
 # name='Tai park'
 
-coord = [-7.85,-6.4,6.2,7.45,6.9,7.4, -7.6, -7.4]
+coord = [-8,-6.4,5.5,7.45,6.9,7.4, -7.6, -7.4]
 #coord = [-8.1,-6.4,6.1,7.45,6.1,6.4, -7.6, -7.4]
 name='Tai park'
 
