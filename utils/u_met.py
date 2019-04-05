@@ -146,7 +146,11 @@ def theta_factor(pz):
 
 def theta(pz, t):
     ist = t + 273.15
-    ist =  ist * ((1000 / pz) ** 0.286)
+    try:
+        ist =  ist * ((1000 / pz) ** 0.286)
+    except ValueError:
+        ist = (ist.T * ((1000 / pz) ** 0.286)).T
+
     return  ist-273.15
 
 

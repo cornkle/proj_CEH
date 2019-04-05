@@ -38,6 +38,13 @@ def closest_point(point, points):
     return np.argmin(dist_2)
 
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    diff = (np.abs(array - value))
+    idx = np.unravel_index(diff.argmin(), diff.shape)
+    return array[idx], idx
+
+
 """create one unique integer from two positive integers
  Cantor pairing function"""
 def unique_of_pair(x,y):
