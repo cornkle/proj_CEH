@@ -10,7 +10,7 @@ import xarray as xr
 from utils import u_grid
 import ipdb
 
-file = '/prj/vera/semval/hansen_forest_2018_0.05deg/Hansen_GFC_2000-2017-v1.5_treecover_WAfrica_250m_cdomerge_time.nc'
+file = '/prj/vera/semval/hansen_forest_2018_0.05deg/Hansen_GFC_2000-2017-v1.5_treecover_WAfrica_250m_ncecat.nc'
 
 da = xr.open_dataset(file)
 da = da['treecover']#.sel(LON=slice(-8,-5), LAT=slice(6,8))
@@ -30,16 +30,14 @@ da = da['treecover']#.sel(LON=slice(-8,-5), LAT=slice(6,8))
 da.values[np.isnan(da.values)]=0
 
 
-#ipdb.set_trace()
-
-grid = u_grid.make(da['LON'].values, da['LAT'].values, 5000)
+grid = u_grid.make(da['LON'].values, da['LAT'].values, 0.05, keep_ll=True)
 outt = grid.lookup_transform(da, return_lut=False, method=np.nanmean)
 
-da_new = xr.DataArray(outt, coords={'time': da.time, 'lat': grid.ll_coordinates[1][:,0], 'lon': grid.ll_coordinates[0][0,:]},
+da_new = xr.DataArray(outt, coords={'time': np.arange(2000,2018), 'lat': grid.xy_coordinates[1][:,0], 'lon': grid.xy_coordinates[0][0,:]},
                         dims=['time','lat', 'lon'])
 
 
-da_new.to_netcdf('/prj/vera/cornkle/treefrac_5km.nc')
+da_new.to_netcdf('/prj/vera/cornkle/treefrac_0.05deg.nc')
 
 #
 # plt.figure(figsize=(9,7))

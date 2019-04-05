@@ -2,10 +2,10 @@ import salem
 import pyproj
 import numpy as np
 from scipy.interpolate import griddata
-import pdb
+import ipdb
 import scipy.spatial.qhull as qhull
 
-proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
+
 
 """Define a grid with salem
 lon: list or numpy array of longitudes. Has to contain at least min max longitudes of the grid
@@ -16,14 +16,20 @@ dx: number of meters per pixel, must be integer, e.g. 5000 for 5km pixels
 """
 
 
-def make(lon, lat, dx, proj=proj):
+def make(lon, lat, dx, keep_ll=False):
     if lon.ndim == 1:
         grid_lons, grid_lats = np.meshgrid(lon, lat)
     else:
         grid_lons = lon
         grid_lats = lat
-    # Transform lon, lats to the mercator projection
-    x, y = pyproj.transform(salem.wgs84, proj, grid_lons, grid_lats)
+    if not keep_ll:
+        # Transform lon, lats to the mercator projection
+        proj = pyproj.Proj('+proj=merc +lat_0=0. +lon_0=0.')
+        x, y = pyproj.transform(salem.wgs84, proj, grid_lons, grid_lats)
+    else:
+        proj = salem.wgs84
+        x, y = grid_lons, grid_lats
+
     # take the min and max
     xmax, xmin = np.max(x), np.min(x)
     ymax, ymin = np.max(y), np.min(y)
