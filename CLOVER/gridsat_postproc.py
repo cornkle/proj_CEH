@@ -183,7 +183,7 @@ def month_mean_climatology():
 
             da_res = da1.resample(time='m').mean('time')
 
-            boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-13,13)).resample(time='m').mean()
+            boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-10,10)).resample(time='m').mean()
 
             try:
                 da = xr.concat([da, da_res], 'time')
