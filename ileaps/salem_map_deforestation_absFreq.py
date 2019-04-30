@@ -34,23 +34,23 @@ lossyear = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-
 vegfra = cnst.local_data + 'obs_data/LandCover/evergreen_trees.tif'
 
 file_out = figpath+'blob_map_35km_hist_MAM_16-17UTC_2006.nc'
-file_in = path+'coresPower_MSG*'
-
+file_in = path+'coresPower_*'
+ds18 = xr.open_mfdataset(file_in)
 if not os.path.isfile(file_out):
 
-    ds18 = xr.open_mfdataset(file_in)
+
     #ds18 = xr.open_dataarray(file18)
     print('Starting to write nc files')
 
     ds18 = ds18.sel(lon=slice(-10, 10), lat=slice(4,9))
 
-    ds18_hist = ds18['blobs'][(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 21) & (ds18['time.year']>=2000) & (ds18['time.year']<=2009)]
+    ds18_hist = ds18['blobs'][(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 18) & (ds18['time.year']>=1990) & (ds18['time.year']<=2000)]
 
     ds18_hist.values = (ds18_hist.values > 0).astype(int)
     ds18_hist = ds18_hist.mean('time')*48
     ds18_hist.to_netcdf(figpath + 'blob_map_35km_hist_MAM_16-17UTC_2006.nc')
 
-    ds18_present = ds18['blobs'][(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 21) & (ds18['time.year']>=2012) & (ds18['time.year']<=2017)]
+    ds18_present = ds18['blobs'][(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 18) & (ds18['time.year']>=2012) & (ds18['time.year']<=2017)]
     ds18_present.values = (ds18_present.values > 0).astype(int)
     ds18_present = ds18_present.mean('time')*48 # per day
     ds18_present.to_netcdf(figpath + 'blob_map_35km_present_MAM_16-17UTC_2011.nc')
@@ -105,8 +105,8 @@ mm2=ds18_present.min()
 percboth = np.max([perc,perc2])
 minboth = np.min([mm1,mm2])
 
-ds18_hist = (ds18_hist-mm1)/(perc-mm1)
-ds18_present = (ds18_present-mm2)/(perc2-mm2)
+# ds18_hist = (ds18_hist-mm1)/(perc-mm1)
+# ds18_present = (ds18_present-mm2)/(perc2-mm2)
 # ds18_hist = ds18_hist.where(ds18_hist<=1)
 # ds18_present = ds18_present.where(ds18_present<=1)
 
@@ -333,6 +333,12 @@ map.visualize(ax=ax2, title='Deforested - Forested')
 
 plt.tight_layout()
 plt.savefig(figpath+'map_funnyforest.png', dpi=300)
+
+ds18 = ds18['blobs'][(ds18['time.month']<= 5) & (ds18['time.hour']>= 16) & (ds18['time.hour']<= 18)]
+ts = ds18.sel(lon=slice(-7, -6.9), lat=slice(6.9,7.2)).groupby('time.year').mean()
+plt.figure()
+plt.plot(np.unique(ds18['time.year'].values), ts)
+
 
 # plt.savefig('/users/global/cornkle/VERA/plots/map_'+name+'.png', dpi=300)
 
