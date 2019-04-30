@@ -153,6 +153,321 @@ def t_trend_polyfit():
 
 
 
+def t_trend_polyfit_year():
+    #file = '/users/global/cornkle/data/ERA-I monthly/ERA-WA-Monthly-2mTemp.nc'
+    file = cnst.ERA_MONTHLY_SRFC_SYNOP
+
+    fpath = cnst.network_data + '/figs/CLOVER/months/'
+
+    # define a function to compute a linear trend of a timeseries
+    def linear_trend(x):
+        # pf = np.polyfit(np.arange(len(x)), x, 1)
+        pf, slope, int, p, ind = mk.test(np.arange(len(x)), x.squeeze().values, eps=0.001, alpha=0.01, Ha='upordown')
+
+        # we need to return a dataarray or else xarray's groupby won't be happy
+        issig = slope
+
+        # if ind == 1:
+        #     issig = slope
+        # else:
+        #     issig = np.nan
+
+        return xr.DataArray(issig, )
+
+
+    ## a clean way of plotting - use matplotlib functions directly:
+
+    def draw_map(ax, data, lon, lat, title=None, mask_sig=None, quiver=None, contour=None, cbar_label=None, toggle_cbar=None, **kwargs):
+
+        mapp = ax.contourf(lon, lat, data, transform=ccrs.PlateCarree(), **kwargs)  # this is the actual plot
+
+        ## mask for significance indicator
+        if mask_sig is not None:
+            plt.contourf(lon, lat, mask_sig, colors='none', hatches='.',
+                         levels=[0.5, 1], linewidth=0.1)
+
+        ## quiver list
+        if quiver is not None:
+            qu = ax.quiver(quiver['x'], quiver['y'], quiver['u'], quiver['v'], scale=quiver['scale'])
+        ## additional contour on plot
+        if contour is not None:
+            ax.contour(contour['x'], contour['y'], contour['data'], levels=contour['levels'], cmap=contour['cmap'])
+
+        ax.coastlines()  ## adds coastlines
+        # Gridlines
+        xl = ax.gridlines(draw_labels=True);  # adds latlon grid lines
+        xl.xlabels_top = False  ## labels off
+        xl.ylabels_right = False
+        plt.title(title)
+        # Countries
+        ax.add_feature(cartopy.feature.BORDERS, linestyle='--');  # adds country borders
+        if toggle_cbar is not None:
+            cbar = plt.colorbar(mapp)  # adds colorbar
+            cbar.set_label(cbar_label)
+        plt.show()
+
+
+    dam = xr.open_dataset(file)
+    dam = dam['t2m']
+
+    f = plt.figure(figsize=(9,11))
+
+    m_dic = { 1 : 'Jan', 2 : 'Feb', 3 : 'Mar', 4 : 'Apr', 5 : 'May', 6 : 'Jun', 7 : 'Jul', 8 : 'Aug',
+              9 : 'Sep', 10 : 'Oct', 11 : 'Nov', 12 : '12'}
+
+    for mm in range(1,13):
+
+        ax = f.add_subplot(4,3,mm, projection=ccrs.PlateCarree())  # this opens a new plot axis
+
+        da = dam[(dam['time.month']==mm)]
+
+        str_tit = m_dic[mm]
+
+        da = da.sel(longitude=slice(-18,51), latitude=slice(36, -37))
+        da = da.groupby('time.year').mean(axis=0)
+
+        lons = da.longitude
+        lats = np.flip(da.latitude.values, axis=0)
+
+        # stack lat and lon into a single dimension called allpoints
+        stacked = da.stack(allpoints=['latitude','longitude'])
+        # apply the function over allpoints to calculate the trend at each point
+        trend = stacked.groupby('allpoints').apply(linear_trend)
+        # unstack back to lat lon coordinates
+        trend_unstacked = trend.unstack('allpoints')
+
+        trend_unstacked = trend_unstacked*10. # warming over decade
+        da2 = xr.DataArray(trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
+
+        bla = True
+        # if mm in [3,6,9,12]:
+        #     bla = True
+
+        draw_map(ax, da2.values, da2.longitude, da2.latitude, levels=[-0.4, -0.3, -0.2, 0.2, 0.3, 0.4],
+                 extend='both', title=str_tit, mask_sig=None, quiver=None, contour=None, cbar_label='K decade$^{-1}$', cmap='RdBu_r', toggle_cbar=bla)
+
+
+        print('Doing ', str(mm))
+
+    plt.tight_layout()
+    fp = fpath + 'ttrend_year.png'
+
+    f.savefig(fp)
+    plt.close('all')
+
+
+def t_trend_polyfit_season():
+    #file = '/users/global/cornkle/data/ERA-I monthly/ERA-WA-Monthly-2mTemp.nc'
+    file = cnst.ERA_MONTHLY_SRFC_SYNOP
+
+    fpath = cnst.network_data + '/figs/CLOVER/months/'
+
+    # define a function to compute a linear trend of a timeseries
+    def linear_trend(x):
+        # pf = np.polyfit(np.arange(len(x)), x, 1)
+        pf, slope, int, p, ind = mk.test(np.arange(len(x)), x.squeeze().values, eps=0.001, alpha=0.01, Ha='upordown')
+
+        # we need to return a dataarray or else xarray's groupby won't be happy
+        issig = slope
+
+        # if ind == 1:
+        #     issig = slope
+        # else:
+        #     issig = np.nan
+
+        return xr.DataArray(issig, )
+
+
+    ## a clean way of plotting - use matplotlib functions directly:
+
+    def draw_map(ax, data, lon, lat, title=None, mask_sig=None, quiver=None, contour=None, cbar_label=None, toggle_cbar=None, **kwargs):
+
+        mapp = ax.contourf(lon, lat, data, transform=ccrs.PlateCarree(), **kwargs)  # this is the actual plot
+
+        ## mask for significance indicator
+        if mask_sig is not None:
+            plt.contourf(lon, lat, mask_sig, colors='none', hatches='.',
+                         levels=[0.5, 1], linewidth=0.1)
+
+        ## quiver list
+        if quiver is not None:
+            qu = ax.quiver(quiver['x'], quiver['y'], quiver['u'], quiver['v'], scale=quiver['scale'])
+        ## additional contour on plot
+        if contour is not None:
+            ax.contour(contour['x'], contour['y'], contour['data'], levels=contour['levels'], cmap=contour['cmap'])
+
+        ax.coastlines()  ## adds coastlines
+        # Gridlines
+        xl = ax.gridlines(draw_labels=True);  # adds latlon grid lines
+        xl.xlabels_top = False  ## labels off
+        xl.ylabels_right = False
+        plt.title(title)
+        # Countries
+        ax.add_feature(cartopy.feature.BORDERS, linestyle='--');  # adds country borders
+        if toggle_cbar is not None:
+            cbar = plt.colorbar(mapp)  # adds colorbar
+            cbar.set_label(cbar_label)
+        plt.show()
+
+
+    dam = xr.open_dataset(file)
+    dam = dam['t2m']
+
+    f = plt.figure(figsize=(10,9))
+
+    m_dic = { 1 : 'Jan', 2 : 'Feb', 3 : 'Mar', 4 : 'Apr', 5 : 'May', 6 : 'Jun', 7 : 'Jul', 8 : 'Aug',
+              9 : 'Sep', 10 : 'Oct', 11 : 'Nov', 12 : '12'}
+
+    seasons = [ [12,2, 'DJF',1], [3,5, 'MAM',2], [6,8, 'JJA',3],[9,11, 'SON',4]]
+
+    for mm in seasons:
+
+        ax = f.add_subplot(2,2,mm[3], projection=ccrs.PlateCarree())  # this opens a new plot axis
+        if mm[0] == 12:
+            da = dam[(dam['time.month']>=mm[0]) | (dam['time.month']<=mm[1])]
+        else:
+            da = dam[(dam['time.month'] >= mm[0]) & (dam['time.month'] <= mm[1])]
+
+        str_tit = mm[2]
+
+        da = da.sel(longitude=slice(-18,51), latitude=slice(36, -37))
+        da = da.groupby('time.year').mean(axis=0)
+
+        lons = da.longitude
+        lats = np.flip(da.latitude.values, axis=0)
+
+        # stack lat and lon into a single dimension called allpoints
+        stacked = da.stack(allpoints=['latitude','longitude'])
+        # apply the function over allpoints to calculate the trend at each point
+        trend = stacked.groupby('allpoints').apply(linear_trend)
+        # unstack back to lat lon coordinates
+        trend_unstacked = trend.unstack('allpoints')
+
+        trend_unstacked = trend_unstacked*10. # warming over decade
+        da2 = xr.DataArray(trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
+
+        bla = True
+        # if mm in [3,6,9,12]:
+        #     bla = True
+
+        draw_map(ax, da2.values, da2.longitude, da2.latitude, levels=[-0.4, -0.3, -0.2, 0.2, 0.3, 0.4],
+                 extend='both', title=str_tit, mask_sig=None, quiver=None, contour=None, cbar_label='K decade$^{-1}$', cmap='RdBu_r', toggle_cbar=bla)
+
+
+        print('Doing ', str(mm))
+
+    plt.tight_layout()
+    fp = fpath + 'ttrend_year.png'
+
+    f.savefig(fp)
+    plt.close('all')
+
+def t_trend_polyfit_month():
+    #file = '/users/global/cornkle/data/ERA-I monthly/ERA-WA-Monthly-2mTemp.nc'
+    file = cnst.ERA_MONTHLY_SRFC_SYNOP
+
+    fpath = cnst.network_data + '/figs/CLOVER/months/'
+
+    # define a function to compute a linear trend of a timeseries
+    def linear_trend(x):
+        # pf = np.polyfit(np.arange(len(x)), x, 1)
+        pf, slope, int, p, ind = mk.test(np.arange(len(x)), x.squeeze().values, eps=0.001, alpha=0.01, Ha='upordown')
+
+        # we need to return a dataarray or else xarray's groupby won't be happy
+        issig = slope
+
+        # if ind == 1:
+        #     issig = slope
+        # else:
+        #     issig = np.nan
+
+        return xr.DataArray(issig, )
+
+
+    ## a clean way of plotting - use matplotlib functions directly:
+
+    def draw_map(ax, data, lon, lat, title=None, mask_sig=None, quiver=None, contour=None, cbar_label=None, toggle_cbar=None, **kwargs):
+
+        mapp = ax.contourf(lon, lat, data, transform=ccrs.PlateCarree(), **kwargs)  # this is the actual plot
+
+        ## mask for significance indicator
+        if mask_sig is not None:
+            plt.contourf(lon, lat, mask_sig, colors='none', hatches='.',
+                         levels=[0.5, 1], linewidth=0.1)
+
+        ## quiver list
+        if quiver is not None:
+            qu = ax.quiver(quiver['x'], quiver['y'], quiver['u'], quiver['v'], scale=quiver['scale'])
+        ## additional contour on plot
+        if contour is not None:
+            ax.contour(contour['x'], contour['y'], contour['data'], levels=contour['levels'], cmap=contour['cmap'])
+
+        ax.coastlines()  ## adds coastlines
+        # Gridlines
+        xl = ax.gridlines(draw_labels=True);  # adds latlon grid lines
+        xl.xlabels_top = False  ## labels off
+        xl.ylabels_right = False
+        plt.title(title)
+        # Countries
+        ax.add_feature(cartopy.feature.BORDERS, linestyle='--');  # adds country borders
+        if toggle_cbar is not None:
+            cbar = plt.colorbar(mapp)  # adds colorbar
+            cbar.set_label(cbar_label)
+        plt.show()
+
+
+    dam = xr.open_dataset(file)
+    dam = dam['t2m']
+
+    f = plt.figure(figsize=(10,9))
+
+    m_dic = { 1 : 'Jan', 2 : 'Feb', 3 : 'Mar', 4 : 'Apr', 5 : 'May', 6 : 'Jun', 7 : 'Jul', 8 : 'Aug',
+              9 : 'Sep', 10 : 'Oct', 11 : 'Nov', 12 : '12'}
+
+    seasons = [ [11,2, 'Nov',1], [2,5, 'Feb',2], [5,8, 'May',3],[8,11, 'Aug',4]]
+
+    for mm in seasons:
+
+        ax = f.add_subplot(2,2,mm[3], projection=ccrs.PlateCarree())  # this opens a new plot axis
+
+        da = dam[(dam['time.month'] == mm[0])]
+
+        str_tit = mm[2]
+
+        da = da.sel(longitude=slice(-18,51), latitude=slice(36, -37))
+        da = da.groupby('time.year').mean(axis=0)
+
+        lons = da.longitude
+        lats = np.flip(da.latitude.values, axis=0)
+
+        # stack lat and lon into a single dimension called allpoints
+        stacked = da.stack(allpoints=['latitude','longitude'])
+        # apply the function over allpoints to calculate the trend at each point
+        trend = stacked.groupby('allpoints').apply(linear_trend)
+        # unstack back to lat lon coordinates
+        trend_unstacked = trend.unstack('allpoints')
+
+        trend_unstacked = trend_unstacked*10. # warming over decade
+        da2 = xr.DataArray(trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
+
+        bla = True
+        # if mm in [3,6,9,12]:
+        #     bla = True
+
+        draw_map(ax, da2.values, da2.longitude, da2.latitude, levels=[-0.4, -0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.4],
+                 extend='both', title=str_tit, mask_sig=None, quiver=None, contour=None, cbar_label='K decade$^{-1}$', cmap='RdBu_r', toggle_cbar=bla)
+
+
+        print('Doing ', str(mm))
+
+    plt.tight_layout()
+    fp = fpath + 'ttrend_year_singleM.png'
+
+    f.savefig(fp)
+    plt.close('all')
+
+
+
 
 def t_mean():
     # file = '/users/global/cornkle/data/ERA-I monthly/ERA-WA-Monthly-2mTemp.nc'

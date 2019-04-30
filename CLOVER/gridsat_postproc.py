@@ -179,8 +179,6 @@ def month_mean_climatology():
             #da1['tir'].values[da1['tir'].values < -70] = 1
 
 
-
-
             da_res = da1.resample(time='m').mean('time')
 
             boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-10,10)).resample(time='m').mean()
