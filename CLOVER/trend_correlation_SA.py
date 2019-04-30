@@ -167,7 +167,7 @@ def corr_box():
         10 : [14,28,-15,-5],
         11 : [16,30,-20,-10],
         12 : [16,30,-22,-12],
-        (11,1) : [20,30,-25,-18]
+        (11,1) : [18,30,-23,-18]
     }
 
 
@@ -182,7 +182,7 @@ def corr_box():
         if type(m)==int:
             m = [m]
 
-        t2diff, t2year = array_juggling(t2d, m) #
+        t2diff, t2year = array_juggling(t2d, [10]) #
         qdiff, qyear = array_juggling(q, m) #, hour=12
         shdiff, sheyear = array_juggling(shear, m) #, hour=12
         vdiff, vyear = array_juggling(v600, m)  # , hour=12
@@ -206,9 +206,9 @@ def corr_box():
         print('plot')
 
         if len(m) == 1:
-            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_OCT_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'corr_mid_-70C_synop_-50base_linear' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_OCT_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
         map = shear.salem.get_map()
