@@ -76,6 +76,7 @@ def run_mixed(nb_processors, func, data, dic_names):
 
     return dic
 
+
 def run_flat(nb_processors, func, data, dic_names):
 
     pool = multiprocessing.Pool(processes=nb_processors)
@@ -87,7 +88,7 @@ def run_flat(nb_processors, func, data, dic_names):
     dic = {}
 
     res = np.array(res)
-    pdb.set_trace()
+
     for id, l in enumerate(dic_names):
 
             dic[l] = np.squeeze(res[:,id,...])

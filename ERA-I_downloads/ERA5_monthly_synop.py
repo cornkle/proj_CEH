@@ -10,7 +10,7 @@ def download(year):
             'product_type':'reanalysis-synoptic-monthly-means',
             'variable':[
                 '100m_u_component_of_wind','100m_v_component_of_wind','10m_u_component_of_wind',
-                '10m_v_component_of_neutral_wind','10m_v_component_of_wind','2m_dewpoint_temperature',
+                '10m_v_component_of_wind','2m_dewpoint_temperature',
                 '2m_temperature','boundary_layer_height','convective_available_potential_energy',
                 'convective_inhibition','high_cloud_cover','instantaneous_10m_wind_gust',
                 'mean_sea_level_pressure',
@@ -35,7 +35,8 @@ def download(year):
                 '21:00', '22:00', '23:00'
             ]
         },
-        '/users/global/cornkle/mymachine/ERA5/ERA5_monthly_'+str(y)+'_synop.nc')
+        '/media/ck/Elements/ERA5/monthly/synoptic/surface/ERA5_monthly_'+str(y)+'_synop.nc')
 
 for y in range(1979,2020):
+    print('Doing year', y)
     download(y)

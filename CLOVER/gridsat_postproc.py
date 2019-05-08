@@ -168,40 +168,39 @@ def month_mean_climatology():
     msg_folder = cnst.GRIDSAT
     fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
 
-    if not os.path.isfile(msg_folder + fname):
-        da = None
-        da_box = None
-        for y in years:
-            y = str(y)
-            da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
-            print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
-            #da1['tir'].values[da1['tir'].values < -70] = 1
+    #if not os.path.isfile(msg_folder + fname):
+    da = None
+    da_box = None
+    for y in years:
+        y = str(y)
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
+        print('Doing ' + y)
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
+        #da1['tir'].values[da1['tir'].values < -70] = 1
 
 
-            da_res = da1.resample(time='m').mean('time')
+        da_res = da1.resample(time='m').mean('time')
 
-            boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-10,10)).resample(time='m').mean()
+        #boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-10,10)).resample(time='m').mean()
+        boxed = da1['tir'].sel(lat=slice(10, 17), lon=slice(-10, 10)).resample(time='m').mean()
 
-            try:
-                da = xr.concat([da, da_res], 'time')
-            except TypeError:
-                da = da_res.copy()
+        try:
+            da = xr.concat([da, da_res], 'time')
+        except TypeError:
+            da = da_res.copy()
 
-            try:
-                da_box = xr.concat([da_box, boxed], 'time')
-            except TypeError:
-                da_box = boxed.copy()
-
+        try:
+            da_box = xr.concat([da_box, boxed], 'time')
+        except TypeError:
+            da_box = boxed.copy()
 
         # pkl.dump(np.array(boxed),
         #          open('/users/global/cornkle/data/CLOVER/saves/box_13W-13E-4-8N_meanT-50_from5000km2.p',
         #               'wb'))
 
         enc = {'tir': {'complevel': 5, 'zlib': True}}
-
-        da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2.nc')
-
+        #da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2.nc')
+        da_box.to_netcdf(msg_folder + 'box_13W-13E-10-18N_meanT-50_from5000km2.nc')
         da.to_netcdf(msg_folder + fname, encoding=enc)
 
 

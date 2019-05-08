@@ -9,6 +9,24 @@ import os
 import numpy as np
 from scipy.ndimage.measurements import label
 from utils import u_mann_kendall as mk
+import itertools
+import ipdb
+
+
+def merge_dicts(list_of_dicts, merge_lists=False):
+    d = {}
+    for dict in list_of_dicts:
+        for key in dict:
+            try:
+                d[key].append(dict[key])
+            except KeyError:
+                d[key] = [dict[key]]
+
+    if merge_lists:
+        for k in d.keys():
+            d[k] = [d for d in itertools.chain.from_iterable(d[k])]  # merges lists of list
+
+    return d
 
 
 def locate(pattern, root_path, exclude=None):
@@ -283,6 +301,15 @@ def cut_box(xpos, ypos, arr, dist=None):
     return kernel
 
 def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
+    """
+
+    :param array: 2d input array
+    :param thresh: cloud threshold
+    :param min_area: minimum area of the cloud
+    :param max_area: maximum area of the cloud
+    :param minmax_area: tuple indicating only clouds bigger than tuple[0] and smaller than tuple[1]
+    :return: 2d array with labelled blobs
+    """
     array[array >= thresh] = 0  # T threshold maskout
     array[np.isnan(array)] = 0  # set ocean nans to 0
 
@@ -297,9 +324,9 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         goodinds = u[(n>=min_area) & (u!=0)]
         badinds = u[n<min_area]
 
-        for b in badinds:
-            pos = np.where(labels==b)
-            labels[pos]=0
+        # for b in badinds:
+        #     pos = np.where(labels==b)
+        #     labels[pos]=0
 
     if max_area != None:
         goodinds = u[(n<=max_area)  & (u!=0)]
@@ -309,6 +336,7 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
         badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
 
+    if min_area | max_area | minmax_area:
         for b in badinds:
             pos = np.where(labels==b)
             labels[pos]=0
