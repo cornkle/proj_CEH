@@ -7,6 +7,7 @@ from eod import rewrite_data
 import pdb
 import os
 import xarray as xr
+from utils import constants as cnst
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
@@ -24,15 +25,15 @@ def saveNetcdf():
 
 def saveMonthly():
 
-    bla = xr.open_mfdataset('/users/global/cornkle/data/OBS/AMSRE/day_aqua/nc/*.nc')
+    bla = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/day_aqua/nc/*.nc')
     monthly = bla.resample('m', dim='time', how='mean')
-    monthly.to_netcdf('/users/global/cornkle/data/OBS/AMSRE/day_aqua/amsre_day_monthly.nc')
+    monthly.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/day_aqua/amsre_day_monthly.nc')
 
 def saveAnomaly():
-    mf = xr.open_mfdataset('/users/global/cornkle/data/OBS/AMSRE/day_aqua/nc_day/AMSR*.nc', concat_dim='time')
-    mf = mf.sel(lon=slice(-11,11), lat=slice(9,21))
+    mf = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_day/AMSR*.nc', concat_dim='time')
+    #mf = mf.sel(lon=slice(-11,11), lat=slice(9,21))
 
-    mf = mf['SM'][(mf['time.month'] >= 6) & (mf['time.month'] <= 9)]
+    mf = mf['SM'][(mf['time.month'] >= 3) & (mf['time.month'] <= 11)]
 
     mf['ymonth'] = ('time', [str(y)+'-'+str(m) for (y,m) in zip(mf['time.year'].values,mf['time.month'].values)])
     # minus =  mf.groupby('ymonth').mean(dim='time')
@@ -69,4 +70,4 @@ def saveAnomaly():
         ds = xr.Dataset({'SM': da})
 
         date = str(arr['time.year'].values)+str(arr['time.month'].values).zfill(2)+str(arr['time.day'].values).zfill(2)
-        ds.to_netcdf('/users/global/cornkle/data/OBS/AMSRE/day_aqua/sma_nc_day/smaD_'+date+'.nc')
+        ds.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_day_bigdomain/sma_'+date+'.nc')

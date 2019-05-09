@@ -41,6 +41,13 @@ def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_missing=None):
 
 def linear_trend_lingress(x, nb_missing=None):
 
+    if np.isnan(x).all():
+        ds = xr.Dataset()
+        ds['slope'] = xr.DataArray(np.nan, )
+        ds['pval'] = xr.DataArray(np.nan, )
+        ds['r'] = xr.DataArray(np.nan, )
+        return ds
+
     slope, intercept, r, p, std_err = stats.linregress(np.arange(len(x)), x)
 
     # we need to return a dataarray or else xarray's groupby won't be happy
@@ -64,7 +71,10 @@ def flip_lat(ds):
     :param ds:
     :return:
     """
-    ds = ds.sel(latitude=slice(None, None, -1))
+    try:
+        ds = ds.sel(latitude=slice(None, None, -1))
+    except ValueError:
+        ds = ds.sel(lat=slice(None, None, -1))
     return ds
 
 

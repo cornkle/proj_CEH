@@ -66,8 +66,9 @@ LSTA_DOMSCALE = network_data + 'data/OBS/MSG_LSTA/power_maps/'
 
 AMSRE_DIR = network_data + 'data/OBS/AMSRE/aqua/'
 AMSRE_NIGHT = AMSRE_DIR + 'nc_night/'
+AMSRE_DAY = AMSRE_DIR + 'nc_day/'
 AMSRE_ANO_NIGHT = AMSRE_DIR + 'sma_nc_night/'
-AMSRE_ANO_DAY = AMSRE_DIR + 'sma_nc_day/'
+AMSRE_ANO_DAY = AMSRE_DIR + 'sma_nc_day_bigdomain/'
 AMSRE_NIGHT_TESTFILE = AMSRE_NIGHT + 'AMSR_L3_LPRMv05_A_20060116.nc'
 
 TRMM5KM = network_data + 'TRMMfiles/'
@@ -77,7 +78,7 @@ CMORPH = network_data + 'data/OBS/CMORPH/CMORPH_nc/'
 
 GRIDSAT = local_data + 'GRIDSAT/MCS18/'
 GRIDSAT_RAW = local_data + 'GRIDSAT/'
-CHIRPS = network_data + 'data/OBS/THEO_CHIRPS/'
+CHIRPS = network_data + 'data/OBS/CHIRPS/'
 
 TRMM_DAILY = elements_drive + 'TRMM/data/daily/aggregated/'
 TRMM_MONTHLY = elements_drive + 'TRMM/data/monthly/aggregated/'

@@ -4,6 +4,7 @@ import numpy as np
 from scipy.interpolate import griddata
 import ipdb
 import scipy.spatial.qhull as qhull
+import xarray as xr
 
 
 
@@ -92,6 +93,28 @@ def quick_regrid(lon, lat, data, grid):
     data = data.reshape((grid.ny, grid.nx))
 
     return data
+
+
+def grid_to_latlon(grid):
+
+    coords = grid.ll_coordinates
+    return ((coords[0])[0,:], (coords[1])[:,0])
+
+
+def refactor_da(da, factor):
+    grid = da.salem.grid.regrid(factor=factor)
+    data = grid.lookup_transform(da)
+
+    times = ['year', 'month', 'time', 'date']
+    for vn in times:
+        if vn in da.coords:
+            time = da[vn]
+
+    lon, lat = grid_to_latlon(grid)
+
+
+    return xr.DataArray(data, coords=[time, lat, lon],
+                          dims=['time', 'latitude', 'longitude'])
 
 
 
