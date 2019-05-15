@@ -11,11 +11,11 @@ import numpy as np
 import os
 from utils import u_arrays as uarr
 import pandas as pd
-from utils import u_time as ut, u_interpolate as uint, constants as cnst
+from utils import u_time as ut, u_interpolate as uint, constants as cnst, u_darrays
 import datetime as dt
 from utils import u_grid
 import xarray as xr
-import pdb
+import ipdb
 from scipy.ndimage.measurements import label
 
 #========================================================================================
@@ -341,6 +341,10 @@ def rewrite_AMSRE(file):
 
     out = file.replace('raw', 'nc')
     out = out.replace('.gra', '.nc')
+
+    if os.path.isfile(out):
+        return
+
     day=True
     if day:
         hour = 13
@@ -390,6 +394,65 @@ def rewrite_AMSRE(file):
         print('Out directory not found')
     print('Wrote ' + out)
     return ds
+
+def rewrite_AMSR2(file):
+
+    out = file.replace('raw', 'nc')
+    #out = out.replace('.nc4', '.nc')
+    out = out.replace('LPRM-AMSR2', 'AMSR2')
+
+    if '_A_' in file:
+        day=True
+    else:
+        day = False
+
+    if day:
+        hour = 13
+    else:
+        hour = 1
+
+    cut = os.path.basename(out)
+    path = os.path.dirname(out)
+    path = path.replace(path[-6::], '')
+    pieces = cut.split('_')
+    time = (pieces[5])[0:8]
+    out = path + os.sep + pieces[0] + '_' +  pieces[1] + '_' +  pieces[2] + '_' + pieces[4] + '_' + time + '.nc'
+
+    ipdb.set_trace()
+    if os.path.isfile(out):
+        return
+
+    yr = int(time[0:4])
+    mon = int(time[4:6])
+    day = int(time[6:8])
+    date = [pd.datetime(yr, mon, day, hour, 0)]
+
+    ds = xr.open_dataset(file)
+    ds = u_darrays.flip_lat(ds)
+    da = xr.DataArray((ds['soil_moisture_c1']).values[None, ...], coords={'time': date,
+                                             'lat': ds.Latitude,
+                                             'lon': ds.Longitude},
+                      dims=['time', 'lat', 'lon'])  # .isel(time=0)
+
+    da.values[da.values<-1] = np.nan
+    if np.sum(da.values) == np.nan:
+        return
+
+    ds = xr.Dataset({'SM': da})
+
+    ds = ds.sel(lon=slice(-18,30), lat=slice(0,27)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
+
+    try:
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return ds
+
 
 def rewrite_CMORPH(file):
 
