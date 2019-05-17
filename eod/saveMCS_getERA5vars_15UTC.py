@@ -45,7 +45,7 @@ def perSys(clim=False):
 
     pdf = pkl.load(open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p', 'rb'))
     pdf_all = pdf.where((pdf.clat >= 5) & (pdf.clat <= 9) & (pdf.clon >= -12) & (pdf.clon <= 12) &
-                        (pdf.year >= 2000) & (pdf.year <= 2014))
+                        (pdf.year >= 2006) & (pdf.year <= 2013))
     pdf_all = pdf_all.dropna()
 
     # era_pl = xr.open_mfdataset('/home/ck/DIR/mymachine/ERA5/pressure_levels/*.nc')
@@ -75,7 +75,7 @@ def perSys(clim=False):
 
     #test = pd.DataFrame.from_dict(merged, orient='index')
 
-    pkl.dump(merged, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_ERA5_allmonth_2000-2014_18UTC.p',
+    pkl.dump(merged, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_ERA5_allmonth_2006-2013_15UTC.p',
                            'wb'))
 
 
@@ -101,11 +101,11 @@ def get_ERA5(inputs):
         if clim:
 
             time = str(date.year) + '-' + str(date.month) + '-' + '12'
-            stormtime = str(date.year) + '-' + str(date.month) + '-' + '18'
+            stormtime = str(date.year) + '-' + str(date.month) + '-' + '15'
 
         else:
             time = str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2) + 'T12'
-            stormtime = str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2) + 'T18'
+            stormtime = str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2) + 'T15'
 
         try:
             era_day_pl = era_pl.sel(time=time).isel(time=0)
