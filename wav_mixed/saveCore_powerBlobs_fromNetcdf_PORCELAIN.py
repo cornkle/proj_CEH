@@ -23,11 +23,11 @@ def run():
 
     pool = multiprocessing.Pool(processes=5)
 
-    for y in range(2015,2019):
+    for y in range(2013,2019):
 
         if (y >=2016) & (y<=2018):
             gstr = 'FY2G'
-        if (y >= 2014) & (y <= 2015):
+        if (y >= 2013) & (y <= 2015):
             gstr = 'FY2F'
 
         gfile = '/prj/PORCELAIN/Fengyun/CTT/CTT_grid_'+gstr+'.nc'
@@ -40,7 +40,7 @@ def run():
         inds, weights, shape = u_int.interpolation_weights_grid(mdic['longitude'].values, mdic['latitude'].values, grid)
         gridd = (inds, weights, shape, grid)
 
-        for m in range(6,10):
+        for m in range(5,11):
 
             files = glob.glob(met_folder + str(y) +'/' + str(m).zfill(2) +'/' + gstr +'*.nc')
             passit = []
@@ -94,6 +94,8 @@ def _timeLoop(timeslice, inds_inter, weights_inter, shape_inter, tag):
 
 def file_loop(passit):
 
+    CLOBBER=False
+
 
     gridd = passit[0]
     inds_inter = gridd[0]
@@ -119,6 +121,26 @@ def file_loop(passit):
     year = np.array(file[-16:-12]).astype(int)
 
     date = dt.datetime(year, month, day, hour, minute)
+
+    out = cnst.network_data + 'data/emma_test/'
+    outdir = out + str(date.year) + '/' + str(date.month).zfill(2) + '/'
+    fname = os.path.basename(file)
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    fnew = fname.replace('MLT', 'POWER')
+
+    savefile = outdir + fnew  # 'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
+
+    if not CLOBBER:
+        if os.path.isfile(savefile):
+            print('File exists, continue!')
+            return
+    else:
+        try:
+            os.remove(savefile)
+        except OSError:
+            pass
 
 
     ds = xr.Dataset()
@@ -149,20 +171,7 @@ def file_loop(passit):
 
     #ds = ds.sel(lat=slice(2,17), lon=slice(-18,13))     #[-14, 2.5, 4, 11.5] cutout to remove dodgy boundaries
 
-    out = cnst.network_data + 'data/emma_test/'
-    outdir = out + str(date.year) + '/' + str(date.month).zfill(2) + '/'
-    fname = os.path.basename(file)
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
 
-    fnew = fname.replace('MLT', 'POWER')
-
-    savefile = outdir + fnew  # 'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
-
-    try:
-        os.remove(savefile)
-    except OSError:
-        pass
     # da.name = 'blob'
     # enc = {'blob': {'complevel': 5, 'zlib': True}}
 

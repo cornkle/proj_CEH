@@ -22,17 +22,19 @@ from scipy.ndimage.measurements import label
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
 def rewriteMsgLonLat_WA():
-    llFile = cnst.network_data + 'data/OBS/meteosat_WA30/MSG_1640_580_lat_lon.gra'
+    llFile = cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon.gra'
 
     llShape = (580,1640)
     llMDI = np.float32(13.5)
     ll = np.fromfile(llFile,dtype=llMDI.dtype)
+
+    ipdb.set_trace()
     lon = ll[0:580*1640]
     lat = ll[580*1640:]
     lat.shape = llShape
     lon.shape = llShape
 
-    llsavefile = cnst.network_data + 'data/OBS/meteosat_WA30/MSG_1640_580_lat_lon'
+    llsavefile = cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
 
@@ -54,6 +56,25 @@ def rewriteMFGLonLat_WA():
     np.savez(llsavefile,lon=lon,lat=lat)
 
 #========================================================================================
+# Rewrites 504x1368 msg lat lon to something nice (lat lon from blobs)
+#========================================================================================
+def rewriteMSG_MAMON_LonLat_WA():
+    llFile = cnst.network_data + 'data/OBS/MSG_MAMON/lat_lon_1368_504.gra'
+
+    llShape = (504,1368)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+
+    lat = ll[0:504*1368]
+    lon = ll[504*1368:]
+    lat.shape = llShape
+    lon.shape = llShape
+
+    llsavefile = cnst.network_data + 'data/OBS/MSG_MAMON/MSG_1368_504_lat_lon'
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+
+#========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
 def rewriteMFG_MAMON_LonLat_WA():
@@ -62,6 +83,7 @@ def rewriteMFG_MAMON_LonLat_WA():
     llShape = (336,914)
     llMDI = np.float32(13.5)
     ll = np.fromfile(llFile,dtype=llMDI.dtype)
+
     lon = ll[0:336*914]
     lat = ll[336*914:]
     lat.shape = llShape
