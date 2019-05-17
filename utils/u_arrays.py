@@ -289,12 +289,12 @@ def cut_box(xpos, ypos, arr, dist=None):
         kernel = cut_kernel_3d(arr, xpos, ypos, dist)
         if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
             print("Please check kernel dimensions, there is something wrong")
-            pdb.set_trace()
+            ipdb.set_trace()
     else:
         kernel = cut_kernel(arr,xpos, ypos,dist)
         if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
             print("Please check kernel dimensions, there is something wrong")
-            pdb.set_trace()
+            ipdb.set_trace()
 
 
 
@@ -336,7 +336,7 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
         badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
 
-    if min_area | max_area | minmax_area:
+    if (min_area is not None) | (max_area is not None) | (minmax_area is not None):
         for b in badinds:
             pos = np.where(labels==b)
             labels[pos]=0

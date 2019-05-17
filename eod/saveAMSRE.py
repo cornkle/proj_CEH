@@ -11,13 +11,15 @@ from utils import constants as cnst
 import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
+import ipdb
 
 def saveNetcdf():
 
-    sm_folder = '/users/global/cornkle/data/OBS/AMSRE/day_aqua/raw_day'
+    sm_folder = cnst.network_data + 'data/OBS/AMSRE/aqua/raw_day'
     pool = multiprocessing.Pool(processes=7)
     files = glob.glob(sm_folder+'/AMSR*.gra')
-
+    print('start loop')
+    # ipdb.set_trace()
     # for f in files:
     #     ds = rewrite_data.rewrite_AMSRE(f, day=True)
 
@@ -25,14 +27,13 @@ def saveNetcdf():
 
 def saveMonthly():
 
-    bla = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/day_aqua/nc/*.nc')
+    bla = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc/*.nc')
     monthly = bla.resample('m', dim='time', how='mean')
-    monthly.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/day_aqua/amsre_day_monthly.nc')
+    monthly.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/aqua/amsre_day_monthly.nc')
 
 def saveAnomaly():
-    mf = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_day/AMSR*.nc', concat_dim='time')
+    mf = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_night/AMSR*.nc', concat_dim='time')
     #mf = mf.sel(lon=slice(-11,11), lat=slice(9,21))
-
     mf = mf['SM'][(mf['time.month'] >= 3) & (mf['time.month'] <= 11)]
 
     mf['ymonth'] = ('time', [str(y)+'-'+str(m) for (y,m) in zip(mf['time.year'].values,mf['time.month'].values)])
@@ -59,6 +60,7 @@ def saveAnomaly():
             arr = dso.sel(time=d.values).drop('ymonth')
         except ValueError:
             arr = dso.sel(time=d.values)
+        print('Doing ', d.values)
         day = arr['time.day'].values
         month = arr['time.month'].values
         year = arr['time.year'].values
@@ -70,4 +72,7 @@ def saveAnomaly():
         ds = xr.Dataset({'SM': da})
 
         date = str(arr['time.year'].values)+str(arr['time.month'].values).zfill(2)+str(arr['time.day'].values).zfill(2)
-        ds.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_day_bigdomain/sma_'+date+'.nc')
+
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_night/sma_'+date+'.nc', mode='w', encoding=encoding, format='NETCDF4')

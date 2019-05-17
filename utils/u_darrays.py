@@ -5,7 +5,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import bottleneck
 import scipy
-import pdb
+import ipdb
 
 
 def shift_lons(ds, lon_dim='lon'):

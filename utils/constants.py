@@ -71,6 +71,9 @@ AMSRE_ANO_NIGHT = AMSRE_DIR + 'sma_nc_night/'
 AMSRE_ANO_DAY = AMSRE_DIR + 'sma_nc_day/'
 AMSRE_NIGHT_TESTFILE = AMSRE_NIGHT + 'AMSR_L3_LPRMv05_A_20060116.nc'
 
+
+
+
 TRMM5KM = network_data + 'TRMMfiles/'
 TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 
