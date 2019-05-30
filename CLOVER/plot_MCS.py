@@ -11,9 +11,9 @@ from utils import constants as cnst
 def draw_map(t, p, lat, lon):
     f=plt.figure()
     ax = f.add_subplot(111, projection=ccrs.PlateCarree())
-    plt.contourf(lon, lat, t, transform=ccrs.PlateCarree(), levels=np.arange(-65,-50))  #levels=np.arange(-75,-39,5)
+    plt.contourf(lon, lat, t, transform=ccrs.PlateCarree(),levels=np.arange(-75,-39,5))  #levels=np.arange(-75,-39,5)
     plt.colorbar()
-    plt.contour(lon, lat, p, transform=ccrs.PlateCarree(), levels=np.arange(2,15,2), cmap='jet') #np.arange(10,51,10)
+   # plt.contour(lon, lat, p, transform=ccrs.PlateCarree(), levels=np.arange(2,15,2), cmap='jet') #np.arange(10,51,10)
     #ax.coastlines()
     # Gridlines
     xl = ax.gridlines(draw_labels=True);
@@ -53,7 +53,7 @@ def plot():
     CP4files = glob.glob(cnst.network_data + 'data/CP4/CLOVER/MCS25_-50_5000km2/*.nc')
     #MSGfiles = glob.glob('/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_-40_18UTC/*.nc')
 
-    CP4files
+    #CP4files
 
-    for a in range(230,240):    #  # 300,325
+    for a in range(7600,7640):    #  # 300,325
         get_file(CP4files[a],var)

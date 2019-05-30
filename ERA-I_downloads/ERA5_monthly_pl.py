@@ -1,4 +1,5 @@
 import cdsapi
+import os
 
 def download(year, month, file):
     c = cdsapi.Client()
@@ -35,4 +36,9 @@ for y in range(1979,2020):
         out_dir = '/home/ck/DIR/mymachine/ERA5/monthly/pressure_levels/'
         path_file =  out_dir + 'ERA5_' + str(y) + '_' + str(m).zfill(2) + '_pl.nc'
         print('Doing ' + path_file)
+
+        if os.path.isfile(path_file):
+            print('File exists, continue')
+            continue
+
         download(y, m, path_file)

@@ -143,7 +143,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 517]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            goodinds = u[n >= 8]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            # 8 for 25km
             if not sum(goodinds) > 0:
                 return
 
@@ -219,7 +220,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
 
 ### Inputs CP25
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
+data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamask file inside
 out_path = cnst.network_data + 'data/CP4/CLOVER'  # out directory to save MCS files
 sbox = [-11, 11, 4.5, 8.5]  # W- E , S - N geographical storm box

@@ -101,9 +101,9 @@ def grid_to_latlon(grid):
     return ((coords[0])[0,:], (coords[1])[:,0])
 
 
-def refactor_da(da, factor):
+def refactor_da(da, factor, method=np.mean):
     grid = da.salem.grid.regrid(factor=factor)
-    data = grid.lookup_transform(da)
+    data = grid.lookup_transform(da, method=method)
 
     times = ['year', 'month', 'time', 'date']
     for vn in times:
