@@ -57,7 +57,7 @@ class ReadWA(object):
 
         if not os.path.isdir(trmm_folder):
             print('Not a directory')
-            quit()
+            return
 
         fdic = {'fpath': [], 'tmins': [], 'date': []}
         rfiles = []

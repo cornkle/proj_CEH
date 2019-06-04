@@ -12,7 +12,7 @@ import xarray as xr
 import os
 import ipdb
 import matplotlib.pyplot as plt
-from utils import u_grid
+from utils import u_grid, constants as cnst
 import pdb
 
 HOD = range(24)  # hours of day
@@ -20,12 +20,13 @@ YRANGE = range(2004, 2015)
 
 
 def saveMCS_WA15():
-    trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    msg_folder = '/users/global/cornkle/data/OBS/meteosat_tropWA' #meteosat_WA30'
+    trmm_folder = cnst.network_data + 'data/OBS/TRMM/trmm_swaths_WA/'
+    msg_folder = cnst.network_data + 'data/OBS/MSG_WA30' #meteosat_WA30'
+    msg_folder2 = cnst.network_data + 'data/OBS/MSG_MAMON'
 
     t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-12, 12, 4, 9])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
-    m = msg.ReadMsg(msg_folder)
-    m2 = msg.ReadMsg(msg_folder)
+    mJJAS = msg.ReadMsg(msg_folder)
+    mMAMON = msg.ReadMsg(msg_folder2)
 
     cnt = 0
 
@@ -40,6 +41,11 @@ def saveMCS_WA15():
 
         if (_m<3) | (_m>11):
             continue
+
+        if _m in [3,4,5,10,11]:
+            m = mMAMON
+        else:
+            m = mJJAS
 
         date = dt.datetime(_y, _m, _d, _h, _mi)
 
@@ -216,10 +222,11 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:
+                print('OSError, no dir?')
                 pass
             da.to_netcdf(path=savefile, mode='w')
             print('Saved ' + savefile)
