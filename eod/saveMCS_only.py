@@ -30,10 +30,10 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
-    tthresh = '-50'
+    pool = multiprocessing.Pool(processes=4)
+    #tthresh = '-50'
 
-    files = glob.glob(cnst.GRIDSAT + '/gridsat_WA_-50_*.nc')
+    files = glob.glob(cnst.GRIDSAT + '/gridsat_WA_-40*.nc')
 
     print('Nb files', len(files))
     #mdic = dictionary() #defaultdict(list)
@@ -46,7 +46,7 @@ def perSys():
 
     test = pd.DataFrame.from_dict(merged, orient='index')
 
-    pkl.dump(test, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p',
+    pkl.dump(test, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_15-18UTC.p',
                            'wb'))
 
 
@@ -76,6 +76,7 @@ def file_loop(f):
 
             dic['date'] = ts
             dic['month'] = int(d['time.month'])
+            dic['hour'] = int(d['time.hour'])
             dic['year'] = int(d['time.year'])
 
             storm = d.values[pos]

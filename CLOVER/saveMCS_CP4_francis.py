@@ -167,12 +167,12 @@ def cut_box(xpos, ypos, arr, dist=None):
         kernel = cut_kernel_3d(arr, xpos, ypos, dist)
         if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
             print("Please check kernel dimensions, there is something wrong")
-            pdb.set_trace()
+            ipdb.set_trace()
     else:
         kernel = cut_kernel(arr,xpos, ypos,dist)
         if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
             print("Please check kernel dimensions, there is something wrong")
-            pdb.set_trace()
+            ipdb.set_trace()
 
 
 
@@ -208,9 +208,12 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         h = (vars[v])[1]
         pl = (vars[v])[0]
         derived = False
-        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc'):
+        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc') :
             derived = v
             v = 'u_pl'
+        if (v == 'q_pl_s') :
+            derived = v
+            v = 'q_pl'
 
         # try:
         #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
@@ -219,7 +222,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         #     return
 
         filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
-
+        print('Filepath', filepath)
         arr = xr.open_mfdataset(filepath, autoclose=True)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
@@ -272,6 +275,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
             goodinds = u[n >= 16]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
+                ipdb.set_trace()
                 return
 
         if (v == 'lsRain') | (v == 'totRain'):
@@ -317,9 +321,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamask file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER'  # out directory to save MCS files
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP25_-50C_10000km2'  # out directory to save MCS files
 box = [-12, 12, 4.5, 8.5]  # W- E , S - N geographical coordinates box
-datestring = '19990401'  # set this to date of file
+#datestring = '19990301'  # set this to date of file
 
 years = np.array(np.arange(1998,2007), dtype=str)
 months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
@@ -334,6 +338,7 @@ vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
 vars['q_pl'] = ([925], 12)  # 925, 650 available
+vars['q_pl_s'] = ([925], 18)
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))

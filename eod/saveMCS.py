@@ -23,8 +23,9 @@ def saveMCS_WA15():
     trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
     msg_folder = '/users/global/cornkle/data/OBS/meteosat_tropWA' #meteosat_WA30'
 
-    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-13, 13, 4, 8])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
+    t = trmm_clover.ReadWA(trmm_folder, yrange=YRANGE, area=[-12, 12, 4, 9])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
     m = msg.ReadMsg(msg_folder)
+    m2 = msg.ReadMsg(msg_folder)
 
     cnt = 0
 
@@ -34,15 +35,15 @@ def saveMCS_WA15():
     # cycle through TRMM dates - only dates tat have a certain number of pixels in llbox are considered      
     for _y, _m, _d, _h, _mi in zip(t.dates.dt.year,  t.dates.dt.month, t.dates.dt.day, t.dates.dt.hour, t.dates.dt.minute):
 
-        if (_h <10) | (_h>21):
+        if (_h <15) | (_h>21):
             continue
 
-        if (_m<9) | (_m>10):
+        if (_m<3) | (_m>11):
             continue
 
         date = dt.datetime(_y, _m, _d, _h, _mi)
 
-        tdic = t.get_ddata(date, cut=[4, 8])
+        tdic = t.get_ddata(date, cut=[4.5, 8.5])
 
 
         #get closest minute
@@ -88,7 +89,7 @@ def saveMCS_WA15():
 
         lon1 = mdic['lon'].values
         lat1 = mdic['lat'].values
-        mdic['t'].values[mdic['t'].values >= -40] = 0  # T threshold -10
+        mdic['t'].values[mdic['t'].values >= -50] = 0  # T threshold -10
         labels, numL = label(mdic['t'].values)
 
         u, inv = np.unique(labels, return_inverse=True)
@@ -215,7 +216,7 @@ def saveMCS_WA15():
             da.attrs['area'] = sum(mmask.flatten())
             da.attrs['area_cut'] = sum(mask2)
             da.close()
-            savefile = '/users/global/cornkle/MCSfiles/WA5000_4-8N_13W-13E_-40_18UTC/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+            savefile = '/users/global/cornkle/MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
             try:
                 os.remove(savefile)
             except OSError:
