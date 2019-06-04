@@ -158,3 +158,9 @@ def draw_map(data, lon, lat, title=None,  mask_sig=None, quiver=None, contour=No
     cbar = plt.colorbar(mapp)  # adds colorbar
     cbar.set_label(cbar_label)
     plt.show()
+
+
+def hist_freq(ax, data, **kwargs):
+    weights = np.ones_like(data) / float(len(data))
+    ax.hist(data, weights = weights, **kwargs)
+    return ax

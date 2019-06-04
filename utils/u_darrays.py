@@ -81,6 +81,16 @@ def flip_lat(ds):
     return ds
 
 
+def to_newarray(da):
+
+    das = xr.DataArray(da.values,
+                      coords={'time': da.time, 'latitude': da.latitude.values,
+                              'longitude': da.longitude.values},
+                      dims=['time', 'latitude', 'longitude'])  # [np.newaxis, :]
+    das.attrs = da.attrs
+    return das
+
+
 
 ################### correlation computation with quick parallel dask usage
 def covariance_gufunc(x, y):

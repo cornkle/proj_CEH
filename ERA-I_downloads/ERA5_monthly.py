@@ -1,6 +1,6 @@
 import cdsapi
 
-def download(year):
+def download(year, month):
     c = cdsapi.Client()
 
     c.retrieve(

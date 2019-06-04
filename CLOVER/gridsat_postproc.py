@@ -168,10 +168,10 @@ def month_count():
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_' + y + '.nc')  # _-40_1000km2_15-21UTC
             print('Doing ' + y)
-            da1['tir'].values = da1['tir'].values/100
+            da1['tir'].values = da1['tir'].values#/100  ONLY FOR NEWER FILES
             da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108)) #-65
             da1['tir'].values[da1['tir'].values < -70] = 1
-
+            #ipdb.set_trace()
             da1 = da1.resample(time='m').sum('time')
             try:
                 da = xr.concat([da, da1], 'time')
