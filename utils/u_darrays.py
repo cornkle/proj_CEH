@@ -74,7 +74,10 @@ def flip_lat(ds):
     try:
         ds = ds.sel(latitude=slice(None, None, -1))
     except ValueError:
-        ds = ds.sel(lat=slice(None, None, -1))
+        try:
+            ds = ds.sel(lat=slice(None, None, -1))
+        except ValueError:
+            ds = ds.sel(Latitude=slice(None, None, -1))
     return ds
 
 

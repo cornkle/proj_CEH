@@ -13,10 +13,18 @@ import pandas as pd
 from scipy.interpolate import griddata
 import ipdb
 
-def saveNetcdf():
+def saveNetcdf(day=True):
 
-    sm_folder = cnst.network_data + 'data/OBS/AMSRE/aqua/raw_day'
-    pool = multiprocessing.Pool(processes=7)
+    if day:
+        daystring = '_A_'
+        dstring = 'day'
+    else:
+        daystring = '_D_'
+        dstring = 'night'
+
+
+    sm_folder = cnst.network_data + 'data/OBS/AMSRE/aqua/raw_'+dstring
+    pool = multiprocessing.Pool(processes=5)
     files = glob.glob(sm_folder+'/AMSR*.gra')
     print('start loop')
     # ipdb.set_trace()

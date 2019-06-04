@@ -21,7 +21,14 @@ filepath = {
     'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2018,2018)],  # 2004, 2018
     'MSG_MAMON_old' : [cnst.network_data +'/data/OBS/MSG_tropWA/', [3,4,5,10,11], (2004,2015)],
     'MSG_MAMON' : [cnst.network_data +'/data/OBS/MSG_MAMON/', [3,4,5,10,11], (2004,2018)]
+
 }
+
+def run_all():
+
+    for k in ['MFG_JJAS', 'MFG_MAMON', 'MSG_JJAS', 'MSG_MAMON']:
+        run(k)
+
 
 def run(dataset, CLOBBER=False):
 
@@ -40,7 +47,7 @@ def run(dataset, CLOBBER=False):
                     print('File exists, continue!')
                     continue
 
-            pool = multiprocessing.Pool(processes=3)
+            pool = multiprocessing.Pool(processes=6)
             print('Reading '+filepath[dataset][0])
             meteosat_folder = (filepath[dataset])[0]
 

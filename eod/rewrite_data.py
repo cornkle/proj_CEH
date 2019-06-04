@@ -404,7 +404,7 @@ def rewrite_AMSRE(file):
 
     ds = xr.Dataset({'SM': da})
 
-    ds = ds.sel(lon=slice(-17,20), lat=slice(0,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
+    ds = ds.sel(lon=slice(-18,30), lat=slice(0,27))  # ds.sel(lon=slice(-17,20), lat=slice(0,20)) #lon=slice(-20,55), lat=slice(-40,40) AFRICA
 
     try:
         comp = dict(zlib=True, complevel=5)
@@ -438,9 +438,9 @@ def rewrite_AMSR2(file):
     path = path.replace(path[-6::], '')
     pieces = cut.split('_')
     time = (pieces[5])[0:8]
-    out = path + os.sep + pieces[0] + '_' +  pieces[1] + '_' +  pieces[2] + '_' + pieces[4] + '_' + time + '.nc'
+    out = path + os.sep + pieces[0] + '_' +  pieces[1] +'_LPRMv05_' +  pieces[2] + '_'  + time + '.nc'
 
-    ipdb.set_trace()
+    #ipdb.set_trace()
     if os.path.isfile(out):
         return
 
@@ -451,9 +451,10 @@ def rewrite_AMSR2(file):
 
     ds = xr.open_dataset(file)
     ds = u_darrays.flip_lat(ds)
-    da = xr.DataArray((ds['soil_moisture_c1']).values[None, ...], coords={'time': date,
-                                             'lat': ds.Latitude,
-                                             'lon': ds.Longitude},
+
+    da = xr.DataArray((ds['soil_moisture_c1']).values.T[None, ...], coords={'time': date,
+                                             'lat': ds.Latitude.values,
+                                             'lon': ds.Longitude.values},
                       dims=['time', 'lat', 'lon'])  # .isel(time=0)
 
     da.values[da.values<-1] = np.nan
