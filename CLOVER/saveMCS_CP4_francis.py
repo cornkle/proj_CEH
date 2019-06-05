@@ -205,6 +205,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
     #loop through every var
     for v in keys:
 
+        print('Variable ', v)
+
         h = (vars[v])[1]
         pl = (vars[v])[0]
         derived = False
@@ -226,9 +228,14 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         arr = xr.open_mfdataset(filepath, autoclose=True)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-        dar = dar.sel(time=datestring, method='nearest')
+
+        datestringh = pd.datetime(datestring['time.year'], datestring['time.month'], datestring['time.day'],
+                                  h, datestring['time.minute'])
+
+        dar = dar.sel(time=datestringh, method='nearest')
         #ipdb.set_trace()
         if int(dar['time.hour'])!=h:
+            ipdb.set_trace()
             print('Wrong hour')
             return
 
@@ -249,7 +256,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
         regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
         da = xr.DataArray(regrid,
-                          coords={'time': dar.time, 'latitude': ls_arr.rlat.values,
+                          coords={'time': datestring, 'latitude': ls_arr.rlat.values,
                                   'longitude': ls_arr.rlon.values, },
                           dims=['latitude', 'longitude'])
 
@@ -260,6 +267,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         if v == 'lw_out_PBLtop':
 
             da.values = olr_to_bt(da.values)
+
             da.values[da.values >= tthresh] = 0  # T threshold maskout
             da.values[np.isnan(da.values)] = 0 # set ocean nans to 0
 
@@ -273,9 +281,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 16]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            goodinds = u[n >= 258]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
-                ipdb.set_trace()
+                print('No goodinds!')
                 return
 
         if (v == 'lsRain') | (v == 'totRain'):
@@ -319,9 +327,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 ### Inputs:
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
-ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamask file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP25_-50C_10000km2'  # out directory to save MCS files
+data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
+ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_-50C_5000km2'  # out directory to save MCS files
 box = [-12, 12, 4.5, 8.5]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
@@ -333,12 +341,12 @@ tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], 18)
-vars['totRain'] =  ([], 18)   # pressure levels, hour # totRain for CP25, lsRain for CP
+vars['lsRain'] =  ([], 18)   # pressure levels, hour # totRain for CP25, lsRain for CP
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
 vars['q_pl'] = ([925], 12)  # 925, 650 available
-vars['q_pl_s'] = ([925], 18)
+#vars['q_pl_s'] = ([925], 18)totRain
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))
