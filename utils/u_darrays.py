@@ -8,7 +8,7 @@ import scipy
 import ipdb
 
 
-def shift_lons(ds, lon_dim='lon'):
+def shift_lons(ds, lon_dim='lon', save=False):
     """ Shift longitudes from [0, 360] to [-180, 180] """
     lons = ds[lon_dim].values
     new_lons = np.empty_like(lons)
@@ -16,6 +16,8 @@ def shift_lons(ds, lon_dim='lon'):
     new_lons[mask] = -(360. - lons[mask])
     new_lons[~mask] = lons[~mask]
     ds[lon_dim].values = new_lons
+    if save:
+        ds.to_netcdf(save)
     return ds
 
 def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_missing=None):

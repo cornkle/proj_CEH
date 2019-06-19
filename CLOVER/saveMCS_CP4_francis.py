@@ -206,6 +206,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
     for v in keys:
 
         print('Variable ', v)
+        vv = v
 
         h = (vars[v])[1]
         pl = (vars[v])[0]
@@ -232,17 +233,28 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         datestringh = pd.datetime(datestring['time.year'], datestring['time.month'], datestring['time.day'],
                                   h, datestring['time.minute'])
 
-        dar = dar.sel(time=datestringh, method='nearest')
-        #ipdb.set_trace()
+        try:
+            dar = dar.sel(time=datestringh, method='nearest') #, method='nearest'
+        except ValueError:
+            dar = dar.sel(time=datestringh)
+
+        if v == 'q_pl':
+            dar.values = np.array(dar.values/100).astype(float)
+
         if int(dar['time.hour'])!=h:
             ipdb.set_trace()
             print('Wrong hour')
             return
 
         if 'pressure' in dar.coords:
-            dar.values[dar.values==0] = np.nan # potential missing value maskout
-            if len(pl) > 1:
-                shear = dar.sel(pressure=pl[0]).values - dar.sel(pressure=pl[1]).values
+            try:
+                dar.values[dar.values==0] = np.nan # potential missing value maskout
+            except ValueError:
+                print('Pressure value error!')
+                return
+            if (len(pl) > 1) & (vv == 'shear'):
+
+                shear = dar.sel(pressure=650).values - dar.sel(pressure=925).values
                 dar = dar.sum(dim='pressure').squeeze()
                 dar.values = shear
                 if derived:
@@ -292,7 +304,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         ds[v] = da
 
-        print('Saved ', v)
+        print('Saved ', v, h)
+
 
     for gi in goodinds:
         if (gi == 0):  # index 0 is always background, ignore!
@@ -310,7 +323,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         lonmax, lonmin = np.nanmax(lons[inds]), np.nanmin(lons[inds])
 
         ds_box = dbox.sel(latitude=slice(latmin,latmax), longitude=slice(lonmin, lonmax))
-
 
         savefile = out_dir + os.sep + pd.Timestamp(date).strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
         try:
@@ -333,7 +345,7 @@ out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_-50C_5000km2'  # out directo
 box = [-12, 12, 4.5, 8.5]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-years = np.array(np.arange(1998,2007), dtype=str)
+years = np.array(np.arange(2001,2007), dtype=str)
 months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
 days = np.array(np.arange(1,32), dtype=str)
 
@@ -352,9 +364,12 @@ for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))
 files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
 
-dummy = xr.open_mfdataset(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc', autoclose=True)
+dummy = xr.open_mfdataset(data_path+os.sep+'q_pl'+os.sep+'*.nc', autoclose=True)  #lw_out_PBLtop
 
-time = dummy['lw_out_PBLtop'][dummy['time.hour']==18].time
+time = dummy['q_pl'][dummy['time.hour']==12].time
 
 for d in time:
+
+    if (d['time.year']<2000) | ((d['time.month']>6) & (d['time.month']<9)):
+        continue
     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)

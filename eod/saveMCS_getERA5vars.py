@@ -44,7 +44,7 @@ def perSys(clim=False):
     pool = multiprocessing.Pool(processes=5)
 
     pdf = pkl.load(open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p', 'rb'))
-    pdf_all = pdf.where((pdf.clat >= 5) & (pdf.clat <= 9) & (pdf.clon >= -12) & (pdf.clon <= 12) &
+    pdf_all = pdf.where((pdf.clat >= 5) & (pdf.clat <= 8) & (pdf.clon >= -12) & (pdf.clon <= 12) &
                         (pdf.year >= 2000) & (pdf.year <= 2014))
     pdf_all = pdf_all.dropna()
 

@@ -37,15 +37,11 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_-50C_5000km2')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_-50C_5000km2')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
-    # res = pool.map(file_loop, files)
-    # pool.close()
-    res=[]
-    for f in files:
-        res.append(file_loop(f))
-
+    res = pool.map(file_loop, files)
+    pool.close()
     #
     #res = [item for sublist in res for item in sublist]  # flatten list of lists
 
@@ -76,7 +72,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA-I.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA-I.p',
                            'wb'))
 
 
@@ -107,11 +103,6 @@ def file_loop(f):
 
     if np.sum(mask) < 3:
         return
-
-    antimask = ~mask
-    outp[antimask] = 0
-    maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
-
     out['area'] = np.sum(mask)
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
@@ -119,9 +110,7 @@ def file_loop(f):
 
     out['tmin'] = np.min(outt[mask])
     out['tmean'] = np.mean(outt[mask])
-
-    out['pmax'] = np.nanmean(outp[maxpos[0]-1:maxpos[0]+2, maxpos[1]-1:maxpos[1]+2]) # degrade rainfall to 20km
-    #out['pmax'] = np.max(outp[mask]) # degrade rainfall to 20km
+    out['pmax'] = np.max(outp[mask])
     out['pmean'] = np.mean(outp[mask])
     out['qmax'] = np.max(outq[mask])
     out['qmean'] = np.mean(outq[mask])

@@ -171,8 +171,6 @@ def corr_box():
     }
 
 
-    months = [1,2,3,4,10,11,12]
-    months = [10]
     months = [(11,1),2,3,10]
 
     for m in months:
@@ -182,11 +180,11 @@ def corr_box():
         if type(m)==int:
             m = [m]
 
-        t2diff, t2year = array_juggling(t2d, [10]) #
+        t2diff, t2year = array_juggling(t2d, m) #
         qdiff, qyear = array_juggling(q, m) #, hour=12
         shdiff, sheyear = array_juggling(shear, m) #, hour=12
-        vdiff, vyear = array_juggling(v600, m)  # , hour=12
-        udiff, uyear = array_juggling(u600, m)  # , hour=12
+        vdiff, vyear = array_juggling(v800, m)  # , hour=12
+        udiff, uyear = array_juggling(u800, m)  # , hour=12
         tirdiff, tiryear = array_juggling(tir, m)  # average frequency change
 
         #mcs_month = mcs_temp[mcs_temp['time.month'] == m] # meanT box average change
@@ -206,9 +204,9 @@ def corr_box():
         print('plot')
 
         if len(m) == 1:
-            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_OCT_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_850T'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_OCT_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'corr_mid_-70C_synop_-50base_linear_850T' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
         map = shear.salem.get_map()
@@ -248,9 +246,11 @@ def corr_box():
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         ax3 = f.add_subplot(223)
-        map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
-        map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4, -0.3,0.3,0.4,0.5,0.6,0.7])
+        # map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
+        # map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4, -0.3,0.3,0.4,0.5,0.6,0.7])
         #map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,6), colors='k', linewidths=0.5)
+        map.set_data(tcorr['r'], interp='linear')  # interp='linear'
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,-0.3,0.3,0.4,0.5,0.6,0.7])
 
         qu = ax3.quiver(xx, yy, u, v, scale=50, width=0.002)
         qk = plt.quiverkey(qu, 0.4, 0.03, 4, '4 m s$^{-1}$',
