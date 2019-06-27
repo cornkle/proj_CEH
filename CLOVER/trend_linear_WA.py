@@ -160,7 +160,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = True
+        sig = False
 
         t2trend, t2mean = calc_trend(t2, m,  method=method, sig=sig,hour=12, wilks=False) #hour=12,
         t2_mean = t2mean.mean(axis=0)
@@ -200,9 +200,9 @@ def trend_all():
         ti_da = tirtrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'trend_synop_WA_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'trend_synop_WA_nosig_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'trend_synop_WA_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'trend_synop_WA_nosig_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(15,8), dpi=300)
@@ -227,7 +227,7 @@ def trend_all():
         map.set_data(t_da.values, interp='linear')  # interp='linear'
 
         map.set_contour((t2_mean.values-273.15).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=[20,23,26,29,32,35])
-        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
         #map.set_contour((t2_mean.values).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=np.linspace(800,925,8))
         #map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
@@ -239,7 +239,7 @@ def trend_all():
         ax2 = f.add_subplot(222)
         map.set_data(q_da.values,interp='linear')  # interp='linear'
         map.set_contour((q_mean.values).astype(np.float64),interp='linear', colors='k', levels=[6,8,10,12,14,16], linewidths=0.5)
-        map.set_plot_params(levels=[-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_plot_params(levels=[-0.4,-0.3,-0.2,-0.1,-0.05,-0.05,0.1,0.2,0.3,0.4], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
         dic = map.visualize(ax=ax2, title='925hPa Spec. humidity trend | contours: mean q', cbar_title='g kg-1 decade-1')
         contours = dic['contour'][0]
@@ -250,7 +250,7 @@ def trend_all():
         map.set_data(s_da.values, interp='linear')  # interp='linear'
         map.set_contour(s_da.values, interp='linear', levels=np.arange(-7,7,8), cmap='Blues')
 
-        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='925-650hPa wind shear trend, mean 650hPa wind vectors', cbar_title='m s-1 decade-1')
         qu = ax3.quiver(xx, yy, u, v, scale=60, width=0.002)
 

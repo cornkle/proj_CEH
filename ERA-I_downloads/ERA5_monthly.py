@@ -25,10 +25,11 @@ def download(year, month):
                 '07','08','09',
                 '10','11'
             ],
+            'area': '25/-18.5/3.5/17',  # pick domain upper/left/lower/right
             'grid' : '0.7/0.7' ,
             'time' : ['00:00'],
         },
-        '/prj/AMMA2050/ERA5/synop/srfc/ERA5_monthly_'+str(year)+'.nc')
+        '/prj/AMMA2050/ERA5/monthly/surface/ERA5_monthly_0.7deg_'+str(year)+'.nc')
 
 for y in range(1979,2020):
     download(y)

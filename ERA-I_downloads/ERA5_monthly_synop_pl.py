@@ -1,14 +1,13 @@
 import cdsapi
-import os
 
-def download(year, month, file):
+def download(year):
     c = cdsapi.Client()
 
     c.retrieve(
         'reanalysis-era5-pressure-levels-monthly-means',
         {
             'format': 'netcdf',
-            'product_type': 'monthly_averaged_reanalysis',
+            'product_type':'monthly_averaged_reanalysis_by_hour_of_day',
             'variable': [
                 'divergence', 'geopotential',
                 'relative_humidity', 'specific_humidity',
@@ -24,21 +23,25 @@ def download(year, month, file):
                 '900', '925', '950',
                 '975'
             ],
-            'area' : '25/-18.5/3.5/17',   # pick domain upper/left/lower/right
             'year': [str(year)],
-            'month': [str(month).zfill(2)],
-            'time': '00:00'
-        },  file)
+            'month': [
+                '01', '02', '03',
+                '04', '05', '06',
+                '07', '08', '09',
+                '10', '11', '12'
+            ],
+            'area': '25/-18.5/3.5/17',  # pick domain upper/left/lower/right
+            'grid': '0.7/0.7',
+            'time': [
+                '00:00', '03:00',
+                '06:00',
+                '09:00',
+                '12:00', '15:00',
+                '18:00',
+                '21:00'
+            ]
+        },   '/media/ck/Elements/ERA5/monthly/synoptic/pressure_levels/ERA5_monthly_pl_'+str(y)+'_synop.nc')
 
 for y in range(1979,2020):
-    for m in range(1, 13):
-
-        out_dir = '/home/ck/DIR/mymachine/ERA5/monthly/pressure_levels/'
-        path_file =  out_dir + 'ERA5_' + str(y) + '_' + str(m).zfill(2) + '_pl.nc'
-        print('Doing ' + path_file)
-
-        if os.path.isfile(path_file):
-            print('File exists, continue')
-            continue
-
-        download(y, m, path_file)
+    print('Doing year', y)
+    download(y)
