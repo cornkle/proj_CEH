@@ -80,7 +80,9 @@ def trend_all():
 
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    storm_mean = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    storm_extreme = 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'
+    mcs = cnst.GRIDSAT + storm_extreme
 
     fpath = cnst.network_data + 'figs/CLOVER/months/'
 
@@ -142,14 +144,14 @@ def trend_all():
 
     q.values = q.values*1000
 
-    grid = t2d.salem.grid.regrid(factor=0.5)
+    grid = t2d.salem.grid.regrid(factor=0.25)
     t2 = t2d # grid.lookup_transform(t2d)
     tir = grid.lookup_transform(da3['tir'])
 
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [(11,1)]#, 2,3,10]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [(11,1),1,2,3,4,5,6,7,8,9,10,11,12]#, 2,3,10]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -200,10 +202,10 @@ def trend_all():
         ti_da = tirtrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'trend_synop_lowWind_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'trend_synop_-70C5000_trend_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'trend_synop_lowWind_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
-        map = shear.salem.get_map()
+            fp = fpath + 'trend_synop_-70C5000_trend_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+        map = t2d.salem.get_map()
 
         f = plt.figure(figsize=(15,8), dpi=300)
 
@@ -216,7 +218,7 @@ def trend_all():
         u = u6trend_unstacked.values[1::2, 1::2]
         v = v6trend_unstacked.values[1::2, 1::2]
 
-        #Quiver only every 7th grid point
+        #Quiver only every 7th grid pointtr
         uu = u6_mean.values[1::2, 1::2]
         vv = v6_mean.values[1::2, 1::2]
 
@@ -263,7 +265,7 @@ def trend_all():
                            labelpos='E', coordinates='figure')
 
         ax4 = f.add_subplot(224)
-        map.set_contour(tirm_mean.values, interp='linear', levels=[0.1,0.5,1,2.5], colors='k', linewidths=0.5)
+        map.set_contour((tirm_mean.values).astype(np.float64), interp='linear', levels=[0.1,0.5,1,2.5], colors='k', linewidths=0.5)
 
 
         ti_da[ti_da==0] = np.nan

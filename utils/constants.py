@@ -5,7 +5,8 @@ if os.path.isdir('/home/ck/DIR/'):
     ext_drive = '/home/ck/DIR/'
     local_data = ext_drive + 'mymachine/'
     network_data = ext_drive + 'cornkle/'
-    elements_drive = '/media/ck/Elements/Obs_Data/'
+    elements_drive = '/media/ck/Elements/'
+
 else:
     if os.path.isdir('/localscratch/wllf030/cornkle/'):
         local_data = '/localscratch/wllf030/cornkle/'

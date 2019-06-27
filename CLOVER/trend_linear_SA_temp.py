@@ -153,7 +153,7 @@ def trend_all():
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [(11,1), 2,3,10]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [(11,1),1,2,3,4,5,6,7,8,9,10,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -204,9 +204,9 @@ def trend_all():
         ti_da = tirtrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'trend_synop_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'trend_synop_SA_-40base1000_-65Ctrend_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'trend_synop_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'trend_synop_SA_-40base1000_-65Ctrend_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
 
         f = plt.figure(figsize=(15,8), dpi=300)
@@ -237,7 +237,7 @@ def trend_all():
         #map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
         dic = map.visualize(ax=ax1, title='2m temperature trend | contours: mean T', cbar_title='K decade-1')
-        qu = ax3.quiver(xx, yy, uu, vv, scale=80, width=0.002)
+        qu = ax1.quiver(xx, yy, uu, vv, scale=80, width=0.002)
 
         qk = plt.quiverkey(qu, 0.4, 0.03, 4, '4 m s$^{-1}$',
                            labelpos='E', coordinates='figure')
