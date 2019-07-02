@@ -31,6 +31,9 @@ ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_1983-2014_pl.nc'
 # ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
 # ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
 ERA5 = local_data + 'ERA5/'
+ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
+ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
+
 
 LSTA_TOPO = network_data + 'data/ancils_python/lsta_corr_topo.nc'
 WA_TOPO_1MIN = network_data + 'data/ancils_python/gtopo_1min_afr.nc'

@@ -38,7 +38,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=6)
     tthresh = '-50'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM/*.nc')
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
@@ -81,7 +81,7 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
 
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA-I.p',
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_TRMM_ERA-I.p',
                            'wb'))
 
 
