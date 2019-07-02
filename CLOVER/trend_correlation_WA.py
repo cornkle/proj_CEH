@@ -15,11 +15,11 @@ import shapely.geometry as shpg
 c_box = [15,32,-20,-15]#Middle[15,32,-20,-15]# DJF[17, 25, -28, -22]
 
 def corr_box():
-    srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
-    pl = cnst.ERA_MONTHLY_PL_SYNOP
+    srfc = cnst.ERA5_MONTHLY_SRFC_SYNOP
+    pl = cnst.ERA5_MONTHLY_PL_SYNOP
     mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'  # -70count
 
-    fpath = cnst.network_data + 'figs/CLOVER/months/'
+    fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/'
 
     dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p', 'rb'))
     dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_WA.p', 'rb'))
@@ -92,6 +92,7 @@ def corr_box():
 
     tir = da3['tir']
     tir = t2d.salem.lookup_transform(tir)
+
 
     def array_juggling(data, month, hour=None):
 
@@ -181,7 +182,7 @@ def corr_box():
 
     months = [1,2,3,4,10,11,12]
     months = [10]
-    months = [3,10,5,9] #(3,5), (9,11),
+    months = [3,4,10,5,9,11] #(3,5), (9,11),
 
     for m in months:
 
@@ -190,12 +191,14 @@ def corr_box():
         if type(m)==int:
             m = [m]
 
+        tirdiff, tiryear = array_juggling(tir, m)  # average frequency change
+
         t2diff, t2year = array_juggling(t2d, m) #
         qdiff, qyear = array_juggling(q, m) #, hour=12
         shdiff, sheyear = array_juggling(shear, m) #, hour=12
         vdiff, vyear = array_juggling(v925, m)  # , hour=12
         udiff, uyear = array_juggling(u925, m)  # , hour=12
-        tirdiff, tiryear = array_juggling(tir, m)  # average frequency change
+
 
         #mcs_month = mcs_temp[mcs_temp['time.month'] == m] # meanT box average change
 
@@ -209,14 +212,14 @@ def corr_box():
         shearcorr = corr(shdiff, tirdiff, bsingle=bs, c_box=c_box)
         tcorr = corr(t2diff, tirdiff, bsingle=bs, c_box=c_box)
 
-        dicm[m[0]].values[dicm[m[0]].values==0] = np.nan  #.values
+        dicm[m[0]][dicm[m[0]]==0] = np.nan  #.values
 
         print('plot')
 
         if len(m) == 1:
-            fp = fpath + 'corr_WA_-70C_synop_linear_INT_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_INT_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'corr_WA_-70C_synop_linear_INT_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_INT_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
         map = shear.salem.get_map()

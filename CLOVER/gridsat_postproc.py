@@ -190,15 +190,15 @@ def month_count_sum():
 
     for y in years:
         y = str(y)
-        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
+        da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-70_5000km2_15-21UTC' + y + '.nc')
         print('Doing ' + y)
         da1['tir'].values = da1['tir'].values/100
-        da1['tir'] = da1['tir'].where((da1['tir'] <= -65) & (da1['tir'] >= -108))
-        da1['tir'].values[da1['tir'].values<=-65] = 1
+        da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108))
+        da1['tir'].values[da1['tir'].values<=-70] = 1
 
-        da1 = da1.resample(time='m').sum('time')
+        da1 = da1.resample(time='d').max('time').resample(time='m').mean('day') # percentage of days per month
 
-        fname = '/gridsat_WA_-40_1000km2_15-21UTC' + y + '_monthSum.nc'
+        fname = '/gridsat_WA_-70_5000km2_15-21UTC' + y + '_monthSum.nc'
         enc = {'tir': {'complevel': 5, 'zlib': True}}
         da1.to_netcdf(msg_folder + fname, encoding=enc)
 
