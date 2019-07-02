@@ -65,8 +65,8 @@ def saveYearly_parallel():
 def loop(y):
 
     out = cnst.local_data + 'GRIDSAT/MCS18/'
-    infolder = cnst.elements_drive + 'GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
-    filename = 'gridsat_WA_-40_5000km2_15-21UTC' + str(y) + '.nc'
+    infolder = cnst.local_data + 'GRIDSAT/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
+    filename = 'gridsat_WA_-70_5000km2_15-21UTC' + str(y) + '.nc'
     da = None
     if os.path.isfile(out + filename):
         return
@@ -77,13 +77,14 @@ def loop(y):
         print('Doing ' + f)
 
         df = xr.open_dataset(f)
+        #ipdb.set_trace()
 
         if (df['time.hour']<15) | (df['time.hour']>21):
             continue
 
         df.rename({'irwin_cdr': 'tir'}, inplace=True)
         df['tir'].values = df['tir'].values-273.15
-        labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[78, 25000],
+        labels, goodinds = ua.blob_define(df['tir'].values, -70, minmax_area=[83, 25000],
                                           max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
         df['tir'].values[labels == 0] = 0
         df['tir'].values[df['tir'].values < -110] = 0

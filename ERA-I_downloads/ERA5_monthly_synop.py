@@ -25,7 +25,7 @@ def download(year):
                 '07','08','09',
                 '10','11','12'
             ],
-            'area': '25/-18.5/3.5/17',  # pick domain upper/left/lower/right
+            'area': '5/0/-40/90',#'25/-18.5/3.5/17',  # pick domain upper/left/lower/right
             'grid': '0.7/0.7',
             'time': [
                 '00:00',  '03:00',
@@ -36,7 +36,7 @@ def download(year):
                 '21:00'
             ]
         },
-        '/media/ck/Elements/ERA5/monthly/synoptic/surface/ERA5_monthly_srfc_'+str(y)+'_synop.nc')
+        '/prj/AMMA2050/ERA5/monthly/SA/synoptic/surface/ERA5_monthly_srfc_'+str(y)+'_synop.nc')
 
 for y in range(1979,2020):
     print('Doing year', y)
