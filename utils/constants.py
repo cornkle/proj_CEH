@@ -34,6 +34,9 @@ ERA5 = local_data + 'ERA5/'
 ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
 ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
 
+ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
+ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
+
 
 LSTA_TOPO = network_data + 'data/ancils_python/lsta_corr_topo.nc'
 WA_TOPO_1MIN = network_data + 'data/ancils_python/gtopo_1min_afr.nc'

@@ -11,10 +11,11 @@ from utils import u_grid as ug
 from matplotlib import patches
 from matplotlib import lines
 import shapely.geometry as shpg
+from utils import constants as cnst
 
 
-path = '/users/global/cornkle/MCSfiles/'
-figpath = '/users/global/cornkle/figs/Ileaps/'
+path = cnst.network_data + 'MCSfiles/'
+figpath = cnst.network_data + 'figs/Ileaps/'
 
 file2 = path+'blob_map_35km_-65_JJAS_sum_18UTC.nc'
 file = path+'blob_map_35km_-65_JJAS_sum_03UTC.nc'
@@ -22,10 +23,10 @@ file = path+'blob_map_35km_-65_JJAS_sum_03UTC.nc'
 
 #file=path+'blob_map_35km_-75_sum_0-3UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
 
-fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
+fpath = cnst.ANCILS + 'gtopo_1min_afr.nc'
 #lst = '/users/global/cornkle/data/LandCover/evergreen_trees.tif'
-lst = '/localscratch/wllf030/cornkle/obs_data/LandCover/evergreen_trees.tif'
-vegfra = '/users/global/cornkle/data/MODIS/vegfra/Average.tif'
+lst = cnst.local_data + 'obs_data/LandCover/evergreen_trees.tif'
+vegfra = cnst.network_data + 'data/MODIS/vegfra/Average.tif'
 
 tfile = '/users/global/cornkle/data/MODIS/LST/acp_0130MYD_h17v08_regridded.nc'
 

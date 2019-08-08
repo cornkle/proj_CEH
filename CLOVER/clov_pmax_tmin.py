@@ -8,7 +8,7 @@ sns.set_style("ticks")
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
-from utils import constants_lappi as cnst
+from utils import constants as cnst
 from scipy import stats
 import matplotlib.cm as cm
 

@@ -21,13 +21,13 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
         if len(month)>1:
 
-            data = data[((data['time.month'] >= month[0]) | (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
         else:
 
             data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
     else:
         if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) | (data['time.month'] <= month[1]))& (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
         else:
             data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
 
@@ -43,10 +43,10 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
     # apply the function over allpoints to calculate the trend at each point
     print('Entering trend calc')
 
-    alpha = 0.05
+    alpha = 0.09
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='mk':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.0001,nb_missing=10)
+        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
         dtrend = dtrend.unstack('allpoints')
         if sig:
             (dtrend['slope'].values)[dtrend['ind'].values==0] = 0
@@ -80,7 +80,7 @@ def trend_all():
 
     srfc = cnst.ERA5_MONTHLY_SRFC_SYNOP #cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA5_MONTHLY_PL_SYNOP #cnst.ERA_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_mean_5000km2.nc'
 
     fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/'
 
@@ -94,16 +94,16 @@ def trend_all():
     #da2 = xr.decode_cf(da2)
     da2 = u_darrays.flip_lat(da2)
     da2 = da2.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
-    da3 = xr.open_dataset(mcs)
+    da3 = xr.open_dataarray(mcs)*100
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
 
     lons = da.longitude
     lats = da.latitude
 
 
-    press = da2['sp']
+    press = da2['tcwv']
     press = press[press['time.hour'] == 12]
-    press.values = press.values*1000
+    #press.values = press.values#*1000
     low_press = 925
     up_press = 650
 
@@ -145,20 +145,20 @@ def trend_all():
 
     q.values = q.values*1000
 
-    #grid = t2d.salem.grid.regrid(factor=0.5)
+    grid = t2d.salem.grid.regrid(factor=0.5)
     t2 = t2d # grid.lookup_transform(t2d)
-    tir = t2d.salem.lookup_transform(da3['tir']) #grid.lookup_transform(da3['tir'])
+    tir = grid.lookup_transform(da3)  #t2d.salem.lookup_transform(da3['tir']) #
 
-    # grid = grid.to_dataset()
-    # tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
+    grid = grid.to_dataset()
+    tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [3,4,5,6,7,8,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [(3,5), (9,11)]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
 
     for m in months:
-        method = 'mk'
+        method = 'polyfit'
 
         if type(m)==int:
             m = [m]
@@ -178,6 +178,9 @@ def trend_all():
         sheartrend, shearmean = calc_trend(shear, m, method=method, sig=sig,hour=12, wilks=False) #hour=12,
         shear_mean = shearmean.mean(axis=0)
 
+        presstrend, pressmean = calc_trend(press, m, method=method, sig=sig,hour=12, wilks=False) #hour=12,
+        press_mean = pressmean.mean(axis=0)
+
         u6trend, u6mean = calc_trend(u6, m,  method=method, sig=sig, hour=12,wilks=False) #hour=12,
         u6_mean = u6mean.mean(axis=0)
         v6trend, v6mean = calc_trend(v6, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
@@ -188,25 +191,29 @@ def trend_all():
         sheartrend_unstacked = sheartrend * 10.  # warming over decade
         u6trend_unstacked = u6trend * 10
         v6trend_unstacked = v6trend * 10
+        presstrend_unstacked = presstrend * 10
 
         tirtrend_unstacked = ((tirtrend.values)*10. / tirm_mean.values) * 100.
-
-        tirtrend_out = tirtrend_unstacked#xr.DataArray(tirtrend_unstacked, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
-        tirmean_out = tirm_mean #xr.DataArray(tirm_mean, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
+        #ipdb.set_trace()
+        tirtrend_out = xr.DataArray(tirtrend_unstacked, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
+        tirtrend_out.name = 'tir'
+        #tirmean_out = xr.DataArray(tirm_mean, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
 
         dicm[m[0]] = tirtrend_out
-        dicmean[m[0]] = tirmean_out
+        dicmean[m[0]] = tirm_mean
 
         t_da = t2trend_unstacked
         q_da = qtrend_unstacked
         s_da = sheartrend_unstacked
-        ti_da = tirtrend_unstacked
+        ti_da = tirtrend_out
+        tcwv_da = presstrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'ERA5_trend_synop_WA_sig_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'ERA5_trend_synop_WA_sig_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
+        ti_da = t2d.salem.transform(ti_da)
 
         f = plt.figure(figsize=(15,8), dpi=300)
 
@@ -226,11 +233,30 @@ def trend_all():
         xx = xx[1::2, 1::2]
         yy = yy[1::2, 1::2]
 
+        pdic = {
+            'tlin' : (t2_mean.values-273.15).astype(np.float64),
+            'tmean' : (t2_mean.values-273.15).astype(np.float64),
+            'qmean' : (q_mean.values).astype(np.float64),
+            'qlin'  : q_da.values,
+            'shearlin' : s_da.values,
+            'u' : u,
+            'v' : v,
+            'xx' : xx,
+            'yy' : yy,
+            'tirmean' : tirm_mean,
+
+
+        }
+
+        pkl.dump(dicm,
+                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
+                      'wb'))
+
         ax1 = f.add_subplot(221)
         map.set_data(t_da.values, interp='linear')  # interp='linear'
 
         map.set_contour((t2_mean.values-273.15).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=[20,23,26,29,32,35])
-        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
         #map.set_contour((t2_mean.values).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=np.linspace(800,925,8))
         #map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
@@ -240,9 +266,9 @@ def trend_all():
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         ax2 = f.add_subplot(222)
-        map.set_data(q_da.values,interp='linear')  # interp='linear'
-        map.set_contour((q_mean.values).astype(np.float64),interp='linear', colors='k', levels=[6,8,10,12,14,16], linewidths=0.5)
-        map.set_plot_params(levels=[-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
+        map.set_data(tcwv_da.values,interp='linear')  # interp='linear'
+        map.set_contour((tcwv_da.values).astype(np.float64),interp='linear', colors='k', levels=[20,30,40,50,60], linewidths=0.5) #[6,8,10,12,14,16]
+        map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
         dic = map.visualize(ax=ax2, title='925hPa Spec. humidity trend | contours: mean q', cbar_title='g kg-1 decade-1')
         contours = dic['contour'][0]
@@ -253,7 +279,7 @@ def trend_all():
         map.set_data(s_da.values, interp='linear')  # interp='linear'
         map.set_contour(s_da.values, interp='linear', levels=np.arange(-7,7,8), cmap='Blues')
 
-        map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,0.4, 0.6,0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='925-650hPa wind shear trend, mean 650hPa wind vectors', cbar_title='m s-1 decade-1')
         qu = ax3.quiver(xx, yy, u, v, scale=60, width=0.002)
 
@@ -261,10 +287,10 @@ def trend_all():
                            labelpos='E', coordinates='figure')
 
         ax4 = f.add_subplot(224)
-        map.set_contour((tirm_mean.values).astype(np.float64), interp='linear', levels=[0.1,0.5,1,2.5], colors='k', linewidths=0.5)
+        map.set_contour((tirm_mean), interp='linear', levels=[0.1,0.5,1,2.5], colors='k', linewidths=0.5)
+        #.values).astype(np.float64)
 
-
-        ti_da[ti_da==0] = np.nan
+        ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
         coord = [18, 25, -28, -20]
         geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
