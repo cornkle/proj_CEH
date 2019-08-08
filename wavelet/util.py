@@ -7,9 +7,10 @@ Created on Thu Jun  2 14:08:18 2016
 import numpy as np
 #from wavelet import twod as w2d
 from scipy import ndimage
-from wavelet import wav
+from wavelet import wav, wav1d
 import pdb
 import matplotlib.pyplot as plt
+import ipdb
 
 def read_dic(dic):
     dt = dic['dx']
@@ -31,12 +32,14 @@ def _create_dic(dx, dist, start, nb):
 
 ############ Frequently used datasets
 DATASETS = {
-    'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),
+    'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),  # resolution, distance between scales,start scale, number of scales
     'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 2),  #28     0.5
+    'METEOSAT5K_veraTest': _create_dic(5, 0.5, 15, 2),  #28     0.5
     'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
-    'METSRFC': _create_dic(3, 0.45, 9, 10) # nb =14 also tested
+    'METSRFC': _create_dic(3, 0.45, 9, 10), # nb =14 also tested
+    'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10)  # nb =14 also tested
 }
 
 
@@ -97,10 +100,10 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
     dic['t']=powerTIR
     dic['scales'] = obj.scales
     dic['res'] = obj.res
+    dic['coeffs'] = coeffsTIR
     return dic
 
 def waveletT_normalised(t, dx=None, dist=None,start=None, nb=None, dataset=None):
-
 
     dic = {}
 
@@ -364,3 +367,49 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
 
     return dic
 #
+
+def waveletT1D(t, dx=None, dist=None,start=None, nb=None, dataset=None, mask=None):
+
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    #1D continuous wavelet analysis:
+    #TIR
+    tir=t.copy()
+    tir[tir<0] = 0
+    tir = (tir - np.mean(tir)) / np.std(tir)
+
+    obj = wav1d.wavelet(dx, dist, nb, start=start)
+
+    #TIR
+    coeffsTIRx, powerTIRx = obj.calc_coeffs(tir, le_thresh=0, fill=0.0001, direction='x')
+    coeffsTIRy, powerTIRy = obj.calc_coeffs(tir, le_thresh=0, fill=0.0001, direction='y')
+
+
+    tir_shuff = tir.copy()
+    np.random.shuffle(tir_shuff)
+
+    coeffsSIGx, powerSIGx = obj.calc_coeffs(tir_shuff, le_thresh=0, fill=0.0001, direction='x')
+    coeffsSIGy, powerSIGy = obj.calc_coeffs(tir_shuff, le_thresh=0, fill=0.0001, direction='y')
+
+    sigx = obj.significance(powerTIRx, powerSIGx, direction='x', mask=mask)
+    sigy = obj.significance(powerTIRy, powerSIGy, direction='y', mask=mask)
+
+
+    dic['powerx']=powerTIRx
+    dic['powery'] = powerTIRy
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    dic['coeffsx'] = coeffsTIRx
+    dic['coeffsy'] = coeffsTIRy
+    dic['sigx'] = sigx
+    dic['sigy'] = sigy
+
+    return dic

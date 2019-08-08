@@ -54,6 +54,8 @@ class wavelet(object):
         """
 
         wav_coeffs = w2d.cwt2d(data, self.res, self.res, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
+
+
         wav_coeffs_pure = np.real(wav_coeffs.copy())
         if le_thresh!=None:
             wav_coeffs[np.real(wav_coeffs <= le_thresh)] = fill

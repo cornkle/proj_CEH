@@ -201,6 +201,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
     llsavefile = file.replace('.gra', '')
     np.savez(llsavefile,lon=lon,lat=lat)
 
+
 #========================================================================================
 # Rewrites modis lat lon to something nice (lat lon from blobs)
 #  file: lat lon grads file
@@ -357,6 +358,47 @@ def rewriteLSTAClim_toNetcdf(file):
         print('Out directory not found')
     print('Wrote ' + out)
     return
+
+#========================================================================================
+# Rewrites modis lat lon to something nice (lat lon from blobs)
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteLSTTrend_VERA(file):
+
+
+    out = file.replace('.gra', '.nc')
+
+    print('Doing '+file)
+
+    x = 760
+    y = 320
+
+    blat = np.linspace(4.025,4.025+y*0.05,y)
+    blon = np.linspace(-17.975,-17.975+x*0.05,x)
+
+
+    rr = np.fromfile(file, dtype=np.float32(13.5))
+
+    rr = np.reshape(rr, (blat.size,blon.size))
+
+    da = xr.DataArray(rr, coords={
+                                             'lat':  blat,
+                                             'lon': blon},
+                      dims=['lat', 'lon'])#.isel(time=0)
+
+    try:
+
+        da.to_netcdf(path=out, mode='w')
+
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return
+
+
 
 
 def rewrite_AMSRE(file):

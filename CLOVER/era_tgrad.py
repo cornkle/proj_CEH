@@ -260,7 +260,7 @@ def t_trend_polyfit_season():
     #file = '/users/global/cornkle/data/ERA-I monthly/ERA-WA-Monthly-2mTemp.nc'
     file = cnst.ERA_MONTHLY_SRFC_SYNOP
 
-    fpath = cnst.network_data + '/figs/CLOVER/months/'
+    fpath = cnst.network_data + '/figs/CLOVER/months/ERA5_WA/'
 
     # define a function to compute a linear trend of a timeseries
     def linear_trend(x):
@@ -269,7 +269,7 @@ def t_trend_polyfit_season():
 
         # we need to return a dataarray or else xarray's groupby won't be happy
         issig = slope
-
+        #
         # if ind == 1:
         #     issig = slope
         # else:
@@ -313,7 +313,7 @@ def t_trend_polyfit_season():
     dam = xr.open_dataset(file)
     dam = dam['t2m']
 
-    f = plt.figure(figsize=(10,9))
+    f = plt.figure(figsize=(10,9), dpi=300)
 
     m_dic = { 1 : 'Jan', 2 : 'Feb', 3 : 'Mar', 4 : 'Apr', 5 : 'May', 6 : 'Jun', 7 : 'Jul', 8 : 'Aug',
               9 : 'Sep', 10 : 'Oct', 11 : 'Nov', 12 : '12'}
@@ -339,11 +339,12 @@ def t_trend_polyfit_season():
         # stack lat and lon into a single dimension called allpoints
         stacked = da.stack(allpoints=['latitude','longitude'])
         # apply the function over allpoints to calculate the trend at each point
+        #u_darrays.linear_trend_mk, alpha=alpha, eps=0.0001,nb_missing=10
         trend = stacked.groupby('allpoints').apply(linear_trend)
         # unstack back to lat lon coordinates
         trend_unstacked = trend.unstack('allpoints')
 
-        trend_unstacked = trend_unstacked*10. # warming over decade
+        trend_unstacked = trend_unstacked*10 # warming over decade
         da2 = xr.DataArray(trend_unstacked, coords=[lats, lons], dims=['latitude', 'longitude'])
 
         bla = True
@@ -419,7 +420,7 @@ def t_trend_polyfit_month():
     dam = xr.open_dataset(file)
     dam = dam['t2m']
 
-    f = plt.figure(figsize=(10,9))
+    f = plt.figure(figsize=(9,8), dpi=300)
 
     m_dic = { 1 : 'Jan', 2 : 'Feb', 3 : 'Mar', 4 : 'Apr', 5 : 'May', 6 : 'Jun', 7 : 'Jul', 8 : 'Aug',
               9 : 'Sep', 10 : 'Oct', 11 : 'Nov', 12 : '12'}

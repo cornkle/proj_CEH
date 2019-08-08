@@ -19,9 +19,10 @@ import pickle as pkl
 def dictionary_storm():
 
     dic = {}
-    vars = ['q_col','u_col','r_col','v_col','q_col_s','u_col_s','r_col_s','v_col_s','u925_s','u650_s',
-           'q925_s','q700_s','tcwv_s','CAPE_s','tcwv','CAPE','dates','tmin','tmean','t10','area',
-            'area70','lat','lon','u925','u650','q925','q700']
+    vars = ['q_col','u_col','r_col','v_col', 'd_col', 't_col', 'q_col_s','u_col_s','r_col_s','v_col_s','d_col_s', 't_col_s',
+            'u925_s','u650_s',
+           'q925_s','q700_s','t2_s', 'divMoist_s','slp_s', 'd925_s','tcwv_s','CAPE_s','tcwv','CAPE','dates','tmin','tmean','t10','area',
+            'area70','lat','lon','u925','u650','q925','q700', 't2','divMoist', 'slp', 'd925']
 
     for v in vars:
         dic[v] = []
@@ -30,7 +31,7 @@ def dictionary_storm():
 def dictionary():
 
     dic = {}
-    vars = ['q_col','u_col','r_col','v_col',
+    vars = ['q_col','u_col','r_col','v_col', 'd_col',
            'tcwv','CAPE','dates','tmin','tmean','t10','area',
             'area70','lat','lon','u925','u650','q925','q700']
 
@@ -69,10 +70,12 @@ def perSys(clim=False):
     merged = ua.merge_dicts(res, merge_lists=True)
 
     #test = pd.DataFrame.from_dict(merged, orient='index')
-
-    pkl.dump(merged, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_ERA5_allmonth_2000-2014_18UTC_front_CLIM.p',
+    if clim:
+        pkl.dump(merged, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_ERA5_allmonth_5-8N_2000-2014_18UTC_front_CLIM.p',
                            'wb'))
-
+    else:
+        pkl.dump(merged, open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA_ERA5_allmonth_5-8N_2000-2014_18UTC_front.p',
+                           'wb'))
 
 def get_ERA5(inputs):
 
@@ -89,8 +92,8 @@ def get_ERA5(inputs):
         time = str(date.month).zfill(2) + '-12'
         stormtime = str(date.month).zfill(2) + '-18'
 
-        pl_str = 'ERA5/CLIM_2000-2014/pressure_levels/ERA5_2000-2014_CLIM_'
-        srfc_str = 'ERA5/CLIM_2000-2014/surface/ERA5_2000-2014_CLIM_'
+        pl_str = 'ERA5/monthly/synop_selfmade/CLIM_2000-2014/pressure_levels/ERA5_2000-2014_CLIM_'
+        srfc_str = 'ERA5/monthly/synop_selfmade/CLIM_2000-2014/surface/ERA5_2000-2014_CLIM_'
 
         try:
             print('Open '+ cnst.local_data + pl_str + time + '_pl.nc')
@@ -115,9 +118,12 @@ def get_ERA5(inputs):
 
     else:
 
-        era_pl = xr.open_dataset(cnst.local_data + 'ERA5/pressure_levels/ERA5_' +str(date.year) + '_' + str(date.month).zfill(2) + '_pl.nc')
+        era_pl = xr.open_dataset(cnst.local_data + 'ERA5/hourly/pressure_levels/ERA5_' +str(date.year) + '_' + str(date.month).zfill(2) + '_pl.nc')
         era_srfc = xr.open_dataset(
-            cnst.local_data + 'ERA5/surface/ERA5_' + str(date.year) + '_' + str(date.month).zfill(2) + '_srfc.nc')
+            cnst.local_data + 'ERA5/hourly/surface/ERA5_' + str(date.year) + '_' + str(date.month).zfill(2) + '_srfc.nc')
+
+        era_pl = era_pl.rename({'longitude' : 'lon', 'latitude' : 'lat'})
+        era_srfc = era_srfc.rename({'longitude' : 'lon', 'latitude' : 'lat'})
 
         time = str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2) + 'T12'
         stormtime = str(date.year) + str(date.month).zfill(2) + str(date.day).zfill(2) + 'T18'
@@ -180,13 +186,20 @@ def get_ERA5(inputs):
         dic['u650'].append(np.asscalar((era_day_pl['u'].isel(lat=yyy, lon=xxx).sel(level=650).mean().values)))
         dic['q925'].append(np.asscalar((era_day_pl['q'].isel(lat=yyy, lon=xxx).sel(level=925).mean().values)))
         dic['q700'].append(np.asscalar((era_day_pl['q'].isel(lat=yyy, lon=xxx).sel(level=700).mean().values)))
+        dic['d925'].append(np.asscalar((era_day_pl['d'].isel(lat=yyy, lon=xxx).sel(level=925).mean().values)))
         dic['CAPE'].append(np.asscalar((era_day_sf['cape'].isel(lat=yy, lon=xx).mean().values)))
         dic['tcwv'].append(np.asscalar((era_day_sf['tcwv'].isel(lat=yy, lon=xx).mean().values)))
+        dic['t2'].append(np.asscalar((era_day_sf['t2m'].isel(lat=yy, lon=xx).mean().values)))
+        dic['divMoist'].append(np.asscalar((era_day_sf['p84.162'].isel(lat=yy, lon=xx).mean().values)))
+        dic['slp'].append(np.asscalar((era_day_sf['msl'].isel(lat=yy, lon=xx).mean().values)))
 
         dic['q_col'].append((era_day_pl['q'].isel(lat=yyy, lon=xxx).values))
         dic['u_col'].append((era_day_pl['u'].isel(lat=yyy, lon=xxx).values))
         dic['r_col'].append((era_day_pl['r'].isel(lat=yyy, lon=xxx).values))
         dic['v_col'].append((era_day_pl['v'].isel(lat=yyy, lon=xxx).values))
+        dic['t_col'].append((era_day_pl['t'].isel(lat=yyy, lon=xxx).values))
+        dic['d_col'].append((era_day_pl['d'].isel(lat=yyy, lon=xxx).values))
+
 
         dic['u925_s'].append(
             np.asscalar((era_day_plt['u'].isel(lat=yyy, lon=xxx).sel(level=925).mean().values)))
@@ -196,13 +209,20 @@ def get_ERA5(inputs):
             np.asscalar((era_day_plt['q'].isel(lat=yyy, lon=xxx).sel(level=925).mean().values)))
         dic['q700_s'].append(
             np.asscalar((era_day_plt['q'].isel(lat=yyy, lon=xxx).sel(level=700).mean().values)))
+        dic['d925_s'].append(
+            np.asscalar((era_day_plt['d'].isel(lat=yyy, lon=xxx).sel(level=925).mean().values)))
         dic['CAPE_s'].append(np.asscalar((era_day_sft['cape'].isel(lat=yy, lon=xx).mean().values)))
         dic['tcwv_s'].append(np.asscalar((era_day_sft['tcwv'].isel(lat=yy, lon=xx).mean().values)))
+        dic['t2_s'].append(np.asscalar((era_day_sft['t2m'].isel(lat=yy, lon=xx).mean().values)))
+        dic['divMoist_s'].append(np.asscalar((era_day_sft['p84.162'].isel(lat=yy, lon=xx).mean().values)))
+        dic['slp_s'].append(np.asscalar((era_day_sft['msl'].isel(lat=yy, lon=xx).mean().values)))
+
 
         dic['q_col_s'].append((era_day_plt['q'].isel(lat=yyy, lon=xxx).values))
         dic['u_col_s'].append((era_day_plt['u'].isel(lat=yyy, lon=xxx).values))
         dic['r_col_s'].append((era_day_plt['r'].isel(lat=yyy, lon=xxx).values))
         dic['v_col_s'].append((era_day_plt['v'].isel(lat=yyy, lon=xxx).values))
+        dic['d_col_s'].append((era_day_plt['d'].isel(lat=yyy, lon=xxx).values))
 
         dic['tmin'].append(indic.tmin[id])
         dic['tmean'].append(indic.tmean[id])

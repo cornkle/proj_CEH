@@ -17,9 +17,9 @@ c_box = [15,32,-20,-15]#Middle[15,32,-20,-15]# DJF[17, 25, -28, -22]
 def corr_box():
     srfc = cnst.ERA5_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA5_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'  # -70count
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_mean_5000km2.nc'  # -70count
 
-    fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/'
+    fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/use/'
 
     dicm = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p', 'rb'))
     dicmean = pkl.load(open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_WA.p', 'rb'))
@@ -147,13 +147,15 @@ def corr_box():
                 if bsingle:
                     r, p = stats.pearsonr(aa.values, bb)
 
-                    pf = np.polyfit(aa.values, bb, 1)
+                    #pf = np.polyfit(aa.values, bb, 1)
+                    pf, intercept, r, p, std_err = stats.linregress(aa.values, bb)
                 else:
-                    r, p = stats.pearsonr(aa.values, bb.values)
-                    pf = np.polyfit(aa.values, bb.values, 1)
+                    # r, p = stats.pearsonr(aa.values, bb.values)
+                    # pf = np.polyfit(aa.values, bb.values, 1)
+                    pf, intercept, r, p, std_err = stats.linregress(aa.values, bb.values)
 
 
-                slope = pf[0]
+                slope = pf#[0]
 
                 if (np.nansum(aa.values == 0) >= 10):
                     p = np.nan
@@ -162,6 +164,7 @@ def corr_box():
                 ds['r'].loc[{'latitude': lat, 'longitude': lon}] = r
                 ds['pval'].loc[{'latitude': lat, 'longitude': lon}] = p
                 ds['slope'].loc[{'latitude': lat, 'longitude': lon}] = slope
+                ds['intercept'].loc[{'latitude': lat, 'longitude': lon}] = intercept
 
         return ds
 
@@ -181,8 +184,9 @@ def corr_box():
 
 
     months = [1,2,3,4,10,11,12]
-    months = [10]
+
     months = [3,4,10,5,9,11] #(3,5), (9,11),
+    months = [3,10]
 
     for m in months:
 
@@ -198,6 +202,7 @@ def corr_box():
         shdiff, sheyear = array_juggling(shear, m) #, hour=12
         vdiff, vyear = array_juggling(v925, m)  # , hour=12
         udiff, uyear = array_juggling(u925, m)  # , hour=12
+        vdiff6, vyear6 = array_juggling(u600, m)  # , hour=12
 
 
         #mcs_month = mcs_temp[mcs_temp['time.month'] == m] # meanT box average change
@@ -211,15 +216,16 @@ def corr_box():
             continue
         shearcorr = corr(shdiff, tirdiff, bsingle=bs, c_box=c_box)
         tcorr = corr(t2diff, tirdiff, bsingle=bs, c_box=c_box)
+        vcorr = corr(vdiff6,tirdiff, bsingle=bs, c_box=c_box)
 
-        dicm[m[0]][dicm[m[0]]==0] = np.nan  #.values
+        dicm[m[0]].values[dicm[m[0]].values==0] = np.nan  #.values
 
         print('plot')
 
         if len(m) == 1:
-            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_INT_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_SLOPE_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_INT_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'ERA5_corr_WA_-70C_synop_linear_SLOPE_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
         map = shear.salem.get_map()
@@ -239,27 +245,27 @@ def corr_box():
         #ipdb.set_trace()
         f = plt.figure(figsize=(15,8), dpi=350)
         ax1 = f.add_subplot(221)
-
-        map.set_data(tcorr['r'], interp='linear')  # interp='linear'
+        ipdb.set_trace()
+        map.set_data(tcorr['intercept']+tcorr['slope'], interp='linear')  # interp='linear'
         map.set_contour(t2year-273.15, interp='linear', levels=np.arange(24,37,4),colors='k', linewidths=0.5)
 
 
-        map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,-0.3,0.3,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        dic = map.visualize(ax=ax1, title='2m temperature corr. | contours: mean T', cbar_title='K decade-1')
+        map.set_plot_params(cmap='RdBu_r', extend='both',levels=np.arange(-0.5,0.51,0.1)) # , levels=[-0.7,-0.6,-0.5,-0.4,-0.3,0.3,0.4,0.5,0.6,0.7])
+        dic = map.visualize(ax=ax1, title='2m temperature corr. | contours: mean T', cbar_title='')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         ax2 = f.add_subplot(222)
-        map.set_data(qcorr['r'],interp='linear')  # interp='linear'
+        map.set_data(qcorr['slope']*10,interp='linear')  # interp='linear'
         map.set_contour(qyear,interp='linear', levels=np.arange(5,19,3), colors='k', linewidths=0.5)
 
         map.set_plot_params(cmap='RdBu_r', extend='both',levels=[-0.7,-0.6,-0.5,-0.4,-0.3,0.3,0.4,0.5,0.6,0.7])  # levels=np.arange(-0.5,0.51,0.1),
-        dic = map.visualize(ax=ax2, title='925hPa Spec. humidity corr. | contours: mean q', cbar_title='g kg-1 decade-1')
+        dic = map.visualize(ax=ax2, title='925hPa Spec. humidity corr. | contours: mean q', cbar_title='')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         ax3 = f.add_subplot(223)
-        map.set_data(shearcorr['r'], interp='linear')  # interp='linear'
+        map.set_data(shearcorr['slope']*10, interp='linear')  # interp='linear'
         map.set_plot_params(cmap='RdBu_r', extend='both', levels=[-0.7,-0.6,-0.5,-0.4, -0.3,0.3,0.4,0.5,0.6,0.7])
         #map.set_contour(sheyear, interp='linear', levels=np.arange(-10,1,6), colors='k', linewidths=0.5)
 
@@ -268,7 +274,7 @@ def corr_box():
                            labelpos='E', coordinates='figure')
 
           # levels=np.arange(-0.5,0.51,0.1)
-        dic = map.visualize(ax=ax3, title='650-925hPa wind shear corr., mean 925hPa wind vectors', cbar_title='m s-1 decade-1')
+        dic = map.visualize(ax=ax3, title='650-925hPa wind shear corr., mean 925hPa wind vectors', cbar_title='')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 

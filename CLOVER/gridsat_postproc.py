@@ -10,6 +10,7 @@ import os
 import matplotlib as mpl
 import pickle as pkl
 from utils import constants as cnst
+from utils import u_arrays as ua
 from scipy.ndimage.measurements import label
 
 
@@ -133,7 +134,7 @@ def month_mean_climatology():
         da_res = da1.resample(time='m').mean('time')
 
         #boxed = da1['tir'].sel(lat=slice(4.5,8), lon=slice(-10,10)).resample(time='m').mean()
-        boxed = da1['tir'].sel(lat=slice(10, 17), lon=slice(-10, 10)).resample(time='m').mean()
+        boxed = da1['tir'].sel(lat=slice(5, 8), lon=slice(-12, 10)).resample(time='m').mean()
 
         try:
             da = xr.concat([da, da_res], 'time')
@@ -151,7 +152,7 @@ def month_mean_climatology():
 
         enc = {'tir': {'complevel': 5, 'zlib': True}}
         #da_box.to_netcdf(msg_folder + 'box_13W-13E-4-8N_meanT-50_from5000km2.nc')
-        da_box.to_netcdf(msg_folder + 'box_13W-13E-10-18N_meanT-50_from5000km2.nc')
+        da_box.to_netcdf(msg_folder + 'box_12W-10E-5-8N_meanT-50_from5000km2.nc')
         da.to_netcdf(msg_folder + fname, encoding=enc)
 
 
@@ -160,7 +161,7 @@ def month_count():
     years = list(range(1983, 2018))
 
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-70_monthly_count.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    fname = 'aggs/gridsat_WA_-70_monthly_mean_5000km2.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -169,10 +170,10 @@ def month_count():
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_' + y + '.nc')  # _-40_1000km2_15-21UTC
             print('Doing ' + y)
             da1['tir'].values = da1['tir'].values#/100  ONLY FOR NEWER FILES
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108)) #-65
-            da1['tir'].values[da1['tir'].values < -70] = 1
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108), other=0) #-65
+            da1['tir'].values[da1['tir'].values < 0] = 1
             #ipdb.set_trace()
-            da1 = da1.resample(time='m').sum('time')
+            da1 = da1.resample(time='m').mean('time')
             try:
                 da = xr.concat([da, da1], 'time')
             except TypeError:
@@ -205,8 +206,8 @@ def month_count_sum():
 
 def month_count_concat():
     msg_folder = cnst.GRIDSAT
-    fname = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
-    da = xr.open_mfdataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC*_monthSum.nc')
+    fname = 'aggs/gridsat_WA_-70_monthly_count_15-21UTC_5000km2.nc'
+    da = xr.open_mfdataset(cnst.GRIDSAT + 'monthSum/gridsat_WA_-70_*_monthSum.nc')
 
     enc = {'tir': {'complevel': 5, 'zlib': True}}
     da.to_netcdf(msg_folder + fname, encoding=enc)
@@ -224,3 +225,180 @@ def month_count_concat():
     # mean.plot()
     #
     # plt.savefig('/users/global/cornkle/figs/CLOVER/GRIDSAT_cold_clouds/tests/trend_mcs-50.png', dpi=300)
+
+
+def storm_count(area=False):
+    msg_folder = cnst.GRIDSAT
+    fname = msg_folder + 'gridsat_WA_-40_1000km2_15-21UTC'
+
+    def makedic():
+        mdic = {}
+        for m in range(1,13):
+            mdic[m] = []
+        return mdic
+
+    dic75 = makedic()
+    dic70 = makedic()
+    dic60 = makedic()
+    dic50 = makedic()
+    dic40 = makedic()
+
+    area75 = makedic()
+    area70 = makedic()
+    area60 = makedic()
+    area50 = makedic()
+    area40 = makedic()
+
+    for y in range(1983,2018): #2018
+        ds = xr.open_dataset(fname + str(y) + '.nc')
+        for m in range(1,13):
+
+
+            da = ds['tir'][(ds['time.month'] == m) & (ds['time.hour']>=15) & (ds['time.hour']<=21)]
+            da.values = da.values / 100
+
+            val = 0
+            storm = 0
+            ar = []
+            pixel = 78  # 78 # 78 = 5000km2 # 15000 = 253
+            for d in da:
+
+                cut = d.sel(lat=slice(5, 8), lon=slice(-12, 10))  # 4.5,8.5
+                labels, goodinds = ua.blob_define(cut.values, -40, minmax_area=[pixel, 25000],
+                                                  max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                if area:
+                    for gi in goodinds:
+                        ar.append(np.sum(labels == gi))
+
+                storm += np.float(goodinds.size)
+                val += 1
+            dic40[m].append(storm/val)
+            if area:
+                try:
+                    area40[m].append(np.percentile(ar, 90))
+                except IndexError:
+                    area40[m].append(np.nan)
+
+
+            val = 0
+            storm = 0
+            ar = []
+            pixel = 78 #78 # 78 = 5000km2 # 15000 = 253
+            for d in da:
+
+                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10)) # 4.5,8.5
+                labels, goodinds = ua.blob_define(cut.values, -50, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                if area:
+                    for gi in goodinds:
+                        ar.append(np.sum(labels==gi))
+
+                storm += np.float(goodinds.size)
+                val += 1
+            dic50[m].append(storm/val)
+            if area:
+                try:
+                    area50[m].append(np.percentile(ar, 90))
+                except IndexError:
+                    area50[m].append(np.nan)
+
+            val = 0
+            storm = 0
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                labels, goodinds = ua.blob_define(cut.values, -60, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                if area:
+                    for gi in goodinds:
+                        ar.append(np.sum(labels==gi))
+
+                storm += np.float(goodinds.size)
+                print(m, goodinds, val)
+                val += 1
+            dic60[m].append(storm/val)
+            if area:
+                try:
+                    area60[m].append(np.percentile(ar, 90))
+                except IndexError:
+                    area60[m].append(np.nan)
+
+            val = 0
+            storm = 0
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                labels, goodinds = ua.blob_define(cut.values, -70, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                if area:
+                    for gi in goodinds:
+                        ar.append(np.sum(labels==gi))
+
+                storm += np.float(goodinds.size)
+                val += 1
+            dic70[m].append(storm/val)
+            if area:
+                try:
+                    area70[m].append(np.percentile(ar, 90))
+                except IndexError:
+                    area70[m].append(np.nan)
+
+            val = 0
+            storm = 0
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                labels, goodinds = ua.blob_define(cut.values, -75, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                if area:
+                    for gi in goodinds:
+                        ar.append(np.sum(labels==gi))
+
+                storm += np.float(goodinds.size)
+                val += 1
+            dic75[m].append(storm/val)
+            if area:
+                try:
+                    area75[m].append(np.percentile(ar, 90))
+                except IndexError:
+                    area75[m].append(np.nan)
+    print(40, dic40[3])
+    print(50, dic50[3])
+    print(60, dic60[3])
+    print(70, dic70[3])
+    print(75, dic75[3])
+
+
+    pkl.dump(dic40, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-40C_5000km2_15-21.p', #4f5-8f5N
+                        'wb'))
+
+    pkl.dump(dic50, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-50C_5000km2_15-21.p', #4f5-8f5N
+                        'wb'))
+
+    pkl.dump(dic60, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-60C_5000km2_15-21.p',
+                         'wb'))
+
+    pkl.dump(dic70, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-70C_5000km2_15-21.p',
+                         'wb'))
+
+    pkl.dump(dic75, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-75C_5000km2_15-21.p',
+                        'wb'))
+
+
+
+    if area:
+
+        pkl.dump(area40, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-40C_5000km2_1800.p', #4f5-8f5N
+                            'wb'))
+
+        pkl.dump(area50, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-50C_5000km2_1800.p', #4f5-8f5N
+                            'wb'))
+
+        pkl.dump(area60, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-60C_5000km2_1800.p',
+                             'wb'))
+
+        pkl.dump(area70, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-70C_5000km2_1800.p',
+                             'wb'))
+
+        pkl.dump(area75, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-75C_5000km2_1800.p',
+                            'wb'))

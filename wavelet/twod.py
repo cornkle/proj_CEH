@@ -25,7 +25,7 @@ __version__ = '$Revision: 1 $'
 from numpy import (arange, ceil, concatenate, conjugate, cos, exp, floor, 
                    isnan, log, log2, meshgrid, ones, pi, prod, real, sqrt,
                    zeros, polyval)
-from numpy.fft import fft2, ifft2, fftfreq
+from numpy.fft import ifft2, fftfreq, fft2
 import pdb
 from pylab import find
 
