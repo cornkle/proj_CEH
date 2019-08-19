@@ -89,6 +89,7 @@ CMORPH = network_data + 'data/OBS/CMORPH/CMORPH_nc/'
 GRIDSAT = local_data + 'GRIDSAT/MCS18/'
 GRIDSAT_RAW = local_data + 'GRIDSAT/'
 CHIRPS = network_data + 'data/OBS/CHIRPS/'
+CHIRPS_MONTHLY = network_data + 'data/OBS/CHIRPS/monthly/'
 
 TRMM_DAILY = elements_drive + 'TRMM/data/daily/aggregated/'
 TRMM_MONTHLY = elements_drive + 'TRMM/data/monthly/aggregated/'
