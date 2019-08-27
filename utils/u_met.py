@@ -5,6 +5,11 @@ import scipy.ndimage.interpolation as inter
 from utils import constants
 
 
+Lv = 2.501e6 # heat of vapourisation
+Cp = 1005 # heat capacity of dry air at static pressure
+g = 9.80665
+
+
 def u_v_to_ws_wd(u,v):
     """
     U and V wind coords to wind speed and direction
@@ -147,7 +152,7 @@ def theta_factor(pz):
 def theta(pz, t):
     ist = t + 273.15
     try:
-        ist =  ist * ((1000 / pz) ** 0.286)
+        ist =  ist * ((1000 / pz) ** 0.286)  # kappa = 0.286
     except ValueError:
         ist = (ist.T * ((1000 / pz) ** 0.286)).T
 
@@ -157,3 +162,43 @@ def theta(pz, t):
 def olr_to_bt(olr):
     sigma = 5.670373e-8
     return ((olr/sigma)**0.25)-273.15
+
+
+def moist_static_energy(T, q, geop=None, z=None):
+
+    if geop is None:
+        try:
+            geop = z * g
+        except:
+            'Please provide z (height above ground) for calculation of geopotential'
+
+    mse = (T+273.15) * Cp  + geop + q * Lv
+    return mse  #J/kg
+
+def dry_static_energy(T, geop=None, z=None):
+
+    if geop is None:
+        try:
+            geop = z * g
+        except:
+            'Please provide z (height above ground) for calculation of geopotential'
+
+    mse = (T+273.15) * Cp  + geop
+    return mse
+
+
+def theta_e(pz, t, q):
+
+    if np.max(q) >10:
+        print('q is very big, please check, should be given in kg/kg')
+
+    ist = t + 273.15
+    try:
+        ist =  (ist + Lv/Cp*q) * ((1000 / pz) ** 0.286)  # kappa = 0.286
+    except ValueError:
+        ist = ((ist.T + Lv/Cp*q.T)* ((1000 / pz) ** 0.286)).T  # (T + Lv/cpd * mixRat)(p0/p)**kappa, Stull 1988
+
+    return  ist-273.15
+
+
+

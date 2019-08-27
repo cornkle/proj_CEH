@@ -132,6 +132,7 @@ def file_loop(f):
 
     t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
+    mask_area = (outt<=t_thresh) & np.isfinite(outt)
 
     if np.sum(mask) < 3:
         return
@@ -146,7 +147,7 @@ def file_loop(f):
 
     print(np.nanmax(outt[mask]))   # can be bigger than cutout threshold because of interpolation to 5km grid after cutout
 
-    out['area'] = np.sum(mask)
+    out['area'] = np.sum(mask_area)
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)

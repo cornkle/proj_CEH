@@ -22,7 +22,7 @@ HOD = range(24)  # hours of day
 
 
 def multi():
-    pool = multiprocessing.Pool(processes=6)
+    pool = multiprocessing.Pool(processes=5)
 
     res = pool.map(saveMCS_WA15, range(2004,2019))
 
@@ -119,7 +119,7 @@ def saveMCS_WA15(YRANGE):
 
                 lon1 = mdic['lon'].values
                 lat1 = mdic['lat'].values
-                mdic['t'].values[mdic['t'].values >= -50] = 0  # T threshold -10
+                mdic['t'].values[mdic['t'].values >= -70] = 0  # T threshold -10
                 labels, numL = label(mdic['t'].values)
 
                 u, inv = np.unique(labels, return_inverse=True)
@@ -225,7 +225,7 @@ def saveMCS_WA15(YRANGE):
                     da.attrs['area'] = sum(mmask.flatten())
                     da.attrs['area_cut'] = sum(mask2)
                     da.close()
-                    savefile = cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+                    savefile = cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-70_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
                     try:
                         os.remove(savefile)
                     except OSError:

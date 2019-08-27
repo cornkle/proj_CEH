@@ -45,7 +45,7 @@ def perSys(clim=False):
     pool = multiprocessing.Pool(processes=5)
 
     pdf = pkl.load(open(cnst.CLOVER_SAVES + 'StormLoc_-50_5000km_WA.p', 'rb'))
-    pdf_all = pdf.where((pdf.clat >= 5) & (pdf.clat <= 8) & (pdf.clon >= -12) & (pdf.clon <= 12) &
+    pdf_all = pdf.where((pdf.clat >= 5) & (pdf.clat <= 8) & (pdf.clon >= -12) & (pdf.clon <= 10) &
                         (pdf.year >= 2000) & (pdf.year <= 2014))
     pdf_all = pdf_all.dropna()
 
@@ -223,6 +223,7 @@ def get_ERA5(inputs):
         dic['r_col_s'].append((era_day_plt['r'].isel(lat=yyy, lon=xxx).values))
         dic['v_col_s'].append((era_day_plt['v'].isel(lat=yyy, lon=xxx).values))
         dic['d_col_s'].append((era_day_plt['d'].isel(lat=yyy, lon=xxx).values))
+        dic['t_col_s'].append((era_day_plt['t'].isel(lat=yyy, lon=xxx).values))
 
         dic['tmin'].append(indic.tmin[id])
         dic['tmean'].append(indic.tmean[id])
