@@ -43,7 +43,7 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
     # apply the function over allpoints to calculate the trend at each point
     print('Entering trend calc')
 
-    alpha = 0.09
+    alpha = 0.05
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='mk':
         dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
@@ -106,12 +106,18 @@ def trend_all():
     #press.values = press.values#*1000
     low_press = 925
     up_press = 650
+    mid_press = 700
 
     q = da['q'].sel(level=slice(low_press-20, low_press)).mean('level')
     q = q[q['time.hour']==12]
     t2d = da2['t2m']#['t2m']
     #t2d = da['t'].sel(level=slice(800, 850)).mean('level')
     t2d = t2d[t2d['time.hour']==12]
+
+    theta_low = u_met.theta_e(da.level.values, da['t'].sel(level=low_press), da['q'].sel(level=low_press))
+    theta_high = u_met.theta_e(da.level.values, da['t'].sel(level=mid_press), da['q'].sel(level=mid_press))
+
+    theta_e = theta_low - theta_high
 
     u600 = da['u'].sel(level=slice(up_press-20, up_press)).mean('level')
     u600 = u600[u600['time.hour']==12]
@@ -152,7 +158,7 @@ def trend_all():
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [(3,5), (9,11)]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [2,3,4,5,6,7,8,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -186,12 +192,16 @@ def trend_all():
         v6trend, v6mean = calc_trend(v6, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
         v6_mean = v6mean.mean(axis=0)
 
+        thetatrend, thetamean = calc_trend(theta_e, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
+        theta_mean = thetamean.mean(axis=0)
+
         t2trend_unstacked = t2trend*10. # warming over decade
         qtrend_unstacked = qtrend * 10.  # warming over decade
         sheartrend_unstacked = sheartrend * 10.  # warming over decade
         u6trend_unstacked = u6trend * 10
         v6trend_unstacked = v6trend * 10
         presstrend_unstacked = presstrend * 10
+        thetatrend_unstacked = thetatrend * 10
 
         tirtrend_unstacked = ((tirtrend.values)*10. / tirm_mean.values) * 100.
         #ipdb.set_trace()
@@ -207,6 +217,7 @@ def trend_all():
         s_da = sheartrend_unstacked
         ti_da = tirtrend_out
         tcwv_da = presstrend_unstacked
+        theta_da  = thetatrend_unstacked
 
         if len(m) == 1:
             fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_'+str(m[0]).zfill(2)+'.png'
@@ -267,8 +278,8 @@ def trend_all():
 
         ax2 = f.add_subplot(222)
         map.set_data(tcwv_da.values,interp='linear')  # interp='linear'
-        map.set_contour((tcwv_da.values).astype(np.float64),interp='linear', colors='k', levels=[20,30,40,50,60], linewidths=0.5) #[6,8,10,12,14,16]
-        map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
+        map.set_contour((press_mean.values).astype(np.float64),interp='linear', colors='k', levels=[20,30,40,50,60], linewidths=0.5) #[6,8,10,12,14,16]
+        map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4, 0.6,0.8], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
         dic = map.visualize(ax=ax2, title='925hPa Spec. humidity trend | contours: mean q', cbar_title='g kg-1 decade-1')
         contours = dic['contour'][0]
@@ -277,9 +288,9 @@ def trend_all():
 
         ax3 = f.add_subplot(223)
         map.set_data(s_da.values, interp='linear')  # interp='linear'
-        map.set_contour(s_da.values, interp='linear', levels=np.arange(-7,7,8), cmap='Blues')
+        map.set_contour(s_da.values, interp='linear', levels=np.arange(-15,-8,8), colors='k')
 
-        map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,0.4, 0.6,0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4, 0.6,0.8], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
         map.visualize(ax=ax3, title='925-650hPa wind shear trend, mean 650hPa wind vectors', cbar_title='m s-1 decade-1')
         qu = ax3.quiver(xx, yy, u, v, scale=60, width=0.002)
 
