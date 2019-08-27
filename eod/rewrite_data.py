@@ -17,6 +17,7 @@ from utils import u_grid
 import xarray as xr
 import ipdb
 from scipy.ndimage.measurements import label
+import matplotlib.pyplot as plt
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -160,6 +161,40 @@ def rewriteMsgLonLat_Sahel():
     llsavefile = '/users/global/cornkle/data/OBS/meteosat_SA15/MSG_728_350_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
+#========================================================================================
+# Rewrites 350x728 msg lat lon to something nice (lat lon from blobs)
+#========================================================================================
+def rewriteMfgLonLat_Stitch():
+    ssFile = '/users/global/cornkle/shared/data/OBS/MFG_JJAS/MFG_1094_61_lat_lon_stitch.npz'
+    llFile = '/users/global/cornkle/shared/data/OBS/MFG_JJAS/MFG_1094_463_lat_lon.npz'
+
+    latlon_stitch = np.load(ssFile)
+    latlon = np.load(llFile)
+
+    slon = latlon_stitch['lon']
+    slat = latlon_stitch['lat']
+
+    lon = latlon['lon']
+    lat = latlon['lat']
+
+    outlon = np.zeros((lat.shape[0]+slat.shape[0]-1,lon.shape[1]))
+    outlat = np.zeros((lat.shape[0]+slat.shape[0]-1,lon.shape[1]))
+
+    outlon[0:slat.shape[0],:] = slon
+    outlon[slat.shape[0]::,:] = lon[1::,:]
+
+    outlat[0:slat.shape[0],:] = slat
+    outlat[slat.shape[0]::,:] = lat[1::,:]
+
+    plt.figure()
+    plt.plot(outlon[:,50])
+
+    plt.figure()
+    plt.plot(outlat[:,50])
+
+    llsavefile = '/users/global/cornkle/shared/data/OBS/MFG_JJAS/MFG_1094_523_lat_lon_stitch_full.gra'
+    np.savez(llsavefile,lon=outlon,lat=outlat)
+
 
 #========================================================================================
 # Rewrites 201x326 msg lat lon to something nice (lat lon from blobs)
@@ -177,6 +212,8 @@ def rewriteMsgLonLat(file, nx, ny):
     lat = ll[ny*nx:]
     lat.shape = llShape
     lon.shape = llShape
+
+    #ipdb.set_trace()
 
     llsavefile = file.replace('.gra', '')
     np.savez(llsavefile,lon=lon,lat=lat)

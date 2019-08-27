@@ -18,8 +18,8 @@ import glob
 MFG folder:
 on wllf012, 1983-2005, 1094x463,
 """
-y1 = 1999#2006
-y2 = 2006 #
+y1 = 1983#2006
+y2 = 2003 #
 class ReadMfg(object):
     def __init__(self, msg_folder, y1=y1, y2=y2, months=None):
 
@@ -34,6 +34,7 @@ class ReadMfg(object):
 
         try:
             lpath = uarr.locate('lon.npz', msg_folder, exclude = None)
+            spath = uarr.locate('lon_stitch.npz', msg_folder, exclude = None)
         except:
             print('Not a directory or no msg lat/lon found')
             return
@@ -65,10 +66,19 @@ class ReadMfg(object):
         mlon = msg_latlon['lon']
         mlat = msg_latlon['lat']
 
+        msg_latlon_stitch = np.load(spath[0])
+        slon = msg_latlon_stitch['lon']
+        slat = msg_latlon_stitch['lat']
+
         self.lat = mlat
         self.lon = mlon
         self.nx = mlon.shape[1]
         self.ny = mlon.shape[0]
+
+        self.stitch_lat = slat
+        self.stitch_lon = slon
+        self.stitch_nx = slon.shape[1]
+        self.stitch_ny = slon.shape[0]
 
         years = []
         outfiles = []
@@ -91,6 +101,26 @@ class ReadMfg(object):
             return
 
         self.date = [pd.datetime(yr, mon, day, hr, mins)]
+
+
+    def stitch(self,data_upper, data_lower):
+        #ipdb.set_trace()
+
+        if data_upper.ndim ==2:
+
+            out = np.zeros(((self.lat).shape[0] + (self.stitch_lat).shape[0] - 1, (self.lon).shape[1]))
+
+            out[0:self.stitch_lat.shape[0], :] = data_lower
+            out[self.stitch_lat.shape[0]::, :] = data_upper[1::, :]
+
+        else:
+            #ipdb.set_trace()
+            out = np.zeros((data_upper.shape[0],(self.lat).shape[0] + (self.stitch_lat).shape[0] - 1, (self.lon).shape[1]))
+
+            out[:,0:self.stitch_lat.shape[0], :] = data_lower
+            out[:, self.stitch_lat.shape[0]::, :] = data_upper[:,1::, :]
+
+        return out
 
 
     def get_data(self, llbox=None, netcdf_path=None):
@@ -158,8 +188,25 @@ class ReadMfg(object):
 
         rr = np.fromfile(file, dtype=rrMDI.dtype)
         rr.shape = rrShape
-
         rr = rr.astype(np.int32)
+
+        lon = self.lon
+        lat = self.lat
+
+        stitch_file = file.replace('mfg_raw_binary', 'mfg_raw_binary_stitch')
+
+        if os.path.isfile(stitch_file):
+            ssShape = (48, self.stitch_ny, self.stitch_nx)  # msg shape, 48 time steps per day
+
+            ss = np.fromfile(stitch_file, dtype=rrMDI.dtype)
+
+            ss.shape = ssShape
+
+            ss = ss.astype(np.int32)
+
+            lon = self.stitch(self.lon, self.stitch_lon)
+            lat = self.stitch(self.lat, self.stitch_lat)
+            rr = self.stitch(rr,ss)
 
         if np.sum(rr) == 0:
             rr = rr
@@ -170,13 +217,13 @@ class ReadMfg(object):
 
         if llbox:
             i, j = np.where(
-                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
-            blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
-            blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
+                (lon > llbox[0]) & (lon < llbox[1]) & (lat > llbox[2]) & (lat < llbox[3]))
+            blat = lat[i.min():i.max() + 1, j.min():j.max() + 1]
+            blon = lon[i.min():i.max() + 1, j.min():j.max() + 1]
             rr = rr[:, i.min():i.max() + 1, j.min():j.max() + 1]
         else:
-            blat = self.lat
-            blon = self.lon
+            blat = lat
+            blon = lon
         #ipdb.set_trace()
         str = file.split(os.sep)[-2]
         curr_date = []
