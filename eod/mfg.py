@@ -10,8 +10,7 @@ import datetime
 import itertools
 import ipdb
 import glob
-
-
+import matplotlib.pyplot as plt
 
 
 """
@@ -110,15 +109,16 @@ class ReadMfg(object):
 
             out = np.zeros(((self.lat).shape[0] + (self.stitch_lat).shape[0] - 1, (self.lon).shape[1]))
 
-            out[0:self.stitch_lat.shape[0], :] = data_lower
-            out[self.stitch_lat.shape[0]::, :] = data_upper[1::, :]
+            out[self.stitch_lat.shape[0]-1::, :] = data_upper
+            out[0:self.stitch_lat.shape[0]-1, :] = data_lower[0:-1, :]
+
 
         else:
-            #ipdb.set_trace()
+
             out = np.zeros((data_upper.shape[0],(self.lat).shape[0] + (self.stitch_lat).shape[0] - 1, (self.lon).shape[1]))
 
-            out[:,0:self.stitch_lat.shape[0], :] = data_lower
-            out[:, self.stitch_lat.shape[0]::, :] = data_upper[:,1::, :]
+            out[:,self.stitch_lat.shape[0]-1::, :] = data_upper
+            out[:, 0:self.stitch_lat.shape[0]-1, :] = data_lower[:,0:-1, :]
 
         return out
 
