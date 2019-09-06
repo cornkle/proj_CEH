@@ -46,7 +46,7 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
     alpha = 0.05
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='mk':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
+        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.0001,nb_missing=10)
         dtrend = dtrend.unstack('allpoints')
         if sig:
             (dtrend['slope'].values)[dtrend['ind'].values==0] = 0
@@ -80,7 +80,7 @@ def trend_all():
 
     srfc = cnst.ERA5_MONTHLY_SRFC_SYNOP #cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA5_MONTHLY_PL_SYNOP #cnst.ERA_MONTHLY_PL_SYNOP
-    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_count_15-21UTC_5000km2.nc'#gridsat_WA_-70_monthly_mean_5000km2.nc' #gridsat_WA_-50_monthly_count_-50base.nc' #gridsat_WA_-70_monthly_mean_5000km2.nc'  gridsat_WA_-50_monthly_count
+    mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_mean_5000km2.nc'#gridsat_WA_-70_monthly_mean_5000km2.nc' #gridsat_WA_-50_monthly_count_-50base.nc' #gridsat_WA_-70_monthly_mean_5000km2.nc'  gridsat_WA_-50_monthly_count
 
     fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/'
 
@@ -94,7 +94,7 @@ def trend_all():
     #da2 = xr.decode_cf(da2)
     da2 = u_darrays.flip_lat(da2)
     da2 = da2.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
-    da3 = xr.open_dataarray(mcs)/30*100#/30*100
+    da3 = xr.open_dataarray(mcs)*100#/30*100
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
     #ipdb.set_trace()
     da = da.isel(time=(da['time.hour']==12))
@@ -135,9 +135,9 @@ def trend_all():
     v600 = da['v'].sel(level=slice(up_press, mid_press)).mean('level')
     ws600 = u_met.u_v_to_ws_wd(u600, v600)
 
-    u800 = da['u'].sel(level=slice(low_press-30, low_press)).mean('level')
+    u800 = da['u'].sel(level=925)
 
-    v800 = da['v'].sel(level=slice(low_press-30, low_press)).mean('level')
+    v800 = da['v'].sel(level=925)
 
     shear_u = u600-u800
     shear_v = v600-v800
@@ -157,7 +157,7 @@ def trend_all():
 
     q.values = q.values*1000
 
-    grid = t2d.salem.grid.regrid(factor=0.8)
+    grid = t2d.salem.grid.regrid(factor=1)
     t2 = t2d # grid.lookup_transform(t2d)
     tir = grid.lookup_transform(da3)  #t2d.salem.lookup_transform(da3['tir']) #
 
@@ -165,7 +165,7 @@ def trend_all():
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
 
-    months= [2,3,4,5,6,7,8,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [3,10]#[2,3,4,5,6,7,8,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -234,9 +234,9 @@ def trend_all():
         dicmean[m[0]] = tirm_mean
 
         if len(m) == 1:
-            fp = fpath + 'use/ERA5_trend_synop_WA_-70_poly_theta_Tirmean_15-21_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_-70_use_windvec925_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'use/ERA5_trend_synop_WA_-70_poly_theta_Tirmean_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'use/ERA5_-70_use_windvec925_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
         ti_da = t2d.salem.transform(tirtrend_out)
 
@@ -285,24 +285,24 @@ def trend_all():
 
         map.set_contour(s_da.values, interp='linear', levels=[0.4,0.8,1], colors='darkturquoise')
         map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        qu = ax1.quiver(xx, yy, u, v, scale=50, width=0.002)
+        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.002)
 
-        qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$',
-                           labelpos='E', coordinates='figure')
+        # qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
+        #                    labelpos='E', coordinates='figure')
 
         #map.set_contour((t2_mean.values).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=np.linspace(800,925,8))
         #map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
-        dic = map.visualize(ax=ax1, title='2m temperature trend | contours: 925-600 hPa wind trend', cbar_title='K decade-1')
+        dic = map.visualize(ax=ax1, title='2m temperature | 925-600hPa wind shear | 600hPa wind vectors', cbar_title=r'K decade$^{-1}$')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
         ax2 = f.add_subplot(222)
         map.set_data(theta_da.values,interp='linear')  # interp='linear'
-        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='darkturquoise', levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4, 0.6,0.8]) #[6,8,10,12,14,16]
+        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='darkturquoise', levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6]) #[6,8,10,12,14,16]
         map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
-        dic = map.visualize(ax=ax2, title='925hPa Spec. humidity trend | contours: mean q', cbar_title='g kg-1 decade-1')
+        dic = map.visualize(ax=ax2, title=r'$\Delta \theta_e$ 925-600hPa | 925hPa specific humidity', cbar_title=r'K decade$^{-1}$')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
@@ -311,21 +311,21 @@ def trend_all():
         map.set_data(thetad_da.values, interp='linear')  # interp='linear'
         map.set_contour(tcwv_da.values, interp='linear', levels=[-2,-1.5,-1,-0.5,0.5,1,1.5,2], colors='darkturquoise')
 
-        map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
 
-        qu = ax3.quiver(xx, yy, uu, vv, scale=50, width=0.002)
+        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.002)
 
-        qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$',
+        qk = plt.quiverkey(qu, 0.45, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
                            labelpos='E', coordinates='figure')
 
 
-        dic = map.visualize(ax=ax3, title='Total precipitable water | contours: mean q', cbar_title='g kg-1 decade-1')
+        dic = map.visualize(ax=ax3, title=r'$\Delta \theta$ 925-600hPa | TCWV | 925hPa wind vectors', cbar_title=r'K decade$^{-1}$')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
 
         ax4 = f.add_subplot(224)
-        map.set_contour((tirm_mean), interp='linear', levels=[0.1,0.5,1,2.5], colors='k', linewidths=0.5)
+        map.set_contour((tirm_mean), interp='linear', levels=[0.1,0.5,1,2,3,4], colors='k', linewidths=0.5)
 
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
@@ -333,11 +333,11 @@ def trend_all():
         geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
-        map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(10,51,10)
+        map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,41,10))  # levels=np.arange(10,51,10)
 
         ax4.scatter(xaej, yaej, color='r', s=50, edgecolors='r', linewidths=1)
 
-        dic = map.visualize(ax=ax4, title='-70C cloud cover change | >5000km2', cbar_title='$\%$ decade-1')
+        dic = map.visualize(ax=ax4, title='-70$^{\circ}$C cloud cover change | >5000km$^{2}$', cbar_title='$\%$ decade$^{-1}$')
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 

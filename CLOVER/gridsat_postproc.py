@@ -254,7 +254,7 @@ def storm_count(area=False):
         for m in range(1,13):
 
 
-            da = ds['tir'][(ds['time.month'] == m) & (ds['time.hour']>=15) & (ds['time.hour']<=21)]
+            da = ds['tir'][(ds['time.month'] == m) & (ds['time.hour']==18)]#(ds['time.hour']>=15) & (ds['time.hour']<=21)]
             da.values = da.values / 100
 
             val = 0
@@ -263,7 +263,7 @@ def storm_count(area=False):
             pixel = 78  # 78 # 78 = 5000km2 # 15000 = 253
             for d in da:
 
-                cut = d.sel(lat=slice(5, 8), lon=slice(-12, 10))  # 4.5,8.5
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))  # 4.5,8.5
                 labels, goodinds = ua.blob_define(cut.values, -40, minmax_area=[pixel, 25000],
                                                   max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
                 if area:
@@ -286,7 +286,7 @@ def storm_count(area=False):
             pixel = 78 #78 # 78 = 5000km2 # 15000 = 253
             for d in da:
 
-                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10)) # 4.5,8.5
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12)) # 4.5,8.5
                 labels, goodinds = ua.blob_define(cut.values, -50, minmax_area=[pixel, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
                 if area:
@@ -306,7 +306,7 @@ def storm_count(area=False):
             storm = 0
             ar = []
             for d in da:
-                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -60, minmax_area=[pixel, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
                 if area:
@@ -327,7 +327,7 @@ def storm_count(area=False):
             storm = 0
             ar = []
             for d in da:
-                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -70, minmax_area=[pixel, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
                 if area:
@@ -347,7 +347,7 @@ def storm_count(area=False):
             storm = 0
             ar = []
             for d in da:
-                cut = d.sel(lat=slice(5, 8), lon=slice(-12,10))
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -75, minmax_area=[pixel, 25000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
                 if area:
@@ -369,19 +369,19 @@ def storm_count(area=False):
     print(75, dic75[3])
 
 
-    pkl.dump(dic40, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-40C_5000km2_15-21.p', #4f5-8f5N
+    pkl.dump(dic40, open(cnst.network_data + 'data/CLOVER/saves/storm_count_10W-12E_5-8N_-40C_5000km2_18.p', #4f5-8f5N
                         'wb'))
 
-    pkl.dump(dic50, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-50C_5000km2_15-21.p', #4f5-8f5N
+    pkl.dump(dic50, open(cnst.network_data + 'data/CLOVER/saves/storm_count_10W-12E_5-8N_-50C_5000km2_18.p', #4f5-8f5N
                         'wb'))
 
-    pkl.dump(dic60, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-60C_5000km2_15-21.p',
+    pkl.dump(dic60, open(cnst.network_data + 'data/CLOVER/saves/storm_count_10W-12E_5-8N_-60C_5000km2_18.p',
                          'wb'))
 
-    pkl.dump(dic70, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-70C_5000km2_15-21.p',
+    pkl.dump(dic70, open(cnst.network_data + 'data/CLOVER/saves/storm_count_10W-12E_5-8N_-70C_5000km2_18.p',
                          'wb'))
 
-    pkl.dump(dic75, open(cnst.network_data + 'data/CLOVER/saves/storm_count_12W-10E_5-8N_-75C_5000km2_15-21.p',
+    pkl.dump(dic75, open(cnst.network_data + 'data/CLOVER/saves/storm_count_10W-12E_5-8N_-75C_5000km2_18.p',
                         'wb'))
 
 

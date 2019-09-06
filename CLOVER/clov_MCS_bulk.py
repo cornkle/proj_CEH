@@ -36,9 +36,9 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=6)
+    pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon/*.nc')
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
@@ -81,7 +81,7 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
 
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_TRMM_ERA-I.p',
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA-I.p',
                            'wb'))
 
 
@@ -133,6 +133,7 @@ def file_loop(f):
     t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
     mask_area = (outt<=t_thresh) & np.isfinite(outt)
+    mask70 = (outt<=-70) & np.isfinite(outt)
 
     if np.sum(mask) < 3:
         return
@@ -140,14 +141,10 @@ def file_loop(f):
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-
-    if isfin < 3:
-        return
-
     print(np.nanmax(outt[mask]))   # can be bigger than cutout threshold because of interpolation to 5km grid after cutout
 
     out['area'] = np.sum(mask_area)
+    out['area70'] = np.sum(mask70)
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
@@ -182,9 +179,9 @@ def file_loop(f):
 
     out['shear'] = float(e650['u']-e925['u'])
 
-    out['pgt30'] = np.sum(outp[mask]>30)
+    out['pgt30'] = np.sum(outp[mask]>=30)
     out['isvalid'] = np.sum(mask)
-    out['pgt01'] = np.sum(outp[mask]>0.1)
+    out['pgt01'] = np.sum(outp[mask]>=0.1)
     #
     out['p'] = outp[mask]
     out['t'] = outt[mask]
