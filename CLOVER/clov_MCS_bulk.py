@@ -38,7 +38,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM/*.nc')
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM_old/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
@@ -48,7 +48,7 @@ def perSys():
 
     #
     # res = []
-    # for f in files[0:8000]:
+    # for f in files[0:100]:
     #     out = file_loop(f)
     #     res.append(out)
     #
@@ -80,8 +80,8 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA-I.p',
+    #ipdb.set_trace()
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA-I_old.p',
                            'wb'))
 
 
@@ -89,6 +89,9 @@ def file_loop(f):
     print('Doing file: ' + f)
     dic = xr.open_dataset(f)
     era = xr.open_dataset(cnst.ERA_DAILY_PL12UTC)
+
+    if dic['time.hour'] <= 17:
+        return
 
     getera =np.where((era['time.day']==dic['time.day']) & (era['time.month']==dic['time.month']) & (era['time.year']==dic['time.year']))
     try:
