@@ -28,7 +28,7 @@ def run_arrays(nb_processors, func, data, dic_names):
     return dic
 
 
-def era_run_arrays(nb_processors, func, data, dic):
+def era_run_arrays(nb_processors, func, data):
 
     pool = multiprocessing.Pool(processes=nb_processors)
 
@@ -37,7 +37,7 @@ def era_run_arrays(nb_processors, func, data, dic):
     print('Returned from parallel')
 
     res = [x for x in res if x is not None]
-    #dic = {}
+    dic = {}
 
     rres = []
     dic_names = (res[0])[1]

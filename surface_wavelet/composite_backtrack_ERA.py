@@ -33,13 +33,13 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_CENTRE70_SMALL
+    file = constants.MCS_CENTRE70
 
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == 17 ) & ((msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6)) ]
+    msg = msg[(msg['time.hour'] == 18) & ((msg['time.minute'] == 0) & (
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6)) ]
 
     msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
 
@@ -49,7 +49,7 @@ def composite(h):
     #    dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/ERA/composite_backtrack_ERA"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/composite_backtrack_ERA"+str(hour).zfill(2)+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, dist, probs=False):
@@ -110,18 +110,19 @@ def get_previous_hours(date):
         return None
     cmm = cmm.sel(time=t1)
 
-    cm = cmm['t'].sel(level=950).squeeze() -273.15 #* 1000
+    cm = cmm['t'].sel(level=925).squeeze() -273.15 #* 1000
 
     cm = cm.to_dataset()
 
-    shear =  (cmm['u'].sel(level=600).squeeze() - cmm['u'].sel(level=925).squeeze() ) #
+    shear =  (cmm['u'].sel(level=650).squeeze() - cmm['u'].sel(level=925).squeeze() ) #
 
-    vwind_srfc = cmm['v'].sel(level=950).squeeze()
-    uwind_srfc = cmm['u'].sel(level=950).squeeze()
+    vwind_srfc = cmm['v'].sel(level=925).squeeze()
+    uwind_srfc = cmm['u'].sel(level=925).squeeze()
 
     cm['shear'] = shear
     cm['u950'] = uwind_srfc
     cm['v950'] = vwind_srfc
+
 
     pdb.set_trace()
     return cm

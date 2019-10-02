@@ -53,10 +53,10 @@ def rewrite_ERA_latflip(file):
     era_write.to_netcdf(file)
 
 
-def saveClimatology():
+def saveClimatology_pl():
     flist = []
-    for y in range(2000,2015):
-        fs = glob.glob(cnst.local_data + '/ERA5/pressure_levels/ERA5_*'+str(y)+'*_pl.nc')
+    for y in range(2006,2011):
+        fs = glob.glob(cnst.local_data + '/ERA5/hourly/pressure_levels/ERA5_*'+str(y)+'*_pl.nc')
         flist.extend(fs)
 
     mf = xr.open_mfdataset(flist, concat_dim='time')
@@ -69,7 +69,7 @@ def saveClimatology():
 
         ds = xr.Dataset()
 
-        date = [pd.datetime(2014, np.array(str(sl.monthHour.values)[0:2], dtype=int), 15, np.array(str(sl.monthHour.values)[3:5], dtype=int), 0)]
+        date = [pd.datetime(2010, np.array(str(sl.monthHour.values)[0:2], dtype=int), 15, np.array(str(sl.monthHour.values)[3:5], dtype=int), 0)]
         for svar in sl.data_vars:
 
             da = xr.DataArray(sl[svar].values[None, ...],
@@ -81,4 +81,35 @@ def saveClimatology():
         # comp = dict(zlib=True, complevel=5)
         # encoding = {var: comp for var in ds.data_vars}
         #ipdb.set_trace()
-        ds.to_netcdf(cnst.local_data + '/ERA5/CLIM_test/ERA5_2000-2014_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_pl.nc')#, mode='w', encoding=encoding, format='NETCDF4')
+        ds.to_netcdf(cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_pl.nc')#, mode='w', encoding=encoding, format='NETCDF4')
+
+
+def saveClimatology_srfc():
+    flist = []
+    for y in range(2006,2011):
+        fs = glob.glob(cnst.local_data + '/ERA5/hourly/surface/ERA5_*'+str(y)+'*_srfc.nc')
+        flist.extend(fs)
+
+    mf = xr.open_mfdataset(flist, concat_dim='time')
+    #mf['ymonth'] = ('time', [str(y) + '-' + str(m) for (y, m) in zip(mf['time.year'].values, mf['time.month'].values)])
+
+    mf['monthHour'] = (
+    'time', [str(y).zfill(2) + '-' + str(m).zfill(2) for (y, m) in zip(mf['time.month'].values, mf['time.hour'].values)])
+    clim = mf.groupby('monthHour').mean(dim='time')
+    for _, sl in clim.groupby('monthHour'):
+
+        ds = xr.Dataset()
+
+        date = [pd.datetime(2010, np.array(str(sl.monthHour.values)[0:2], dtype=int), 15, np.array(str(sl.monthHour.values)[3:5], dtype=int), 0)]
+        for svar in sl.data_vars:
+
+            da = xr.DataArray(sl[svar].values[None, ...],
+                              coords={'time': date, 'lat': sl.latitude.values, 'lon': sl.longitude.values},
+                              dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
+            da.attrs = sl[svar].attrs
+            ds[svar] = da
+            ds.attrs = clim.attrs
+        # comp = dict(zlib=True, complevel=5)
+        # encoding = {var: comp for var in ds.data_vars}
+        #ipdb.set_trace()
+        ds.to_netcdf(cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc.nc')#, mode='w', encoding=encoding, format='NETCDF4')

@@ -15,6 +15,7 @@ from collections import OrderedDict
 import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_grid, u_darrays
 from scipy.interpolate import griddata
+import multiprocessing
 
 import pickle as pkl
 
@@ -29,8 +30,14 @@ def diurnal_loop():
         print('Doing '+str(l))
         composite(l)
 
-def composite(h, eh):
-    #pool = multiprocessing.Pool(processes=8)
+def yearly_loop():
+
+    for l in np.arange(17,23):
+        print('Doing '+str(l))
+        composite(l)
+
+def composite(h, eh, year):
+    pool = multiprocessing.Pool(processes=1)
 
 
     file = cnst.MCS_CENTRE70
@@ -40,37 +47,40 @@ def composite(h, eh):
     msg = xr.open_dataarray(file)
 
     msg = msg[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >=6) ]
+        msg['time.year'] >=2006) & (msg['time.month'] >=6) ]
 
-    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
+    msg = msg.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
     msg.attrs['eh'] = eh
     msg.attrs['refhour'] = h
-    dic = OrderedDict()
-    for sk in ['lsta',  'cnt', 'cntp', 'cntm', 'probmsg']:
-        dic['lsta']
 
-    res = []
-    for mm in msg:
-        out =file_loop(mm)
-        res.append(out)
+    dic = u_parallelise.era_run_arrays(3, file_loop, msg)
 
-    print('Returned from parallel')
-
-    res = [x for x in res if x is not None]
-
-    rres = []
-    dic_names = (res[0])[1]
-    for r in res:
-        rres.append(np.array(r[0]))
-
-    vars = np.array(rres)
-    for id, l in enumerate(dic_names):
-            dic[l] = np.nansum(np.squeeze(vars[:,id,...]), axis=0)
+    # dic = OrderedDict()
+    # # for sk in ['lsta',  'cnt', 'cntp', 'cntm', 'probmsg']:
+    # #     dic['lsta']
+    #n
+    # res = []
+    # for mm in msg:
+    #     out =file_loop(mm)
+    #     res.append(out)
+    # return
+    # print('Returned from parallel')
+    #
+    # res = [x for x in res if x is not None]
+    #
+    # rres = []
+    # dic_names = (res[0])[1]
+    # for r in res:
+    #     rres.append(np.array(r[0]))
+    #
+    # vars = np.array(rres)
+    # for id, l in enumerate(dic_names):
+    #         dic[l] = np.nansum(np.squeeze(vars[:,id,...]), axis=0)
     # for k in dic.keys():
     #    dic[k] = np.nansum(dic[k], axis=0)
 
-
-    pkl.dump(dic, open(cnst.network_data + "figs/LSTA-bullshit/AGU/composite_backtrack"+str(eh) + "UTCERA"+str(hour).zfill(2)+".p", "wb"))
+    #ipdb.set_trace()
+    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
     print('Dumped file')
 
 
@@ -129,6 +139,7 @@ def get_previous_hours(date, ehour, refhour):
     # else:
 
     date = date.replace(hour=refhour)
+    cm = xr.Dataset()
 
     if ehour > 0:
         edate = date + pd.Timedelta(str(ehour) + ' hours')
@@ -142,40 +153,52 @@ def get_previous_hours(date, ehour, refhour):
     file = cnst.ERA5
 
     try:
-        cmm = xr.open_dataset(file + 'pressure_levels/ERA5_'+str(edate.year)+'_' + str(edate.month).zfill(2) + '_pl.nc')
+        cmm = xr.open_dataset(file + 'hourly/pressure_levels/ERA5_'+str(edate.year)+'_' + str(edate.month).zfill(2) + '_pl.nc')
+        cmm = u_darrays.flip_lat(cmm)
     except:
         return None
 
     try:
-        css = xr.open_dataset(file + 'surface/ERA5_'+str(edate.year)+'_' + str(edate.month).zfill(2) + '_srfc.nc')
+        css = xr.open_dataset(file + 'hourly/surface/ERA5_'+str(edate.year)+'_' + str(edate.month).zfill(2) + '_srfc.nc')
+        css = u_darrays.flip_lat(css)
     except:
         return None
 
 
-    pl_clim = xr.open_dataset(file + 'CLIM/ERA5_2006-2010_CLIM_'+str(edate.month)+'-'+str(edate.hour)+'_pl.nc')
-    srfc_clim = xr.open_dataset(file + 'CLIM/ERA5_2006-2010_CLIM_'+str(edate.month)+'-'+str(edate.hour)+'_srfc.nc')
+    pl_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.hour).zfill(2)+'_pl_rw.nc').load()
+    pl_clim = u_darrays.flip_lat(pl_clim)
+    srfc_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.hour).zfill(2)+'_srfc_rw.nc').load()
+    #srfc_clim = u_darrays.flip_lat(srfc_clim)
+
+    ## latitude in surface is already flipped, not for pressure levels though... ?!
+
+
+    cmm = cmm.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
+    css = css.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
+    pl_clim = pl_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
+    srfc_clim = srfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
+
 
     cmm = cmm.sel(time=t1)
+    pl_clim = pl_clim.squeeze()
+
     css = css.sel(time=t1)
-    # pl_clim = pl_clim.sel(month=cmm['time.month'].values)
-    # srfc_clim = srfc_clim.sel(month=cmm['time.month'].values)
+    srfc_clim = srfc_clim.squeeze()
 
-    cm = cmm['t'].sel(level=925).squeeze() - pl_clim['t'].sel(level=925).squeeze() #* 1000
+    t = cmm['t'].sel(level=925).squeeze() - pl_clim['t'].sel(level=925).squeeze() #* 1000
 
-    cm = cm.to_dataset()
-
-    shear =  (cmm['u'].sel(level=600).squeeze() - cmm['u'].sel(level=925).squeeze() ) #- (pl_clim['u'].sel(level=600).squeeze() - pl_clim['u'].sel(level=925).squeeze() ) #
+    shear =  (cmm['u'].sel(level=650).squeeze() - cmm['u'].sel(level=925).squeeze() ) #- (pl_clim['u'].sel(level=600).squeeze() - pl_clim['u'].sel(level=925).squeeze() ) #
     rh = (cmm['r'].sel(level=925).squeeze() - pl_clim['r'].sel(level=925).squeeze() )
 
     vwind_srfc = cmm['v'].sel(level=925).squeeze() - pl_clim['v'].sel(level=925).squeeze()
     uwind_srfc = cmm['u'].sel(level=925).squeeze() - pl_clim['u'].sel(level=925).squeeze()
-    wwind_srfc = cmm['w'].sel(level=400).squeeze() - pl_clim['w'].sel(level=400).squeeze()
+    #wwind_srfc = cmm['w'].sel(level=400).squeeze() - pl_clim['w'].sel(level=400).squeeze()
     div = cmm['d'].sel(level=925).squeeze()
 
     cape = css['cape'].squeeze() - srfc_clim['cape'].squeeze()
     surface_pressure = css['sp'].squeeze() / 100 - srfc_clim['sp'].squeeze() / 100
-    #sl_pressure = css['msl'].squeeze() / 100 - srfc_clim['msl'].squeeze()/ 100
-    lv = 2.26 * 1e6  # energy of evaporation in J / kg of water
+    # #sl_pressure = css['msl'].squeeze() / 100 - srfc_clim['msl'].squeeze()/ 100
+    # lv = 2.26 * 1e6  # energy of evaporation in J / kg of water
     sh = css['ishf'].squeeze() * (-1)
     #lh = css['ie'].squeeze()* lv * (-1)
     #ef = lh / (sh + lh)
@@ -185,7 +208,7 @@ def get_previous_hours(date, ehour, refhour):
 
     #ef_ano = ef - ef_clim
 
-    #t2 = css['t2m'].squeeze() - srfc_clim['t2m'].squeeze()
+    t2 = css['t2m'].squeeze() - srfc_clim['t2m'].squeeze()
     q = cmm['q'].sel(level=925).squeeze() - pl_clim['q'].sel(level=925).squeeze()
 
     cm['shear'] = shear
@@ -196,14 +219,15 @@ def get_previous_hours(date, ehour, refhour):
     cm['v925raw'] = cmm['v'].sel(level=925).squeeze()
     cm['cape'] = cape
     cm['rh'] = rh
-    cm['sf'] = surface_pressure
+    cm['slp'] = surface_pressure
 
     cm['tciw'] = css['tciw'].squeeze() - srfc_clim['tciw'].squeeze()
     cm['sh'] = sh_f
-    #cm['t2'] = t2
+    cm['t2'] = t2
     cm['div'] = div *1000
     cm['q'] = q
-    cm['w400'] = wwind_srfc
+    cm['t'] = t
+
     srfc_clim.close()
     pl_clim.close()
     css.close()
@@ -286,11 +310,11 @@ def file_loop(fi):
         return None
     print('Doing '+ 'lsta_daily_' + fdate + '.nc')
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
-    ttopo = topo['h']
-
-    grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0])+abs(grad[1])
+    # topo = xr.open_dataset(cnst.LSTA_TOPO)
+    # ttopo = topo['h']
+    #
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0])+abs(grad[1])
 
 
     lsta_da = lsta['LSTA'].squeeze()
@@ -298,18 +322,18 @@ def file_loop(fi):
         print('Not enough valid')
         return None
 
-    lsta_da.values[ttopo.values>=500] = np.nan
-    lsta_da.values[gradsum>30] = np.nan
+    # lsta_da.values[ttopo.values>=500] = np.nan
+    # lsta_da.values[gradsum>30] = np.nan
     pos = np.where((fi.values == 1)) #(fi.values >= 5) & (fi.values < 65)
 
-    topo.close()
+    #topo.close()
 
     if (np.sum(pos) == 0):
         print('No blobs found')
         return None
 
 
-    dist = 300
+    dist = 200
 
     kernel2_sum = np.zeros((dist*2+1, dist*2+1))
     cnt_sum = np.zeros((dist*2+1, dist*2+1))
@@ -320,13 +344,16 @@ def file_loop(fi):
     edic = {}
 
     probs = get_previous_hours(date, fi.attrs['eh'], fi.attrs['refhour'])
-    print(probs)
+    print('Era5 collect')
+
     try:
         probs_on_lsta = lsta.salem.transform(probs)
     except RuntimeError:
+        print('Era5 on LSTA interpolation problem')
         return None
 
     probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
+
     probsm_on_lsta = lsta.salem.transform(probs_msg, interp='nearest')
     # if np.sum(probsm_on_lsta>1) != 0:
     #     'Stopp!!'
@@ -350,6 +377,14 @@ def file_loop(fi):
         except TypeError:
             continue
 
+        if np.nansum(probm[:,dist::])>=1:   # filter out cases with MCSs at 12
+            print('MCS continue')
+            continue
+
+        if np.nanmax(vdic['tciw'][:,dist::])>=0.06:   # filter out cases with MCSs at 12
+            print('MCS continue')
+            continue
+
         kernel2_sum = np.nansum(np.stack([kernel2_sum, kernel2]), axis=0)
         cntp_sum = np.nansum(np.stack([cntp_sum, cntp]), axis=0)
         cnt_sum = np.nansum(np.stack([cnt_sum, cnt]), axis=0)
@@ -363,6 +398,9 @@ def file_loop(fi):
             else:
                 edic[ks] = vdic[ks]
 
+    if np.sum(cnt_sum)==0:
+        return None
+
     outlist = [kernel2_sum, cnt_sum, cntp_sum, cntm_sum, probm_sum]
     outnames = ['lsta',  'cnt', 'cntp', 'cntm', 'probmsg']
     for ek in edic.keys():
@@ -375,20 +413,20 @@ def file_loop(fi):
     return outlist, outnames
 
 
-def plot_gewex(h, ehour):
+def plot_gewex(h, ehour, year):
     hour=h
 
     tag = str(ehour)
 
 
-    dic = pkl.load(open(cnst.network_data + "figs/LSTA-bullshit/AGU/composite_backtrack"+tag+"UTCERA"+str(hour).zfill(2)+".p", "rb"))
+    dic = pkl.load(open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack"+tag+"UTCERA"+str(hour).zfill(2)+"_"+str(year)+".p", "rb"))
     #dic2 = pkl.load(open(cnst.network_data + "figs/LSTA-bullshit/AGU/CMORPH_6-6UTC_antecedent/composite_backtrack_CMORPH_"+str(hour).zfill(2)+".p", "rb"))
     extent = (dic['lsta'].shape[1]-1)/2
     xlen = dic['lsta'].shape[1]
     ylen = dic['lsta'].shape[0]
 
     xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st=30
+    st=20
     xquiv = xv[4::st, 4::st]
     yquiv = yv[4::st, 4::st]
 
@@ -410,6 +448,7 @@ def plot_gewex(h, ehour):
     contours = plt.contour((dic['probmsg']/ dic['cntm'])*100, extend='both', levels=np.arange(10,70,10), cmap='jet') # #, levels=np.arange(1,5, 0.5)
     plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
     plt.plot(extent, extent, 'bo')
+
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) ) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
@@ -419,7 +458,7 @@ def plot_gewex(h, ehour):
 
     ax1 = f.add_subplot(232)
     #ipdb.set_trace()
-    plt.contourf(((dic['sh'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-10, -5, -2.5, -1, 1,2.5, 5,10]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['sh'])/ dic['cntp']), extend='both',  cmap='RdBu_r',levels=[-20,-10, -5, 5,10,20]) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='s-1')
     contours = plt.contour((dic['t'] / dic['cntp']), extend='both',levels=[ -1, -0.8, -0.6,-0.4,-0.2,0.2,0.4,0.6,  0.8, 1], cmap='PuOr_r') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
@@ -429,7 +468,7 @@ def plot_gewex(h, ehour):
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title('Shading: MSG LSTA, Contours: ERA5 T2m', fontsize=9)
+    plt.title('Shading: sensible heat, Contours: ERA5 t925', fontsize=9)
 
     ax1 = f.add_subplot(233)
     plt.contourf(((dic['q'])/ dic['cntp'])*1000, extend='both',  cmap='RdBu', levels=np.linspace(-1,1,7 )) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
@@ -448,7 +487,7 @@ def plot_gewex(h, ehour):
     plt.contourf(((dic['cape'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-500,500,10)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='s-1')
     plt.plot(extent, extent, 'bo')
-    contours = plt.contour((dic['sf'] / dic['cntp'])*1000, extend='both', cmap='viridis') #np.arange(-15,-10,0.5)
+    contours = plt.contour((dic['slp'] / dic['cntp'])*1000, extend='both', cmap='viridis') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
     qk = plt.quiverkey(qu, 0.7, 0.95,2, '2 m s$^{-1}$',
@@ -458,7 +497,7 @@ def plot_gewex(h, ehour):
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title('Shading: MSG LSTA, vectors: 900hPa wind anomaly', fontsize=9)
+    plt.title('Shading: cape, contours:slp, vectors: 925hPa wind anomaly', fontsize=9)
 
     ax1 = f.add_subplot(235)
     plt.contourf(((dic['rh'])/ dic['cntp']), extend='both',  cmap='RdBu', levels=np.arange(-10,11, 2)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
@@ -472,6 +511,7 @@ def plot_gewex(h, ehour):
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
+    plt.title('Shading: rh, contours:v925, vectors: 925hPa wind', fontsize=9)
 
     # ax1 = f.add_subplot(236)
     # plt.contourf(((dic['div'])/ dic['cntp']), extend='both',  cmap='RdBu') #  tciw  #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
@@ -491,18 +531,17 @@ def plot_gewex(h, ehour):
     contours = plt.contour((dic['tciw'] *100/ dic['cntp']), extend='both', cmap='viridis') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     qu = ax1.quiver(xquiv, yquiv, u, v, scale=30)
-
     ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
 
-    plt.title('ERA5 950hPa divergence (shading) & 700-950hPa wind shear', fontsize=9)
+    plt.title('ERA5 950hPa divergence (shading) & tciw & 925 wind anomaly', fontsize=9)
 
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(cnst.network_data + 'figs/LSTA-bullshit/AGU/test_' + str(ehour).zfill(2)+ 'hours_' +str(hour).zfill(2)+'UTC_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    #plt.savefig(cnst.network_data + 'figs/LSTA-bullshit/AGU/test_' + str(ehour).zfill(2)+ 'hours_' +str(hour).zfill(2)+'UTC_single.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
 
 
 
