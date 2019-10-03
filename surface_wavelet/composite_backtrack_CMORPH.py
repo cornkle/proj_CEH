@@ -14,6 +14,7 @@ import pandas as pd
 import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
 from scipy.interpolate import griddata
+from utils import constants as cnst
 
 import pickle as pkl
 
@@ -34,10 +35,10 @@ def composite(h):
     file = constants.MCS_CENTRE70
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 17 ) &  (msg['time.hour'] <= 21 )) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] == 6) ]
+    msg = msg[((msg['time.hour'] >= 20 ) &  (msg['time.hour'] <= 22)) & (msg['time.minute'] == 0) & (
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 7) ]
 
-    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
+    msg = msg.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
 
     dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
 
@@ -45,7 +46,7 @@ def composite(h):
        dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_JUN_"+str(h).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack_CMORPH_"+str(h).zfill(2)+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
@@ -95,19 +96,19 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
 def get_previous_hours(date):
 
 
-    tdic = {16 : ('34 hours', '13 hours'),
-            17: ('35 hours', '14 hours'),
-            18 : ('36 hours', '15 hours'),
-            19 : ('37 hours', '16 hours'),
-            20: ('38 hours', '17 hours'),
-            21: ('39 hours', '18 hours'),
-            22: ('40 hours', '9 hours'),
-            23: ('41 hours', '20 hours'),
-            0: ('42 hours', '21 hours'),
-            1: ('43 hours', '22 hours'),
-            2: ('44 hours', '23 hours'),
-            3: ('45 hours', '24 hours'),
-            6: ('48 hours', '27 hours')}
+    tdic = {16 : ('34 hours', '6 hours'),  # 6am prev - 9am storm day
+            17: ('35 hours', '7 hours'),
+            18 : ('36 hours', '8 hours'),
+            19 : ('37 hours', '9 hours'),
+            20: ('38 hours', '10 hours'),
+            21: ('39 hours', '11 hours'),
+            22: ('40 hours', '12 hours'),
+            23: ('41 hours', '13 hours'),
+            0: ('42 hours', '14 hours'),
+            1: ('43 hours', '15 hours'),
+            2: ('44 hours', '16 hours'),
+            3: ('45 hours', '17 hours'),
+            6: ('48 hours', '18 hours')}
     before = pd.Timedelta(tdic[date.hour][0])
     before2 = pd.Timedelta(tdic[date.hour][1])
 
@@ -181,9 +182,9 @@ def file_loop(fi):
         print('Not enough valid')
         return None
 
-    lsta_da.values[ttopo.values>=450] = np.nan
-    lsta_da.values[gradsum>30] = np.nan
-    pos = np.where( fi.values==2 )  #(fi.values >= 5) & (fi.values < 65)
+    lsta_da.values[ttopo.values>=600] = np.nan
+    lsta_da.values[gradsum>35] = np.nan
+    pos = np.where( fi.values==1 )  #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0):
         print('No blobs found')
@@ -252,6 +253,9 @@ def file_loop(fi):
     print('Returning')
 
     return (kernel2_sum, kernel3_sum, cnt_sum, pr_sum, cntp_sum)
+
+
+
 
 
 def plot_gewex(h):

@@ -1,6 +1,6 @@
 import multiprocessing
 import numpy as np
-import pdb
+import ipdb
 
 
 def run_arrays(nb_processors, func, data, dic_names):
@@ -34,8 +34,9 @@ def era_run_arrays(nb_processors, func, data):
 
     res = pool.map(func, data)
     pool.close()
-    print('Returned from parallel')
 
+    print('Returned from parallel')
+    #ipdb.set_trace()
     res = [x for x in res if x is not None]
     dic = {}
 
