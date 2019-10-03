@@ -18,7 +18,7 @@ from utils import constants as cnst
 def run():
     #  (1174, 378)
     msg_folder = cnst.network_data +'/data/OBS/MSG_WA30/'
-    pool = multiprocessing.Pool(processes=6)
+    pool = multiprocessing.Pool(processes=4)
 
     m = msg.ReadMsg(msg_folder, y1=2006, y2=2010)
     files  = m.fpath
@@ -52,7 +52,7 @@ def run():
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_GT15000k_withT.nc'
+    savefile = cnst.network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_GT15000k_withT.nc'
 
     try:
         os.remove(savefile)

@@ -275,6 +275,7 @@ def file_loop(fi):
         lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
+
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
     topo = xr.open_dataset(constants.LSTA_TOPO)

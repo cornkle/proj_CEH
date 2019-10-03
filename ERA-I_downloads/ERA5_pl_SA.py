@@ -37,7 +37,7 @@ def download(year, month, day, file):
         },  file)
 
 #dates = []
-for y in range(2015,2019): # (1979,2020)
+for y in range(1990,2019): # (1979,2020)
     for m in range(1, 13):
         for d in range(1,32):
 

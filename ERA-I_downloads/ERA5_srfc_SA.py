@@ -34,9 +34,16 @@ def download(year, month, day, file):
         },
         file)
 
-for y in range(1995,2000): # (1979,2020)
+
+mdic = {1: range(1, 32), 2: range(1, 30), 3: range(1, 32),
+       4: range(1, 31), 5: range(1, 32), 6: range(1, 31),
+       7: range(1, 32), 8: range(1, 32), 9: range(1, 31),
+       10: range(1, 32), 11: range(1, 31), 12: range(1, 32)
+       }
+
+for y in range(1979,1995): # (1979,2020)
     for m in range(1, 13):
-        for d in range(1,32):
+        for d in mdic[m]:
 
             out_dir = '/prj/nflics/ERA5_scratch/hourly/surface/'
             path_file =  out_dir + 'ERA5_' + str(y) + '_' + str(m).zfill(2) + '_' + str(d).zfill(2) + '_srfc.nc'

@@ -9,8 +9,8 @@ import os
 import xarray as xr
 import numpy as np
 import pandas as pd
-from scipy.interpolate import griddata
 from utils import constants as cnst, u_interpolate as uint
+import ipdb
 
 def saveNetcdf():
 
@@ -28,7 +28,7 @@ def saveDailyBlobs():
     :return:
     """
 
-    msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
     msg = xr.open_dataarray(msgfile)
 
     # def first_nozero(array_like, axis):
@@ -51,7 +51,45 @@ def saveDailyBlobs():
 
     md.values[md.values>23] = md.values[md.values>23]-24
 
-    md.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc')
+    md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc')
+
+
+def saveDailyMCS():
+    """
+    Converts hourly centre-point convective-core files to daily netcdf files so they can be saved with LSTA daily data
+    :return:
+    """
+
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
+    msg = xr.open_dataarray(msgfile).load()
+
+    # def first_nozero(array_like, axis):
+    #     array_like[array_like<16]= array_like[array_like<16]+24
+    #     return np.nanmin(array_like,axis=axis)
+
+    #msg.values[msg.values > 75] = np.nan
+
+    for m in msg:
+        print('Doing ',m['time'])
+        msg.values[msg.values == 0] = np.nan
+
+        if m['time.hour'].values >= 16:
+            m.values[np.isfinite(m.values)] = m['time.hour'].values
+        else:
+            m.values[np.isfinite(m.values)] = m['time.hour'].values + 24
+
+    ### this is useful, it removes all pixels which got rain twice on a day
+    print('Starting resample')
+    ipdb.set_trace()
+    md = msg.resample(time='24H', base=16, skipna=True).min('time')
+
+    md = md[(md['time.month'] >= 6) & (md['time.month'] <= 9)]
+
+    md.values[md.values > 23] = md.values[md.values > 23] - 24
+
+
+
+    md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily.nc')
 
 
 def saveNetcdf_blobs():
