@@ -41,6 +41,7 @@ def era_run_arrays(nb_processors, func, data):
     dic = {}
 
     rres = []
+    #ipdb.set_trace()
     dic_names = (res[0])[1]
     for r in res:
         rres.append(np.array(r[0]))

@@ -58,38 +58,40 @@ def saveDailyMCS():
     """
     Converts hourly centre-point convective-core files to daily netcdf files so they can be saved with LSTA daily data
     :return:
+
+    For a single file: cdo mergetime file1.nc file2.nc fileout.nc
     """
 
-    msgfile = cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
-    msg = xr.open_dataarray(msgfile).load()
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS.nc'
+    msg = xr.open_dataarray(msgfile)
+    slices = [(int(len(msg['time'])/2)-5, int(len(msg['time'])), '2'), (0,int(len(msg['time'])/2)-5, '1')]
 
-    # def first_nozero(array_like, axis):
-    #     array_like[array_like<16]= array_like[array_like<16]+24
-    #     return np.nanmin(array_like,axis=axis)
+    for sl in slices:
 
-    #msg.values[msg.values > 75] = np.nan
+        m1 = msg.isel(time=slice(sl[0], sl[1])).load()
+        m1.values[m1.values == 0] = np.nan
 
-    for m in msg:
-        print('Doing ',m['time'])
-        msg.values[msg.values == 0] = np.nan
+        for m in m1:
 
-        if m['time.hour'].values >= 16:
-            m.values[np.isfinite(m.values)] = m['time.hour'].values
-        else:
-            m.values[np.isfinite(m.values)] = m['time.hour'].values + 24
+            if m['time.hour'].values >= 16:
+                m.values[np.isfinite(m.values)] = m['time.hour'].values
+            else:
+                m.values[np.isfinite(m.values)] = m['time.hour'].values + 24
 
-    ### this is useful, it removes all pixels which got rain twice on a day
-    print('Starting resample')
-    ipdb.set_trace()
-    md = msg.resample(time='24H', base=16, skipna=True).min('time')
+        ### this is useful, it removes all pixels which got rain twice on a day
+        print('Starting resample')
 
-    md = md[(md['time.month'] >= 6) & (md['time.month'] <= 9)]
+        md = m1.resample(time='24H', base=16, skipna=True).min('time')
 
-    md.values[md.values > 23] = md.values[md.values > 23] - 24
+        md = md[(md['time.month'] >= 6) & (md['time.month'] <= 9)]
+
+        md.values[md.values > 23] = md.values[md.values > 23] - 24
 
 
+        md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_'+sl[2]+'.nc')
+        del md
+        del m1
 
-    md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily.nc')
 
 
 def saveNetcdf_blobs():
