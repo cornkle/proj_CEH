@@ -23,18 +23,18 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
-def run_hours():
+def plot_all_cross():
 
-    l = [6, 21, 0, 3, 18]
-    for ll in l:
-        composite(ll)
+    hours = [14,15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
+    for h in hours:
+        plot(h)
 
 
 
 def plot(hour):
 
-    path = cnst.network_data + 'figs/LSTA-bullshit/AGU'
-    dic = pkl.load(open(path+"/coeffs_test_nans_stdall"+str(hour)+"UTC.p", "rb"))
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000.p", "rb"))
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -48,6 +48,8 @@ def plot(hour):
     keys = list(dic.keys())
     cnt = (dic['SN-pos'][0]).shape[0]
 
+    #ipdb.set_trace()
+
     # for l in keys:
     #     if keys == 'scales':
     #         continue
@@ -58,17 +60,17 @@ def plot(hour):
     l=0
     dist=100
 
-    snblob = ((dic[keys[l]])[0].T / (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
-    snrandom = ((dic[keys[l]])[1].T / (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
+    snblob = (dic[keys[l]])[0] #/ (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
+    snrandom = (dic[keys[l]])[1] #/ (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
     snmask = (dic[keys[l]])[2]#-(dic[keys[l+2]])[2]
-    snblob_std = (dic[keys[l]])[3]
-    snrandom_std = (dic[keys[l]])[4]
+    # snblob_std = (dic[keys[l]])[3]
+    # snrandom_std = (dic[keys[l]])[4]
 
-    weblob = ((dic[keys[l+1]])[0].T / (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
-    werandom = ((dic[keys[l+1]])[1].T / (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
+    weblob = (dic[keys[l+1]])[0] #/ (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
+    werandom = (dic[keys[l+1]])[1] #/ (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
     wemask = (dic[keys[l+1]])[2]#-(dic[keys[l+3]])[2]
-    weblob_std = (dic[keys[l+1]])[3]
-    werandom_std = (dic[keys[l+1]])[4]
+    # weblob_std = (dic[keys[l+1]])[3]
+    # werandom_std = (dic[keys[l+1]])[4]
 
     l=2
     dist=100
@@ -76,7 +78,7 @@ def plot(hour):
     f = plt.figure(figsize=(9, 9))
     ax = f.add_subplot(221)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales , (snblob) - (snrandom) , cmap='RdBu_r', vmin = -0.3, vmax=0.3)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales , (snblob) - (snrandom) , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
@@ -88,7 +90,7 @@ def plot(hour):
 
     ax = f.add_subplot(222)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3,scales,   (weblob) - (werandom) , cmap='RdBu_r', levels = [-0.3,-0.2,-0.1, -0.05,-0.025, 0.025, 0.05,0.1, 0.2,0.3], extend='both')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3,scales,   (weblob) - (werandom) , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1], extend='both')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wemask, colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
@@ -100,7 +102,7 @@ def plot(hour):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snrandom,  cmap='RdBu_r', vmin = -0.4, vmax=0.4) #, vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob,  cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1]) #, vmin = -0.1, vmax=0.1)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -113,7 +115,7 @@ def plot(hour):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, werandom    , cmap='RdBu_r', vmin = -0.4, vmax=0.4) # vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob    , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,wemask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -124,13 +126,14 @@ def plot(hour):
     plt.title('West-East scales', fontsize=10)
 
     plt.tight_layout()
-    #plt.savefig(path + '/lsta_hours_'+keys[l]+'_'+str(hour)+'.png')
+    plt.savefig(path + '/USE_plots/lsta_hours_'+keys[l]+'_'+str(hour)+'_15000km_-65.png')
     plt.show()
+    #plt.close()
 
 def plot_map(hour):
 
-    path = cnst.network_data + 'figs/LSTA-bullshit/AGU'
-    dic = pkl.load(open(path+"/coeffs_test_nans_stdall"+str(hour)+"UTC.p", "rb"))
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_75000_coldCore.p", "rb"))
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -152,20 +155,16 @@ def plot_map(hour):
     random = (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['cnt'][0][0,:,:]
     mask = (dic['kernel'])[2]
-
+    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
 
-    plt.figure()
-    plt.imshow(dic['cnt'][0][1,:,:]-dic['cnt'][0][2,:,:], origin='lower')
-    plt.show()
-
-    f = plt.figure(figsize=(15, 8))
+    f = plt.figure(figsize=(13, 6))
     ax = f.add_subplot(121)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both',levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5])
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
-
+    ax.plot(0,0, 'bo')
     ax.set_xlabel('km')
     ax.set_ylabel('Scales')
 
@@ -173,8 +172,9 @@ def plot_map(hour):
               fontsize=10)
 
     ax = f.add_subplot(122)
-
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel[0::,:,:].mean(axis=0)-random[0::,:,:].mean(axis=0), cmap='RdBu_r', extend='both', vmin=-15, vmax=15)
+    print('averaged: ',scales[0], scales[1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel[2:3,:,:].sum(axis=0)-random[2:3,:,:].sum(axis=0), cmap='RdBu_r', extend='both', levels=[-0.06,-0.04,-0.02,0.02,0.04,0.06])
+    plt.plot(0,0,'bo')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
@@ -185,74 +185,159 @@ def plot_map(hour):
 
 
     plt.tight_layout()
-    #plt.savefig(path + '/lsta_hours_'+keys[l]+'_'+str(hour)+'.png')
+    plt.savefig(path + '/USE_plot/lsta_hours_'+keys[l]+'_'+str(hour)+'.png')
+    plt.show()
+
+def plot_all():
+    hours =  [14,15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
+    for h in hours:
+        plot_map_full(h)
+
+def plot_map_full(hour):
+
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_25000.p", "rb")) #coeffs_nans_stdkernel_USE_"+str(hour)+"UTC.p", "rb"))
+
+    scales = dic['scales']
+    nbcores = dic['nbcores']
+
+    del dic['scales']
+    del dic['nbcores']
+    del dic['nbrcores']
+
+    #ipdb.set_trace()
+    keys = list(dic.keys())
+    cnt = (dic['SN-pos'][0]).shape[0]
+
+    l=0
+    dist=100
+    print('scales', scales)
+    pos = np.array([1,4,6,8])
+    print(scales[pos])
+
+    #ipdb.set_trace()
+    kernel = (dic['kernel'])[0] / dic['cnt'][0]
+    random = (dic['kernel'])[1] / dic['cnt'][1]
+    lsta = (dic['lsta'])[0] / dic['lsta'][1]#dic['lsta'][1]#[0,:,:]
+    mask = (dic['kernel'])[2]
+    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    dist=100
+
+    f = plt.figure(figsize=(13, 6))
+    ax = f.add_subplot(231)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 ,lsta , cmap='RdBu_r', extend='both',levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5])
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    ax.plot(0,0, 'bo', markersize=3)
+    ax.set_xlabel('km')
+    ax.set_ylabel('Scales')
+
+    plt.title('South-North scales, Nb cores: ' + str(nbcores) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
+              fontsize=10)
+
+    ax = f.add_subplot(232)
+    print('averaged: ',scales[0], scales[1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel.mean(axis=0)-random.mean(axis=0), cmap='RdBu_r', extend='both', levels=[-0.07,-0.06,-0.05,-0.04,-0.03,0.03,0.04,0.05,0.06,0.07])
+    plt.plot(0,0,'bo', markersize=3)
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('Mean of coefficients', fontsize=10)
+
+
+    for ids, scale in enumerate(scales[pos]):
+
+        ax = f.add_subplot(2,3,ids+3)
+
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,   #- random[ids, :, :]
+                     kernel[ids, :, :], cmap='RdBu_r', extend='both') # - random[ids, :, :]
+        plt.plot(0, 0, 'bo', markersize=3)
+        plt.colorbar(label='Power difference (Blob-random)')
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, mask[0, :, :],
+                     colors='none', hatches='.', levels=[0.5, 1], linewidth=0.25)
+
+        ax.set_xlabel('km')
+        ax.set_ylabel('km')
+
+        plt.title('Scale: '+str(np.round(scale,1)), fontsize=10)
+
+
+
+
+    plt.tight_layout()
+    #plt.savefig(path + '/USE_plots/coefficients_both_'+str(hour)+'_75000km_-60.png')
     plt.show()
 
 
 def plot_gewex2():
-    path = '/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/wavelet'
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
 
     f = plt.figure(figsize=(12,7))
 
 
-    for id, h in enumerate([18,21,0,3]):
+    for id, h in enumerate([14,15,16,17]):
 
-        dic = pkl.load(open(path + "/c_wet_dry_withzero" + str(h) + "UTC.p", "rb"))
+        dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_"+str(h)+"UTC_25000.p", "rb"))
 
         scales = dic['scales']
-        sn_mask = dic['SN-dw_mask']
-        we_mask = dic['WE-dw_mask']
+        nbcores = dic['nbcores']
+        nbrcores = dic['nbrcores']
         del dic['scales']
-        del dic['SN-dw_mask']
-        del dic['WE-dw_mask']
+        del dic['nbcores']
+        del dic['nbrcores']
+        del dic['kernel']
 
         keys = list(dic.keys())
         cnt = (dic['SN-pos'][0]).shape[0]
 
+        # ipdb.set_trace()
+
+        # for l in keys:
+        #     if keys == 'scales':
+        #         continue
+        #
+        #     (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
+        #     (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
 
         l = 0
         dist = 100
 
-        snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
+        snblob = (dic[keys[l]])[0]  # / (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
+        snrandom = (dic[keys[l]])[1]  # / (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
         snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
+        # snblob_std = (dic[keys[l]])[3]
+        # snrandom_std = (dic[keys[l]])[4]
 
-        weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
+        weblob = (dic[keys[l + 1]])[0]  # / (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
+        werandom = (dic[keys[l + 1]])[1]  # / (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
         wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
+        # weblob_std = (dic[keys[l+1]])[3]
+        # werandom_std = (dic[keys[l+1]])[4]
 
-        snmask_r = ~snmask
-        wemask_r = ~wemask
-        we_mask_r = ~we_mask
-        sn_mask_r = ~sn_mask
         l = 2
         dist = 100
-
-        wet_snblob = (dic[keys[l]])[0]  # -(dic[keys[l+2]])[0]
-        wet_snrandom = (dic[keys[l]])[1]  # -(dic[keys[l+2]])[1]
-        wet_snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
-
-        wet_weblob = (dic[keys[l + 1]])[0]  # -(dic[keys[l+3]])[0]
-        wet_werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
-        wet_wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
 
         ax = f.add_subplot(2,4, id+1)
 
         rand=False
         if rand:
-            a = (snblob-snrandom) -(wet_snblob-wet_snrandom)
+            a = (snblob-snrandom)
 
-            b= (weblob - werandom) - (wet_weblob-wet_werandom)
+            b= (weblob - werandom)
         else:
-            a = (snblob  - wet_snblob )
+            a = (snblob )
 
-            b = (weblob - wet_weblob )
+            b = (weblob )
             # b[b < 0] -= 0.03
             # we_mask[b<-0.05]=1
 
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a , cmap='RdBu_r', levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
        # plt.colorbar(label='Power difference (Dry-wet)')
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, sn_mask, colors='none', hatches='.', levels=[0.5, 1],
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
                      linewidth=0.25)
         ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
 
@@ -271,7 +356,7 @@ def plot_gewex2():
                      levels=[-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04, -0.03,-0.01, 0.01, 0.03,0.04,0.05,0.06,0.07,0.08,0.09, 0.1], extend='both')
        # plt.colorbar(label='Power difference (Dry-wet)')
 
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, we_mask, colors='none', hatches='.',
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, wemask, colors='none', hatches='.',
                      levels=[0.5, 1], linewidth=0.1)
 
         ax.set_xlabel('Cross-section (km)')
@@ -288,12 +373,12 @@ def plot_gewex2():
     cax = f.add_axes([0.89, 0.57, 0.02, 0.38])
     cbar = f.colorbar(mp1, cax)
     cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
+    cbar.set_label('Coefficient mean', fontsize=12)
 
     cax = f.add_axes([0.89, 0.08, 0.02, 0.38])
     cbar = f.colorbar(mp1, cax)
     cbar.ax.tick_params(labelsize=12)
-    cbar.set_label('Wavelet power (Dry-Wet)', fontsize=12)
+    cbar.set_label('Coefficient mean', fontsize=12)
 
 
     plt.show()

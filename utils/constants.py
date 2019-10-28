@@ -39,6 +39,7 @@ ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
 
 
 LSTA_TOPO = network_data + 'data/ancils_python/lsta_corr_topo.nc'
+LSTA_TOPO_OLD = network_data + 'data/ancils_python/lsta_topo.nc'
 WA_TOPO_1MIN = network_data + 'data/ancils_python/gtopo_1min_afr.nc'
 TOPO_1MIN = network_data + 'data/ancils_python/gtopo_1min.nc'
 MSG5KM_TOPO = network_data + 'data/ancils_python/msg5km_topo.nc'

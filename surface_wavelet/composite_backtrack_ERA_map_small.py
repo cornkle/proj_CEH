@@ -75,12 +75,12 @@ def composite(h, eh):
     # print('Returned from parallel')
     #
 
-    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small.p", "wb"))
+    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_stormCentre.p", "wb"))
     print('Dumped file')
 
 
 
-def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False):
+def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -119,7 +119,20 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False):
         cnt3 = np.zeros_like(kernel)
 
 
-    return kernel,  cnt, cnt2, vdic, prob, cnt3
+    if np.nansum(probs3) > 0:
+        probcm = u_arrays.cut_kernel(probs3,xpos, ypos,dist)
+        cnt4 = np.zeros_like(kernel)
+        cnt4[np.isfinite(probcm)] = 1
+
+    else:
+        probcm = np.zeros_like(kernel)
+        cnt4 = np.zeros_like(kernel)
+
+
+    return kernel,  cnt, cnt2, vdic, prob, cnt3, probcm, cnt4
+
+
+
 
 def get_previous_hours(date, ehour, refhour):
 
@@ -276,6 +289,59 @@ def get_previous_hours_msg(date, ehour, refhour):
     return xout
 
 
+def get_previous_hours_CMORPH(date):
+
+
+    tdic = {16 : ('34 hours', '6 hours'),  # 6am prev - 9am storm day
+            17: ('35 hours', '7 hours'),
+            18 : ('36 hours', '8 hours'),
+            19 : ('37 hours', '9 hours'),
+            20: ('38 hours', '10 hours'),
+            21: ('39 hours', '11 hours'),
+            22: ('40 hours', '12 hours'),
+            23: ('41 hours', '13 hours'),
+            0: ('42 hours', '14 hours'),
+            1: ('43 hours', '15 hours'),
+            2: ('44 hours', '16 hours'),
+            3: ('45 hours', '17 hours'),
+            6: ('48 hours', '18 hours')}
+    before = pd.Timedelta(tdic[date.hour][0])
+    before2 = pd.Timedelta(tdic[date.hour][1])
+
+    t1 = date - before
+    t2 = date - before2
+
+    # before2 = pd.Timedelta('15 minutes')
+    #
+    # t1 = date #- before
+    # t2 = date + before2
+
+    file = cnst.CMORPH
+    try:
+        cmm = xr.open_dataarray(file + 'CMORPH_WA_' + str(date.year) + '.nc')
+    except:
+        return None
+    cmm = cmm.sel( time=slice(t1, t2)).sum(dim='time') # lat=slice(10.9,19), lon=slice(-9.8,9.8),
+    # cmm = cmm.sel(lat=slice(10.9, 19), lon=slice(-9.8, 9.8))
+    # posi = np.where(pd.to_datetime(cmm.time.values) == date)
+    #
+    # cmm = cmm.isel(time=slice(posi[0][0]-2,posi[0][0]))
+    cm = cmm
+    pos = np.where(cm.values>=10) #(msg.values >= 5) & (msg.values < 65)) # #
+
+    out = np.zeros_like(cm)
+    out[pos] = 1
+    #out = np.sum(out, axis=0) / out.shape[0]
+
+    xout = cm.copy()
+    xout.name = 'probs'
+    xout.values = out
+
+    del cm
+
+    return xout
+
+
 
 def file_loop(fi):
 
@@ -314,8 +380,8 @@ def file_loop(fi):
         print('Not enough valid')
         return None
 
-    lsta_da.values[ttopo.values>=600] = np.nan
-    lsta_da.values[gradsum>35] = np.nan
+    lsta_da.values[ttopo.values>=450] = np.nan
+    lsta_da.values[gradsum>30] = np.nan
     pos = np.where((fi.values == 1)) #(fi.values >= 5) & (fi.values < 65)
 
     del topo
@@ -348,15 +414,38 @@ def file_loop(fi):
 
     probsm_on_lsta = lsta.salem.transform(probs_msg, interp='nearest')
     del probs_msg
-    del lsta
-    # if np.sum(probsm_on_lsta>1) != 0:
-    #     'Stopp!!'
-    #     pdb.set_trace()
 
+    probs_cm = get_previous_hours_CMORPH(date)
+    try:
+        probscm_on_lsta = lsta.salem.transform(probs_cm)
+    except RuntimeError:
+        return None
+    del probs_cm
+    del lsta
+
+    mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
+
+        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 16), lon=lon,
+                             lat=lat).values
+        if mhour < 16:
+            mhour += 24
+
+        if mhour == 0:
+            mhour += 24
+
+        chour = fi['time.hour'].values
+
+        # ipdb.set_trace()
+
+        if (chour >= 0) & (chour <= 15):
+            chour += 24
+        if (mhour < fi['time.hour'].values) | (np.isnan(mhour)):
+            print('Core overlaps: earliest:', mhour, ' core: ', chour)
+            continue
 
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
@@ -367,7 +456,7 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, cnt, cntp, vdic, probm, cntm = cut_kernel(xpos, ypos, lsta_da, dist, probs=probs_on_lsta, probs2=probsm_on_lsta)
+            kernel2, cnt, cntp, vdic, probm, cntm, probcm, cntc = cut_kernel(xpos, ypos, lsta_da, dist, probs=probs_on_lsta, probs2=probsm_on_lsta, probs3=probscm_on_lsta)
         except TypeError:
             continue
 
@@ -378,6 +467,12 @@ def file_loop(fi):
         if np.nanmax(vdic['tciw'][:,dist::])>=0.05:   # filter out cases with MCSs at 12
             print('MCS continue')
             continue
+
+        if np.nansum(probcm[100:200,:])>=100:   # filter out cases with rainfall to the south
+            print('Southward rainfall, continue')
+            continue
+
+
 
         kernel2_sum = np.nansum(np.stack([kernel2_sum, kernel2]), axis=0)
         cntp_sum = np.nansum(np.stack([cntp_sum, cntp]), axis=0)

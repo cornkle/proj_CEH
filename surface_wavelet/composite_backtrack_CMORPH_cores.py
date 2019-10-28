@@ -15,7 +15,7 @@ import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
 from scipy.interpolate import griddata
 from utils import constants as cnst
-
+import ipdb
 import pickle as pkl
 
 
@@ -35,18 +35,28 @@ def composite(h):
     file = cnst.MCS_POINTS_DOM
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] == h )) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2007) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 7) ]
 
-    msg = msg.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
+    for year in np.arange(2007, 2011):
+        msg = msg[((msg['time.hour'] == h )) & (msg['time.minute'] == 0) & (
+            msg['time.year'] == year) & ((msg['time.month'] >=6) & (msg['time.month'] <=9))]
 
-    dic = u_parallelise.run_arrays(5,file_loop,msg[200:800],['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
+        msg = msg.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
 
-    for k in dic.keys():
-       dic[k] = np.nansum(dic[k], axis=0)
+        dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
+        #
+        # res = []
+        # for m in msg:
+        #     out = file_loop(m)
+        #     res.append(out)
+        # ipdb.set_trace()
+        # return
 
+        ipdb.set_trace()
+        for k in dic.keys():
+           dic[k] = np.nansum(dic[k], axis=0)
 
-    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack_CMORPH_"+str(h).zfill(2)+"_cores.p", "wb"))
+        print('Dumped file')
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/august/composite_backtrack_CMORPH_"+str(year)+'_'+str(h).zfill(2)+"_cores.p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
@@ -182,8 +192,8 @@ def file_loop(fi):
         print('Not enough valid')
         return None
 
-    lsta_da.values[ttopo.values>=600] = np.nan
-    lsta_da.values[gradsum>35] = np.nan
+    lsta_da.values[ttopo.values>=450] = np.nan
+    lsta_da.values[gradsum>30] = np.nan
     pos = np.where((fi.values >= 5) & (fi.values < 65) )  # # fi.values==1
 
     if (np.sum(pos) == 0):
@@ -211,11 +221,22 @@ def file_loop(fi):
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]),int(fdate[4:6]), int(fdate[6:8]), 16), lon=lon, lat=lat).values
+        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 16), lon=lon,
+                             lat=lat).values
         if mhour < 16:
-            mhour +=24
-        if (mhour < fi['time.hour'].values) | (np.isnan(mhour)):
-            print('Core overlaps: earliest:', mhour, ' core: ',  fi['time.hour'].values)
+            mhour += 24
+
+        if mhour == 0:
+            mhour += 24
+
+        chour = fi['time.hour'].values
+
+        # ipdb.set_trace()
+
+        if (chour >= 0) & (chour <= 15):
+            chour += 24
+        if (mhour < chour) | (np.isnan(mhour)):
+            print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
 
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
@@ -231,13 +252,17 @@ def file_loop(fi):
         except TypeError:
             continue
 
+        # if np.nansum(prkernel[100:200,:])>=50:   # filter out cases with rainfall to the south
+        #     print('Southward rainfall, continue')
+        #     continue
+
 
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
         prkernel_list.append(prkernel)
         cnt_list.append(cnt)
         cntp_list.append(cntp)
-
+    #ipdb.set_trace()
     if kernel2_list == []:
         return None
 

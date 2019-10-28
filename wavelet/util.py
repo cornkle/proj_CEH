@@ -103,6 +103,8 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
     dic['coeffs'] = coeffsTIR
     return dic
 
+
+
 def waveletT_normalised(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
     dic = {}
@@ -149,6 +151,32 @@ def applyHat(t, dx=None, dist=None,start=None, nb=None, dataset=None):
     obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
+
+    dic['power'] = powerTIR
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    dic['coeffs'] = coeffsTIR
+
+    return dic
+
+def applyHat_pure(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx, dist, nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    tir = t.copy()
+    #tir[tir > 0] = 0
+    tir = tir #- np.mean(tir)
+
+    obj = wav.wavelet(dx, dist, nb, start=start)
+    # TIR
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir)
 
     dic['power'] = powerTIR
     dic['scales'] = obj.scales
@@ -334,10 +362,10 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
     tir = t.copy()
     obj = wav.wavelet(dx, dist, nb, start=start)
 
-    coeffsTIR_dry, powerTIR_dry = obj.calc_coeffs(tir, le_thresh=0, fill=0)
+    coeffsTIR_dry, powerTIR_dry = obj.calc_coeffs(tir, le_thresh=0, fill=0.01)
 
     tir = tir * -1
-    coeffsTIR_wet, powerTIR_wet = obj.calc_coeffs(tir, le_thresh=0, fill=0)
+    coeffsTIR_wet, powerTIR_wet = obj.calc_coeffs(tir, le_thresh=0, fill=0.01)
 
 
     for id, s in enumerate(obj.scales):
