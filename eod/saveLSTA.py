@@ -64,7 +64,7 @@ def saveDailyMCS():
 
     msgfile = cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS.nc'
     msg = xr.open_dataarray(msgfile)
-    slices = [(int(len(msg['time'])/2)-5, int(len(msg['time'])), '2'), (0,int(len(msg['time'])/2)-5, '1')]
+    slices = [(0,int(len(msg['time'])/2)-7, '1')]  #(int(len(msg['time'])/2)-5, int(len(msg['time'])), '2'),
 
     for sl in slices:
 
@@ -73,7 +73,7 @@ def saveDailyMCS():
 
         for m in m1:
 
-            if m['time.hour'].values >= 16:
+            if m['time.hour'].values >= 14:
                 m.values[np.isfinite(m.values)] = m['time.hour'].values
             else:
                 m.values[np.isfinite(m.values)] = m['time.hour'].values + 24
@@ -81,14 +81,14 @@ def saveDailyMCS():
         ### this is useful, it removes all pixels which got rain twice on a day
         print('Starting resample')
 
-        md = m1.resample(time='24H', base=16, skipna=True).min('time')
+        md = m1.resample(time='24H', base=14, skipna=True).min('time')
 
         md = md[(md['time.month'] >= 6) & (md['time.month'] <= 9)]
 
         md.values[md.values > 23] = md.values[md.values > 23] - 24
 
 
-        md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_'+sl[2]+'.nc')
+        md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_14UTC_'+sl[2]+'.nc')
         del md
         del m1
 

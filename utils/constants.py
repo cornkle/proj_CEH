@@ -46,7 +46,7 @@ MSG5KM_TOPO = network_data + 'data/ancils_python/msg5km_topo.nc'
 
 
 MCS_POINTS_DOM = network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc' #/users/global/cornkle/MCSfiles/blob_map_MCSs_-40-75000_JJAS_-50-points_dominant.nc'#'/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
-MCS_HOUR_DAILY = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily.nc'
+MCS_HOUR_DAILY = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_14UTC.nc'
 MCS_TMIN = network_data + 'MCSfiles/blob_map_JJAS_-70minT_15k.nc'
 MCS_15K = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
 MCS_CENTRE70 = network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_15k.nc'
