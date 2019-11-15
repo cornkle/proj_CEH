@@ -93,7 +93,7 @@ def month_mean_hov():
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
             print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -70) & (da1['tir'] >= -108) )
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -60) & (da1['tir'] >= -108) )
 
             WA_box = [-12,12,4.5,20]
             SA_box = [25,33,-28,-10]
@@ -109,7 +109,7 @@ def month_mean_hov():
                 hov_box = out.copy()
 
         hov_box.year.values = hov_box.year.values+years[0]
-        hov_box.to_netcdf(msg_folder + 'aggs/WAbox_meanT-70_hov_5000km2.nc')
+        hov_box.to_netcdf(msg_folder + 'aggs/WAbox_meanT-60_hov_5000km2.nc')
 
 
 

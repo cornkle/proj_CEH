@@ -29,6 +29,21 @@ def run_hours():
         composite(ll)
 
 
+def rewrite_list():
+        dic = pkl.load(
+            open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt25000km2_table.p', "rb"))
+        new = dic.copy()
+        for k in new.keys():
+            new[k] = []
+
+        for k in dic.keys():
+            lists = dic[k]
+            for l in lists:
+                new[k].extend(l)
+
+        pkl.dump(new, open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt25000km2_table_new.p', "wb"))
+
+
 def composite():
     pool = multiprocessing.Pool(processes=5)
 
@@ -56,7 +71,7 @@ def composite():
 
     res = np.array(res)
 
-    dic_names = [ 'date','x_3k', 'y_3k', 'x_5k', 'y_5k', 'rlist' , 'elist', 'mlist',  'area' , 'csize']
+    dic_names = [ 'date','x_3k', 'y_3k', 'x_5k', 'y_5k', 'rlist' , 'elist', 'mlist',  'area' , 'csize', 'hour']
 
     for id, l in enumerate(dic_names):
 
@@ -271,7 +286,7 @@ def file_loop(fi):
     else:
         eh = 12-(ref+24)
 
-    era_mcs = get_era_mcs(date, eh, ref)
+    era_mcs = get_era_mcs(daybefore, eh, ref)
     print('Era5 collect')
 
     try:
@@ -281,12 +296,12 @@ def file_loop(fi):
         return None
     del era_mcs
 
-    msg_mcs = get_msg_mcs(date, eh, ref)
+    msg_mcs = get_msg_mcs(daybefore, eh, ref)
 
     msg_on_lsta = lsta_da.salem.transform(msg_mcs, interp='nearest')
     del msg_mcs
 
-    cmorph = get_CMORPH(date)
+    cmorph = get_CMORPH(daybefore)
     try:
         cmorph_on_lsta = lsta_da.salem.transform(cmorph)
     except RuntimeError:
@@ -313,6 +328,7 @@ def file_loop(fi):
     ypos_3k = []
     xpos_5k = []
     ypos_5k = []
+    hourlist = []
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -378,7 +394,7 @@ def file_loop(fi):
         if np.nansum(rainarea)/rainarea.size >= 0.25 :   # filter out cases with rainfall to the south
             rflag = 1
 
-        date_list.append(date)
+        date_list.append(daybefore)
         mlist.append(mflag)
         elist.append(eflag)
         rlist.append(rflag)
@@ -389,8 +405,9 @@ def file_loop(fi):
         ypos_3k.append(ypos)
         xpos_5k.append(x)
         ypos_5k.append(y)
+        hourlist.append(ref)
 
-    return (date_list, xpos_3k, ypos_3k, xpos_5k, ypos_5k,rlist,elist,mlist,area_list,csize_list)
+    return (date_list, xpos_3k, ypos_3k, xpos_5k, ypos_5k,rlist,elist,mlist,area_list,csize_list, hourlist)
 # rcns_sum, rcwe_sum, cns_sum, cwe_sum,
 
 

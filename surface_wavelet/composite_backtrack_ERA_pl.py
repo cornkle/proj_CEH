@@ -13,8 +13,9 @@ import pdb
 import pandas as pd
 from collections import OrderedDict
 import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_grid
 from scipy.interpolate import griddata
+
 
 import pickle as pkl
 
@@ -33,7 +34,7 @@ def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
 
-    file = constants.MCS_CENTRE70
+    file = cnst.MCS_CENTRE70
 
     hour = h
 
@@ -49,7 +50,7 @@ def composite(h):
     #    dic[k] = np.nansum(dic[k], axis=0)
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_ERA_pl_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_backtrack"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
 
 
 def cut_kernel(xpos, ypos, expos, eypos, arr, dist, probs=False):
@@ -101,7 +102,7 @@ def get_previous_hours(date):
     t1 = edate
     t2 = edate + pd.Timedelta('3 hours')
 
-    file = constants.ERA5
+    file = cnst.ERA5
 
     try:
         cmm = xr.open_dataset(file + 'ERA5_'+str(date.year)+'_pls.nc')
@@ -159,12 +160,12 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(constants.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
     print('Doing '+ 'lsta_daily_' + fdate + '.nc')
 
-    topo = xr.open_dataset(constants.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
 
     grad = np.gradient(ttopo.values)

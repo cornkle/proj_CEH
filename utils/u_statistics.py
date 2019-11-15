@@ -55,7 +55,8 @@ class MidPointNorm(Normalize):
 def histo_frequency(data, **kwargs):
     weights = np.ones_like(data) / float(len(data))
     hist, h = np.histogram(data, weights=weights, **kwargs)
-    return hist, h
+    count, h = np.histogram(data, **kwargs)
+    return hist, count, h
 
 
 def linear_trend(x):
