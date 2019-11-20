@@ -27,13 +27,12 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [14,15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
+    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
-
 def composite(hour):
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=3)
 
     file = cnst.MCS_POINTS_DOM #MCS_TMIN #
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients' #corrected_LSTA/wavelet/large_scale
@@ -124,21 +123,21 @@ def composite(hour):
         #     dic[l].append(np.nanstd(dic[l][0], axis=(0,2)))
         #     dic[l].append(np.nanstd(dic[l][1], axis=(0,2)))
 
-    for l in keys:
-        if l == 'scales':
-            continue
-        if 'pos' in l:
-            (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-            (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-        else:
-            (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
-            try:
-                (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
-            except IndexError:
-                continue
+    # for l in keys:
+    #     if l == 'scales':
+    #         continue
+    #     if 'pos' in l:
+    #         (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
+    #         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
+    #     else:
+    #         (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
+    #         try:
+    #             (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
+    #         except IndexError:
+    #             continue
 
 
-    pkl.dump(dic, open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000-50000.p", "wb"))
+    pkl.dump(dic, open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_randomTest.p", "wb"))
     print('Save file written!')
 
 
@@ -160,11 +159,11 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmedian(kernel[:,:, 99:102], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmedian(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmedian(kernel[:,99:102,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmedian(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -239,7 +238,7 @@ def file_loop(fi):
     lsta_da.values[ttopo.values >= 450] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
     pos = np.where((fi.values >= 5) & (fi.values <= 65)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
-
+    del topo
     if (np.sum(pos) == 0):
         print('No blobs found')
         return None
@@ -265,6 +264,7 @@ def file_loop(fi):
     wavpos = wutil.applyHat_pure(wav_input, dataset='METSRFC')
 
     wavarr = wavpos['coeffs'].copy()
+    scales = wavpos['scales'].copy()
 
     for inds, wava in enumerate(wavarr):
         wava[inter1] = np.nan
@@ -274,7 +274,7 @@ def file_loop(fi):
         wavarr[inds, :, :] = (wava) / (np.nanstd(wava))
 
         #wavarr[inds, inter1[0], inter1[1]] = np.nan
-
+    del wavpos
     wav_input[inter1] = np.nan
 
     # xfi = fi.shape[1]
@@ -306,14 +306,16 @@ def file_loop(fi):
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
     mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
 
-    labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[600,2500], max_area=None)
+    labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)
 
     for y, x in zip(pos[0], pos[1]):
 
         # print('yx', y ,x)
         # print('labels', labels)
 
-        #print('labels', labels[y,x], goodinds)
+        lat = fi['lat'][y]
+        lon = fi['lon'][x]
+
         if (labels[y,x] not in goodinds) | (labels[y,x] == 0):
             print('MCS too small!!')
             continue
@@ -322,13 +324,9 @@ def file_loop(fi):
             print('Core too warm!!')
             continue
 
-        lat = fi['lat'][y]
-        lon = fi['lon'][x]
-
-        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 16), lon=lon,
+        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 14), lon=lon,
                              lat=lat).values
-
-        if mhour < 14: # 16
+        if mhour <= 13:
             mhour += 24
 
         if mhour == 0:
@@ -336,12 +334,9 @@ def file_loop(fi):
 
         chour = fi['time.hour'].values
 
-        # ipdb.set_trace()
-
-        if (chour >= 0) & (chour <= 13): #15
+        if (chour >= 0) & (chour <= 13):
             chour += 24
-
-        if (mhour < chour) : # | (np.isnan(mhour)
+        if (mhour < chour) | (np.isnan(mhour)):
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
 
@@ -374,9 +369,19 @@ def file_loop(fi):
         ##### random
 
         rdist = 50
-        randy = np.array([y-rdist, y-rdist, y-rdist, y, y, y+rdist, y+rdist, y+rdist])
-        randx = np.array([x-rdist, x, x+rdist, x-rdist, x+rdist, x-rdist, x, x + rdist])
+        randy50 = [y-rdist, y-rdist, y-rdist, y, y, y+rdist, y+rdist, y+rdist]
+        randx50 = [x-rdist, x, x+rdist, x-rdist, x+rdist, x-rdist, x, x + rdist]
+        randy50_100 = [y - rdist,  y - rdist, y, y, y + rdist, y + rdist]
 
+        rdist = 100
+        randx100 = [x-rdist,  x+rdist, x-rdist, x+rdist, x-rdist, x + rdist]
+
+        rdist = 150
+        randx150 = [x-rdist,  x+rdist, x-rdist, x+rdist, x-rdist, x + rdist]
+
+
+        randy = np.array(randy50 + randy50_100 + randy50_100)
+        randx = np.array(randx50 + randx100 + randx150)
         #ipdb.set_trace()
         for ry, rx in zip(randy, randx):
 
@@ -418,6 +423,10 @@ def file_loop(fi):
             rwepos.append(wavpos_we)  # west-east wavelet
             rkernel.append(rrkernel)
 
+    del lsta_da
+    del mcs_hour
+    del mcsimage
+
     if nspos == []:
         print('NorthSouth empty')
         return None
@@ -440,7 +449,7 @@ def file_loop(fi):
         rkernel_cnt = np.sum(np.isfinite(np.stack(rkernel, axis=0)), axis=0)[np.newaxis,...]
 
 
-    scales = wavpos['scales']
+
 
     print('Returning with kernel, success!!')
 

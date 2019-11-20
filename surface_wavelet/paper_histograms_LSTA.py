@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_darrays
 import ipdb
 import pickle as pkl
 
@@ -22,17 +22,12 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for h in [14,16,18,20,22,0,2,4,6]:  #range(0,24)
+    for h in [10,11,12,13]: #14,15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9]:  #range(0,24)
 
-        if h <= 15:
-            shift = (12 + h) * (-1)
-        else:
-            shift = 12 - h
-
-        composite(h, shift)
+        composite(h)
 
 
-def composite(h, eh):
+def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
@@ -44,127 +39,61 @@ def composite(h, eh):
     msg = msg[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
-    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
+    msg = msg.sel( lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
 
     msg.attrs['refhour'] = h
-    msg.attrs['eh'] = eh
 
-    dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt'])
-    #
+    dic = u_parallelise.run_flat(3,file_loop,msg,['c30', 's100', 'e100', 'r30', 'rs100', 're100'])
+
     # res = []
     # for m in msg[0:20]:
     #     out = file_loop(m)
     #     res.append(out)
     # return
 
-    for k in dic.keys():
-       dic[k] = np.nansum(dic[k], axis=0)
-    print('File written')
-    pkl.dump(dic, open(path + "/composite_new_"+str(hour).zfill(2)+".p", "wb"))
+    print('Writing pickle')
+
+    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+".p", "wb"))
 
 
 
-def cut_kernel(xpos, ypos, arr, date, lon, lat, t, dist, parallax=False, rotate=False, probs=False):
-
-
-    if parallax:
-        km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
-        lx, ly = km
-
-        lx = int(np.round(lx / 3.))
-        ly = int(np.round(ly / 3.))  # km into pixels
-        xpos = xpos - lx
-        ypos = ypos - ly
+def cut_kernel(xpos, ypos, arr, dist):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    if rotate:
-        kernel = u_met.era_wind_rotate(kernel,date,lat,lon,level=700, ref_angle=90)
-    # plt.figure()
-    # plt.imshow(kernel, origin='lower')
-
-    #plt.pause(100000)
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
-    kernel3 = kernel - np.nanmean(kernel)
-
-    cnt = np.zeros_like(kernel)
-    cnt[np.isfinite(kernel)] = 1 #kslots[np.isfinite(kernel)]   #1
-
-    # slot_kernel[np.isnan(kernel)] = 0
+    kmean = kernel - np.nanmean(kernel)
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         return
+    ycirc30, xcirc30 = u_arrays.draw_circle(dist, dist,5) # 15km radius
+    k30 = np.nanmean(kmean[ycirc30, xcirc30])
+
+    ycirc100, xcirc100 = u_arrays.draw_circle(dist+1, dist-67, 35)  # at - 200km, draw 50km radius circle
+    s100 = np.nanmean(kmean[ycirc100,xcirc100])
+
+    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 35)  # at - 150km, draw 50km radius circle
+    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
 
 
-    if np.nansum(probs) > 0:
-        prob = u_arrays.cut_kernel(probs,xpos, ypos,dist)
-        cnt3 = np.zeros_like(kernel)
-        cnt3[np.isfinite(prob)] = 1
+    return k30, s100, e100
 
-    else:
-        prob = np.zeros_like(kernel)
-        cnt3 = np.zeros_like(kernel)
-
-
-    return kernel, kernel3, cnt, prob, cnt3
-
-
-
-
-def get_previous_hours_msg(date, ehour, refhour):
-
-    date = date.replace(hour=refhour)
-
-    if ehour > 0:
-        edate = date + pd.Timedelta(str(ehour) + ' hours')
-    else:
-        edate = date - pd.Timedelta(str(np.abs(ehour)) + ' hours')
-        #edate = edate.replace(hour=ehour)
-
-    t1 = edate - pd.Timedelta('1 hours')
-    t2 = edate + pd.Timedelta('1 hours')
-
-    file = cnst.MCS_15K# MCS_15K #_POINTS_DOM
-    msg = xr.open_dataarray(file)
-    try:
-        msg = msg.sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
-    except OverflowError:
-        return None
-
-    #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
-    pos = np.where((msg.values <= -40) ) #(msg.values >= 5) & (msg.values < 65)) # #
-
-    out = np.zeros_like(msg)
-    out[pos] = 1
-    out = np.sum(out, axis=0)
-    out[out>0]=1
-    # if np.sum(out>1) != 0:
-    #     'Stop!!!'
-    #     pdb.set_trace()
-
-    msg = msg.sum(axis=0)*0
-
-    xout = msg.copy()
-    del msg
-    xout.name = 'probs'
-    xout.values = out
-
-    return xout
 
 
 def file_loop(fi):
 
-    timestr = str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2)
-    print('Doing day: ', timestr+'_'+str(fi['time.hour'].values))
-    date = pd.to_datetime(timestr)
+    print('Doing day: ', fi.time)
+
+    date = pd.to_datetime(
+        str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
 
     dayd = pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 
-    if (fi['time.hour'].values) <= 16:
+    if (fi['time.hour'].values) <= 13:
         print('Nighttime')
         daybefore = date - dayd
     else:
@@ -174,24 +103,18 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc') #_NEW
+        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
     except OSError:
-        print('LSTA file missing')
         return None
-    print('Doing '+ 'lsta_daily_' + fdate + '.nc')
+    print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
     topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0])+abs(grad[1])
+    gradsum = abs(grad[0]) + abs(grad[1])
 
+    lsta_da = lsta['LSTA'].squeeze()
 
-    lsta_da = lsta['LSTA'].squeeze()  # should be LSTA
-    #### remove mean from LSTA_NEW
-
-    #slot_da = lsta['NbSlot'].squeeze()
-
-    # lsta_da.values[slot_da.values>15] = np.nan # just to test cases with clouds
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
         return None
@@ -201,28 +124,24 @@ def file_loop(fi):
     lsta_da.values[gradsum>30] = np.nan
     pos = np.where((fi.values >= 5) & (fi.values <= 65) )  #(fi.values >= 5) & (fi.values < 65), fi.values<-40
 
-    if (np.sum(pos) == 0):  #| (len(pos[0]) < 3)
+    if (np.sum(pos) == 0):
         print('No blobs found')
         return None
 
-    probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
-
-    msg_on_lsta = lsta.salem.transform(probs_msg, interp='nearest')
-    del probs_msg
-
-
-    kernel2_list = []
-    kernel3_list = []
-    cnt_list = []
+    c30 = []
+    r30 = []
+    s100  = []
+    rs100 = []
+    e100 = []
+    re100 = []
 
     dist = 100
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
-    mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19), lon=slice(-9.9,9.9))
-    counter = 0
+    mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
 
-    labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600, 50000], max_area=None)
+    labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)
 
     for y, x in zip(pos[0], pos[1]):
 
@@ -253,8 +172,6 @@ def file_loop(fi):
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
 
-        t = fi.sel(lat=lat, lon=lon)
-
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
         plon = point['lon'].values
@@ -265,32 +182,82 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            kernel2, kernel3, cnt, msg_kernel, mcnt = cut_kernel(xpos, ypos, lsta_da, daybefore.month, plon, plat, -40, dist,probs=msg_on_lsta, parallax=False, rotate=False)
+            kc30, kcs100, kce100 = cut_kernel(xpos, ypos, lsta_da.values, dist)
         except TypeError:
             continue
 
-        # if np.nansum(msg_kernel[:,dist::])>=2:   # filter out cases with MCSs at 12
-        #     print('Meteosat MCS continue')
+        # if np.sum(np.isfinite(kc30)) ==0:
         #     continue
 
-        kernel2_list.append(kernel2)
-        kernel3_list.append(kernel3)
-        cnt_list.append(cnt)
+        c30.append(kc30)
+        s100.append(kcs100)
+        e100.append(kce100)
 
-    if kernel2_list == []:
+        ##### random
+
+        rdist = 50
+        randy50 = [y - rdist, y - rdist, y - rdist, y, y, y + rdist, y + rdist, y + rdist]
+        randx50 = [x - rdist, x, x + rdist, x - rdist, x + rdist, x - rdist, x, x + rdist]
+        randy50_100 = [y - rdist, y - rdist, y, y, y + rdist, y + rdist]
+
+        rdist = 100
+        randx100 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
+
+        rdist = 150
+        randx150 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
+
+        randy = np.array(randy50 + randy50_100 + randy50_100)
+        randx = np.array(randx50 + randx100 + randx150)
+        # ipdb.set_trace()
+        for ry, rx in zip(randy, randx):
+
+            if ry < 0:
+                continue
+            if ry > fi.shape[0] - 1:
+                continue
+
+            if rx < 0:
+                continue
+            if rx > fi.shape[1] - 1:
+                continue
+
+            try:
+                lat = fi['lat'][ry]
+            except IndexError:
+                ipdb.set_trace()
+            try:
+                lon = fi['lon'][rx]
+            except IndexError:
+                ipdb.set_trace()
+
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+            plat = point['lat'].values
+            plon = point['lon'].values
+
+            xpos = np.where(lsta_da['lon'].values == plon)
+            xpos = int(xpos[0])
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
+
+            try:
+                rc30, rcs100, rce100 = cut_kernel(xpos, ypos, lsta_da.values, dist)
+            except TypeError:
+                continue
+
+            r30.append(rc30)
+            rs100.append(rcs100)
+            re100.append(rce100)
+
+
+    if c30 == []:
         return None
 
-    if len(kernel2_list) == 1:
-      return None
-    else:
-
-        kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
-        kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
-        cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
+    # if len(c30) == 1:
+    #   return None
 
     print('Returning with kernel')
 
-    return (kernel2_sum, kernel3_sum, cnt_sum)
+    return (c30, s100, e100, r30, rs100, re100)
 
 
 
