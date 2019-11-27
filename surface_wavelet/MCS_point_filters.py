@@ -31,7 +31,7 @@ def run_hours():
 
 def rewrite_list():
         dic = pkl.load(
-            open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt25000km2_table.p', "rb"))
+            open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt15000km2_table.p', "rb"))
         new = dic.copy()
         for k in new.keys():
             new[k] = []
@@ -41,7 +41,7 @@ def rewrite_list():
             for l in lists:
                 new[k].extend(l)
 
-        pkl.dump(new, open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt25000km2_table_new.p', "wb"))
+        pkl.dump(new, open('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/cores_-60_filteredPoints_gt15000km2_table_new.p', "wb"))
 
 
 def composite():
@@ -315,7 +315,7 @@ def file_loop(fi):
     mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
 
     #size filter
-    labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[1000,25000], max_area=None)
+    labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)
 
     mlist = []
     rlist = []
@@ -373,7 +373,7 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
 
-        dist = 200
+        dist = 100
         try:
             msg_kernel, era_kernel, cmorph_kernel = cut_kernel(xpos, ypos, dist, msg_on_lsta, era_on_lsta, cmorph_on_lsta)  #3km res kernels
         except TypeError:

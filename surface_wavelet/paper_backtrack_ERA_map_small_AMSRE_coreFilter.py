@@ -61,34 +61,37 @@ def eh_loop():
 
 def composite(h, eh):
 
-    file = cnst.MCS_POINTS_DOM
-    #file = cnst.MCS_CENTRE70
-
+    msgopen = pd.read_csv(
+        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h)+'.p')
     hour = h
+    msg = pd.DataFrame.from_dict(msgopen)# &  &
+    msg['eh'] = eh
 
-    msg = xr.open_dataarray(file)
+    msg['date'] = pd.to_datetime(msg[['year','month','day']])
+    print('Start core number ', len(msg))
 
-    for year in np.arange(2006, 2011):
-        #year='all'
-
-        msgo = msg[((msg['time.hour'] == hour) ) & (msg['time.minute'] == 0) & (
-            msg['time.year'] ==year) & ((msg['time.month'] >=6) & (msg['time.month'] <=9))  ]
-
-
-        msgo = msgo.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
-        msgo.attrs['eh'] = eh
-        msgo.attrs['refhour'] = h
-        print('MCS dataset length:', len(msgo))
-        dic = u_parallelise.era_run_arrays(4, file_loop, msgo)
-        # res = []
-        # for m in msgo[0:100]:
-        #     out = file_loop(m)
-        #     res.append(out)
+    # calculate the chunk size as an integer
+    #'chunk_size = int(msg.shape[0] / pnumber)
+    msg.sort_values(by='date')
+    ipdb.set_trace()
+    chunk, chunk_ind, chunk_count = np.unique(msg.date, return_index=True, return_counts=True)
 
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_AMSRE_500w04_15k_p90"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
-        del dic
-        print('Dumped file')
+    chunks = [msg.ix[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
+
+    # res = []
+    # for m in chunks[0:30]:
+    #     out = file_loop(m)
+    #     res.append(out)
+    #
+    # ipdb.set_trace()
+    # return
+    dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
+
+    ipdb.set_trace()
+    pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_composite_cores_AMSRE_500w04_15k_"+str(eh) + "UTCERA"+str(hour).zfill(2)+"_small_cores.p", "wb"))
+    del dic
+    print('Dumped file')
 
 
 

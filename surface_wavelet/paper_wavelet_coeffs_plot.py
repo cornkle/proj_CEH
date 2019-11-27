@@ -402,7 +402,7 @@ def plot_gewex2():
     for id, h in enumerate([16,17,19,21]):
 
         path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-        dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_25000.p", "rb"))
+        dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_15000.p", "rb"))
 
         scales = dic['scales']
         nbcores = dic['nbcores']

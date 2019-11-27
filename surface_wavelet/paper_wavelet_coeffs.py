@@ -329,9 +329,6 @@ def file_loop(fi):
         if mhour <= 13:
             mhour += 24
 
-        if mhour == 0:
-            mhour += 24
-
         chour = fi['time.hour'].values
 
         if (chour >= 0) & (chour <= 13):

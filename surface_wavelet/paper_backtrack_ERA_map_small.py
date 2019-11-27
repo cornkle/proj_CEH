@@ -88,7 +88,7 @@ def composite(h, eh):
         # ipdb.set_trace()
         # return
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_-80_clim"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_LSTAcpMID_storm"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
         del dic
         print('Dumped file')
 
@@ -150,6 +150,30 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         plsta = np.zeros_like(kernel)
         lcnt = np.zeros_like(kernel)
 
+    kmean = kernel - np.nanmean(kernel)
+    ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+
+    # if e100 >= -3.5:   ### random LSTA p10
+    #     return
+    #
+    # if e100 <= 2.7:   ### random LSTA p90
+    #     return
+
+    # if e100 >= -3:  ### core LSTA p10
+    #     return
+
+    # if e100 <= 2.88:  ### random LSTA p90
+    #     return
+
+    # if e100 >= -1.36:  ### core LSTA p25
+    #     return
+    #
+    # if e100 <= 1.45:  ### random LSTA p75
+    #     return
+
+    if (e100 >= 1.1) | (e100<=1):
+        return
 
     return kernel,  cnt, cnt2, vdic, prob, cnt3, probcm, cnt4,plsta, lcnt
 
@@ -221,15 +245,15 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     #srfc_clim = srfc_clim.squeeze()
 
-    t =  pl_clim['t'].sel(level=925).squeeze() #* 1000  #cmm['t'].sel(level=925).squeeze() -
+    t =  cmm['t'].sel(level=925).squeeze() -pl_clim['t'].sel(level=925).squeeze() #* 1000  #
 
     shear =  cmm['u'].sel(level=650).squeeze() - cmm['u'].sel(level=925).squeeze()
 
-    vwind_srfc = pl_clim['v'].sel(level=925).squeeze()  # cmm['v'].sel(level=925).squeeze() -
-    uwind_srfc =  pl_clim['u'].sel(level=925).squeeze()  #cmm['u'].sel(level=925).squeeze() -
+    vwind_srfc = cmm['v'].sel(level=925).squeeze() -pl_clim['v'].sel(level=925).squeeze()  #
+    uwind_srfc =  cmm['u'].sel(level=925).squeeze() -pl_clim['u'].sel(level=925).squeeze()  #
 
-    uwind_up =  pl_clim['u'].sel(level=650).squeeze() # cmm['u'].sel(level=650).squeeze() #-
-    vwind_up =  pl_clim['v'].sel(level=650).squeeze() # cmm['v'].sel(level=650).squeeze() #-
+    uwind_up =  pl_clim['u'].sel(level=650).squeeze()
+    vwind_up =  pl_clim['v'].sel(level=650).squeeze()
     #wwind_up = cmm['w'].sel(level=650).squeeze()
 
     uwind_up_ano = cmm['u'].sel(level=650).squeeze() - pl_clim['u'].sel(level=650).squeeze()
@@ -247,9 +271,16 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
                    u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
                                  pl_clim['q'].sel(level=650).squeeze())
 
-    theta_e =  theta_e_diff_clim  #theta_e_diff -
+    theta_e =  theta_e_diff -theta_e_diff_clim  #
+    theta_e_low = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15, cmm['q'].sel(level=925).squeeze())\
+                  - u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
+                                 pl_clim['q'].sel(level=925).squeeze())
 
-    q =  pl_clim['q'].sel(level=925).squeeze()  #cmm['q'].sel(level=925).squeeze() -  !!!!!!!!!!!!!!!!!!!
+    theta_e_up =  u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15, cmm['q'].sel(level=650).squeeze()) \
+                  - u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
+                                 pl_clim['q'].sel(level=650).squeeze())
+
+    q =  cmm['q'].sel(level=925).squeeze()-pl_clim['q'].sel(level=925).squeeze()
 
     cm['shear'] = shear
     cm['u925'] = uwind_srfc
@@ -275,6 +306,8 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['q'] = q
     cm['t'] = t
     cm['theta_e'] = theta_e
+    cm['theta_e_low'] = theta_e_low
+    cm['theta_e_up'] = theta_e_up
 
     #del srfc_clim
     del pl_clim
@@ -494,7 +527,7 @@ def file_loop(fi):
             print('MCS too small!!')
             continue
 
-        if (mcsimage.values[y,x] > -80):
+        if (mcsimage.values[y,x] > -60):
             print('Core too warm!!')
             continue
 
@@ -534,10 +567,6 @@ def file_loop(fi):
         if np.nansum(probm[dist-50:dist+50,dist-30:dist+100])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
             print('Meteosat MCS continue')
             continue
-        # #
-        # if np.nanmax(vdic['tciw'][:,dist::])>=0.02:   # filter out cases with MCSs at 12
-        #     print('ERA MCS continue')
-        #     continue
 
         if np.nanmin((vdic['tciwmid'][dist-50:dist+50,dist-30:dist+100]))<=-0.4:   # 0.03 for tciw, -0.3 for w [dist-50:dist+50,dist-30:dist+100] ,filter out cases with MCSs at 12
             print('ERA MCS continue')
@@ -741,12 +770,183 @@ def plot_doug_timeseries():
     #plt.close()
 
 
+
+def plot_doug_all_diff(h, eh):
+
+    dic = {}
+    dic2 = {}
+
+    name = "ERA5_composite_cores_LSTA_500w04_15k_LSTAcp90"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name2 = "ERA5_composite_cores_LSTA_500w04_15k_LSTAcp10"
+
+    def coll(dic, h, eh, year,name):
+        print(h)
+        core = pkl.load(open(
+            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/"+name+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores.p", "rb"))
+        for id, k in enumerate(core.keys()):
+            try:
+                dic[k] = dic[k] + core[k]
+            except KeyError:
+                dic[k] = core[k]
+
+
+    for y in range(2006,2011):
+        coll(dic, h, eh, y,name)
+
+    for y in range(2006,2011):
+        coll(dic2, h, eh, y,name2)
+
+    extent = (dic['lsta'].shape[1]-1)/2
+    xlen = dic['lsta'].shape[1]
+    ylen = dic['lsta'].shape[0]
+
+    xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
+    st=30
+    xquiv = xv[4::st, 4::st]
+    yquiv = yv[4::st, 4::st]
+
+    u = (dic['u925']/ dic['cntp'])[4::st, 4::st]
+    v = (dic['v925']/ dic['cntp'])[4::st, 4::st]
+
+    u600 = (dic['u650_orig']/ dic['cntp'])[4::st, 4::st]
+    v600 = (dic['v650_orig']/ dic['cntp'])[4::st, 4::st]
+
+    u_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
+    v_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
+
+
+    f = plt.figure(figsize=(15,7))
+    ax = f.add_subplot(231)
+
+
+    plt.contourf((dic['plsta'] / dic['plcnt'])-((dic2['plsta'] / dic2['plcnt'])), cmap='RdBu_r', extend='both', levels=np.linspace(-5,5,12)) #-(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    plt.colorbar(label='K', format='%1.2f')
+    plt.text(0.02,0.08, 'ITD 0-line', color='turquoise', fontsize=12, transform=ax.transAxes)
+    plt.text(0.02, 0.03, 'ITD anomaly 0-line', color='k', fontsize=12, transform=ax.transAxes)
+
+    # plt.annotate('ITD 0-line', xy=(0.04, 0.1), xytext=(0, 4), size=15, color='turquoise', xycoords=('figure fraction', 'figure fraction'))
+    #              #             textcoords='offset points')   #transform=ax.transAxes
+    #pdb.set_trace()
+
+    contours = plt.contour((dic['t'] / dic['cntp'])-(dic2['t'] / dic2['cntp']), extend='both', cmap='PuOr_r', linewidths=2, levels=np.linspace(-1,1,8)) # #, levels=np.arange(1,5, 0.5)
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.1f')
+    #contours2 = plt.contour((dic['v925']) / dic['cntp'], extend='both', cmap='RdBu', levels=np.linspace(-1, 1,9))  # , levels=np.linspace(-1,1,10)#(dic['probc']/ dic['cntc'])*100, extend='both', levels=np.arange(15,70,12), cmap='jet') # #, levels=np.arange(1,5, 0.5)
+    #plt.clabel(contours2, inline=True, fontsize=11, fmt='%1.0f')
+
+    contours = plt.contour((dic['v925']/ dic['cntc'])-(dic2['v925']/ dic2['cntc']), extend='both',colors='k', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+
+    contours = plt.contour((dic['v925_orig']/ dic['cntc'])-(dic2['v925_orig']/ dic2['cntc']), extend='both',colors='turquoise', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6 , dtype=int))
+    ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.title(str(h).zfill(2)+'00UTC | '+str(np.max(dic['cnt']))+' cores, LSTA day-1, ERA5$_{noon}$ 925hPa T anomaly', fontsize=9)
+
+
+    ax1 = f.add_subplot(232)
+    plt.contourf(((dic['lsta'])/ dic['cnt'])-((dic2['lsta'])/ dic2['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-5,5,12)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='K', format='%1.2f')
+    contours = plt.contour((dic['probc']/ dic['cntc'])*100 - (dic2['probc']/ dic2['cntc'])*100, extend='both', cmap='jet', linewidths=2)  #np.arange(-15,-10,0.5)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+
+
+
+    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
+    plt.plot(extent, extent, 'bo')
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax1.set_xlabel('km')
+    ax1.set_ylabel('km')
+    plt.title('LSTA day0, Contours: CMORPH rainP>5mm [6am|day-1 to 10am|day0]', fontsize=9)
+
+    ax1 = f.add_subplot(233)
+    plt.contourf(((dic['q'])*1000/ dic['cntp'])-((dic2['q'])*1000/ dic2['cntp']), extend='both',  cmap='RdBu', levels=np.linspace(-0.8,0.8,10)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='g kg-1')
+    contours = plt.contour((dic['shear'] / dic['cntp'])-(dic2['shear'] / dic2['cntp']), extend='both', cmap='viridis_r', linewidths=2) #np.arange(-15,-10,0.5)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    plt.plot(extent, extent, 'bo')
+    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax1.set_xlabel('km')
+    ax1.set_ylabel('km')
+    plt.title('925hPa q anomaly, contours: 650hPa-925hPa zonal shear', fontsize=9)
+
+    ax1 = f.add_subplot(234)
+ #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf((((dic['div'])/ dic['cntp'])-((dic2['div'])/ dic2['cntp']))*100, extend='both',  cmap='PuOr', levels=np.linspace(-0.7, 0.7, 10)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='10$^{-2}$ s$^{-1}$', format='%1.3f')
+    plt.plot(extent, extent, 'bo')
+    # contours = plt.contour((dic['v650_orig'] / dic['cntp']), extend='both', cmap='viridis') #np.arange(-15,-10,0.5)
+    # plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    # qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
+    #qk = plt.quiverkey(qu, 0.2, 0.02,1, '1 m s$^{-1}$',
+    #                   labelpos='E', coordinates='figure')
+
+    ax1.streamplot(xv, yv, (dic['u925']/ dic['cntp'])-(dic2['u925']/ dic2['cntp']), (dic['v925']/ dic['cntp'])-(dic2['v925']/ dic2['cntp']), density=[0.5, 1])
+
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
+    ax1.set_xlabel('km')
+    ax1.set_ylabel('km')
+    plt.title('925hPa divergence, vectors: 925hPa wind anomaly', fontsize=9)
+
+
+    ax1 = f.add_subplot(235)
+    #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+     # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf((dic['tciwmid'] / dic['cntp'])-(dic2['tciwmid'] / dic2['cntp']), extend='both', cmap='PuOr', levels=np.linspace(-0.02, 0.02, 10))
+    plt.colorbar(label=r'Pa s$^{-1}$', format='%1.3f')
+    plt.plot(extent, extent, 'bo')
+    # contours = plt.contour(((dic['v925_orig']) / dic['cntp']) , extend='both', cmap='RdBu', levels=np.linspace(-2,2,11), linewidths=2) #np.arange(-15,-10,0.5)
+    # plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax1.streamplot(xv, yv, dic['u925_orig']/ dic['cntp']-dic2['u925_orig']/ dic2['cntp'], dic['v925_orig']/ dic['cntp']-dic2['v925_orig']/ dic2['cntp'], density=[0.5, 1])
+
+    # qu = ax1.quiver(xquiv, yquiv, u_orig, v_orig, scale=30)
+    # qk = plt.quiverkey(qu, 0.55, 0.02, 1, '1 m s$^{-1}$',
+    #                    labelpos='E', coordinates='figure')
+
+    ax1.set_xticklabels(np.array((np.linspace(0, extent * 2, 9) - 100) * 6, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
+    ax1.set_xlabel('km')
+    ax1.set_ylabel('km')
+    plt.title(r'500hpa omega, vectors: 925hPa wind', fontsize=9)
+
+    ax1 = f.add_subplot(236)
+    #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['theta_e']) / dic['cntp'])-((dic2['theta_e']) / dic2['cntp']), extend='both', cmap='RdBu', levels=np.linspace(-2.5,2.5,14)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label=r'K')
+    plt.plot(extent, extent, 'bo')
+    contours = plt.contour((dic['u650'] / dic['cntp'])-(dic2['u650'] / dic2['cntp']), extend='both', cmap='PuOr', levels=[-2,-1.5,-1,-0.5,-0.2,-0.1, 0,0.1,0.2,0.5,1,1.5,2], linewidths=2) #np.arange(-15,-10,0.5)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    # qu = ax1.quiver(xquiv, yquiv, u600, v600, scale=20)
+    # qk = plt.quiverkey(qu, 0.9, 0.02, 1, '1 m s$^{-1}$',
+    #                    labelpos='E', coordinates='figure')
+
+    ax1.set_xticklabels(np.array((np.linspace(0, extent * 2, 9) - 100) * 6, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
+    ax1.set_xlabel('km')
+    ax1.set_ylabel('km')
+    plt.title(r'$\Delta \theta_{e}$ anomaly, contours: 650hPa u-wind anomaly', fontsize=9)
+
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+str(h).zfill(2)+'_'+str(eh).zfill(2)+'_DIFF_9010.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    #plt.close()
+
+
+
 def plot_doug_all(h, eh):
 
     dic = {}
     dic2 = {}
 
-    name = "ERA5_composite_cores_LSTA_500w04_15k_-67-70_clim"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_composite_cores_LSTA_500w04_15k_LSTAcpMID"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
 
     def coll(dic, h, eh, year):
@@ -786,7 +986,7 @@ def plot_doug_all(h, eh):
     ax = f.add_subplot(231)
 
 
-    plt.contourf((dic['plsta'] / dic['plcnt'])-np.mean((dic['plsta'] / dic['plcnt'])), cmap='RdBu_r', levels=np.linspace(-1.5,1.5,12), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['plsta'] / dic['plcnt'])-np.mean((dic['plsta'] / dic['plcnt'])), cmap='RdBu_r', levels=np.linspace(-2,2,16), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     plt.colorbar(label='K', format='%1.2f')
     plt.text(0.02,0.08, 'ITD 0-line', color='turquoise', fontsize=12, transform=ax.transAxes)
@@ -816,7 +1016,7 @@ def plot_doug_all(h, eh):
 
 
     ax1 = f.add_subplot(232)
-    plt.contourf(((dic['lsta'])/ dic['cnt'])-np.mean((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-1.5,1.5,12)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta'])/ dic['cnt'])-np.mean((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-2,2,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K', format='%1.2f')
     contours = plt.contour((dic['probc']/ dic['cntc'])*100, extend='both', levels=np.arange(15,70,12), cmap='jet', linewidths=2)  #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
@@ -903,7 +1103,7 @@ def plot_doug_all(h, eh):
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+str(h).zfill(2)+'_'+str(eh).zfill(2)+'_TEST.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+str(h).zfill(2)+'_'+str(eh).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     #plt.close()
 
 
@@ -1073,30 +1273,21 @@ def plot_doug_CLIM(h, eh):
     #plt.close()
 
 
-def plot_doug(h, eh):
+def plot_doug_paper(h, eh):
 
     dic = {}
-    dic2 = {}
+    name = "ERA5_composite_cores_LSTA_500w04_15k_"
+
 
     def coll(dic, h, eh, year):
         print(h)
         core = pkl.load(open(
-            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_"+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores.p", "rb"))
+            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/"+name+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores.p", "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
             except KeyError:
                 dic[k] = core[k]
-
-        # cm = pkl.load(open(
-        #     cnst.network_data + "figs/LSTA/corrected_LSTA/new/composite_backtrack_CMORPH_" + str(h).zfill(
-        #         2) + "_cores.p", "rb"))
-
-        # for id, k in enumerate(cm.keys()):
-        #     try:
-        #         dic2[k] = dic2[k] + cm[k]
-        #     except KeyError:
-        #         dic2[k] = cm[k]
 
 
     for y in range(2006,2011):
@@ -1113,6 +1304,15 @@ def plot_doug(h, eh):
 
     u = (dic['u925']/ dic['cntp'])[4::st, 4::st]
     v = (dic['v925']/ dic['cntp'])[4::st, 4::st]
+
+    u600 = (dic['u650_orig']/ dic['cntp'])[4::st, 4::st]
+    v600 = (dic['v650_orig']/ dic['cntp'])[4::st, 4::st]
+
+    u_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
+    v_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
+
+
+    f = plt.figure(figsize=(15,7))
 
 
     f = plt.figure(figsize=(10,8))
@@ -1185,12 +1385,15 @@ def plot_doug(h, eh):
 def plot_doug_small(h, eh):
 
     dic = {}
+    dic2 = {}
+
+    name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+
 
     def coll(dic, h, eh, year):
         print(h)
         core = pkl.load(open(
-            cnst.network_data + "figs/LSTA/corrected_LSTA/new/wavelet_drywet_power/composite_backtrack" + str(
-                eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + "_small_cores.p", "rb"))
+            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/"+name+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores.p", "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
@@ -1198,32 +1401,36 @@ def plot_doug_small(h, eh):
                 dic[k] = core[k]
 
 
-    for y in range(2006, 2011):
+    for y in range(2006,2011):
         coll(dic, h, eh, y)
 
-    extent = (dic['lsta'].shape[1] - 1) / 2
+    extent = (dic['lsta'].shape[1]-1)/2
     xlen = dic['lsta'].shape[1]
     ylen = dic['lsta'].shape[0]
 
     xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st = 30
+    st=30
     xquiv = xv[4::st, 4::st]
     yquiv = yv[4::st, 4::st]
 
-    u = (dic['u925'] / dic['cntp'])[4::st, 4::st]
-    v = (dic['v925'] / dic['cntp'])[4::st, 4::st]
+    u = (dic['u925']/ dic['cntp'])[4::st, 4::st]
+    v = (dic['v925']/ dic['cntp'])[4::st, 4::st]
+
+    u600 = (dic['u650_orig']/ dic['cntp'])[4::st, 4::st]
+    v600 = (dic['v650_orig']/ dic['cntp'])[4::st, 4::st]
+
+    u_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
+    v_orig = (dic['v925_orig']/ dic['cntp'])[4::st, 4::st]
 
     f = plt.figure(figsize=(10, 4))
     ax = f.add_subplot(121)
 
-    plt.contourf((dic['lsta'] / dic['cnt']), cmap='RdBu_r',
-                 levels=[-0.8, -0.6, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.6, 0.8],
-                 extend='both')  # -(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['lsta'] / dic['cnt']), cmap='RdBu_r', levels = np.linspace(-1.5, 1.5, 12), extend = 'both')
     # plt.plot(extent, extent, 'bo')
     plt.colorbar(label='K')
     # pdb.set_trace()
 
-    contours = plt.contour(((dic['div'])/ dic['cntp'])*100, extend='both',  cmap='RdBu', levels=np.linspace(-0.8,0.8,8)) # #, levels=np.arange(1,5, 0.5)
+    contours = plt.contour(((dic['div'])/ dic['cntp'])*100, extend='both',  cmap='PuOr_r', levels=np.linspace(-0.7,0.7,10)) # #, levels=np.arange(1,5, 0.5)
     qu = ax.quiver(xquiv, yquiv, u, v, scale=15)
     qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
                        labelpos='E', coordinates='figure')
@@ -1241,7 +1448,7 @@ def plot_doug_small(h, eh):
     ax1 = f.add_subplot(122)
     plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='g kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-18,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
+    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-15.5,-12,0.5), cmap='viridis_r') #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     plt.plot(extent, extent, 'bo')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
@@ -1253,89 +1460,5 @@ def plot_doug_small(h, eh):
 
     plt.tight_layout()
     plt.show()
-    # plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/large_scale/'+str(hour).zfill(2)+'_JUN.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    #plt.savefig('/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/large_scale/'+str(hour).zfill(2)+'_JUN.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     # plt.close()
-
-
-def plot_doug_small_allhours():
-
-    dic = {}
-
-    def coll(dic, h, eh, year):
-        print(h)
-        core = pkl.load(open(
-            cnst.network_data + "figs/LSTA/corrected_LSTA/new/august/composite_backtrack" + str(
-                eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + "_small_cores.p", "rb"))
-        for id, k in enumerate(core.keys()):
-            try:
-                dic[k] = dic[k] + core[k]
-            except KeyError:
-                dic[k] = core[k]
-
-
-    for y in range(2006, 2011):
-        for h,eh in zip([17,18,19,20], [-5,-6,-7,-8]):
-            coll(dic, h, eh, y)
-
-    extent = (dic['lsta'].shape[1] - 1) / 2
-    xlen = dic['lsta'].shape[1]
-    ylen = dic['lsta'].shape[0]
-
-    xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st = 30
-    xquiv = xv[4::st, 4::st]
-    yquiv = yv[4::st, 4::st]
-
-    u = (dic['u925'] / dic['cntp'])[4::st, 4::st]
-    v = (dic['v925'] / dic['cntp'])[4::st, 4::st]
-
-    f = plt.figure(figsize=(10, 4))
-    ax = f.add_subplot(121)
-
-    plt.contourf((dic['lsta'] / dic['cnt']), cmap='RdBu_r',
-                 levels=[-1, -0.8, -0.6, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.6, 0.8,1],
-                 extend='both', alpha=0.9)  # -(rkernel2_sum / rcnt_sum)
-    # plt.plot(extent, extent, 'bo')
-    plt.colorbar(label='K')
-    # pdb.set_trace()
-
-    contours = plt.contour(((dic['div'])/ dic['cntp'])*100, extend='both',  cmap='RdBu', levels=np.linspace(-0.49,0.49,6)) # #, levels=np.arange(1,5, 0.5)
-    qu = ax.quiver(xquiv, yquiv, u, v, scale=13, width=0.006)
-    qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
-                       labelpos='E', coordinates='figure')
-
-
-    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent * 2, 9) - 100) * 6, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.title('23-01UTC | ' + str(np.max(dic['cnt'])) + ' cores, LSTA & 06-06UTC antecedent rain', fontsize=9)
-
-
-    ax1 = f.add_subplot(122)
-    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-0.5,0.6,0.05)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='g kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-16,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    plt.plot(extent, extent, 'bo')
-    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-    plt.title('Shading: 925hPa q anomaly, Contours: 650hPa-925hPa wind shear ', fontsize=9)
-
-    plt.tight_layout()
-    plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/august/jun-sep_17-20UTC_mean.png")#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    # plt.close()
-
-
-def plot_all():
-
-    hours = [16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]
-
-    for h in hours:
-        plot_doug(h)

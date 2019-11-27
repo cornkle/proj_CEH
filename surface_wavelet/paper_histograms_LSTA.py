@@ -14,6 +14,7 @@ import pandas as pd
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_darrays
 import ipdb
 import pickle as pkl
+import itertools
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -22,7 +23,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for h in [10,11,12,13]: #14,15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9]:  #range(0,24)
+    for h in [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]:  #range(0,24)
 
         composite(h)
 
@@ -46,14 +47,14 @@ def composite(h):
     dic = u_parallelise.run_flat(3,file_loop,msg,['c30', 's100', 'e100', 'r30', 'rs100', 're100'])
 
     # res = []
-    # for m in msg[0:20]:
+    # for m in msg[15:20]:
     #     out = file_loop(m)
     #     res.append(out)
     # return
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "wb"))
 
 
 
@@ -71,12 +72,24 @@ def cut_kernel(xpos, ypos, arr, dist):
     ycirc30, xcirc30 = u_arrays.draw_circle(dist, dist,5) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
-    ycirc100, xcirc100 = u_arrays.draw_circle(dist+1, dist-67, 35)  # at - 200km, draw 50km radius circle
-    s100 = np.nanmean(kmean[ycirc100,xcirc100])
+    if not np.isfinite(np.nansum(k30)):
+        return
+    #kernel[ycirc30, xcirc30] = 700
 
-    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 35)  # at - 150km, draw 50km radius circle
+    ycirc100, xcirc100 = u_arrays.draw_circle(dist+1, dist-67, 17)  # at - 200km, draw 50km radius circle
+    #s100 = np.nanmean(kmean[ycirc100,xcirc100])
+    s100 = np.nanmean(kmean[dist-67-17:dist-67+17, dist-50:dist]) #at -200km in box 100km high
+
+    #kernel[ycirc100,xcirc100] = 1000
+
+    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
     e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
-
+    # kernel[ycirc100e, xcirc100e] = 500
+    #
+    # f = plt.figure()
+    # plt.imshow(kernel)
+    #
+    # return
 
     return k30, s100, e100
 
@@ -209,7 +222,11 @@ def file_loop(fi):
         randy = np.array(randy50 + randy50_100 + randy50_100)
         randx = np.array(randx50 + randx100 + randx150)
         # ipdb.set_trace()
-        for ry, rx in zip(randy, randx):
+        # yrand = np.array([y-50,y,y+50])
+        # xrand = np.arange(40,fi.shape[1],50)
+
+        #for ry, rx in itertools.product(yrand,xrand):
+        for ry, rx in zip(randy,randx):
 
             if ry < 0:
                 continue

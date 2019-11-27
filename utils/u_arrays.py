@@ -51,7 +51,7 @@ def distance(x1, y1, x2, y2):
     return np.sqrt((x1 - x2) *(x1 - x2) + (y1 - y2) * (y1 - y2))
 
 
-def closest_point(point, points):
+def closest_point(point, points):  # points is a 2d array like np.array(list(zip(mlon,mlat)))
     dist_2 = np.sum((points - point) * (points - point), axis=1)
     return np.argmin(dist_2)
 
