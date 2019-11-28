@@ -43,8 +43,7 @@ def diurnal_loop():
 
 def composite(h, eh):
 
-    msgopen = pd.read_csv(
-        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h)+'.csv')
+    msgopen = pd.read_csv('/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_'+str(h)+'.csv')
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
     msg['eh'] = eh
@@ -53,16 +52,18 @@ def composite(h, eh):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
+    msgin = msg[msg['SMwet']>=2]
+    print('Number of cores', len(msgin))
+
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
-    msg.sort_values(by='date')
+    msgin.sort_values(by='date')
 
     for year in np.arange(2006, 2011):
 
-        msgy = msg[msg['year']==year]
+        msgy = msgin[msgin['year']==year]
 
         chunk, chunk_ind, chunk_count = np.unique(msgy.date, return_index=True, return_counts=True)
-
 
         chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
@@ -75,7 +76,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_mapSmallfunc_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_cores_TEST.p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -137,9 +138,9 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         plsta = np.zeros_like(kernel)
         lcnt = np.zeros_like(kernel)
 
-    kmean = kernel - np.nanmean(kernel)
-    ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+    # kmean = kernel - np.nanmean(kernel)
+    # ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    # e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
 
     # if e100 >= -3.5:   ### random LSTA p10
     #     return
@@ -159,8 +160,8 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
     # if e100 <= 1.45:  ### random LSTA p75
     #     return
 
-    if (e100 >= 1.1) | (e100<=1):
-        return
+    # if (e100 >= 1.1) | (e100<=1):
+    #     return
 
     return kernel,  cnt, cnt2, vdic, prob, cnt3, probcm, cnt4,plsta, lcnt
 
@@ -559,13 +560,13 @@ def plot_doug(h, eh):
     dic = {}
     dic2 = {}
 
-    name = "ERA5_mapSmallfunc_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_cores_WET_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
 
     def coll(dic, h, eh, year):
         print(h)
         core = pkl.load(open(
-            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/"+name+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_cores_TEST.p", "rb"))
+            cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/"+name+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+".p", "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
@@ -686,7 +687,7 @@ def plot_doug(h, eh):
     ax1 = f.add_subplot(235)
     #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf((dic['tciwmid'] / dic['cntp']), extend='both', cmap='PuOr', levels=np.linspace(-0.02, 0.02, 10))
+    plt.contourf((dic['tciwmid'] / dic['cntp']), extend='both', cmap='PuOr', levels=np.linspace(-0.05, 0.05, 10))
     plt.colorbar(label=r'Pa s$^{-1}$', format='%1.3f')
     plt.plot(extent, extent, 'bo')
     # contours = plt.contour(((dic['v925_orig']) / dic['cntp']) , extend='both', cmap='RdBu', levels=np.linspace(-2,2,11), linewidths=2) #np.arange(-15,-10,0.5)

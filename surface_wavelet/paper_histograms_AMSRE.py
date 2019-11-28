@@ -54,7 +54,7 @@ def composite(h):
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "wb"))
 
 
 
@@ -65,15 +65,19 @@ def cut_kernel(xpos, ypos, arr, dist):
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
-    kmean = kernel - np.nanmean(kernel)
+    kmean = kernel #- np.nanmean(kernel)
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         return
-    ycirc30, xcirc30 = u_arrays.draw_circle(dist, dist,5) # 15km radius
+    ycirc30, xcirc30 = u_arrays.draw_circle(dist+1, dist+1,6) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
     if not np.isfinite(np.nansum(k30)):
         return
+
+    # if not np.sum(np.isfinite(kmean))/kmean.size >=0.1:
+    #     return
+
     #kernel[ycirc30, xcirc30] = 700
 
     ycirc100, xcirc100 = u_arrays.draw_circle(dist+1, dist-67, 17)  # at - 200km, draw 50km radius circle
@@ -115,26 +119,52 @@ def file_loop(fi):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    try:
-        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
-    except OSError:
-        return None
-    print('Doing ' + 'lsta_daily_' + fdate + '.nc')
-
     topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
+    #
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0]) + abs(grad[1])
 
-    lsta_da = lsta['LSTA'].squeeze()
+    smpath = [cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc',
+              cnst.AMSRE_ANO_NIGHT + 'sma_' + fdate + '.nc',
+              ]
 
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
-        print('Not enough valid')
+    smlist = []
+
+    for sid, sp in enumerate(smpath):
+
+        try:
+            lsta = xr.open_dataset(sp)
+        except OSError:
+            return None
+        print('Doing ' + sp)
+
+        lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+
+        lsta_da = lsta['SM'].squeeze()
+
+        if sid == 0:
+            if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
+                print('Not enough valid')
+                return None
+
+        try:
+            lsta_da = topo.salem.transform(lsta_da)
+        except RuntimeError:
+            print('lsta_da on LSTA interpolation problem')
+            return None
+
+        lsta_da.values[ttopo.values >= 450] = np.nan
+        lsta_da.values[gradsum > 30] = np.nan
+
+        smlist.append(lsta_da)
+        del lsta
+
+    lsta_da = smlist[0]
+
+    if len(smlist) != 2:
         return None
 
-
-    lsta_da.values[ttopo.values>=450] = np.nan
-    lsta_da.values[gradsum>30] = np.nan
     pos = np.where((fi.values >= 5) & (fi.values <= 65) )  #(fi.values >= 5) & (fi.values < 65), fi.values<-40
 
     if (np.sum(pos) == 0):
