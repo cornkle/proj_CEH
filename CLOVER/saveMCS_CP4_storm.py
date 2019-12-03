@@ -227,7 +227,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
         print('Filepath', filepath)
-        arr = xr.open_mfdataset(filepath, autoclose=True)
+        arr = xr.open_mfdataset(filepath, file_cache_maxsize=10)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 

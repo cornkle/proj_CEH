@@ -61,7 +61,7 @@ def saveMCS_WA15(YRANGE):
 
                 da = t['HQprecipitation'].squeeze()
                 da = da.T
-                tdic = da.sel(lat=slice(4.5,9), lon=slice(-12,12))
+                tdic = da.sel(lat=slice(4.5,20), lon=slice(-12,12))
 
                 if np.sum(tdic.values) <= 0.01:
                     continue
@@ -119,7 +119,7 @@ def saveMCS_WA15(YRANGE):
 
                 lon1 = mdic['lon'].values
                 lat1 = mdic['lat'].values
-                mdic['t'].values[mdic['t'].values >= -70] = 0  # T threshold -10
+                mdic['t'].values[mdic['t'].values >= -50] = 0  # T threshold -10
                 labels, numL = label(mdic['t'].values)
 
                 u, inv = np.unique(labels, return_inverse=True)
@@ -202,7 +202,7 @@ def saveMCS_WA15(YRANGE):
                     mmask = np.isfinite(outl)
                     mask2 = np.isfinite(outl[tmask])
 
-                    if (sum(mmask.flatten())*25 < 350) | (outt.max()>200):# or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
+                    if (sum(mmask.flatten())*25 < 350) | (outt.max()>250):# or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
                         continue
 
                     if sum(mask2.flatten()) < 5:  # sum(mmask.flatten())*0.3:
@@ -225,7 +225,7 @@ def saveMCS_WA15(YRANGE):
                     da.attrs['area'] = sum(mmask.flatten())
                     da.attrs['area_cut'] = sum(mask2)
                     da.close()
-                    savefile = cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-70_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+                    savefile = cnst.network_data + 'MCSfiles/WA5000_4-20N_12W-12E_-50_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
                     try:
                         os.remove(savefile)
                     except OSError:
