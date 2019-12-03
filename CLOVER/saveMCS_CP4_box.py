@@ -56,7 +56,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
     if 'lw_out_PBLtop' not in keys:
         print('please provide ORL first in dictionary')
         return
-    box = [-17, 14, 3.5, 13.5]
+    box = [-17, 14, 3.5, 21]
 
     #load seamask
     landsea_path = glob.glob(ancils_dir+os.sep+'landseamask*.nc')[0]
@@ -79,9 +79,14 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
         h = (vars[v])[1]
         pl = (vars[v])[0]
         derived = False
-        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc'):
-            derived = v
-            v = 'u_pl'
+        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc') | (v == 'theta'):
+            if v == 'theta':
+                derived = v
+                v = 't_pl'
+
+            else:
+                derived = v
+                v = 'u_pl'
 
         # try:
         #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
@@ -97,7 +102,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
         pdt = pd.to_datetime(datestring.values)
         pdt = pdt.replace(hour=h)
         dar = dar.sel(time=pdt, method='nearest')
-        ipdb.set_trace()
+
         if int(dar['time.hour'])!=h:
             print('Wrong hour')
             return
@@ -220,10 +225,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, sbox, tthresh):
 
 ### Inputs CP25
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
+data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamask file inside
 out_path = cnst.network_data + 'data/CP4/CLOVER'  # out directory to save MCS files
-sbox = [-11, 11, 4.5, 8.5]  # W- E , S - N geographical storm box
+sbox = [-17, 14, 3.5, 21]  # W- E , S - N geographical storm box
 datestring = '19990401'  # set this to date of file
 
 years = np.array(np.arange(1998,2007), dtype=str)
@@ -239,6 +244,8 @@ vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
 vars['q_pl'] = ([925], 12)  # 925, 650 available
+vars['theta'] = ([650,925], 12)
+
 datelist = []
 # for y,m,d in itertools.product(years, months, days):
 #     datelist.append(y+m+str(d).zfill(2))

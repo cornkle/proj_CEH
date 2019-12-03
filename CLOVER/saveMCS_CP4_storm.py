@@ -9,7 +9,7 @@ import pandas as pd
 import ipdb
 import itertools
 from collections import OrderedDict
-from utils import constants as cnst
+from utils import constants as cnst, u_met
 
 def olr_to_bt(olr):
     sigma = 5.670373e-8
@@ -211,12 +211,13 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         h = (vars[v])[1]
         pl = (vars[v])[0]
         derived = False
-        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc') :
+        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc') | (v == 'theta') :
             derived = v
             v = 'u_pl'
-        if (v == 'q_pl_s') :
+
+        if (v == 'theta') :
             derived = v
-            v = 'q_pl'
+            v = 't_pl'
 
         # try:
         #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
@@ -257,6 +258,22 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 shear = dar.sel(pressure=650).values - dar.sel(pressure=925).values
                 dar = dar.sum(dim='pressure').squeeze()
                 dar.values = shear
+                if derived:
+                    v = derived
+
+            if (len(pl) > 1) & (vv == 'theta'):
+
+                dar2 = arr['q_pl'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
+                try:
+                    dar2 = dar2.sel(time=datestringh, method='nearest')  # , method='nearest'
+                except ValueError:
+                    dar2 = dar2.sel(time=datestringh)
+                dar2.values = np.array(dar2.values / 100).astype(float)
+
+                theta_up = u_met.theta_e(650, dar.sel(pressure=650).values, dar2.sel(pressure=650).values)
+                theta_low = u_met.theta_e(925, dar.sel(pressure=925).values, dar2.sel(pressure=925).values)
+                dar = dar.sum(dim='pressure').squeeze()
+                dar.values = theta_low-theta_up
                 if derived:
                     v = derived
 
@@ -341,13 +358,13 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_-50C_5000km2'  # out directory to save MCS files
-box = [-12, 12, 4.5, 8.5]  # W- E , S - N geographical coordinates box
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_4-20N'  # out directory to save MCS files
+box = [-12, 12, 4.5, 20]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-years = np.array(np.arange(2001,2007), dtype=str)
-months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
-days = np.array(np.arange(1,32), dtype=str)
+# years = np.array(np.arange(2001,2007), dtype=str)
+# months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
+# days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
@@ -358,18 +375,20 @@ vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
 vars['q_pl'] = ([925], 12)  # 925, 650 available
-#vars['q_pl_s'] = ([925], 18)totRain
-datelist = []
-for y,m,d in itertools.product(years, months, days):
-    datelist.append(y+m+str(d).zfill(2))
-files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
+vars['theta'] = ([650, 925], 12)
+vars['t_pl'] = ([650], 12)
 
-dummy = xr.open_mfdataset(data_path+os.sep+'q_pl'+os.sep+'*.nc', autoclose=True)  #lw_out_PBLtop
+# datelist = []
+# for y,m,d in itertools.product(years, months, days):
+#     datelist.append(y+m+str(d).zfill(2))
+# files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
+
+dummy = xr.open_mfdataset(data_path+os.sep+'q_pl'+os.sep+'*.nc', autoclose=True)  #check for q_pl timeseries cause pressure level dates are missing
 
 time = dummy['q_pl'][dummy['time.hour']==12].time
 
 for d in time:
 
-    if (d['time.year']<2000) | ((d['time.month']>6) & (d['time.month']<9)):
+    if (d['time.year']<1998): #| ((d['time.month']>6) & (d['time.month']<9)):
         continue
     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
