@@ -24,7 +24,7 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [0,1,2,3,4,5,6,7]  #15,16,17,18,19,20,21,22,23,
+    l = [15,16,17,18,19,20,21,22,23, 0,1,2,3,4,5,6,7]  #
     for ll in l:
         composite(ll)
 
@@ -60,7 +60,7 @@ def composite(hour):
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9) ]
 
-    msg = msg.sel(lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
+    msg = msg.sel(lat=slice(9,19.5), lon=slice(-11.5, 11.5))
 
     res = pool.map(file_loop, msg)
     pool.close()
@@ -136,7 +136,9 @@ def file_loop(fi):
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)  ###5km grid
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
-    mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
+    mcsimage = mcsimage.sel(time=fi.time, lat=slice(9,19.5), lon=slice(-11.5, 11.5))
+
+
 
     #size filter
     labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)

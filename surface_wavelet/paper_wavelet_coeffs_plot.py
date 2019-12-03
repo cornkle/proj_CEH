@@ -56,7 +56,7 @@ def merge():
 def plot(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_merge.p", "rb"))
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_initiation_AMSRE.p", "rb"))
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -106,7 +106,7 @@ def plot(hour):
     f = plt.figure(figsize=(9, 9))
     ax = f.add_subplot(221)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales , (snblob) - (snrandom) , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales , (snblob) - (snrandom) , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1], extend='both')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1])
 
@@ -130,7 +130,7 @@ def plot(hour):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob,  cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1]) #, vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob,  cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1], extend='both') #, vmin = -0.1, vmax=0.1)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -143,7 +143,7 @@ def plot(hour):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob    , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob    , cmap='RdBu_r', levels = [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1], extend='both')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,wemask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -239,7 +239,7 @@ def plot_diurnal():
 def plot_map(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_merge.p", "rb"))
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_propagation_AMSRE.p", "rb"))
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -265,7 +265,7 @@ def plot_map(hour):
     dist=100
 
     f = plt.figure(figsize=(13, 6))
-    ax = f.add_subplot(141)
+    ax = f.add_subplot(121)
 
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both',levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5])
     plt.colorbar(label='Power difference (Blob-random)')
@@ -287,11 +287,11 @@ def plot_map(hour):
     ax.set_xlabel('km')
     ax.set_ylabel('km')
 
-    plt.title('West-East scales', fontsize=10)
+    plt.title('Wavelet coefficients at 30km', fontsize=10)
 
 
     plt.tight_layout()
-    #plt.savefig(path + '/paper/wcoeff_hours_'+keys[l]+'_'+str(hour)+'.png')
+    plt.savefig(path + '/paper/wcoeff_hours_'+keys[l]+'_'+str(hour)+'.png')
     plt.show()
 
 def plot_all():
@@ -299,10 +299,14 @@ def plot_all():
     for h in hours:
         plot_map_full(h)
 
-def plot_map_full(hour):
+def plot_map_full(hour, amsre=False):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60.p", "rb")) #coeffs_nans_stdkernel_USE_"+str(hour)+"UTC.p", "rb"))
+    if amsre:
+        tag = '_AMSRE'
+    else:
+        tag = ''
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_initiationNight"+tag+".p", "rb")) #coeffs_nans_stdkernel_USE_"+str(hour)+"UTC.p", "rb"))
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -312,19 +316,6 @@ def plot_map_full(hour):
     del dic['nbrcores']
 
     keys = list(dic.keys())
-
-    for l in keys:
-        if l == 'scales':
-            continue
-        if 'pos' in l:
-            (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-            (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-        else:
-            (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
-            try:
-                (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
-            except IndexError:
-                continue
 
     #ipdb.set_trace()
     keys = list(dic.keys())
@@ -347,22 +338,27 @@ def plot_map_full(hour):
     f = plt.figure(figsize=(13, 6))
     ax = f.add_subplot(231)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 ,lsta , cmap='RdBu_r', extend='both',levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5])
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    if amsre:
+        cmap = 'RdBu'
+    else:
+        cmap = 'RdBu_r'
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 ,lsta , cmap=cmap, extend='both',levels=[ -0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5])
+    plt.colorbar(label='Wavelet coefficient')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
     ax.plot(0,0, 'bo', markersize=3)
     ax.set_xlabel('km')
     ax.set_ylabel('Scales')
 
-    plt.title('South-North scales, Nb cores: ' + str(nbcores) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
+    plt.title('Spatial composite, Nb cores: ' + str(nbcores) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
               fontsize=10)
 
     ax = f.add_subplot(232)
     print('averaged: ',scales[0], scales[1])
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel.mean(axis=0)-random.mean(axis=0), cmap='RdBu_r', extend='both', levels= [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel.mean(axis=0)-random.mean(axis=0), cmap=cmap, extend='both', levels= [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1])
     plt.plot(0,0,'bo', markersize=3)
-    plt.colorbar(label='Power difference (Blob-random)')
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    plt.colorbar(label='Wavelet coefficient')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
 
     ax.set_xlabel('km')
     ax.set_ylabel('km')
@@ -375,11 +371,11 @@ def plot_map_full(hour):
         ax = f.add_subplot(2,3,ids+3)
 
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,   #- random[ids, :, :]
-                     kernel[ids, :, :], cmap='RdBu_r', extend='both',levels= [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1]) # - random[ids, :, :]
+                     kernel[ids, :, :], cmap=cmap, extend='both',levels= [-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1]) # - random[ids, :, :]
         plt.plot(0, 0, 'bo', markersize=3)
-        plt.colorbar(label='Power difference (Blob-random)')
-        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, mask[0, :, :],
-                     colors='none', hatches='.', levels=[0.5, 1], linewidth=0.25)
+        plt.colorbar(label='Wavelet coefficient')
+        #plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, mask[0, :, :],
+        #             colors='none', hatches='.', levels=[0.5, 1], linewidth=0.25)
 
         ax.set_xlabel('km')
         ax.set_ylabel('km')
@@ -390,7 +386,7 @@ def plot_map_full(hour):
 
 
     plt.tight_layout()
-    plt.savefig(path + '/paper/wcoeff_map_'+str(hour)+'_15000km_-60.png')
+    plt.savefig(path + '/paper/wcoeff_map_'+str(hour)+'_15000km_-60_propagating.png')
     plt.show()
 
 

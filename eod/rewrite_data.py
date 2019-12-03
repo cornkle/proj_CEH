@@ -18,6 +18,7 @@ import xarray as xr
 import ipdb
 from scipy.ndimage.measurements import label
 import matplotlib.pyplot as plt
+from utils import u_grid, u_interpolate as u_int
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -621,3 +622,24 @@ def rewrite_CMORPH(file):
         print('Out directory not found')
     print('Wrote ' + out)
     return ds
+
+
+
+
+def rewrite_topo():
+    path = '/home/ck/DIR/cornkle/data/ancils_python/'
+    file =  path + 'gtopo_1min_afr.nc'
+    topo = xr.open_dataset(file)
+
+    grid = u_grid.make(topo['lon'].values, topo['lat'].values, 3000) #m.lon, m.lat, 5000)
+    outtopo = grid.lookup_transform(topo['h'])
+    lon,lat = grid.ll_coordinates
+
+    da = xr.DataArray(outtopo, coords={
+                                             'lat': lat[:,0],
+                                             'lon': lon[0,:]},
+                      dims=['lat', 'lon'])  # .isel(time=0)
+    da.name = 'h'
+
+    da.to_netcdf(path=path+ 'gtopo_3km_WA.nc', mode='w',  format='NETCDF4')
+

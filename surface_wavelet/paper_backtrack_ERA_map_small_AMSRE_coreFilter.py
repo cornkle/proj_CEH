@@ -75,7 +75,7 @@ def rewrite_list(hour):
 
     df = pd.DataFrame.from_dict(dic)
     df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'SMmean', 'SMdry', 'SMwet'])
-    df.to_csv(path + "cores_gt15000km2_table_AMSRE_" + str(hour) + ".csv", na_rep=-999, index_label='id')
+    df.to_csv(path + "cores_gt15000km2_table_AMSRE_tracking_" + str(hour) + ".csv", na_rep=-999, index_label='id')
 
 
 def composite(h):
@@ -121,9 +121,11 @@ def composite(h):
 
     dic = df_concat.to_dict()
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_"+str(hour)+".p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_tracking_"+str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
+
+    rewrite_list(hour)
 
 
 
@@ -148,12 +150,12 @@ def cut_kernel(xpos, ypos, arrlist, dist):
             #     ipdb.set_trace()
 
 
-            smean = np.nanmean(kernel[dist-30:dist+30, dist:dist+100])
+            smean = np.nanmean(kernel[dist-30:dist+30, dist:dist+67])
 
         #ycirc100e, xcirc100e = ua.draw_circle(dist + 100, dist + 1, 100)  # at - 150km, draw 50km radius circle
-        wet = np.nansum(kernel[dist-30:dist+30, dist:dist+100]>=0.1)/np.sum(np.isfinite(kernel[dist-30:dist+30, dist:dist+100]))
-        dry = np.nansum(kernel[dist - 30:dist + 30, dist:dist + 100] <= -1) / np.sum(
-            np.isfinite(kernel[dist - 30:dist + 30, dist:dist + 100]))
+        wet = np.nansum(kernel[dist-30:dist+30, dist:dist+67]>=1)/np.sum(np.isfinite(kernel[dist-30:dist+30, dist:dist+67]))
+        dry = np.nansum(kernel[dist - 30:dist + 30, dist:dist + 67] <= -1) / np.sum(
+            np.isfinite(kernel[dist - 30:dist + 30, dist:dist + 67]))
 
 
         if wet >= 0.5:
