@@ -29,13 +29,17 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
+    l = [15,16,17,19,21,23]#[15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
 def composite(hour):
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
+    msgopen = pd.read_csv(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
+            hour) + '.csv')
+
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
@@ -156,7 +160,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_propagationNight_AMSRE.p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE.p", "wb"))
     print('Save file written!')
 
 
@@ -200,7 +204,7 @@ def cut_kernel_lsta(xpos, ypos, arr):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    kernel = kernel-np.nanmean(kernel)
+    kernel = kernel#-np.nanmean(kernel)
 
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
@@ -358,24 +362,36 @@ def file_loop(df):
         lon = dit.lon
 
         #initiation filter:
-        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        if os.path.isfile(initpath):
-            dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-                                names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-                                       'core_time', 'initiation_time'])
-            ddic = dic[
-                (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-                            dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
-
-            #ipdb.set_trace()
-            if len(ddic) == 0:
-                continue
-            #ipdb.set_trace()
-            if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-                continue
+        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        # if os.path.isfile(initpath):
+            # dic = pd.read_table(initpath, delim_whitespace=True, header=None,
+            #                     names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
+            #                            'core_time', 'initiation_time'])
+            # ddic = dic[
+            #     (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
+            #                 dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
+            #
+            # #ipdb.set_trace()
+            # if len(ddic) == 0:
+            #     continue
+            # #ipdb.set_trace()
+            # if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
+            #     continue
 
             # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
             #     continue
+
+            # initiation filter:
+
+            # if (dit['xdiff'] < 100) & (dit['initTime']!=2):
+            #     # & (ddic['initiation_time'].values >= 12):
+            #     print('Initiation point too close')
+            #     continue
+
+                # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
+                #
+                #     print('Initiation point too far', dit['initTime'])
+                #     continue
 
         try:
             point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)

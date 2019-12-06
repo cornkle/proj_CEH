@@ -54,7 +54,7 @@ def composite(h):
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter.p", "wb"))
 
 
 
@@ -86,7 +86,7 @@ def cut_kernel(xpos, ypos, arr, dist):
 
     #kernel[ycirc100,xcirc100] = 1000
 
-    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+31, dist+1, 17)  # at - 150km, draw 50km radius circle
     e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
     # kernel[ycirc100e, xcirc100e] = 500
 

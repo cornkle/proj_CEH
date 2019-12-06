@@ -54,22 +54,28 @@ def composite(h):
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_"+str(hour).zfill(2)+"_SlotFilter.p", "wb"))
 
 
 
-def cut_kernel(xpos, ypos, arr, dist):
+def cut_kernel(xpos, ypos, arr, dist, nbslot=False):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
+    if nbslot is not False:
+        nbsl = u_arrays.cut_kernel(nbslot, xpos, ypos, dist)
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+50]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+50])) <=0.5:
+            print('TOO FEW SLOTS!')
+            return
+
     kmean = kernel - np.nanmean(kernel)
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         return
-    ycirc30, xcirc30 = u_arrays.draw_circle(dist, dist,5) # 15km radius
+    ycirc30, xcirc30 = u_arrays.draw_circle(dist+1, dist+1,6) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
     if not np.isfinite(np.nansum(k30)):
@@ -82,7 +88,7 @@ def cut_kernel(xpos, ypos, arr, dist):
 
     #kernel[ycirc100,xcirc100] = 1000
 
-    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+31, dist+1, 17)  # at - 100/150km, draw 50km radius circle
     e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
     # kernel[ycirc100e, xcirc100e] = 500
     #
@@ -127,6 +133,7 @@ def file_loop(fi):
     gradsum = abs(grad[0]) + abs(grad[1])
 
     lsta_da = lsta['LSTA'].squeeze()
+    slot_da = lsta['NbSlot'].squeeze().values
 
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
@@ -184,8 +191,10 @@ def file_loop(fi):
         if (mhour < chour) | (np.isnan(mhour)):
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
-
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
+        except KeyError:
+            continue
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -195,7 +204,7 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            kc30, kcs100, kce100 = cut_kernel(xpos, ypos, lsta_da.values, dist)
+            kc30, kcs100, kce100 = cut_kernel(xpos, ypos, lsta_da.values, dist, nbslot=slot_da)
         except TypeError:
             continue
 
@@ -246,8 +255,10 @@ def file_loop(fi):
                 lon = fi['lon'][rx]
             except IndexError:
                 ipdb.set_trace()
-
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+            try:
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
+            except KeyError:
+                continue
             plat = point['lat'].values
             plon = point['lon'].values
 

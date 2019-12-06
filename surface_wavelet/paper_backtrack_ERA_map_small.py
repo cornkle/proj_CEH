@@ -88,7 +88,7 @@ def composite(h, eh):
         # ipdb.set_trace()
         # return
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_LSTAcpMID_storm"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_WET_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
         del dic
         print('Dumped file')
 
@@ -166,8 +166,8 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
     # if e100 <= 2.88:  ### random LSTA p90
     #     return
 
-    # if e100 >= -1.36:  ### core LSTA p25
-    #     return
+    if e100 >= -1.36:  ### core LSTA p25
+        return
     #
     # if e100 <= 1.45:  ### random LSTA p75
     #     return
@@ -210,17 +210,17 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     # except:
     #     return None
 
-    # csm = xr.open_dataset(
-    #     file + 'hourly/surface/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(2) + '_srfc.nc')
-    # csm = u_darrays.flip_lat(csm)
+    csm = xr.open_dataset(
+        file + 'hourly/surface/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(2) + '_srfc.nc')
+    csm = u_darrays.flip_lat(csm)
 
 
     pl_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.hour).zfill(2)+'_pl_rw.nc').load()
     pl_clim = u_darrays.flip_lat(pl_clim)
-    #srfc_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_'+str(t1_MCScheck.month).zfill(2)+'-'+str(t1_MCScheck.hour).zfill(2)+'_srfc_rw.nc').load()
-    # esrfc_clim = xr.open_dataset(
-    #     file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_' + str(edate.month).zfill(
-    #         2) + '-' + str(edate.hour).zfill(2) + '_srfc_rw.nc').load()
+
+    esrfc_clim = xr.open_dataset(
+        file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_' + str(edate.month).zfill(
+            2) + '-' + str(edate.hour).zfill(2) + '_srfc_rw.nc').load()
 
     ## latitude in surface is already flipped, not for pressure levels though... ?!
 
@@ -230,30 +230,29 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     pl_clim = pl_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
 
     #srfc_clim = srfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
-    #esrfc_clim = esrfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
+    esrfc_clim = esrfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
 
     cmm = cmp.sel(time=t1)
     pl_clim = pl_clim.squeeze()
 
-    #css = css.sel(time=t1_MCScheck)
-    try:
-        css = cmp.sel(time=t1_MCScheck)
-    except KeyError:
-        print('ERA MCScheck time key error')
-        return None
-    #scm = csm.sel(time=t1)
+    css = cmp.sel(time=t1_MCScheck)
+    scm = csm.sel(time=t1)
 
     #srfc_clim = srfc_clim.squeeze()
 
-    t =  cmm['t'].sel(level=925).squeeze() -pl_clim['t'].sel(level=925).squeeze() #* 1000  #
+    sh = scm['ishf'].squeeze() - esrfc_clim['ishf'].squeeze()
+    ev = scm['ie'].squeeze() - esrfc_clim['ie'].squeeze()
+    skt = scm['skt'].squeeze() - esrfc_clim['skt'].squeeze()
 
-    shear =  cmm['u'].sel(level=650).squeeze() - cmm['u'].sel(level=925).squeeze()
+    t = cmm['t'].sel(level=925).squeeze() - pl_clim['t'].sel(level=925).squeeze() #* 1000
 
-    vwind_srfc = cmm['v'].sel(level=925).squeeze() -pl_clim['v'].sel(level=925).squeeze()  #
-    uwind_srfc =  cmm['u'].sel(level=925).squeeze() -pl_clim['u'].sel(level=925).squeeze()  #
+    shear =  (cmm['u'].sel(level=650).squeeze() - cmm['u'].sel(level=925).squeeze() ) #- (pl_clim['u'].sel(level=600).squeeze() - pl_clim['u'].sel(level=925).squeeze() ) #
 
-    uwind_up =  pl_clim['u'].sel(level=650).squeeze()
-    vwind_up =  pl_clim['v'].sel(level=650).squeeze()
+    vwind_srfc = cmm['v'].sel(level=925).squeeze() - pl_clim['v'].sel(level=925).squeeze()
+    uwind_srfc = cmm['u'].sel(level=925).squeeze() - pl_clim['u'].sel(level=925).squeeze()
+
+    uwind_up = cmm['u'].sel(level=650).squeeze() #- pl_clim['u'].sel(level=650).squeeze()
+    vwind_up = cmm['v'].sel(level=650).squeeze() #- pl_clim['v'].sel(level=650).squeeze()
     #wwind_up = cmm['w'].sel(level=650).squeeze()
 
     uwind_up_ano = cmm['u'].sel(level=650).squeeze() - pl_clim['u'].sel(level=650).squeeze()
@@ -271,16 +270,9 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
                    u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
                                  pl_clim['q'].sel(level=650).squeeze())
 
-    theta_e =  theta_e_diff -theta_e_diff_clim  #
-    theta_e_low = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15, cmm['q'].sel(level=925).squeeze())\
-                  - u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
-                                 pl_clim['q'].sel(level=925).squeeze())
+    theta_e = theta_e_diff - theta_e_diff_clim
 
-    theta_e_up =  u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15, cmm['q'].sel(level=650).squeeze()) \
-                  - u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
-                                 pl_clim['q'].sel(level=650).squeeze())
-
-    q =  cmm['q'].sel(level=925).squeeze()-pl_clim['q'].sel(level=925).squeeze()
+    q = cmm['q'].sel(level=925).squeeze() - pl_clim['q'].sel(level=925).squeeze()
 
     cm['shear'] = shear
     cm['u925'] = uwind_srfc
@@ -299,15 +291,14 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     cm['u650'] = uwind_up_ano
     cm['v650'] = vwind_up_ano
-    # cm['geop'] = geop
-    # cm['geop_orig'] = cmm['z'].sel(level=650).squeeze()/g
+    cm['sh'] = sh
+    cm['ev'] = ev
+    cm['skt'] = skt
 
     cm['div'] = div *1000
     cm['q'] = q
     cm['t'] = t
     cm['theta_e'] = theta_e
-    cm['theta_e_low'] = theta_e_low
-    cm['theta_e_up'] = theta_e_up
 
     #del srfc_clim
     del pl_clim
@@ -946,7 +937,7 @@ def plot_doug_all(h, eh):
     dic = {}
     dic2 = {}
 
-    name = "ERA5_composite_cores_LSTA_500w04_15k_LSTAcpMID"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_composite_cores_LSTA_500w04_15k_WET_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
 
     def coll(dic, h, eh, year):

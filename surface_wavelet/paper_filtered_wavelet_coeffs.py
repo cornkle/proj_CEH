@@ -29,13 +29,16 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
+    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7] #15,16,
     for ll in l:
         composite(ll)
 
 def composite(hour):
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
+    msgopen = pd.read_csv(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
+            hour) + '.csv')
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
@@ -156,7 +159,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_propagation_MSGfilter.p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_ALL_-60_5slotSmall.p", "wb"))
     print('Save file written!')
 
 
@@ -178,11 +181,11 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmedian(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmean(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmedian(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -194,7 +197,7 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
     return wav_ns, wav_we, kernel[[2,4,6,8], :, :]  #[1,4,6,10]
 
 
-def cut_kernel_lsta(xpos, ypos, arr, date, lat, lon, msg=None):
+def cut_kernel_lsta(xpos, ypos, arr, msg=None, nbslot=None):
 
     dist = 100
 
@@ -212,6 +215,12 @@ def cut_kernel_lsta(xpos, ypos, arr, date, lat, lon, msg=None):
         msgkernel = u_arrays.cut_kernel(msg, xpos, ypos, dist)
     else:
         msgkernel = kernel*0
+
+    if nbslot is not False:
+        nbsl = u_arrays.cut_kernel(nbslot, xpos, ypos, dist)
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+50]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+50])) <=0.5:
+            print('TOO FEW SLOTS!')
+            return
 
 
     return kernel, msgkernel
@@ -254,6 +263,10 @@ def get_previous_hours_msg(lsta_date):
 
 def file_loop(df):
 
+    msg_latlon = np.load(cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon.npz')
+    mlon = msg_latlon['lon'].flatten()
+    mlat = msg_latlon['lat'].flatten()
+
     date = df['date'].iloc[0]
     hour = df['hour'].iloc[0]
     print('Doing day: ', date)
@@ -283,6 +296,7 @@ def file_loop(df):
     gradsum = abs(grad[0]) + abs(grad[1])
 
     lsta_da = lsta['LSTA'].squeeze()
+    slot_da = lsta['NbSlot'].squeeze().values
 
     #### remove mean from LSTA
 
@@ -359,27 +373,44 @@ def file_loop(df):
         lon = dit.lon
 
         #initiation filter:
-        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        if os.path.isfile(initpath):
-            dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-                                names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-                                       'core_time', 'initiation_time'])
-            ddic = dic[
-                (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-                            dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
+        #initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        #if os.path.isfile(initpath):
+        #     dic = pd.read_table(initpath, delim_whitespace=True, header=None,
+        #                         names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
+        #                                'core_time', 'initiation_time'])
+        #     ddic = dic[
+        #         (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
+        #                     dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
 
             #ipdb.set_trace()
-            if len(ddic) == 0:
-                continue
+            # if len(ddic) == 0:
+            #     continue
             #ipdb.set_trace()
-            if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-                continue
+            # if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
+            #     continue
 
             # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
             #     continue
 
+            ## init location filter
+
+            # min_init = lon + 3
+            # is_init = mlon[ddic['i_core']]
+            #
+            # print('Init location', is_init, 'Min location', min_init, 'init_hour', ddic['initiation_time'])
+
+            # if (dit['xdiff'] < 100) & (dit['initTime']!=2):
+            #     print('Initiation point too close')
+            #     continue
+
+            # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
+            #     print('Initiation point too far', dit['initTime'])
+            #     continue
+
+
+
         try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
             continue
         #ipdb.set_trace()
@@ -392,14 +423,14 @@ def file_loop(df):
         ypos = int(ypos[0])
 
         try:
-            lsta_kernel, msg_kernel = cut_kernel_lsta(xpos, ypos, wav_input, daybefore, plon, plat, msg=probsm_on_lsta)
+            lsta_kernel, msg_kernel = cut_kernel_lsta(xpos, ypos, wav_input,msg=False, nbslot=slot_da)
         except TypeError:
             print('Kernel error')
             continue
         dist=100
-        if np.nansum(msg_kernel[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
-            print('Meteosat MCS continue')
-            continue
+        # if np.nansum(msg_kernel[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
+        #     print('Meteosat MCS continue')
+        #     continue
 
 
         try:
@@ -437,7 +468,7 @@ def file_loop(df):
         for ry, rx in zip(randy, randx):
 
             try:
-                point = lsta_da.sel(lat=ry, lon=rx, method='nearest', tolerance=0.5)
+                point = lsta_da.sel(lat=ry, lon=rx, method='nearest', tolerance=0.04)
             except KeyError:
                 continue
             plat = point['lat'].values

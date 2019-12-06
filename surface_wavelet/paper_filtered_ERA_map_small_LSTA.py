@@ -82,9 +82,15 @@ def composite(h, eh):
 
 
 
-def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, lsta_prev=False):
+def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, lsta_prev=False, nbslot=False):
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
+
+    if nbslot is not False:
+        nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+50]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+50])) <=0.5:
+            print('TOO FEW SLOTS!')
+            return
 
     vdic = {}
 
@@ -138,9 +144,9 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         plsta = np.zeros_like(kernel)
         lcnt = np.zeros_like(kernel)
 
-    # kmean = kernel - np.nanmean(kernel)
-    # ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    # e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+    kmean = kernel #- np.nanmean(kernel)
+    ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
 
     # if e100 >= -3.5:   ### random LSTA p10
     #     return
@@ -154,8 +160,8 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
     # if e100 <= 2.88:  ### random LSTA p90
     #     return
 
-    # if e100 >= -1.36:  ### core LSTA p25
-    #     return
+    if e100 >= -1.36:  ### core LSTA p25
+        return
     #
     # if e100 <= 1.45:  ### random LSTA p75
     #     return
@@ -435,6 +441,8 @@ def file_loop(df):
 
 
     lsta_da = lsta['LSTA'].squeeze()
+    slot_da = lsta['NbSlot'].squeeze().values
+
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
         return None
@@ -495,25 +503,25 @@ def file_loop(df):
         lat = dit.lat
         lon = dit.lon
 
-        #initiation filter:
-        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        if os.path.isfile(initpath):
-            dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-                                names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-                                       'core_time', 'initiation_time'])
-            ddic = dic[
-                (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-                            dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
-
-            #ipdb.set_trace()
-            if len(ddic) == 0:
-                continue
-            #ipdb.set_trace()
-            if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-                continue
-
-            # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
-            #     continue
+        # #initiation filter:
+        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        # if os.path.isfile(initpath):
+        #     dic = pd.read_table(initpath, delim_whitespace=True, header=None,
+        #                         names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
+        #                                'core_time', 'initiation_time'])
+        #     ddic = dic[
+        #         (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
+        #                     dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
+        #
+        #     #ipdb.set_trace()
+        #     if len(ddic) == 0:
+        #         continue
+        #     #ipdb.set_trace()
+        #     if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
+        #         continue
+        #
+        #     # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
+        #     #     continue
 
 
         try:
@@ -528,7 +536,7 @@ def file_loop(df):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, cnt, cntp, vdic, probm, cntm, probcm, cntc ,plsta, lcnt = cut_kernel(xpos, ypos, lsta_da, dist, probs=probs_on_lsta, probs2=probsm_on_lsta, probs3=probscm_on_lsta, lsta_prev=prev_lsta_da)
+            kernel2, cnt, cntp, vdic, probm, cntm, probcm, cntc ,plsta, lcnt = cut_kernel(xpos, ypos, lsta_da, dist, probs=probs_on_lsta, probs2=probsm_on_lsta, probs3=probscm_on_lsta, lsta_prev=prev_lsta_da, nbslot=slot_da)
         except TypeError:
             continue
 

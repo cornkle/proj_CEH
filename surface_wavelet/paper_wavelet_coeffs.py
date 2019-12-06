@@ -27,7 +27,7 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
+    l = [17, 15,16,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
@@ -123,21 +123,21 @@ def composite(hour):
         #     dic[l].append(np.nanstd(dic[l][0], axis=(0,2)))
         #     dic[l].append(np.nanstd(dic[l][1], axis=(0,2)))
 
-    # for l in keys:
-    #     if l == 'scales':
-    #         continue
-    #     if 'pos' in l:
-    #         (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-    #         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-    #     else:
-    #         (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
-    #         try:
-    #             (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
-    #         except IndexError:
-    #             continue
+    for l in keys:
+        if l == 'scales':
+            continue
+        if 'pos' in l:
+            (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
+            (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
+        else:
+            (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
+            try:
+                (dic[l])[1] = np.nansum((dic[l])[1], axis=0)
+            except IndexError:
+                continue
 
 
-    pkl.dump(dic, open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_randomTest.p", "wb"))
+    pkl.dump(dic, open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_ALL_3slot.p", "wb"))
     print('Save file written!')
 
 
@@ -159,11 +159,12 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmedian(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmean(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmedian(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
+
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -175,17 +176,24 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
     return wav_ns, wav_we, kernel[[2,4,6,8], :, :]  #[1,4,6,10]
 
 
-def cut_kernel_lsta(xpos, ypos, arr, date, lat, lon):
+def cut_kernel_lsta(xpos, ypos, arr, date, lat, lon, nbslot=False):
 
     dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
+    kernel = kernel - np.nanmean(kernel)
 
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         return
+
+    if nbslot is not False:
+        nbsl = u_arrays.cut_kernel(nbslot, xpos, ypos, dist)
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67])) <=0.5:
+            print('TOO FEW SLOTS!')
+            return
 
     return kernel
 
@@ -223,6 +231,7 @@ def file_loop(fi):
     gradsum = abs(grad[0]) + abs(grad[1])
 
     lsta_da = lsta['LSTA'].squeeze()
+    slot_da = lsta['NbSlot'].squeeze().values
 
     #### remove mean from LSTA
 
@@ -336,8 +345,10 @@ def file_loop(fi):
         if (mhour < chour) | (np.isnan(mhour)):
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
-
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
+        except KeyError:
+            continue
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -347,16 +358,18 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            wavpos_ns, wavpos_we, vvkernel = cut_kernel(xpos, ypos, wavarr, daybefore, plon, plat, rotate=False)
+            lsta_kernel = cut_kernel_lsta(xpos, ypos, wav_input, daybefore, plon, plat, nbslot=slot_da)
         except TypeError:
             print('Kernel error')
             continue
 
         try:
-            lsta_kernel = cut_kernel_lsta(xpos, ypos, wav_input, daybefore, plon, plat)
+            wavpos_ns, wavpos_we, vvkernel = cut_kernel(xpos, ypos, wavarr, daybefore, plon, plat, rotate=False)
         except TypeError:
             print('Kernel error')
             continue
+
+
 
         nspos.append(wavpos_ns)  # north-south wavelet
         wepos.append(wavpos_we)  # west-east wavelet
@@ -400,8 +413,10 @@ def file_loop(fi):
                 lon = fi['lon'][rx]
             except IndexError:
                 ipdb.set_trace()
-
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+            try:
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
+            except KeyError:
+                continue
             plat = point['lat'].values
             plon = point['lon'].values
 

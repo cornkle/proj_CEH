@@ -16,6 +16,7 @@ import salem
 from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
 from scipy.interpolate import griddata
 import multiprocessing
+import os
 import glob
 
 import pickle as pkl
@@ -241,6 +242,8 @@ def file_loop(df):
 
         plat = point['lat'].values
         plon = point['lon'].values
+
+
 
         xpos = np.where((smlist[0])['lon'].values == plon)
         xpos = int(xpos[0])
