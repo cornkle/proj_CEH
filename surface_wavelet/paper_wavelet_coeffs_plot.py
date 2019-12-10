@@ -54,7 +54,7 @@ def merge():
             pkl.dump(dic, open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_15000_-60_merge_median.p", "wb"))
 
 def plot(hour):
-    name = 'UTC_15000_-60_AMSRE'
+    name = 'UTC_15000_-60_AMSRE'#'UTC_15000_-60_AMSRE'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
@@ -242,7 +242,7 @@ def plot_diurnal():
 def plot_map(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_ALL_-60_5slotSmall.p", "rb"))
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -324,7 +324,7 @@ def plot_map(hour):
 
 
     plt.tight_layout()
-    plt.savefig(path + '/initVSprop/wcoeff_MAPS_'+str(hour)+'.png')
+    plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
     plt.show()
 
 def plot_all():
@@ -499,7 +499,7 @@ def plot_gewex2():
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
                      linewidth=0.25)
 
-        plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a, colors='k', levels=levels, extend='both', linewidths=0.5)
+        #plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, scales, a, colors='k', levels=levels, extend='both', linewidths=0.5)
         plt.axvline(x=0, linestyle='dashed', color='blue')
         ax.set_xticks(np.array([-3, -2, -1, 0, 1, 2, 3]) * 100)
 
@@ -521,8 +521,8 @@ def plot_gewex2():
         plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, wemask, colors='none', hatches='.',
                      levels=[0.5, 1], linewidth=0.1)
 
-        plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, scales, b, colors='k', levels=levels, extend='both',
-                    linewidths=0.5)
+        #plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, scales, b, colors='k', levels=levels, extend='both',
+        #            linewidths=0.5)
 
         plt.axvline(x=0, linestyle='dashed', color='blue')
 
@@ -549,7 +549,7 @@ def plot_gewex2():
 
 
     plt.show()
-    plt.savefig(path + 'initVSprop/' + name + '_CROSS_DIURNAL.png')
+    plt.savefig(path + 'initVSprop/' + name + '_CROSS_DIURNAL_nocontour.png')
 
 
 def paper_plot():

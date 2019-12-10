@@ -30,8 +30,8 @@ def diurnal_loop():
 
 def plot(hour):
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_corrected_SouthBox.p", "rb"))
-
+    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter_+100km_validCheck.p", "rb"))
+    #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
 
     for k in dic.keys():
         coll = []
@@ -78,6 +78,104 @@ def plot(hour):
     plt.plot(bin_centre, cumulative_random, label='random')
     plt.axvline(0,ymin=0, ymax=1, linestyle='dashed', color='k')
     plt.legend()
+
+
+def plot_double(hour):
+
+    tags = [('c30', 'r30', 'Local - 30km scale'), ('e100', 're100', '100km upstream - 100km scale')]
+    f = plt.figure(figsize=(9,6), dpi=200)
+    for id,h in enumerate(hour):
+        path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+        dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_"+str(h).zfill(2)+"_corrected_SouthBox.p", "rb"))
+        #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
+
+        for k in dic.keys():
+            coll = []
+            for ll in dic[k]:
+                coll.extend(ll)
+            dic[k] = coll
+        print(dic.keys())
+
+        cinput = np.array(dic[tags[id][0]])
+        rinput = np.array(dic[tags[id][1]])
+
+        cinput = cinput[np.isfinite(cinput)]
+        rinput = rinput[np.isfinite(rinput)]
+
+        nbpoint, pointcount, bins = u_stat.histo_frequency(cinput, bins=np.arange(-15,15,1))
+        nball, allcount, bins = u_stat.histo_frequency(rinput, bins=np.arange(-15, 15, 1))
+        print(bins)
+        bin_centre = bins[0:-1] + ((bins[1::] - bins[0:-1]) / 2)
+        bin_edge = bins[0:-1]
+        width = bins[1::] - bins[0:-1]
+
+
+        ax = f.add_subplot(1,2,id+1)
+
+        # nball, bins,v = plt.hist(cinput, bins=np.arange(-7,7,0.5), normed=True, edgecolor='k', color=None, alpha=0.3)
+        # nbpoint, bins, v = plt.hist(rinput, bins=np.arange(-7,7,0.5), normed=True, edgecolor='k', color=None, alpha=0.3)
+        # plt.xlabel('Local wavelet coefficient, 30km')
+
+        ax.bar(bin_edge, nbpoint, label='core', edgecolor='k', alpha=0.5, align='edge', width=width)
+        ax.bar(bin_edge, nball, label='core', edgecolor='k', alpha=0.5, align='edge', width=width)
+        plt.ylabel('Frequency')
+        stri = (np.sum(cinput <= np.percentile(rinput, 10)) / cinput.size * 100).round(2)
+        plt.title(str(hour[0])+'UTC: '+tags[id][2])
+        plt.axvline(x=0, color='k', linewidth=2)
+        stri = (np.sum(cinput <= np.percentile(rinput, 50)) / cinput.size * 100).round(2)
+        print(tags[id][2])
+
+    plt.tight_layout()
+    plt.savefig(path + '/initVSprop/AMSRE_histo_perHOUR_'+str(hour[0])+'.png')
+
+
+def plot_double_relative(hour):
+
+    tags = [('c30', 'r30', 'Local - 30km scale'), ('e100', 're100', '100km upstream - 100km scale')]
+    f = plt.figure(figsize=(9,6), dpi=200)
+    for id,h in enumerate(hour):
+        path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+        dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_"+str(h).zfill(2)+"_corrected_SouthBox.p", "rb"))
+        #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
+
+        for k in dic.keys():
+            coll = []
+            for ll in dic[k]:
+                coll.extend(ll)
+            dic[k] = coll
+        print(dic.keys())
+
+        cinput = np.array(dic[tags[id][0]])
+        rinput = np.array(dic[tags[id][1]])
+
+        cinput = cinput[np.isfinite(cinput)]
+        rinput = rinput[np.isfinite(rinput)]
+
+        nbpoint, pointcount, bins = u_stat.histo_frequency(cinput, bins=np.arange(-15,15,1))
+        nball, allcount, bins = u_stat.histo_frequency(rinput, bins=np.arange(-15, 15, 1))
+        print(bins)
+        bin_centre = bins[0:-1] + ((bins[1::] - bins[0:-1]) / 2)
+        bin_edge = bins[0:-1]
+        width = bins[1::] - bins[0:-1]
+
+
+        ax = f.add_subplot(1,2,id+1)
+
+        # nball, bins,v = plt.hist(cinput, bins=np.arange(-7,7,0.5), normed=True, edgecolor='k', color=None, alpha=0.3)
+        # nbpoint, bins, v = plt.hist(rinput, bins=np.arange(-7,7,0.5), normed=True, edgecolor='k', color=None, alpha=0.3)
+        # plt.xlabel('Local wavelet coefficient, 30km')
+
+        ax.bar(bin_edge, nbpoint, label='core', edgecolor='k', alpha=0.5, align='edge', width=width)
+        ax.bar(bin_edge, nball, label='core', edgecolor='k', alpha=0.5, align='edge', width=width)
+        plt.ylabel('Frequency')
+        stri = (np.sum(cinput <= np.percentile(rinput, 10)) / cinput.size * 100).round(2)
+        plt.title(str(hour[0])+'UTC: '+tags[id][2])
+        plt.axvline(x=0, color='k', linewidth=2)
+        stri = (np.sum(cinput <= np.percentile(rinput, 50)) / cinput.size * 100).round(2)
+        print(tags[id][2])
+
+    plt.tight_layout()
+    plt.savefig(path + '/initVSprop/AMSRE_histo_perHOUR_'+str(hour[0])+'.png')
 
 
 
@@ -376,7 +474,7 @@ def plot_diurn_triple():
 def plot_diurn_double():
 
 
-    loop = [('c30', 'r30','Co-located, 30km length scale'), ('e100', 're100', '150km upstream, 100km length scale')]
+    loop = [('c30', 'r30','Co-located, 30km length scale'), ('e100', 're100', '100km upstream, 100km length scale')]
     f = plt.figure(figsize=(5,8), dpi=200)
     for ids, input in enumerate(loop):
         rrange = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]#, 6,7,8,9,10]
@@ -391,7 +489,9 @@ def plot_diurn_double():
 
         for h in rrange:
             path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-            dic = pkl.load(open(path + "LSTA_histograms_AMSRE_"+str(h).zfill(2)+"_corrected_SouthBox.p", "rb"))
+            dic = pkl.load(open(path + "LSTA_histograms_AMSRE_"+str(h).zfill(2)+"SlotFilter_+150km_validCheck.p", "rb"))
+            dic = pkl.load(
+                open(path + "LSTA_histograms_AMSRE_" + str(h).zfill(2) + "_corrected_SouthBox.p", "rb"))
             print('Open')
 
             for k in dic.keys():
@@ -434,10 +534,20 @@ def plot_diurn_double():
             err10_low.append( percmin - (low10 - p*0.01) / (p*0.01) *100 )
 
         ax = f.add_subplot(2,1,ids+1)
-        ax.bar(np.arange(0,len(rrange)), percmmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.5) #
+        ax.bar(np.arange(0,len(rrange)), percmmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k') #
         ax.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k')
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
+        plt.ylim(-75,150)
+        lw = 0.5
+        plt.axhline(y=-50, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=25, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=50, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=75, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=100, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=125, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=0, linewidth=1, color='k', linestyle='solid', zorder=0)
 
         ax.set_xlabel('Hour')
 
@@ -445,7 +555,7 @@ def plot_diurn_double():
         plt.legend()
 
         ax1 = ax.twiny()
-        ax1.bar(np.arange(0, len(rrange)), percmmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.5)
+        ax1.bar(np.arange(0, len(rrange)), percmmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k')
         ax1.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k')
         ax1.set_xticks(np.arange(0,len(rrange)))
         ax1.set_xticklabels(nbmin, rotation=45)
@@ -457,7 +567,107 @@ def plot_diurn_double():
     #plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
     #             textcoords='offset points')  # transform=ax.transAxes,
     plt.show()
-    plt.savefig(path + '/paper/AMSRE_core_probability_double.png')
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_DOUBLE_100km.png')
+
+
+def plot_diurn_double_relative():
+
+
+    loop = [('c30', 'r30','Co-located, 30km length scale'), ('e100', 're100', '100km upstream, 100km length scale')]
+    f = plt.figure(figsize=(5,8), dpi=200)
+    for ids, input in enumerate(loop):
+        rrange = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]#, 6,7,8,9,10]
+        percmmax = []
+        percmmin = []
+        nbmax = []
+        nbmin = []
+        err90_up = []
+        err90_low = []
+        err10_up = []
+        err10_low = []
+
+        for h in rrange:
+            path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+            #dic = pkl.load(open(path + "LSTA_histograms_AMSRE_"+str(h).zfill(2)+"SlotFilter_+150km_validCheck.p", "rb"))
+            dic = pkl.load(
+                open(path + "LSTA_histograms_AMSRE_" + str(h).zfill(2) + "_corrected_SouthBox.p", "rb"))
+            print('Open')
+
+            for k in dic.keys():
+                coll = []
+                for ll in dic[k]:
+                    coll.extend(ll)
+                dic[k] = coll
+
+            cinput = np.array(dic[input[0]])
+            rinput = np.array(dic[input[1]])
+            point = cinput[np.isfinite(cinput)]
+            all = rinput[np.isfinite(rinput)]
+
+            p = 75
+            pprob = np.sum(point > np.percentile(all, p))
+            prob = pprob / point.size
+
+            percmax = prob  *100 # percentage of cells in warmest 25% of LSTA
+            percmmax.append(percmax)
+            nbmax.append(point > np.percentile(all, p))
+
+            low90, upp90 = proportion_confint(pprob, point.size)
+
+            err90_up.append((upp90 *100) - percmax)
+            err90_low.append(percmax -(low90 * 100) )
+
+            p = 25
+            pprob = np.sum(point < np.percentile(all, p))
+            prob = pprob / point.size
+            #ipdb.set_trace()
+            percmin =  prob  *100 # percentage of cells in warmest 25% of LSTA
+
+            print(h, '10prob', prob)
+            print(h, 'percent increase', (prob-0.1)/0.1*100)
+
+            percmmin.append(percmin)
+            nbmin.append(len(point))
+            low10, upp10 = proportion_confint(pprob, point.size)
+
+            err10_up.append((upp10 *100) - percmin)
+            err10_low.append( percmin - (low10 *100 ))
+
+        ax = f.add_subplot(2,1,ids+1)
+        ax.bar(np.arange(0,len(rrange)), percmmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='darkorange') #
+        ax.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax.set_xticks(np.arange(0, len(rrange)))
+        ax.set_xticklabels(rrange)
+        plt.ylim(0,60)
+        lw = 0.5
+        plt.axhline(y=-50, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=25, linewidth=3, color='k', linestyle='solid', zorder=99)
+        plt.axhline(y=50, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=75, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=100, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=125, linewidth=lw, color='k', linestyle='dashed', zorder=0)
+        plt.axhline(y=0, linewidth=1, color='k', linestyle='solid', zorder=0)
+
+        ax.set_xlabel('Hour')
+
+        plt.ylabel('Probability (%)')
+        plt.legend()
+
+        ax1 = ax.twiny()
+        ax1.bar(np.arange(0, len(rrange)), percmmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.8, color='darkorange')
+        ax1.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax1.set_xticks(np.arange(0,len(rrange)))
+        ax1.set_xticklabels(nbmin, rotation=45)
+        ax1.set_xlabel('Number of convective cores')
+
+        plt.title(input[2])
+
+    plt.tight_layout()
+    #plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    #             textcoords='offset points')  # transform=ax.transAxes,
+    plt.show()
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_100km.png')
 
 
 def plot_scatter():

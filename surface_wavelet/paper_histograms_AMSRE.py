@@ -23,7 +23,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for h in [0,1,2,3,4,5,15,16,17,18,19,20,21,22,23]:  #range(0,24)
+    for h in [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]:  #range(0,24)
 
         composite(h)
 
@@ -54,7 +54,7 @@ def composite(h):
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter_+150km_validCheck.p", "wb"))
 
 
 
@@ -72,8 +72,8 @@ def cut_kernel(xpos, ypos, arr, dist):
     ycirc30, xcirc30 = u_arrays.draw_circle(dist+1, dist+1,6) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
-    if not np.isfinite(np.nansum(k30)):
-        return
+    # if np.sum(np.isfinite(k30)) / k30.size < 0.25:
+    #     return
 
     # if not np.sum(np.isfinite(kmean))/kmean.size >=0.1:
     #     return
@@ -86,8 +86,12 @@ def cut_kernel(xpos, ypos, arr, dist):
 
     #kernel[ycirc100,xcirc100] = 1000
 
-    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+31, dist+1, 17)  # at - 150km, draw 50km radius circle
+    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+
+
     e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+    if np.sum(np.isfinite(e100)) / e100.size < 0.1:
+        return
     # kernel[ycirc100e, xcirc100e] = 500
 
     #

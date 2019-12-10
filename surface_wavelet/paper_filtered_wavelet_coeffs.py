@@ -35,10 +35,10 @@ def run_hours():
 
 def composite(hour):
 
-    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
-    msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
-            hour) + '.csv')
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
+    # msgopen = pd.read_csv(
+    #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
+    #         hour) + '.csv')
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
@@ -159,7 +159,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_ALL_-60_5slotSmall.p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_initiation_-60_5slotSmall.p", "wb"))
     print('Save file written!')
 
 
@@ -373,8 +373,8 @@ def file_loop(df):
         lon = dit.lon
 
         #initiation filter:
-        #initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        #if os.path.isfile(initpath):
+        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        if os.path.isfile(initpath):
         #     dic = pd.read_table(initpath, delim_whitespace=True, header=None,
         #                         names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
         #                                'core_time', 'initiation_time'])
@@ -403,9 +403,9 @@ def file_loop(df):
             #     print('Initiation point too close')
             #     continue
 
-            # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
-            #     print('Initiation point too far', dit['initTime'])
-            #     continue
+            if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
+                print('Initiation point too far', dit['initTime'])
+                continue
 
 
 

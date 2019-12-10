@@ -87,7 +87,7 @@ def plot(hour):
     print('Random sample 75 centile', np.percentile(cinput, 75))
     print('Random sample 10 centile', np.percentile(cinput, 25))
 
-
+    plt.savefig(path + '/initVSprop/LSTA_histPerHour_'+str(hour)+'_SlotFilter.png')
 
     #return nball, nbpoint, bins
 
@@ -104,11 +104,11 @@ def plot_diurn():
     err10_low = []
 
 
-    rrange = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5, 6,7,8,9,10]
+    rrange = [15,16,17,18,19,20,21,22,23,0,1,2]#,3,4,5, 6,7,8,9,10]
 
     for h in rrange:
         path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-        dic = pkl.load(open(path + "/LSTA_histograms_" + str(h).zfill(2) + "_corrected.p", "rb"))
+        dic = pkl.load(open(path + "/LSTA_histograms_" + str(h).zfill(2) + "_SlotFilter.p", "rb"))
         print('Open')
 
         for k in dic.keys():
@@ -184,7 +184,7 @@ def plot_diurn_triple():
     loop = [('c30', 'r30','Co-located, 30km length scale'), ('e100', 're100', '150km upstream, 100km length scale'), ('s100','rs100', '150km south, 100km length scale')]
     f = plt.figure(figsize=(5,10), dpi=200)
     for ids, input in enumerate(loop):
-        rrange = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]#, 6,7,8,9,10]
+        rrange = [15,16,17,18,19,20,21,22,23,0,1,2]#,3,4,5]#, 6,7,8,9,10]
         percmmax = []
         percmmin = []
         nbmax = []
@@ -196,7 +196,7 @@ def plot_diurn_triple():
 
         for h in rrange:
             path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-            dic = pkl.load(open(path + "/LSTA_histograms_" + str(h).zfill(2) + "_corrected.p", "rb"))
+            dic = pkl.load(open(path + "/LSTA_histograms_" + str(h).zfill(2) + "_SlotFilter.p", "rb"))
             print('Open')
 
             for k in dic.keys():
@@ -259,7 +259,7 @@ def plot_diurn_triple():
     plt.tight_layout()
     #plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
     #             textcoords='offset points')  # transform=ax.transAxes,
-    plt.savefig(path + '/paper/LSTA_core_probability_triple.png')
+    plt.savefig(path + '/initVSprop/LSTA_core_probability_triple_SlotFilter.png')
 
 
 def plot_scatter():

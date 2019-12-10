@@ -62,7 +62,7 @@ def eh_loop():
 def rewrite_list(hour):
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
     dic = pkl.load(
-        open(path + "cores_gt15000km2_table_AMSRE_" + str(hour) + ".p", "rb"))
+        open(path + "cores_gt15000km2_table_AMSRE_tracking_" + str(hour) + ".p", "rb"))
     # new = dic.copy()
     # for k in new.keys():
     #     new[k] = []
@@ -75,7 +75,7 @@ def rewrite_list(hour):
     # pkl.dump(new, open(path + "cores_gt15000km2_table_1640_580_" + str(hour) + "_new.p", "wb"))
 
     df = pd.DataFrame.from_dict(dic)
-    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'SMmean', 'SMdry', 'SMwet'])
+    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1'])
     df.to_csv(path + "cores_gt15000km2_table_AMSRE_tracking_" + str(hour) + ".csv", na_rep=-999, index_label='id')
 
 
@@ -93,9 +93,12 @@ def composite(h):
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
     msg.sort_values(by='date')
-    msg['SMmean'] = np.nan
-    msg['SMdry'] = np.nan
-    msg['SMwet'] = np.nan
+    msg['SMmean0'] = np.nan
+    msg['SMdry0'] = np.nan
+    msg['SMwet0'] = np.nan
+    msg['SMmean-1'] = np.nan
+    msg['SMdry-1'] = np.nan
+    msg['SMwet-1'] = np.nan
 
     chunk, chunk_ind, chunk_count = np.unique(msg.date, return_index=True, return_counts=True)
 
@@ -122,6 +125,8 @@ def composite(h):
 
     dic = df_concat.to_dict()
 
+    #ipdb.set_trace()
+
     pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_tracking_"+str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
@@ -132,9 +137,9 @@ def composite(h):
 
 def cut_kernel(xpos, ypos, arrlist, dist):
 
-    wetflag = 0
-    dryflag = 0
-    smean = np.nan
+    wetflag = np.array([0,0])
+    dryflag = np.array([0,0])
+    smean = np.array([np.nan, np.nan])
 
     for ids, arr in enumerate(arrlist):
 
@@ -146,24 +151,24 @@ def cut_kernel(xpos, ypos, arrlist, dist):
 
         if ids == 0:
             if (np.sum(np.isfinite(kernel)) < 2):
-                return np.nan, np.nan, np.nan
-            # if (np.sum(np.isfinite(kernel)) > 2):
-            #     ipdb.set_trace()
+                return smean, wetflag, dryflag
+        # if (np.sum(np.isfinite(kernel)) > 2):
+        #     ipdb.set_trace()
 
 
-            smean = np.nanmean(kernel[dist-30:dist+30, dist:dist+67])
+        outmean = np.nanmean(kernel[dist-30:dist+30, dist:dist+100])
+        smean[ids] = outmean
 
         #ycirc100e, xcirc100e = ua.draw_circle(dist + 100, dist + 1, 100)  # at - 150km, draw 50km radius circle
-        wet = np.nansum(kernel[dist-30:dist+30, dist:dist+67]>=1)/np.sum(np.isfinite(kernel[dist-30:dist+30, dist:dist+67]))
-        dry = np.nansum(kernel[dist - 30:dist + 30, dist:dist + 67] <= -1) / np.sum(
-            np.isfinite(kernel[dist - 30:dist + 30, dist:dist + 67]))
-
+        wet = np.nansum(kernel[dist-30:dist+30, dist:dist+100]>=0.1)/np.sum(np.isfinite(kernel[dist-30:dist+30, dist:dist+100]))
+        dry = np.nansum(kernel[dist - 30:dist + 30, dist:dist + 100] <= -1) / np.sum(
+            np.isfinite(kernel[dist - 30:dist + 30, dist:dist + 100]))
 
         if wet >= 0.5:
-            wetflag +=1
+            wetflag[ids] +=1
 
         if dry >= 0.5:
-            dryflag +=1
+            dryflag[ids] +=1
 
     return smean, wetflag, dryflag
 
@@ -188,7 +193,8 @@ def file_loop(df):
 
     fdate = str(lsta_date.year) + str(lsta_date.month).zfill(2) + str(lsta_date.day).zfill(2)
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7.8, 23.2))
     ttopo = topo['h']
     #
     grad = np.gradient(ttopo.values)
@@ -209,7 +215,8 @@ def file_loop(df):
                 return None
         print('Doing '+ sp)
 
-        lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+        lsta = lsta.sel(lon=slice(-13, 13), lat=slice(8, 23))
+        #lsta = lsta.sel(lon=slice(-11, 11), lat=slice(8, 23))
 
         lsta_da = lsta['SM'].squeeze()
 
@@ -238,8 +245,10 @@ def file_loop(df):
 
     for dids, dit in df.iterrows():
 
-        point = lsta_da.sel(lat=dit.lat, lon=dit.lon, method='nearest')
-
+        try:
+            point = lsta_da.sel(lat=dit.lat, lon=dit.lon, method='nearest', tolerance=0.04)
+        except:
+            ipdb.set_trace()
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -249,16 +258,24 @@ def file_loop(df):
         xpos = int(xpos[0])
         ypos = np.where((smlist[0])['lat'].values == plat)
         ypos = int(ypos[0])
+
         try:
             smmean, wetflag, dryflag = cut_kernel(xpos, ypos, smlist, dist)
         except TypeError:
+            print('TypeError')
             continue
 
         # if np.isfinite(smmean):
         #     ipdb.set_trace()
-
-        df.loc[dids, 'SMmean'] = smmean
-        df.loc[dids,'SMdry'] = dryflag
-        df.loc[dids,'SMwet'] = wetflag
+        try:
+            df.loc[dids, 'SMmean0'] = smmean[0]
+        except TypeError:
+            ipdb.set_trace()
+        df.loc[dids,'SMdry0'] = dryflag[0]
+        df.loc[dids,'SMwet0'] = wetflag[0]
+        df.loc[dids, 'SMmean-1'] = smmean[1]
+        df.loc[dids, 'SMdry-1'] = dryflag[1]
+        df.loc[dids, 'SMwet-1'] = wetflag[1]
+    #ipdb.set_trace()
 
     return df

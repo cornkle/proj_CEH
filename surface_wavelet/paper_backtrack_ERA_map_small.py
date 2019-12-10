@@ -757,8 +757,155 @@ def plot_doug_timeseries():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_"+str(h).zfill(2)+'_timeseries_short.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    #plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_"+str(h).zfill(2)+'_timeseries_short.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     #plt.close()
+
+def plot_timeseries_small():
+
+    x = len(list(range(-38, 4, 3)))
+    y = 401
+
+    # outticks = list(range(-30, 1, 5))
+    # ranges = np.arange(-30,1,3)
+    #
+    # outticks = [12,17,22,3,8,13,18]
+    #outticks = [6, 11, 16, 21, 2, 7, 12, 17]
+    ranges = np.arange(-38, 4, 3)
+
+    h = 17
+
+    outdic = {}
+    dummyfile = glob.glob(
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_*_small_cores.p")
+    dummy = pkl.load(open(dummyfile[0], "rb"))
+
+    for k in dummy.keys():
+        outdic[k] = np.zeros((y, x))
+
+    for ids, eh in enumerate(range(-38, 4, 3)):
+
+        dic = {}
+
+        def coll(dic, h, eh, year):
+            print(h)
+            core = pkl.load(open(
+                cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_" + str(
+                    eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + "_small_cores.p", "rb"))
+
+            for id, k in enumerate(core.keys()):
+                try:
+                    dic[k] = dic[k] + core[k]
+                except KeyError:
+                    dic[k] = core[k]
+
+        for y in range(2006, 2011):
+            coll(dic, h, eh, y)
+
+        for k in dic.keys():
+            outdic[k][:, ids] = dic[k][:, 190:211].mean(axis=1)
+    #
+    # pos = np.isclose(outdic['v925'], np.zeros_like(outdic['v925']), atol=0.7)
+    # #ipdb.set_trace()
+    # ppos = np.where(pos)
+    #
+    # for pp in ppos:
+    #     if pp[0] < 150:
+    #         outdic['v925'][pp] = np.nan
+
+
+    # plt.figure()
+    # plt.pcolormesh(outdic['v925'], vmin=0)
+    # plt.colorbar()
+
+    outdic['v925'][50:90,5:9] = np.nan
+
+
+    print(outdic.keys())
+    f = plt.figure(figsize=(6, 8), dpi=200)
+
+
+    ax = f.add_subplot(211)
+    plt.contourf(ranges, np.arange(401), (outdic['t']) / outdic['cntp'], extend='both', cmap='RdBu_r',
+                levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8])
+    plt.colorbar(label=r'K')
+    plt.contour(ranges, np.arange(401), (outdic['t']) / outdic['cntp'], extend='both', colors='k', linewidths=0.1,
+                 levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8])
+
+    contours = plt.contour(ranges, np.arange(401), (outdic['u650'] / outdic['cntp']), extend='both', colors='k',
+                           levels=np.arange(-1,0,0.2), linewidths=1)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+
+
+    contours = plt.contour(ranges, np.arange(401),(outdic['v925']/ outdic['cntp']), extend='both',colors='k', linewidths=5, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    contours = plt.contour(ranges, np.arange(401),(outdic['v925_orig']/ outdic['cntp']), extend='both',colors='k', linewidths=5, levels=[-50,0,50])
+
+    contours = plt.contour(ranges, np.arange(401),(outdic['v925']/ outdic['cntp']), extend='both',colors='k', linewidths=3, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    contours = plt.contour(ranges, np.arange(401),(outdic['v925_orig']/ outdic['cntp']), extend='both',colors='r', linewidths=3, levels=[-50,0,50])
+
+    contours = plt.contour(ranges, np.arange(401),(outdic['v650_orig']/ outdic['cntp']), extend='both',colors=['r','r','white','b', 'b'], linewidths=0.5, levels=[-2,-1,0,0.25,0.5])  #np.arange(-15,-10,0.5)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+
+    plt.axvline(x=-5, color='slategrey')
+    plt.axvline(x=-29, color='slategrey')
+    plt.axhline(y=200, color='slategrey')
+    plt.plot(-5, 200, 'ko')
+    plt.plot(0, 200, 'ro')
+
+    plt.text(0.02,0.1, 'ITD 0-line', color='red', fontsize=14, transform=ax.transAxes)
+    plt.text(0.02, 0.03, 'v-wind anomaly 0-line', color='k', fontsize=14, transform=ax.transAxes)
+
+
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    # ax.set_xticklabels(outticks)
+
+    plt.title('Shading:t-anomaly, contours: 650hpa u-wind anomaly')
+    #plt.hlines(200, xmin=ranges[0], xmax=ranges[-1], linewidth=1)
+    plt.xlabel('Hour relative to t0 [1700UTC]')
+    plt.ylabel('North-South distance from core (km)')
+
+    ax = f.add_subplot(212)
+
+
+    plt.contourf(ranges, np.arange(401), (outdic['q']) * 1000 / outdic['cntp'], levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+                 cmap='RdBu', extend='both')
+    plt.colorbar(label=r'g kg$^{-1}$')
+
+    plt.contour(ranges, np.arange(401), (outdic['q']) * 1000 / outdic['cntp'], levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+     colors = 'k', linewidths = 0.1)
+
+    contours = plt.contour(ranges, np.arange(401), outdic['theta_e'] / outdic['cntp'],colors='white', levels=np.arange(1,3,0.5), linewidths=1.5)
+
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+
+
+    contours = plt.contour(ranges, np.arange(401), (outdic['v925'] / outdic['cntp']), extend='both', colors='k',
+                           linewidths=5, levels=[-50, 0, 50])  # np.arange(-15,-10,0.5)
+    contours = plt.contour(ranges, np.arange(401), (outdic['v925_orig'] / outdic['cntp']), extend='both', colors='k',
+                           linewidths=5, levels=[-50, 0, 50])
+
+    contours = plt.contour(ranges, np.arange(401), (outdic['v925'] / outdic['cntp']), extend='both', colors='k',
+                           linewidths=3, levels=[-50, 0, 50])  # np.arange(-15,-10,0.5)
+    contours = plt.contour(ranges, np.arange(401), (outdic['v925_orig'] / outdic['cntp']), extend='both', colors='r',
+                           linewidths=3, levels=[-50, 0, 50])
+
+    plt.axvline(x=-5, color='slategrey')
+    plt.axvline(x=-29, color='slategrey')
+    plt.axhline(y=200, color='slategrey')
+    plt.plot(-5, 200, 'ko')
+    plt.plot(0, 200, 'ro')
+
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    # ax.set_xticklabels(outticks)
+
+    plt.title(r'Shading:q-anomaly, contours: $\Delta \theta_{e}$ anomaly')
+    # plt.hlines(200, xmin=ranges[0], xmax=ranges[-1], linewidth=1)
+    plt.xlabel('Hour relative to t0 [1700UTC]')
+    plt.ylabel('North-South distance from core (km)')
+
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_"+str(h).zfill(2)+'_timeseries_SMALL_DRY.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.close()
 
 
 

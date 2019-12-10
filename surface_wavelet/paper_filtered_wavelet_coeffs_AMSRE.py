@@ -29,7 +29,7 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [15,16,17,19,21,23]#[15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
+    l = [17,19,20,23]#[15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
@@ -269,7 +269,7 @@ def file_loop(df):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    lsta = xr.open_dataset(cnst.AMSRE_ANO_NIGHT + 'sma_' + fdate + '.nc')
+    lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
     lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
@@ -394,7 +394,7 @@ def file_loop(df):
                 #     continue
 
         try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
             continue
         #ipdb.set_trace()
@@ -452,7 +452,7 @@ def file_loop(df):
         for ry, rx in zip(randy, randx):
 
             try:
-                point = lsta_da.sel(lat=ry, lon=rx, method='nearest', tolerance=0.05)
+                point = lsta_da.sel(lat=ry, lon=rx, method='nearest', tolerance=0.04)
             except KeyError:
                 continue
             plat = point['lat'].values

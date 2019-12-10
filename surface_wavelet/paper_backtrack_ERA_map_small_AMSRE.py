@@ -918,7 +918,7 @@ def plot_AMSR_itd(h, eh):
     dic = {}
     dic2 = {}
 
-    name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean" #ERA5_composite_cores_AMSRE_500w04_15k_minusMean"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
     def coll(dic, h, eh, year):
         print(h)
@@ -952,12 +952,16 @@ def plot_AMSR_itd(h, eh):
     u_orig = (dic['v925_orig']/ dic['cnte'])[4::st, 4::st]
     v_orig = (dic['v925_orig']/ dic['cnte'])[4::st, 4::st]
 
-
-    f = plt.figure(figsize=(10,7), dpi=200)
+    levels = list(np.arange(-1.2, 0, 0.3)) + list(np.arange(0.3, 1.5, 0.3))
+    f = plt.figure(figsize=(10, 8), dpi=200)
     ax = f.add_subplot(221)
 
-    plt.contourf(((dic['lsta-3'])  / (dic['cnt-3'])), cmap='RdBu', levels=np.linspace(-1.2,1.2,10), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.title(r'1700UTC | 2707 cores, NIGHT-1 SM anomaly')#, fontsize=9)
+
+    plt.contourf(((dic['lsta-3'])  / (dic['cnt-3'])), cmap='RdBu', levels=levels, extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
+    plt.axvline(x=200, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=200, linestyle='dashed', color='k', linewidth=1)
     plt.colorbar(label='%')
     #pdb.set_trace()
 
@@ -968,37 +972,41 @@ def plot_AMSR_itd(h, eh):
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.title('1700UTC | '+str(np.max(dic['cnt0']))+' cores, NIGHT-1 SM anomaly')#, CMORPH rainP>10mm [6am|day-1 to 10am|day0]', fontsize=9)
+    #, CMORPH rainP>10mm [6am|day-1 to 10am|day0]', fontsize=9)
 
 #
     ax1 = f.add_subplot(222)
-    plt.contourf(((dic['lsta-2']) / (dic['cnt-2'])), extend='both',  cmap='RdBu',levels=np.linspace(-1.2,1.2,10)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta-2']) / (dic['cnt-2'])), extend='both',  cmap='RdBu',levels=levels) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='%')
-    contours = plt.contour((dic['v925']/ dic['cnte']), extend='both',colors='k', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
-    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
-
-    contours = plt.contour((dic['v925_orig']/ dic['cnte']), extend='both',colors='turquoise', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
-    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+    # contours = plt.contour((dic['v925']/ dic['cnte']), extend='both',colors='k', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    # #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+    #
+    # contours = plt.contour((dic['v925_orig']/ dic['cnte']), extend='both',colors='turquoise', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+    # #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
     plt.plot(extent, extent, 'bo')
-    qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
-    qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
-                       labelpos='E', coordinates='figure')
+    plt.axvline(x=200, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=200, linestyle='dashed', color='k', linewidth=1)
+    # qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
+    # qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
+    #                    labelpos='E', coordinates='figure')
     ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title('DAY-1: SM anomaly, vectors: 925hPa wind anomaly (Day0)', fontsize=9)
+    plt.title('DAY-1: SM anomaly')#, vectors: 925hPa wind anomaly (Day0)', fontsize=9)
 
 
     ax1 = f.add_subplot(223)
     #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf(((dic['lsta-1']) / (dic['cnt-1'])), extend='both', cmap='RdBu', levels=np.linspace(-1.2, 1.2, 10)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta-1']) / (dic['cnt-1'])), extend='both', cmap='RdBu', levels=levels) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='%')
     plt.plot(extent, extent, 'bo')
-    contours = plt.contour((dic['t'] / dic['cnte']), extend='both',
-                           levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, 0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8], cmap='RdBu_r',
-                           linewidths=2) #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    plt.axvline(x=200, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=200, linestyle='dashed', color='k', linewidth=1)
+    # contours = plt.contour((dic['t'] / dic['cnte']), extend='both',
+    #                        levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, 0, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8], cmap='RdBu_r',
+    #                        linewidths=2) #np.arange(-15,-10,0.5)
+    # plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     # qu = ax1.quiver(xquiv, yquiv, u_orig, v_orig, scale=20)
     # qk = plt.quiverkey(qu, 0.9, 0.02, 1, '1 m s$^{-1}$',
     #                    labelpos='E', coordinates='figure')
@@ -1007,17 +1015,19 @@ def plot_AMSR_itd(h, eh):
     ax1.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title(r'NIGHT0: SM anomaly, contours: 925hPa T anomaly (Day0)', fontsize=9)
+    plt.title(r'NIGHT0: SM anomaly')#, contours: 925hPa T anomaly (Day0)', fontsize=9)
 
 
     ax1 = f.add_subplot(224)
     #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf(((dic['lsta0']) / (dic['cnt0'])), extend='both', cmap='RdBu', levels=np.linspace(-1.2, 1.2, 10))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta0']) / (dic['cnt0'])), extend='both', cmap='RdBu', levels=levels)  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='%')
     plt.plot(extent, extent, 'bo')
-    contours = plt.contour(((dic['div']) / dic['cnte']) * 100, extend='both', cmap='PuOr',
-                           levels=np.linspace(-0.7, 0.7, 9))  # np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    plt.axvline(x=200, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=200, linestyle='dashed', color='k', linewidth=1)
+    # contours = plt.contour(((dic['div']) / dic['cnte']) * 100, extend='both', cmap='PuOr',
+    #                        levels=np.linspace(-0.7, 0.7, 9))  # np.arange(-15,-10,0.5)
+    # plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     # qu = ax1.quiver(xquiv, yquiv, u, v, scale=15)
     # qk = plt.quiverkey(qu, 0.9, 0.02, 1, '1 m s$^{-1}$',
     #                    labelpos='E', coordinates='figure')
@@ -1026,7 +1036,7 @@ def plot_AMSR_itd(h, eh):
     ax1.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title(r'DAY0: SM anomaly, contours: 925hPa divergence', fontsize=9)
+    plt.title(r'DAY0: SM anomaly')#, contours: 925hPa divergence', fontsize=9)
 
     plt.tight_layout()
     plt.show()

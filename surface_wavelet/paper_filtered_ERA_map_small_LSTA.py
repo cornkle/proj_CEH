@@ -76,7 +76,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_propagation2_noERAfilter_LSTA"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_propagation_noMeteosatfilter_LSTA"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -144,9 +144,9 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         plsta = np.zeros_like(kernel)
         lcnt = np.zeros_like(kernel)
 
-    kmean = kernel #- np.nanmean(kernel)
-    ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+    # kmean = kernel #- np.nanmean(kernel)
+    # ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
+    # e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
 
     # if e100 >= -3.5:   ### random LSTA p10
     #     return
@@ -159,9 +159,9 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
 
     # if e100 <= 2.88:  ### random LSTA p90
     #     return
-
-    if e100 >= -1.36:  ### core LSTA p25
-        return
+    #
+    # if e100 >= -1.36:  ### core LSTA p25
+    #     return
     #
     # if e100 <= 1.45:  ### random LSTA p75
     #     return
@@ -503,29 +503,40 @@ def file_loop(df):
         lat = dit.lat
         lon = dit.lon
 
-        # #initiation filter:
-        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        # if os.path.isfile(initpath):
-        #     dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-        #                         names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-        #                                'core_time', 'initiation_time'])
-        #     ddic = dic[
-        #         (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-        #                     dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
-        #
-        #     #ipdb.set_trace()
-        #     if len(ddic) == 0:
-        #         continue
-        #     #ipdb.set_trace()
-        #     if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-        #         continue
-        #
-        #     # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
-        #     #     continue
+        #initiation filter:
+        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        if os.path.isfile(initpath):
+            # dic = pd.read_table(initpath, delim_whitespace=True, header=None,
+            #                     names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
+            #                            'core_time', 'initiation_time'])
+            # ddic = dic[
+            #     (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
+            #                 dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
+            #
+            # #ipdb.set_trace()
+            # if len(ddic) == 0:
+            #     continue
+            # #ipdb.set_trace()
+            # if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
+            #     continue
 
+            # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
+            #     continue
+
+            # initiation filter:
+
+            if (dit['xdiff'] < 100) & (dit['initTime']!=2):
+                # & (ddic['initiation_time'].values >= 12):
+                print('Initiation point too close')
+                continue
+
+                # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
+                #
+                #     print('Initiation point too far', dit['initTime'])
+                #     continue
 
         try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
             continue
         plat = point['lat'].values
@@ -543,10 +554,10 @@ def file_loop(df):
         # if np.nansum(probm[dist-50:dist+50,dist-30:dist+100])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
         #     print('Meteosat MCS continue')
         #     continue
-        # #
-        # if np.nanmin((vdic['tciwmid'][dist-50:dist+50,dist-30:dist+100]))<=-0.4:   # 0.03 for tciw, -0.3 for w [dist-50:dist+50,dist-30:dist+100] ,filter out cases with MCSs at 12
-        #     print('ERA MCS continue')
-        #     continue
+        #
+        if np.nanmin((vdic['tciwmid'][dist-50:dist+50,dist-30:dist+67]))<=-0.4:   # 0.03 for tciw, -0.3 for w [dist-50:dist+50,dist-30:dist+100] ,filter out cases with MCSs at 12
+            print('ERA MCS continue')
+            continue
 
 
         kernel2_sum = np.nansum(np.stack([kernel2_sum, kernel2]), axis=0)
@@ -898,81 +909,6 @@ def plot_doug_small(h, eh):
     plt.savefig(
         cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/" + name + str(h).zfill(2) + '_' + str(eh).zfill(
             2) + '_LSTA_small.png')
-
-def plot_doug_small_allhours():
-
-    dic = {}
-
-    def coll(dic, h, eh, year):
-        print(h)
-        core = pkl.load(open(
-            cnst.network_data + "figs/LSTA/corrected_LSTA/new/august/composite_backtrack" + str(
-                eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + "_small_cores.p", "rb"))
-        for id, k in enumerate(core.keys()):
-            try:
-                dic[k] = dic[k] + core[k]
-            except KeyError:
-                dic[k] = core[k]
-
-
-    for y in range(2006, 2011):
-        for h,eh in zip([17,18,19,20], [-5,-6,-7,-8]):
-            coll(dic, h, eh, y)
-
-    extent = (dic['lsta'].shape[1] - 1) / 2
-    xlen = dic['lsta'].shape[1]
-    ylen = dic['lsta'].shape[0]
-
-    xv, yv = np.meshgrid(np.arange(ylen), np.arange(xlen))
-    st = 30
-    xquiv = xv[4::st, 4::st]
-    yquiv = yv[4::st, 4::st]
-
-    u = (dic['u925'] / dic['cntp'])[4::st, 4::st]
-    v = (dic['v925'] / dic['cntp'])[4::st, 4::st]
-
-    f = plt.figure(figsize=(10, 4))
-    ax = f.add_subplot(121)
-
-    plt.contourf((dic['lsta'] / dic['cnt']), cmap='RdBu_r',
-                 levels=[-1, -0.8, -0.6, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.6, 0.8,1],
-                 extend='both', alpha=0.9)  # -(rkernel2_sum / rcnt_sum)
-    # plt.plot(extent, extent, 'bo')
-    plt.colorbar(label='K')
-    # pdb.set_trace()
-
-    contours = plt.contour(((dic['div'])/ dic['cntp'])*100, extend='both',  cmap='RdBu', levels=np.linspace(-0.49,0.49,6)) # #, levels=np.arange(1,5, 0.5)
-    qu = ax.quiver(xquiv, yquiv, u, v, scale=13, width=0.006)
-    qk = plt.quiverkey(qu, 0.9, 0.02,1, '1 m s$^{-1}$',
-                       labelpos='E', coordinates='figure')
-
-
-    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.0f')
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticklabels(np.array((np.linspace(0, extent * 2, 9) - 100) * 6, dtype=int))
-    ax.set_yticklabels(np.array((np.linspace(0, extent * 2, 9) - extent) * 3, dtype=int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.title('23-01UTC | ' + str(np.max(dic['cnt'])) + ' cores, LSTA & 06-06UTC antecedent rain', fontsize=9)
-
-
-    ax1 = f.add_subplot(122)
-    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-0.5,0.6,0.05)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='g kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-16,-12,0.5), cmap='viridis') #np.arange(-15,-10,0.5)
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
-    plt.plot(extent, extent, 'bo')
-    #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
-    plt.title('Shading: 925hPa q anomaly, Contours: 650hPa-925hPa wind shear ', fontsize=9)
-
-    plt.tight_layout()
-    plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/august/jun-sep_17-20UTC_mean.png")#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
-    # plt.close()
 
 
 def plot_all():
