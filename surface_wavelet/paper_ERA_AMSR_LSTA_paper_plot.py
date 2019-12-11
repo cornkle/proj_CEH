@@ -50,7 +50,7 @@ def plot_amsr_lsta_paper(h, eh):
 
     dic2 = {}
 
-    name = "ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean"# "ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
     def coll(dic2, h, eh, year):
         print(h)
@@ -133,7 +133,12 @@ def plot_amsr_lsta_paper(h, eh):
     ax1 = f.add_subplot(223)
     plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.arange(-1,1.1,0.1)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='g kg-1')
-    contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-16.5,-11.5,1), colors='k', linestyles='solid', linewidths=1) #np.arange(-15,-10,0.5)
+    #contours = plt.contour((dic['u650'] / dic['cntp']), extend='both',levels=np.arange(-16.5,-11.5,1), colors='k', linestyles='solid', linewidths=1) #np.arange(-15,-10,0.5)
+    contours = plt.contour((dic['u650'] / dic['cntp']), extend='both', levels=np.arange(-1.5, -0.5, 0.1), colors='k',
+                           linestyles='solid', linewidths=1)  # np.arange(-15,-10,0.5)
+
+    ax1.streamplot(xv, yv, dic['u650_orig'] * 0.01, dic['v650_orig'], density=[0.5, 1], linewidth=0.5, color='k')
+
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     plt.axvline(x=200, linestyle='dashed', color='k', linewidth=1.2)
     plt.axhline(y=200, linestyle='dashed', color='k', linewidth=1.2)
@@ -143,7 +148,7 @@ def plot_amsr_lsta_paper(h, eh):
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title('Shading: 925hPa q anomaly, Contours: 650hPa-925hPa wind shear ', fontsize=9)
+    plt.title('Shading: 925hPa q anomaly, Contours: 650hPa wind anomaly ', fontsize=9)
 
     ax1 = f.add_subplot(224)
  #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
@@ -167,7 +172,7 @@ def plot_amsr_lsta_paper(h, eh):
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_LS_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_LS_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'_u650_streamline.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 def plot_amsr_paper(h, eh):

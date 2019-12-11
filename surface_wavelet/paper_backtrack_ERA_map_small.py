@@ -88,7 +88,7 @@ def composite(h, eh):
         # ipdb.set_trace()
         # return
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_WET_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+"_small_cores.p", "wb"))
         del dic
         print('Dumped file')
 
@@ -166,14 +166,14 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
     # if e100 <= 2.88:  ### random LSTA p90
     #     return
 
-    if e100 >= -1.36:  ### core LSTA p25
-        return
+    # if e100 >= -1.36:  ### core LSTA p25
+    #     return
     #
     # if e100 <= 1.45:  ### random LSTA p75
     #     return
 
-    if (e100 >= 1.1) | (e100<=1):
-        return
+    # if (e100 >= 1.1) | (e100<=1):
+    #     return
 
     return kernel,  cnt, cnt2, vdic, prob, cnt3, probcm, cnt4,plsta, lcnt
 

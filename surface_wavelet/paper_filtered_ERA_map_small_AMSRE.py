@@ -74,9 +74,9 @@ def composite(h, eh):
     print('Start core number ', len(msg))
 
     #msgin = msg[(msg['SMmean0']<-3) & (msg['SMmean-1']<-1.5) & (msg['SMmean0']>-900)& (msg['SMmean-1']>-900)] #[(msg['initTime']>=12.5) & (msg['initTime']<h)]#[msg['SMwet']==2]
-    #msgin = msg[(msg['SMdry0'] ==1) & (msg['SMdry-1']==1) & (msg['SMmean0']>-900)& (msg['SMmean-1']>-900)& (msg['SMmean-1']<-1.8)]
-    msgin = msg[(msg['SMwet0'] == 1) & (msg['SMwet-1'] == 1) & (msg['SMmean0'] > 0.3) & (msg['SMmean-1'] > 0.9)]
-    #msgin = msg[(msg['SMmean0'] > 0.01) & (msg['SMmean-1'] > 0.01)]
+    #######msgin = msg[(msg['SMdry0'] ==1) & (msg['SMdry-1']==1) & (msg['SMmean0']>-900)& (msg['SMmean-1']>-900)& (msg['SMmean-1']<-1.8)]
+    ######msgin = msg[(msg['SMwet0'] == 1) & (msg['SMwet-1'] == 1) & (msg['SMmean0'] > 0.3) & (msg['SMmean-1'] > 0.9)]
+    msgin = msg[(msg['SMmean0'] > 0.01) & (msg['SMmean-1'] > 0.01)]
     print('Number of cores', len(msgin))
 
     # calculate the chunk size as an integer
@@ -100,7 +100,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_SM0GT0.01_SM-1GT0.01_noMeteosatFilter_AMSRE"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -1635,6 +1635,194 @@ def plot_timeseries_coarse():
     plt.tight_layout()
     #plt.show()
     plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_SMALL_'+tag+'_coarse.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.close()
+
+
+
+def plot_timeseries_coarse_noStreamline():
+
+    x = len(list(range(-38, 4, 3)))
+    y = 401
+
+    # outticks = list(range(-30, 1, 5))
+    # ranges = np.arange(-30,1,3)
+    #
+    # outticks = [12,17,22,3,8,13,18]
+    #outticks = [6, 11, 16, 21, 2, 7, 12, 17]
+    ranges = np.arange(-38, 4, 3)
+
+    h = 17
+
+    outdic = {}
+    dummyfile = glob.glob(
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+    dummy = pkl.load(open(dummyfile[0], "rb"))
+
+    #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
+    #####file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
+    for k in dummy.keys():
+        outdic[k] = np.zeros((y, x))
+
+    for ids, eh in enumerate(range(-38, 4, 3)):
+
+        dic = {}
+
+        def coll(dic, h, eh, year, file):
+            print(h)
+
+
+            core = pkl.load(open(
+                cnst.network_data + file + str(eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + ".p", "rb"))
+
+            for id, k in enumerate(core.keys()):
+                try:
+                    dic[k] = dic[k] + core[k]
+                except KeyError:
+                    dic[k] = core[k]
+
+        for y in range(2006, 2011):
+            coll(dic, h, eh, y, file)
+
+        for k in dic.keys():
+            outdic[k][:, ids] = dic[k][:, 190:211].mean(axis=1)
+
+    outdic['v925'][50:90, 5:9] = np.nan
+    #
+    if 'WET' in file:
+        tag = 'WET'
+    elif 'DRY' in file:
+        tag = 'DRY'
+    else:
+        tag = 'ALL'
+
+    def groupedAvg(myArray, N=2):
+        result = np.cumsum(myArray, 0)[N - 1::N, :] / float(N)
+        result[1:,:] = result[1:, :] - result[:-1, :]
+        return result
+
+    diff = {}
+    for k in outdic.keys():
+
+        if 'cnt' in k:
+            continue
+
+        if 'lsta0' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cnt0']) , N=4)
+        elif 'lsta-1' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cnt-1']) , N=4)
+        elif 'lsta-2' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cnt-2']), N=4)
+        elif 'lsta-3' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cnt-3']) , N=4)
+        elif 'msg' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cntm']) , N=4)
+        elif 'probc' in k:
+            diff[k] = groupedAvg((outdic[k] / outdic['cntc']) , N=4)
+        # elif 'v925' in k:
+        #     diff[k+'_0'] = groupedAvg((outdic[k] / outdic['cnte']) , N=4)
+        # elif 'v650' in k:
+        #     diff[k+'_0'] = groupedAvg((outdic[k] / outdic['cnte']) , N=4)
+        else:
+            diff[k] = groupedAvg((outdic[k] / outdic['cnte']) , N=4)
+
+
+    print(diff.keys())
+
+    f = plt.figure(figsize=(6, 8), dpi=200)
+
+
+    yax = np.arange(100)
+    ax = f.add_subplot(211)
+
+    #ipdb.set_trace()
+    plt.contourf(ranges, yax, (diff['t']), extend='both', cmap='RdBu_r',
+                levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8])
+    plt.colorbar(label=r'K')
+    plt.contour(ranges, yax, (diff['t']), extend='both', colors='k', linewidths=0.1,
+                 levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8])
+    #ipdb.set_trace()
+
+
+    contours = plt.contour(ranges, yax, (diff['u650']), extend='both', colors='k',
+                           levels=np.arange(-2.5,0,0.5), linewidths=1)
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+
+
+    #contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
+
+
+    contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
+    contours = plt.contour(ranges, yax, (diff['v925']), extend='both', colors='k', linewidths=3,
+                           levels=[-50, 0.06, 50])
+
+
+    contours = plt.contour(ranges, yax,(diff['v925_orig']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
+    contours = plt.contour(ranges, yax, (diff['v925_orig']), extend='both', colors='r', linewidths=3,
+                           levels=[-50, 0.06, 50])
+
+   # contours = plt.contour(ranges, yax,(outdic['v650_orig']/ outdic['cnte']), extend='both',colors='b', linewidths=0.5, levels=[-50,0,50])
+
+    plt.axvline(x=-5, color='slategrey')
+    plt.axvline(x=-29, color='slategrey')
+    plt.axhline(y=50, color='slategrey')
+    plt.plot(-5, 50, 'ko')
+    plt.plot(0, 50, 'ro')
+
+    plt.text(0.02,0.1, 'ITD 0-line', color='red', fontsize=14, transform=ax.transAxes)
+    plt.text(0.02, 0.03, 'v-wind anomaly 0-line', color='k', fontsize=14, transform=ax.transAxes)
+
+    ax.set_yticklabels(np.array((np.linspace(0, 100, 6) - 50) * 12, dtype=int))
+    # ax.set_xticklabels(outticks)
+
+    plt.title('Shading:t-anomaly, contours: 650hpa u-wind anomaly')
+    #plt.hlines(200, xmin=ranges[0], xmax=ranges[-1], linewidth=1)
+    plt.xlabel('Hour relative to t0 [1700UTC]')
+    plt.ylabel('North-South distance from core (km)')
+
+    ax = f.add_subplot(212)
+
+
+    plt.contourf(ranges, yax, (diff['q']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+                 cmap='RdBu', extend='both')
+    plt.colorbar(label=r'g kg$^{-1}$')
+
+    plt.contour(ranges, yax, (diff['q']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+     colors = 'k', linewidths = 0.1)
+
+    #contours = plt.contour(ranges, yax, diff['theta_e'], colors='k', levels=np.arange(1, 3, 0.5), linewidths=3, linestyle='dotted')
+    contours = plt.contour(ranges, yax, diff['theta_e'],colors='white', levels=np.arange(1,3,0.5), linewidths=1.5)
+
+    plt.clabel(contours, inline=True, fontsize=8, fmt='%1.1f')
+
+    contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
+    contours = plt.contour(ranges, yax, (diff['v925']), extend='both', colors='k', linewidths=3,
+                           levels=[-50, 0.06, 50])
+
+
+    contours = plt.contour(ranges, yax,(diff['v925_orig']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
+    contours = plt.contour(ranges, yax, (diff['v925_orig']), extend='both', colors='r', linewidths=3,
+                           levels=[-50, 0.06, 50])
+
+    #ax.streamplot(ranges, yax,diff['u650_orig']*0.01, diff['v650_orig'], density=[0.5, 1], linewidth=0.5, color='k')  #*0.01
+
+    plt.axvline(x=-5, color='slategrey')
+    plt.axvline(x=-29, color='slategrey')
+    plt.axhline(y=50, color='slategrey')
+    plt.plot(-5, 50, 'ko')
+    plt.plot(0, 50, 'ro')
+
+    ax.set_yticklabels(np.array((np.linspace(0, 100, 6) - 50) *12 , dtype=int))
+    # ax.set_xticklabels(outticks)
+
+    plt.title(r'Shading:q-anomaly, contours: $\Delta \theta_{e}$ anomaly')
+    # plt.hlines(200, xmin=ranges[0], xmax=ranges[-1], linewidth=1)
+    plt.xlabel('Hour relative to t0 [1700UTC]')
+    plt.ylabel('North-South distance from core (km)')
+
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_SMALL_'+tag+'_coarse_streamOFF.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 

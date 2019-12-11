@@ -211,7 +211,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         h = (vars[v])[1]
         pl = (vars[v])[0]
         derived = False
-        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc') | (v == 'theta') :
+        if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc'):
             derived = v
             v = 'u_pl'
 
@@ -227,9 +227,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
         print('Filepath', filepath)
-        arr = xr.open_mfdataset(filepath, file_cache_maxsize=10)
+        arr = xr.open_mfdataset(filepath, autoclose=True)
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
+
 
         datestringh = pd.datetime(datestring['time.year'], datestring['time.month'], datestring['time.day'],
                                   h, datestring['time.minute'])
@@ -238,6 +239,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             dar = dar.sel(time=datestringh, method='nearest') #, method='nearest'
         except ValueError:
             dar = dar.sel(time=datestringh)
+
+        del arr
 
         if v == 'q_pl':
             dar.values = np.array(dar.values/100).astype(float)
@@ -261,14 +264,22 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 if derived:
                     v = derived
 
-            if (len(pl) > 1) & (vv == 'theta'):
+            elif (len(pl) > 1) & (vv == 'theta'):
+                filepath2 = cp_dir + os.sep + 'q_pl' + os.sep + '*' + str(d['time.year'].values) + str(
+                    d['time.month'].values).zfill(2) + '*.nc'
 
-                dar2 = arr['q_pl'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
+                arr2 = xr.open_mfdataset(filepath2, autoclose=True)
+
+                dar2 = arr2['q_pl'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
+
+                del arr2
+
                 try:
                     dar2 = dar2.sel(time=datestringh, method='nearest')  # , method='nearest'
                 except ValueError:
                     dar2 = dar2.sel(time=datestringh)
-                dar2.values = np.array(dar2.values / 100).astype(float)
+
+                dar2.values = np.array(dar2.values / 100).astype(float) / 1000
 
                 theta_up = u_met.theta_e(650, dar.sel(pressure=650).values, dar2.sel(pressure=650).values)
                 theta_low = u_met.theta_e(925, dar.sel(pressure=925).values, dar2.sel(pressure=925).values)
@@ -277,13 +288,17 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 if derived:
                     v = derived
 
-            else:
+            elif (len(pl) == 1) & (vv != 'theta') & (vv != 'shear'):
                 dar = dar.sel(pressure=pl[0]).squeeze()
+
             if derived:
                 v = derived
 
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
-        regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
+        try:
+            regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
+        except ValueError:
+            ipdb.set_trace()
         da = xr.DataArray(regrid,
                           coords={'time': datestring, 'latitude': ls_arr.rlat.values,
                                   'longitude': ls_arr.rlon.values, },
@@ -358,8 +373,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_4-20N'  # out directory to save MCS files
-box = [-12, 12, 4.5, 20]  # W- E , S - N geographical coordinates box
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N'  # out directory to save MCS files
+box = [-12, 12, 5, 20]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
 # years = np.array(np.arange(2001,2007), dtype=str)

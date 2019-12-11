@@ -30,7 +30,7 @@ def diurnal_loop():
 
 def plot(hour):
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter_+100km_validCheck.p", "rb"))
+    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "_corrected_SouthBox.p", "rb"))
     #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
 
     for k in dic.keys():
@@ -78,6 +78,12 @@ def plot(hour):
     plt.plot(bin_centre, cumulative_random, label='random')
     plt.axvline(0,ymin=0, ymax=1, linestyle='dashed', color='k')
     plt.legend()
+
+
+    plt.figure()
+    plt.hist(rinput, range=(-15,15), bins=30)
+    plt.axvline(0)
+    plt.show()
 
 
 def plot_double(hour):
@@ -634,20 +640,13 @@ def plot_diurn_double_relative():
             err10_low.append( percmin - (low10 *100 ))
 
         ax = f.add_subplot(2,1,ids+1)
-        ax.bar(np.arange(0,len(rrange)), percmmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='darkorange') #
-        ax.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax.bar(np.arange(0,len(rrange)), np.array(percmmin)-25,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='darkorange') #
+        ax.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
-        plt.ylim(0,60)
+
         lw = 0.5
-        plt.axhline(y=-50, linewidth=lw, color='k', linestyle='dashed')
-        plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
-        plt.axhline(y=25, linewidth=3, color='k', linestyle='solid', zorder=99)
-        plt.axhline(y=50, linewidth=lw, color='k', linestyle='dashed', zorder=0)
-        plt.axhline(y=75, linewidth=lw, color='k', linestyle='dashed', zorder=0)
-        plt.axhline(y=100, linewidth=lw, color='k', linestyle='dashed', zorder=0)
-        plt.axhline(y=125, linewidth=lw, color='k', linestyle='dashed', zorder=0)
-        plt.axhline(y=0, linewidth=1, color='k', linestyle='solid', zorder=0)
+
 
         ax.set_xlabel('Hour')
 
@@ -655,14 +654,24 @@ def plot_diurn_double_relative():
         plt.legend()
 
         ax1 = ax.twiny()
-        ax1.bar(np.arange(0, len(rrange)), percmmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.8, color='darkorange')
-        ax1.bar(np.arange(0, len(rrange)), percmmax, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax1.bar(np.arange(0, len(rrange)), np.array(percmmin)-25, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.8, color='darkorange')
+        ax1.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax1.set_xticks(np.arange(0,len(rrange)))
         ax1.set_xticklabels(nbmin, rotation=45)
         ax1.set_xlabel('Number of convective cores')
 
+        ax.set_ylim(0 - 25, 60 - 25)
+        locs, ylabels = plt.yticks()
+        # print(ids, locs)
+        ax.set_yticklabels(locs+25)
+
+
         plt.title(input[2])
 
+        # plt.axhline(y=-50, linewidth=lw, color='k', linestyle='dashed')
+        #plt.axhline(y=25, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=0, linewidth=3, color='k', linestyle='solid')
+        #plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
     plt.tight_layout()
     #plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
     #             textcoords='offset points')  # transform=ax.transAxes,
