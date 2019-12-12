@@ -150,6 +150,10 @@ def theta_factor(pz):
 
 
 def theta(pz, t):
+
+    if np.max(t) >100:
+        print('t is very big, please check, should be given in C')
+
     ist = t + 273.15
     try:
         ist =  ist * ((1000 / pz) ** 0.286)  # kappa = 0.286
@@ -191,6 +195,9 @@ def theta_e(pz, t, q):
 
     if np.max(q) >10:
         print('q is very big, please check, should be given in kg/kg')
+
+    if np.max(t) >100:
+        print('t is very big, please check, should be given in C')
 
     ist = t + 273.15
     try:
