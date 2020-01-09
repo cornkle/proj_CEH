@@ -10,12 +10,13 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
+import ipdb
 import pandas as pd
 from scipy import ndimage
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
 import pickle as pkl
 import salem
+
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -34,11 +35,19 @@ def composite(h):
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) ]
+        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
-    msg = msg.sel(lat=slice(10,20), lon=slice(-10,10))
+    msg = msg.sel( lat=slice(5,25), lon=slice(-15,15))
 
     dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+
+    # res = []
+    # #ipdb.set_trace()
+    # for m in msg[200:201]:
+    #
+    #     out = file_loop(m)
+    #     res.append(out)
+    # return
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
@@ -84,7 +93,7 @@ def composite(h):
 
     ax = f.add_subplot(234)
 
-    plt.contourf( (dic['rano'] / dic['rcnt']), cmap='RdBu',  vmin=-2, vmax=2)
+    plt.contourf((dic['ano'] / dic['cnt'])- (dic['rano'] / dic['rcnt']), cmap='RdBu',  vmin=-2, vmax=2)
     plt.plot(extent,extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -120,7 +129,7 @@ def composite(h):
 
     plt.tight_layout()
 
-    plt.savefig(cnst.network_data + 'figs/LSTA-bullshit/AGU/'+'AMSRE_' + str(hour).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    #plt.savefig(cnst.network_data + 'figs/LSTA-bullshit/AGU/'+'AMSRE_' + str(hour).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     plt.show()
 
 
@@ -136,6 +145,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         ypos = ypos - ly
 
     dist = 11
+    #dist=100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -176,18 +186,24 @@ def file_loop(fi):
 
     lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(5, 23))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
     lsta_da = lsta['SM'].squeeze()
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
-    ttopo = topo['h']
-    ttopo = lsta_da.salem.lookup_transform(ttopo)
+    # topo = xr.open_dataset(cnst.LSTA_TOPO)
+    # ttopo = topo['h']
+    #ttopo = lsta_da.salem.lookup_transform(ttopo)
 
-    grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0]) + abs(grad[1])
+    # try:
+    #     lsta_da = topo.salem.transform(lsta_da)
+    # except RuntimeError:
+    #     print('lsta_da on LSTA interpolation problem')
+    #     return None
+
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0]) + abs(grad[1])
 
     # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
     #     print('Not enough valid')
@@ -195,8 +211,8 @@ def file_loop(fi):
 
     # lsta_da.values[np.isnan(lsta_da.values)] = 0
 
-    lsta_da.values[ttopo.values >= 450] = np.nan
-    lsta_da.values[gradsum > 30] = np.nan
+    # lsta_da.values[ttopo.values >= 450] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
     pos = np.where((fi.values >= 5) & (fi.values < 65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
@@ -244,14 +260,46 @@ def file_loop(fi):
         rkernel3_list.append(rkernel3)
         rcnt_list.append(rcnt)
 
+    # mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
+    # mcsimage = xr.open_dataarray(cnst.MCS_15K)
+    # mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19), lon=slice(-9.9,9.9))
+    # counter = 0
+    #
+    # labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600, 50000], max_area=None)
+    #ipdb.set_trace()
+
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        t = fi.sel(lat=lat, lon=lon)
+        # if (labels[y,x] not in goodinds) | (labels[y,x] == 0):
+        #     print('MCS too small!!')
+        #     continue
+        #
+        # if (mcsimage.values[y,x] > -60):
+        #     print('Core too warm!!')
+        #     continue
+        #
+        # mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 14), lon=lon,
+        #                      lat=lat).values
+        # if mhour <= 13:
+        #     mhour += 24
+        #
+        # chour = fi['time.hour'].values
+        #
+        # if (chour >= 0) & (chour <= 13):
+        #     chour += 24
+        # if (mhour+2 < chour) | (np.isnan(mhour)):
+        #     print('Core overlaps: earliest:', mhour, ' core: ', chour)
+        #     continue
 
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+        t = fi.sel(lat=lat, lon=lon)
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.1)
+        except KeyError:
+            print('point index error')
+            continue
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -259,11 +307,13 @@ def file_loop(fi):
         xpos = int(xpos[0])
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
+
         try:
             kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False,
                                                rotate=False)
         except TypeError:
             continue
+
 
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
@@ -283,6 +333,12 @@ def file_loop(fi):
         rkernel2_sum = np.nansum((np.stack(rkernel2_list, axis=0)), axis=0)
         rkernel3_sum = np.nansum((np.stack(rkernel3_list, axis=0)), axis=0)
         rcnt_sum = np.nansum((np.stack(rcnt_list, axis=0)), axis=0)
+
+        # plt.figure()
+        # plt.pcolormesh(kernel2_sum, vmin=-10,vmax=10, cmap='RdBu')
+        #
+        # plt.figure()
+        # plt.pcolormesh(cnt_sum, cmap='viridis')
 
     print('Returning')
 

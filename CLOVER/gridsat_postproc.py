@@ -402,3 +402,172 @@ def storm_count(area=False):
 
         pkl.dump(area75, open(cnst.network_data + 'data/CLOVER/saves/storm_90centArea_12W-10E_5-8N_-75C_5000km2_1800.p',
                             'wb'))
+
+
+
+def storm_count_hov():
+    msg_folder = cnst.GRIDSAT
+    fname = msg_folder + 'gridsat_WA_-40_1000km2_15-21UTC'
+
+    def makedic():
+        mdic = {}
+        for m in range(1,13):
+            mdic[m] = []
+        return mdic
+
+    dic75 = makedic()
+    dic70 = makedic()
+    dic60 = makedic()
+    dic50 = makedic()
+    dic40 = makedic()
+
+
+    for y in range(1983,2018): #2018
+        ds = xr.open_dataset(fname + str(y) + '.nc')
+        for m in range(1,13):
+
+
+            da = ds['tir'][(ds['time.month'] == m) & (ds['time.hour']==18)]#(ds['time.hour']>=15) & (ds['time.hour']<=21)]
+            da.values = da.values / 100
+            da = da.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
+
+            val = 0
+            storm = np.array([0]*da.shape[1])
+            ar = []
+            pixel = 78  # 78 # 78 = 5000km2 # 15000 = 253
+            for d in da:
+
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
+                labels, goodinds = ua.blob_define(cut.values, -40, minmax_area=[pixel, 25000],
+                                                  max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                unarr = []
+                for ll in labels:
+                    isun = np.unique(ll)
+                    num = isun.size
+                    unarr.append(num)
+
+
+                unarr = np.array(unarr)
+                # if np.sum(unarr-1) > 0:
+                #     ipdb.set_trace()
+
+                storm += unarr-1
+                val += 1
+
+                print('-40 storm', storm)
+
+            dic40[m].append(storm/val)
+
+
+
+            val = 0
+            storm = np.array([0]*da.shape[1])
+            ar = []
+            pixel = 78 #78 # 78 = 5000km2 # 15000 = 253
+            for d in da:
+
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12)) # 4.5,8.5
+                labels, goodinds = ua.blob_define(cut.values, -50, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+
+                unarr = []
+                for ll in labels:
+                    isun = np.unique(ll)
+                    num = isun.size
+                    unarr.append(num)
+
+
+                unarr = np.array(unarr)
+
+                storm += unarr-1
+                val += 1
+            dic50[m].append(storm/val)
+
+
+            val = 0
+            storm = np.array([0]*da.shape[1])
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
+                labels, goodinds = ua.blob_define(cut.values, -60, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                unarr = []
+                for ll in labels:
+                    isun = np.unique(ll)
+                    num = isun.size
+                    unarr.append(num)
+
+
+                unarr = np.array(unarr)
+
+                storm += unarr-1
+                val += 1
+
+            dic60[m].append(storm/val)
+
+
+            val = 0
+            storm = np.array([0]*da.shape[1])
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
+                labels, goodinds = ua.blob_define(cut.values, -70, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                unarr = []
+                for ll in labels:
+                    isun = np.unique(ll)
+                    num = isun.size
+                    unarr.append(num)
+
+
+                unarr = np.array(unarr)
+
+                storm += unarr-1
+                val += 1
+
+            dic70[m].append(storm/val)
+
+
+            val = 0
+            storm = np.array([0]*da.shape[1])
+            ar = []
+            for d in da:
+                cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
+                labels, goodinds = ua.blob_define(cut.values, -75, minmax_area=[pixel, 25000],
+                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+                unarr = []
+                for ll in labels:
+                    isun = np.unique(ll)
+                    num = isun.size
+                    unarr.append(num)
+
+
+                unarr = np.array(unarr)
+
+                storm += unarr-1
+                val += 1
+
+            dic75[m].append(storm/val)
+
+    print(40, dic40[3])
+    print(50, dic50[3])
+    print(60, dic60[3])
+    print(70, dic70[3])
+    print(75, dic75[3])
+
+
+    pkl.dump(dic40, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-40C_5000km2_18.p', #4f5-8f5N
+                        'wb'))
+
+    pkl.dump(dic50, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-50C_5000km2_18.p', #4f5-8f5N
+                        'wb'))
+
+    pkl.dump(dic60, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-60C_5000km2_18.p',
+                         'wb'))
+
+    pkl.dump(dic70, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-70C_5000km2_18.p',
+                         'wb'))
+
+    pkl.dump(dic75, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-75C_5000km2_18.p',
+                        'wb'))
+

@@ -205,7 +205,8 @@ def trend_all():
         v8_mean = v8mean.mean(axis=0)
 
         aej = np.argmin(u6_mean, axis=0)
-        #ipdb.set_trace()
+        itd = np.argmin(np.abs(v8_mean.values), axis=0)
+
 
         thetatrend, thetamean = calc_trend(theta_e, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
         theta_mean = thetamean.mean(axis=0)
@@ -249,7 +250,14 @@ def trend_all():
         xaej, yaej = map.grid.transform(u6_mean.longitude.values, u6_mean.latitude.values[aej.values],
                                     crs=shear.salem.grid.proj)
 
+
+        xitd, yitd = map.grid.transform(v8_mean.longitude.values, v8_mean.latitude.values[itd],
+                                    crs=shear.salem.grid.proj)
+
+
         xx, yy = np.meshgrid(xx, yy)
+
+        #ipdb.set_trace()
         #Quiver only every 7th grid point
         u = u6trend.values[1::2, 1::2]
         v = v6trend.values[1::2, 1::2]
@@ -257,6 +265,10 @@ def trend_all():
         #Quiver only every 7th grid point
         uu = u8trend.values[1::2, 1::2]
         vv = v8trend.values[1::2, 1::2]
+
+        #Quiver only every 7th grid point
+        um = u8_mean.values[1::2, 1::2]
+        vm = v8_mean.values[1::2, 1::2]
 
         xx = xx[1::2, 1::2]
         yy = yy[1::2, 1::2]
@@ -283,9 +295,9 @@ def trend_all():
         ax1 = f.add_subplot(221)
         map.set_data(t_da.values, interp='linear')  # interp='linear'
 
-        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.8,1], colors='darkturquoise')
+        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.8,1], colors='darkturquoise', linewidths=2)
         map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.002)
+        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.0025)
 
         # qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
         #                    labelpos='E', coordinates='figure')
@@ -299,7 +311,7 @@ def trend_all():
 
         ax2 = f.add_subplot(222)
         map.set_data(theta_da.values,interp='linear')  # interp='linear'
-        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='darkturquoise', levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6]) #[6,8,10,12,14,16]
+        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='darkturquoise', levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6], linewidths=3) #[6,8,10,12,14,16]
         map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
         dic = map.visualize(ax=ax2, title=r'$\Delta \theta_e$ 925-600hPa | 925hPa specific humidity', cbar_title=r'K decade$^{-1}$')
@@ -309,11 +321,11 @@ def trend_all():
 
         ax3 = f.add_subplot(223)
         map.set_data(thetad_da.values, interp='linear')  # interp='linear'
-        map.set_contour(tcwv_da.values, interp='linear', levels=[-2,-1.5,-1,-0.5,0.5,1,1.5,2], colors='darkturquoise')
+        map.set_contour(tcwv_da.values, interp='linear', levels=[-2,-1.5,-1,-0.5,0.5,1,1.5,2], colors='darkturquoise', linewidths=2)
 
         map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
 
-        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.002)
+        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.0025)
 
         qk = plt.quiverkey(qu, 0.45, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
                            labelpos='E', coordinates='figure')
@@ -325,7 +337,7 @@ def trend_all():
 
 
         ax4 = f.add_subplot(224)
-        map.set_contour((tirm_mean), interp='linear', levels=[0.1,0.5,1,2,3,4], colors='k', linewidths=0.5)
+        map.set_contour((tirm_mean), interp='linear', levels=[0.1,1,2,4], colors='darkturquoise', linewidths=2)
 
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
@@ -336,6 +348,12 @@ def trend_all():
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,41,10))  # levels=np.arange(10,51,10)
 
         ax4.scatter(xaej, yaej, color='r', s=50, edgecolors='r', linewidths=1)
+
+        #ax4.scatter(xitd, yitd, color='r', s=50, edgecolors='k', linewidths=1)
+
+        qu = ax4.quiver(xx, yy, um, vm, scale=90, width=0.0025)
+        qk = plt.quiverkey(qu, 0.94, 0.03, 3, '2 m s$^{-1}$',
+                           labelpos='E', coordinates='figure')
 
         dic = map.visualize(ax=ax4, title='-70$^{\circ}$C cloud cover change | >5000km$^{2}$', cbar_title='$\%$ decade$^{-1}$')
         contours = dic['contour'][0]

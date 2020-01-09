@@ -35,17 +35,17 @@ def run_hours():
 
 def composite(hour):
 
-    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(hour)+'.csv')
-    msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
-            hour) + '.csv')
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_'+str(hour)+'.csv')
+    # msgopen = pd.read_csv(
+    #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
+    #         hour) + '.csv')
 
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msgin = msg#[msg['initTime']<=3]#[msg['SMwet']==2]
+    msgin = msg[(msg['SMmean0']>-900) & (msg['LSTA_flag']>-900) & (msg['month'])!=8]#[msg['initTime']<=3]#[msg['SMwet']==2]
     print('Number of cores', len(msgin))
 
     # calculate the chunk size as an integer
@@ -160,7 +160,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE.p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE_LSTA.p", "wb"))
     print('Save file written!')
 
 

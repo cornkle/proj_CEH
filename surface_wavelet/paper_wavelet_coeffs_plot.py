@@ -324,7 +324,7 @@ def plot_map(hour):
 
 
     plt.tight_layout()
-    plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
+    #plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
     plt.show()
 
 def plot_all():
@@ -335,9 +335,9 @@ def plot_all():
 def plot_map_full(hour, amsre=False):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    name = 'UTC_15000_ALL_-60_5slotSmall'
+    name = 'UTC_15000_-60' #'UTC_15000_ALL_-60_5slotSmall'
     if amsre:
-        tag = '_AMSRE'
+        tag = '_AMSRE_LSTA'
     else:
         tag = ''
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+tag+".p", "rb")) #coeffs_nans_stdkernel_USE_"+str(hour)+"UTC.p", "rb"))
@@ -420,7 +420,7 @@ def plot_map_full(hour, amsre=False):
 
 
     plt.tight_layout()
-    plt.savefig(path + 'initVSprop/'+name+'_map_'+str(hour)+'.png')
+    plt.savefig(path + 'initVSprop/'+name+tag+'_map_'+str(hour)+'.png')
     plt.show()
 
 

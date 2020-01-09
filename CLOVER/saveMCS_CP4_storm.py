@@ -220,35 +220,29 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             derived = v
             v = 't_pl'
 
-        # try:
-        #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
-        # except IndexError:
-        #     print('No file found, return')
-        #     return
+        try:
+            filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
+        except IndexError:
+            print('No file found, return')
+            return
 
-        filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
-        print('Filepath', filepath)
-        arr = xr.open_mfdataset(filepath, autoclose=True)
+        try:
+            arr = xr.open_dataset(filepath)
+        except OSError:
+            print('Cannot open file, continue! ', filepath)
+            return
 
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 
+        dar = dar[dar['time.hour'] == h].squeeze()
 
-        datestringh = pd.datetime(datestring['time.year'], datestring['time.month'], datestring['time.day'],
-                                  h, datestring['time.minute'])
-
-        try:
-            dar = dar.sel(time=datestringh, method='nearest') #, method='nearest'
-        except ValueError:
-            dar = dar.sel(time=datestringh)
 
         del arr
 
         if (v == 'q_pl') | (v=='t_pl') | (v=='lw_out_PBLtop'):
+
             dar.values = np.array(dar.values/100).astype(float)
 
-        if int(dar['time.day']) != datestringh.day:
-            print('Wrong day, file missing for variable ', v)
-            return
 
         if int(dar['time.hour'])!=h:
             ipdb.set_trace()
@@ -270,19 +264,19 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                     v = derived
 
             elif (len(pl) > 1) & (vv == 'theta'):
-                filepath2 = cp_dir + os.sep + 'q_pl' + os.sep + '*' + str(d['time.year'].values) + str(
-                    d['time.month'].values).zfill(2) + '*.nc'
 
-                arr2 = xr.open_mfdataset(filepath2, autoclose=True)
+                try:
+                    filepath2 = glob.glob(cp_dir + os.sep + str('q_pl') + os.sep + '*' + datestring + '*.nc')[0]
+                except IndexError:
+                    print('No file found, return')
+                    return
+                arr2 = xr.open_dataset(filepath2)
 
                 dar2 = arr2['q_pl'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
 
                 del arr2
 
-                try:
-                    dar2 = dar2.sel(time=datestringh, method='nearest')  # , method='nearest'
-                except ValueError:
-                    dar2 = dar2.sel(time=datestringh)
+                dar2 = dar2[dar2['time.hour'] == h].squeeze()
 
                 dar2.values = np.array(dar2.values / 100).astype(float) / 1000
 
@@ -305,7 +299,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         except ValueError:
             ipdb.set_trace()
         da = xr.DataArray(regrid,
-                          coords={'time': datestring, 'latitude': ls_arr.rlat.values,
+                          coords={'time': dar.time, 'latitude': ls_arr.rlat.values,
                                   'longitude': ls_arr.rlon.values, },
                           dims=['latitude', 'longitude'])
 
@@ -315,10 +309,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         if v == 'lw_out_PBLtop':
 
-            da.values = olr_to_bt(da.values)
 
             da.values[da.values >= tthresh] = 0  # T threshold maskout
             da.values[np.isnan(da.values)] = 0 # set ocean nans to 0
+
 
             try:
                 date = da.time.values[0]
@@ -326,10 +320,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 date = da.time.values
 
             labels, numL = label(da.values)
-
-            plt.figure()
-            plt.pcolormesh(labels)
-            return
 
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
@@ -392,33 +382,39 @@ out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N'  # 
 box = [-12, 12, 5, 20]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-# years = np.array(np.arange(2001,2007), dtype=str)
-# months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
-# days = np.array(np.arange(1,32), dtype=str)
+years = np.array(np.arange(2000,2007), dtype=str)
+months = np.array([ '03', '04', '05','06','07','08','09', '10', '11'])#([ '03', '04', '05', '06', '09', '10', '11'])
+days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
-
+h=17
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
-vars['lw_out_PBLtop'] = ([], 18)
-vars['lsRain'] =  ([], 18)   # pressure levels, hour # totRain for CP25, lsRain for CP
+vars['lw_out_PBLtop'] = ([], h)  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
+vars['lsRain'] =  ([], h)   # pressure levels, hour
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
-vars['q_pl'] = ([925], 12)  # 925, 650 available
+vars['q_pl'] = ([925], 12)  # INPUT IN T * 100!!
 vars['theta'] = ([650, 925], 12)
-vars['t_pl'] = ([650], 12)
+vars['t_pl'] = ([650], 12)   # INPUT IN T * 100!!
 
-# datelist = []
-# for y,m,d in itertools.product(years, months, days):
-#     datelist.append(y+m+str(d).zfill(2))
-# files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
+datelist = []
+for y,m,d in itertools.product(years, months, days):
+    datelist.append(y+m+str(d).zfill(2))
 
-dummy = xr.open_mfdataset(data_path+os.sep+'q_pl'+os.sep+'*.nc', autoclose=True)  #check for q_pl timeseries cause pressure level dates are missing
+for d in datelist:
 
-time = dummy['q_pl'][dummy['time.hour']==12].time
+    testfiles = glob.glob(out_path + os.sep + d[0:4] + '-' + d[4:6] + '-' + d[6:8] + '_' + str(h) + '*.nc')
 
-for d in time[0:10]:
-
-    if (d['time.year']<1998) | (d['time.month']<3) | (d['time.month']>11):
+    if len(testfiles) > 0:
+        print(testfiles[0], ' already exists, continue!')
         continue
+
+
     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
+
+# for d in datelist[0:10]:
+#
+#     if (d['time.year']<1998) | (d['time.month']<3) | (d['time.month']>11):
+#         continue
+#     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)

@@ -19,7 +19,7 @@ def dictionary():
     dic = {}
     vars = ['hour', 'month', 'year', 'area',
             'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean',
+            'tmin', 'tmean', 'thetamean', 'thetamax',
             'pmax', 'pmean',
             'qmax' , 'qmean',
             'umax_srfc', 'umean_srfc',
@@ -37,7 +37,7 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_-50C_5000km2')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
     # res = pool.map(file_loop, files)
@@ -76,7 +76,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA-I.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N.p',
                            'wb'))
 
 
@@ -94,6 +94,9 @@ def file_loop(f):
     outu_mid = dic['u_mid'].values
     outshear = dic['shear'].values
     outq = dic['q_pl'].values
+    theta = dic['theta'].values
+    tmid = dic['t_pl'].values
+
 
     out['lon'] = dic['longitude'].values
     out['lat'] = dic['latitude'].values
@@ -104,33 +107,49 @@ def file_loop(f):
 
     t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
+    antimask = ~mask
+
+    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid]:
+        var[antimask] = np.nan
+
 
     if np.sum(mask) < 3:
         return
 
-    antimask = ~mask
-    outp[antimask] = 0
     maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
+    minpos = np.unravel_index(np.nanargmin(outt), outt.shape)
+    minshear = np.unravel_index(np.nanargmin(outshear), outt.shape)
+    maxq = np.unravel_index(np.nanargmax(outq), outt.shape)
 
     out['area'] = np.sum(mask)
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
-    out['tmin'] = np.min(outt[mask])
+    out['tmin'] = np.nanmin(outt)
     out['tmean'] = np.mean(outt[mask])
 
-    out['pmax'] = np.nanmean(outp[maxpos[0]-1:maxpos[0]+2, maxpos[1]-1:maxpos[1]+2]) # degrade rainfall to 20km
+
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],2)) # degrade rainfall to 13km
+
     #out['pmax'] = np.max(outp[mask]) # degrade rainfall to 20km
     out['pmean'] = np.mean(outp[mask])
-    out['qmax'] = np.max(outq[mask])
-    out['qmean'] = np.mean(outq[mask])
+    out['qmax'] = np.nanmean(ua.cut_kernel(outq,maxq[1], maxq[0],2)) #np.max(outq[mask])
+
+    out['qmean'] = np.nanmean(outq[mask])
     out['umax_srfc'] = np.max(outu_srfc[mask])
-    out['umean_srfc'] = np.mean(outu_srfc[mask])
+    out['umean_srfc'] = np.nanmean(outu_srfc[mask])
     out['umin_mid'] = np.min(outu_mid[mask])
     out['umean_mid'] = np.mean(outu_mid[mask])
-    out['shearmin'] = np.min(outshear[mask])
+
+
+    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minshear[1], minshear[0],2))
+
     out['shearmean'] = np.mean(outshear[mask])
+    out['thetamax'] = np.max(theta[mask])
+    out['thetamean'] = np.mean(theta[mask])
+    out['tmidmax'] = np.max(tmid[mask])
+    out['tmidmean'] = np.mean(tmid[mask])
 
     out['pgt30'] = np.sum(outp[mask]>30)
     out['isvalid'] = np.sum(mask)

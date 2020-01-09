@@ -220,21 +220,21 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             derived = v
             v = 't_pl'
 
-        # try:
-        #     filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
-        # except IndexError:
-        #     print('No file found, return')
-        #     return
-
-        filepath = cp_dir+os.sep+str(v)+os.sep+'*'+str(d['time.year'].values)+str(d['time.month'].values).zfill(2)+'*.nc'
+        filepath = cp_dir + os.sep + str(v) + os.sep + '*' + str(d['time.year'].values) + str(
+            d['time.month'].values).zfill(2) + '*.nc'
         print('Filepath', filepath)
-        arr = xr.open_mfdataset(filepath, autoclose=True)
+        try:
+            arr = xr.open_mfdataset(filepath, autoclose=True)
+        except IOError:
+            print('Monthly file missing, return! ', filepath)
+            return
 
-        dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
+        dar = arr[v].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3])).load()
 
 
         datestringh = pd.datetime(datestring['time.year'], datestring['time.month'], datestring['time.day'],
                                   h, datestring['time.minute'])
+
 
         try:
             dar = dar.sel(time=datestringh, method='nearest') #, method='nearest'
@@ -243,8 +243,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         del arr
 
-        if (v == 'q_pl') | (v=='t_pl') | (v=='lw_out_PBLtop'):
-            dar.values = np.array(dar.values/100).astype(float)
+        # if (v == 'q_pl') | (v=='t_pl') | (v=='lw_out_PBLtop'):
+        #     dar.values = np.array(dar.values/100).astype(float)
 
         if int(dar['time.day']) != datestringh.day:
             print('Wrong day, file missing for variable ', v)
@@ -258,9 +258,17 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         if 'pressure' in dar.coords:
             try:
                 dar.values[dar.values==0] = np.nan # potential missing value maskout
+
             except ValueError:
                 print('Pressure value error!')
                 return
+
+            if vv == 'q_pl':
+                dar.values = dar.values*1000
+
+            if (vv == 't_pl') | (vv == 'theta'):
+                dar.values = dar.values-273.15
+
             if (len(pl) > 1) & (vv == 'shear'):
 
                 shear = dar.sel(pressure=650).values - dar.sel(pressure=925).values
@@ -284,7 +292,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
                 except ValueError:
                     dar2 = dar2.sel(time=datestringh)
 
-                dar2.values = np.array(dar2.values / 100).astype(float) / 1000
+                #dar2.values = dar2.values / 1000
 
                 theta_up = u_met.theta_e(650, dar.sel(pressure=650).values, dar2.sel(pressure=650).values)
                 theta_low = u_met.theta_e(925, dar.sel(pressure=925).values, dar2.sel(pressure=925).values)
@@ -315,29 +323,63 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
         if v == 'lw_out_PBLtop':
 
+            testfiles = glob.glob(out_dir + os.sep + pd.Timestamp(datestringh).strftime('%Y-%m-%d_%H:%M:%S') + '*.nc')
+
+            if len(testfiles) > 0:
+                print(testfiles[0], ' already exists, continue!')
+                continue
+
+
+
             da.values = olr_to_bt(da.values)
+            #
+            # plt.figure()
+            # plt.hist(da.values.flatten())
 
             da.values[da.values >= tthresh] = 0  # T threshold maskout
             da.values[np.isnan(da.values)] = 0 # set ocean nans to 0
 
-            try:
-                date = da.time.values[0]
-            except IndexError:
-                date = da.time.values
+            # try:
+            #     date = da.time.values[0]
+            # except IndexError:
+            #     date = da.time.values
+
+            outdate = pd.Timestamp(datestringh).strftime('%Y-%m-%d_%H:%M:%S')
+            #ipdb.set_trace()
+
 
             labels, numL = label(da.values)
 
-            plt.figure()
-            plt.pcolormesh(labels)
-            return
+
+            # plt.figure()
+            # plt.pcolormesh(labels)
+            # return
 
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 258]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            goodinds = u[n >= 258]  # 51pix is 1000km2 ,258 for CP4 5000km2 # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
                 print('No goodinds!')
                 return
+            #print('DATE ', dar.time)
+
+            # plt.figure()
+            # plt.pcolormesh(da.values)
+            # plt.colorbar()
+            #
+            #
+            # for gi in goodinds:
+            #     if gi == 0:
+            #         continue
+            #     labels[labels == gi] = -999
+            # plt.figure()
+            # plt.pcolormesh(labels)
+            # plt.colorbar()
+            #
+            # return
+
+
 
         if (v == 'lsRain') | (v == 'totRain'):
             da.values = da.values*3600  # rain to mm/h
@@ -349,6 +391,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 
     for gi in goodinds:
+
+
         if (gi == 0):  # index 0 is always background, ignore!
             continue
         inds = np.where(labels == gi)
@@ -371,7 +415,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             if np.nansum(ds_box['totRain'])==0:
                 return
 
-        savefile = out_dir + os.sep + pd.Timestamp(date).strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+        savefile = out_dir + os.sep + outdate + '_' + str(gi) + '.nc'
         try:
             os.remove(savefile)
         except OSError:
@@ -386,21 +430,22 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 ### Inputs:
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
+data_path = cnst.network_data + 'data/CP4/CLOVER/CP25hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N'  # out directory to save MCS files
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP25_18UTC_5000km2_-50_5-20N'  # out directory to save MCS files
 box = [-12, 12, 5, 20]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-# years = np.array(np.arange(2001,2007), dtype=str)
-# months = np.array([ '03', '04', '05', '06', '09', '10', '11'])
-# days = np.array(np.arange(1,32), dtype=str)
+years = np.array(np.arange(1998,2007), dtype=str)
+months = np.array([ '03', '04', '05', '06', '07', '08', '09', '10', '11'])
+days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
-vars['lw_out_PBLtop'] = ([], 18)
-vars['lsRain'] =  ([], 18)   # pressure levels, hour # totRain for CP25, lsRain for CP
+vars['lw_out_PBLtop'] = ([], 20)
+vars['totRain'] =  ([], 20)   # pressure levels, hour # totRain for CP25, lsRain for CP
+vars['q_pl'] = ([925], 12)  # 925, 650 available
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
@@ -408,16 +453,13 @@ vars['q_pl'] = ([925], 12)  # 925, 650 available
 vars['theta'] = ([650, 925], 12)
 vars['t_pl'] = ([650], 12)
 
-# datelist = []
-# for y,m,d in itertools.product(years, months, days):
-#     datelist.append(y+m+str(d).zfill(2))
-# files = glob.glob(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc')
 
-dummy = xr.open_mfdataset(data_path+os.sep+'q_pl'+os.sep+'*.nc', autoclose=True)  #check for q_pl timeseries cause pressure level dates are missing
+dummy = xr.open_mfdataset(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc', autoclose=True)  #check for q_pl timeseries cause pressure level dates are missing
 
-time = dummy['q_pl'][dummy['time.hour']==12].time
+time = dummy['lw_out_PBLtop'][dummy['time.hour']==20].time
 
-for d in time[0:10]:
+
+for d in time:
 
     if (d['time.year']<1998) | (d['time.month']<3) | (d['time.month']>11):
         continue

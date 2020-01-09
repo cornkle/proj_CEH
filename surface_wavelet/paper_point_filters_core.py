@@ -32,7 +32,7 @@ def run_hours():
 def rewrite_list(hour):
         path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
         dic = pkl.load(
-            open(path + "cores_gt15000km2_table_"+str(hour)+".p", "rb"))
+            open(path + "cores_gt15000km2_table_"+str(hour)+"_s35.p", "rb"))
         new = dic.copy()
         for k in new.keys():
             new[k] = []
@@ -42,12 +42,12 @@ def rewrite_list(hour):
             for l in lists:
                 new[k].extend(l)
 
-        pkl.dump(new, open(path + "cores_gt15000km2_table_"+str(hour)+"_new.p", "wb"))
+        pkl.dump(new, open(path + "cores_gt15000km2_table_"+str(hour)+"_s35.p", "wb"))
 
 
         df = pd.DataFrame.from_dict(new)
         df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id'])
-        df.to_csv(path + "cores_gt15000km2_table_1640_580_"+str(hour)+".csv", na_rep=-999, index_label='id')
+        df.to_csv(path + "cores_gt15000km2_table_1640_580_"+str(hour)+"_s35.csv", na_rep=-999, index_label='id')
 
 
 def composite(hour):
@@ -60,7 +60,7 @@ def composite(hour):
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9) ]
 
-    msg = msg.sel(lat=slice(9,19.5), lon=slice(-11.5, 11.5))
+    msg = msg.sel(lat=slice(9,19.5), lon=slice(-9.5, 9.5))
 
     res = pool.map(file_loop, msg)
     pool.close()
@@ -81,7 +81,7 @@ def composite(hour):
 
             dic[l] = np.squeeze(res[:,id,...])
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_"+str(hour)+".p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"/cores_gt15000km2_table_"+str(hour)+"_s35.p", "wb"))  #"+str(hour)+"
     print('Save file written!')
 
     rewrite_list(hour)
@@ -118,7 +118,7 @@ def file_loop(fi):
     outdate = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
 
-    pos = np.where((fi.values >= 5) & (fi.values <= 65)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
+    pos = np.where((fi.values >= 5) & (fi.values <= 35)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0):
         print('No blobs found')
@@ -189,7 +189,7 @@ def file_loop(fi):
 
         if (chour >= 0) & (chour <= 13):
             chour += 24
-        if (mhour < chour) | (np.isnan(mhour)):
+        if (mhour+1 < chour) | (np.isnan(mhour)):
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
 

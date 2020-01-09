@@ -127,7 +127,7 @@ def composite(h):
 
     #ipdb.set_trace()
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_tracking_"+str(hour)+".p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking_"+str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
 
@@ -196,6 +196,10 @@ def file_loop(df):
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
     topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7.8, 23.2))
     ttopo = topo['h']
+
+    # topo = xr.open_dataset(cnst.LSTA_TOPO)
+    # ttopo = topo['h']
+
     #
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0])+abs(grad[1])

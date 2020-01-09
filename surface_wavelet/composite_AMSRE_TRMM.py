@@ -35,7 +35,7 @@ def composite(h):
     # 16UTC - 18UTC
     # 0-3 UTC
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] >=0) & (msg['time.hour'] <=3) &(
+    msg = msg[(msg['time.hour'] >=15) & (msg['time.hour'] <=18) &(
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
     msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
@@ -45,7 +45,7 @@ def composite(h):
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/amsre_0-"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/amsre_0-"+str(hour).zfill(2)+".p", "wb"))
 
     extent = dic['ano'].shape[1]/2
 
@@ -140,6 +140,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         ypos = ypos - ly
     #AMSRE 0.25 degrees ~ 27.5 km
     dist = 10
+    #dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -191,6 +192,12 @@ def file_loop(fi):
     topo = xr.open_dataset(constants.LSTA_TOPO)
     ttopo = topo['h']
     ttopo = lsta_da.salem.lookup_transform(ttopo)
+
+    # try:
+    #     lsta_da = topo.salem.transform(lsta_da)
+    # except RuntimeError:
+    #     print('lsta_da on LSTA interpolation problem')
+    #     return None
 
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0]) + abs(grad[1])
@@ -267,7 +274,7 @@ def file_loop(fi):
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
         try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False,
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -50, parallax=False,
                                                rotate=False)
         except TypeError:
             continue

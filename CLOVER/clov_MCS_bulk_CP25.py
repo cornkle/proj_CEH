@@ -37,11 +37,15 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_-50C_5000km2')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_18UTC_5000km2_-50_5-20N')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
     pool.close()
+
+    # res=[]
+    # for f in files:
+    #     res.append(file_loop(f))
     #
     #res = [item for sublist in res for item in sublist]  # flatten list of lists
 
@@ -51,6 +55,7 @@ def perSys():
             try:
                 mdic[k].append(v[k])
             except TypeError:
+                print('Something wrong, return!')
                 continue
 
 
@@ -72,8 +77,9 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA-I.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA5_WA_5-20N.p',
                            'wb'))
+    print('Saved file')
 
 
 def file_loop(f):
@@ -86,7 +92,12 @@ def file_loop(f):
         outp = dic['lsRain'].values
     except KeyError:
         outp = dic['totRain'].values
-    outu_srfc = dic['u_srfc'].values
+
+    try:
+        outu_srfc = dic['u_srfc'].values
+    except KeyError:
+        print('Vars missing, return')
+        return
     outu_mid = dic['u_mid'].values
     outshear = dic['shear'].values
     outq = dic['q_pl'].values
@@ -102,6 +113,7 @@ def file_loop(f):
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
 
     if np.sum(mask) < 3:
+        print('Not enough valid, return')
         return
     out['area'] = np.sum(mask)
 
