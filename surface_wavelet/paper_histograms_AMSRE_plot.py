@@ -30,7 +30,7 @@ def diurnal_loop():
 
 def plot(hour):
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "_corrected_SouthBox.p", "rb"))
+    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "_noOverlapFilter.p", "rb"))
     #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
 
     for k in dic.keys():
@@ -40,11 +40,13 @@ def plot(hour):
         dic[k] = coll
     print(dic.keys())
 
-    cinput = np.array(dic['c30'])
-    rinput = np.array(dic['r30'])
+    cinput = np.array(dic['e100'])
+    rinput = np.array(dic['re100'])
 
     cinput = cinput[np.isfinite(cinput)]
     rinput = rinput[np.isfinite(rinput)]
+
+    print('NUMBEROFCORE', cinput.shape)
 
     nbpoint, pointcount, bins = u_stat.histo_frequency(cinput, bins=np.arange(-15,15,1))
     nball, allcount, bins = u_stat.histo_frequency(rinput, bins=np.arange(-15, 15, 1))

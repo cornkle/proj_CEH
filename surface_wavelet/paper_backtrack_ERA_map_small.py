@@ -1084,7 +1084,7 @@ def plot_doug_all(h, eh):
     dic = {}
     dic2 = {}
 
-    name = "ERA5_composite_cores_LSTA_500w04_15k_WET_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
 
     def coll(dic, h, eh, year):
@@ -1096,6 +1096,7 @@ def plot_doug_all(h, eh):
                 dic[k] = dic[k] + core[k]
             except KeyError:
                 dic[k] = core[k]
+
 
 
     for y in range(2006,2011):
@@ -1124,7 +1125,7 @@ def plot_doug_all(h, eh):
     ax = f.add_subplot(231)
 
 
-    plt.contourf((dic['plsta'] / dic['plcnt'])-np.mean((dic['plsta'] / dic['plcnt'])), cmap='RdBu_r', levels=np.linspace(-2,2,16), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['plsta'] / dic['plcnt'])-np.mean((dic['plsta'] / dic['plcnt'])), cmap='RdBu_r', levels=np.linspace(-1.5,1.5,16), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     plt.colorbar(label='K', format='%1.2f')
     plt.text(0.02,0.08, 'ITD 0-line', color='turquoise', fontsize=12, transform=ax.transAxes)
@@ -1139,9 +1140,11 @@ def plot_doug_all(h, eh):
     #contours2 = plt.contour((dic['v925']) / dic['cntp'], extend='both', cmap='RdBu', levels=np.linspace(-1, 1,9))  # , levels=np.linspace(-1,1,10)#(dic['probc']/ dic['cntc'])*100, extend='both', levels=np.arange(15,70,12), cmap='jet') # #, levels=np.arange(1,5, 0.5)
     #plt.clabel(contours2, inline=True, fontsize=11, fmt='%1.0f')
 
-    contours = plt.contour((dic['v925']/ dic['cntc']), extend='both',colors='k', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
-    #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+    contours = plt.contour((dic['v650_orig']/ dic['cntc']), extend='both',colors='k', linewidths=4, levels=[-50,-0.1,50])  #np.arange(-15,-10,0.5)
+    # #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
+   # ax.streamplot(xv, yv, dic['u650_orig'] / dic['cntp'], (dic['v650_orig'] / dic['cntp'])*10, density=[0.5, 1])
+    qu = ax.quiver(xquiv, yquiv, u600*0, v600, scale=15)
     contours = plt.contour((dic['v925_orig']/ dic['cntc']), extend='both',colors='turquoise', linewidths=4, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
     #plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
@@ -1154,7 +1157,7 @@ def plot_doug_all(h, eh):
 
 
     ax1 = f.add_subplot(232)
-    plt.contourf(((dic['lsta'])/ dic['cnt'])-np.mean((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-2,2,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['lsta'])/ dic['cnt'])-np.mean((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', levels=np.linspace(-1.5,1.5,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K', format='%1.2f')
     contours = plt.contour((dic['probc']/ dic['cntc'])*100, extend='both', levels=np.arange(15,70,12), cmap='jet', linewidths=2)  #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
@@ -1240,7 +1243,7 @@ def plot_doug_all(h, eh):
     plt.title(r'$\Delta \theta_{e}$ anomaly, contours: 650hPa u-wind anomaly', fontsize=9)
 
     plt.tight_layout()
-    plt.show()
+    #plt.show()
     plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+str(h).zfill(2)+'_'+str(eh).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     #plt.close()
 

@@ -54,7 +54,7 @@ def merge():
             pkl.dump(dic, open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_15000_-60_merge_median.p", "wb"))
 
 def plot(hour):
-    name = 'UTC_15000_-60_AMSRE'#'UTC_15000_-60_AMSRE'
+    name = 'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
@@ -70,20 +70,6 @@ def plot(hour):
     keys = list(dic.keys())
     cnt = (dic['SN-pos'][0]).shape[0]
 
-    #ipdb.set_trace()
-
-    # for l in keys:
-    #     if l == 'scales':
-    #         continue
-    #     if 'pos' in l:
-    #         (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-    #         (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-    #     else:
-    #         (dic[l])[0] = np.nanmean((dic[l])[0], axis=0)
-    #         try:
-    #             (dic[l])[1] = np.nanmean((dic[l])[1], axis=0)
-    #         except IndexError:
-    #             continue
 
     l=0
     dist=100
@@ -239,10 +225,14 @@ def plot_diurnal():
     #return dout
 
 
-def plot_map(hour):
+def plot_map_AMSRE(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    key = '2hOverlap'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + (key) + "_.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    #dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(hour) + "UTC_15000_AMSLST_3slot_noOverplotFilter.p",
+    #                    "rb"))  # UTC_15000_ALL_-60_5slotSmall
+
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -260,10 +250,107 @@ def plot_map(hour):
     pos = np.array([2,4,6,8])#np.array([1,4,6,10])
     print(scales[pos])
     #ipdb.set_trace()
-    kernel = (dic['kernel'])[0] / dic['cnt'][0]
+    kernel = (dic['kernel'])[0] #/ dic['cnt'][0]
     random = (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['cnt'][0][0,:,:]
+
+    cnt = dic['cnt'][0][0,:,:]
+
     mask = (dic['kernel'])[2]
+    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    dist=100
+    levels = np.array(list(np.arange(-0.3, 0, 0.05)) + list(np.arange(0.05, 0.31, 0.05)))*3000
+
+    f = plt.figure(figsize=(10, 8), dpi=200)
+    ax = f.add_subplot(221)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both') #,levels=list(np.arange(-1, 0, 0.2)) + list(np.arange(0.2, 1.2, 0.2))
+    plt.colorbar(label='K')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    ax.plot(0,0, 'bo')
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.axvline(x=0, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+
+    plt.title('LSTA | Nb cores: ' + str(nbcores) + '| ' + str(hour).zfill(2) + '00UTC',
+              fontsize=10)
+
+    ax = f.add_subplot(222)
+    print('averaged: ',scales[0], scales[1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel[1,:,:], cmap='RdBu_r', extend='both', levels=levels)
+    plt.plot(0,0,'bo')
+    plt.colorbar(label='Wavelet coefficients')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    plt.axvline(x=0, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('30km', fontsize=10)
+
+    ax = f.add_subplot(223)
+    print('averaged: ',scales[0], scales[1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel[2,:,:], cmap='RdBu_r', extend='both', levels=levels)
+    plt.plot(0,0,'bo')
+    plt.colorbar(label='Wavelet coefficients')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    plt.axvline(x=0, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('59km', fontsize=10)
+
+    ax = f.add_subplot(224)
+    print('averaged: ',scales[0], scales[1])
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , kernel[3,:,:], cmap='RdBu_r', extend='both', levels=levels)
+    plt.plot(0,0,'bo')
+    plt.colorbar(label='Wavelet coefficients')
+    #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[0,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
+    plt.axvline(x=0, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('109km', fontsize=10)
+
+
+    plt.tight_layout()
+    #plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
+    plt.show()
+
+
+def plot_map(hour):
+
+    key = '2hOverlap'
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_" + key +".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+
+    scales = dic['scales']
+    nbcores = dic['nbcores']
+    nbrcores = dic['nbrcores']
+    del dic['scales']
+    del dic['nbcores']
+    del dic['nbrcores']
+
+
+    keys = list(dic.keys())
+    cnt = (dic['SN-pos'][0]).shape[0]
+
+    l=0
+
+    pos = np.array([2,4,6,8])#np.array([1,4,6,10])
+    print(scales[pos])
+    #ipdb.set_trace()
+    kernel = (dic['kernel'])[0] / dic['cnt'][0]
+    random = (dic['kernel'])[1] / dic['cnt'][1]
+    lsta = (dic['lsta'])[0] / dic['lsta'][1]
+    mask = (dic['kernel'])[2]
+
+    cnt = dic['cnt'][0][0, :, :]
+    slots = dic['slots'][0]
+
     extent = ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
     levels = list(np.arange(-0.3, 0, 0.05)) + list(np.arange(0.05, 0.31, 0.05))
@@ -271,7 +358,7 @@ def plot_map(hour):
     f = plt.figure(figsize=(10, 8), dpi=200)
     ax = f.add_subplot(221)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both',levels=list(np.arange(-1, 0, 0.2)) + list(np.arange(0.2, 1.2, 0.2)))
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , cnt , cmap='RdBu_r', extend='both')  #,levels=list(np.arange(-1, 0, 0.2)) + list(np.arange(0.2, 1.2, 0.2))
     plt.colorbar(label='K')
     #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
     ax.plot(0,0, 'bo')

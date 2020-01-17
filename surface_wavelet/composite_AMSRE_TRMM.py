@@ -38,14 +38,14 @@ def composite(h):
     msg = msg[(msg['time.hour'] >=15) & (msg['time.hour'] <=18) &(
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
-    msg = msg.sel(lat=slice(10, 20), lon=slice(-10, 10))
+    msg = msg.sel(lat=slice(12, 20), lon=slice(-10, 10))
 
     dic = u_parallelise.run_arrays(7, file_loop, msg, ['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
     for k in dic.keys():
        dic[k] = np.nansum(dic[k], axis=0)
 
-    pkl.dump(dic, open("/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/amsre_0-"+str(hour).zfill(2)+".p", "wb"))
+    pkl.dump(dic, open("/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/amsre_0-"+str(hour).zfill(2)+".p", "wb"))
 
     extent = dic['ano'].shape[1]/2
 
@@ -139,7 +139,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         xpos = xpos - lx
         ypos = ypos - ly
     #AMSRE 0.25 degrees ~ 27.5 km
-    dist = 10
+    dist = 21
     #dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
@@ -183,7 +183,7 @@ def file_loop(fi):
     except OSError:
         return None
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+    lsta = lsta.sel(lon=slice(-12, 12), lat=slice(8, 21))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
@@ -191,7 +191,7 @@ def file_loop(fi):
 
     topo = xr.open_dataset(constants.LSTA_TOPO)
     ttopo = topo['h']
-    ttopo = lsta_da.salem.lookup_transform(ttopo)
+    #ttopo = lsta_da.salem.lookup_transform(ttopo)
 
     # try:
     #     lsta_da = topo.salem.transform(lsta_da)
@@ -199,8 +199,8 @@ def file_loop(fi):
     #     print('lsta_da on LSTA interpolation problem')
     #     return None
 
-    grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0]) + abs(grad[1])
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0]) + abs(grad[1])
 
     # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
     #     print('Not enough valid')
@@ -208,10 +208,10 @@ def file_loop(fi):
 
     # lsta_da.values[np.isnan(lsta_da.values)] = 0
 
-    lsta_da.values[ttopo.values >= 450] = np.nan
-    lsta_da.values[gradsum > 30] = np.nan
+    # lsta_da.values[ttopo.values >= 600] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
 
-    pos = np.where(fi.values >= 15)
+    pos = np.where((fi.values >= 15) & (fi.values<=65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 2):
         print('No blobs found')

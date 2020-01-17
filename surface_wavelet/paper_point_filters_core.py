@@ -16,6 +16,7 @@ from utils import u_arrays, constants as cnst, u_met
 import pickle as pkl
 from utils import u_arrays as ua, u_darrays as uda
 import salem
+import matplotlib.pyplot as plt
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -29,11 +30,16 @@ def run_hours():
         composite(ll)
 
 
+key = '2hOverlap'
+box = [9,19.5,-11.5,11.5]
+
+
 def rewrite_list(hour):
-        path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+        path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/'
         dic = pkl.load(
-            open(path + "cores_gt15000km2_table_"+str(hour)+"_s35.p", "rb"))
+            open(path + "cores_gt15000km2_table_"+str(hour)+"_" + key + ".p", "rb"))
         new = dic.copy()
+
         for k in new.keys():
             new[k] = []
 
@@ -42,25 +48,25 @@ def rewrite_list(hour):
             for l in lists:
                 new[k].extend(l)
 
-        pkl.dump(new, open(path + "cores_gt15000km2_table_"+str(hour)+"_s35.p", "wb"))
+        pkl.dump(new, open(path + "cores_gt15000km2_table_"+str(hour)+"_" + key + ".p", "wb"))
 
 
         df = pd.DataFrame.from_dict(new)
-        df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id'])
-        df.to_csv(path + "cores_gt15000km2_table_1640_580_"+str(hour)+"_s35.csv", na_rep=-999, index_label='id')
+        df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'topo', 'dtime'])
+        df.to_csv(path + "cores_gt15000km2_table_1640_580_"+str(hour)+"_" + key + ".csv", na_rep=-999, index_label='id')
 
 
 def composite(hour):
     pool = multiprocessing.Pool(processes=5)
 
     file = cnst.MCS_POINTS_DOM #MCS_TMIN #
-    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients' #corrected_LSTA/wavelet/large_scale
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/' #corrected_LSTA/wavelet/large_scale
 
     msg = xr.open_dataarray(file)
     msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9) ]
 
-    msg = msg.sel(lat=slice(9,19.5), lon=slice(-9.5, 9.5))
+    msg = msg.sel(lat=slice(box[0],box[1]), lon=slice(box[2], box[3]))
 
     res = pool.map(file_loop, msg)
     pool.close()
@@ -75,13 +81,13 @@ def composite(hour):
 
     res = np.array(res)
 
-    dic_names = [ 'year', 'month', 'day', 'hour','lon', 'lat', 'area' , 'csize', 'xloc', 'yloc', 't','storm_id']
+    dic_names = [ 'year', 'month', 'day', 'hour','lon', 'lat', 'area' , 'csize', 'xloc', 'yloc', 't','storm_id', 'topo', 'dtime']
 
     for id, l in enumerate(dic_names):
 
             dic[l] = np.squeeze(res[:,id,...])
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_"+str(hour)+"_s35.p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"core_txt/cores_gt15000km2_table_"+str(hour)+"_" + key + ".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
 
     rewrite_list(hour)
@@ -118,7 +124,7 @@ def file_loop(fi):
     outdate = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
 
-    pos = np.where((fi.values >= 5) & (fi.values <= 35)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
+    pos = np.where((fi.values >= 5) & (fi.values <= 65)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
 
     if (np.sum(pos) == 0):
         print('No blobs found')
@@ -136,9 +142,11 @@ def file_loop(fi):
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)  ###5km grid
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
-    mcsimage = mcsimage.sel(time=fi.time, lat=slice(9,19.5), lon=slice(-11.5, 11.5))
+    mcsimage = mcsimage.sel(time=fi.time, lat=slice(box[0],box[1]), lon=slice(box[2], box[3]))
+    mcs_hour = mcs_hour.sel(lat=slice(box[0],box[1]), lon=slice(box[2], box[3]))
 
-
+    topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    ttopo = topo['h']
 
     #size filter
     labels, goodinds = ua.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)
@@ -154,6 +162,9 @@ def file_loop(fi):
     xpos_3k = []
     ypos_3k = []
     storm_id = []
+    topo = []
+    core_size = []
+    dtime = []
 
 
     xloc = []
@@ -174,6 +185,8 @@ def file_loop(fi):
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
+        h = ttopo.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
+
         #overlap filter
         try:
             mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 14), lon=lon,
@@ -189,9 +202,18 @@ def file_loop(fi):
 
         if (chour >= 0) & (chour <= 13):
             chour += 24
-        if (mhour+1 < chour) | (np.isnan(mhour)):
-            print('Core overlaps: earliest:', mhour, ' core: ', chour)
-            continue
+
+        deltatime = chour - mhour
+
+        # if (mhour+2 < chour): #| (np.isnan(mhour)
+        #     print('Core overlaps: earliest:', mhour, ' core: ', chour)
+        #     continue
+
+        if np.isnan(mhour):
+            plt.figure()
+            plt.contourf(mcsimage)
+            plt.contour(mhour, levels=[14,chour])
+            plt.plot(y,x,'ro')
 
 
         isnear = ua.closest_point(np.array([lon,lat]), msg_coords)
@@ -212,11 +234,13 @@ def file_loop(fi):
         xloc.append(loc[1])
         yloc.append(loc[0])
         storm_id.append(si)
+        topo.append(h.values)
+        dtime.append(deltatime)
 
         print('llstart', (float(lon.values), float(lat.values)), 'isMSG', ispoint)
 
 
-    return (yearlist, monthlist, daylist , hourlist, xpos_3k, ypos_3k,area_list,csize_list, xloc,yloc,temperature_list, storm_id)
+    return (yearlist, monthlist, daylist , hourlist, xpos_3k, ypos_3k,area_list,csize_list, xloc,yloc,temperature_list, storm_id, topo, dtime)
 # rcns_sum, rcwe_sum, cns_sum, cwe_sum,
 
 

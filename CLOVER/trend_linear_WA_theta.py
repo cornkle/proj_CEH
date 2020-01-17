@@ -11,6 +11,8 @@ import numpy.ma as ma
 import pickle as pkl
 import shapely.geometry as shpg
 import seaborn
+from metpy import calc
+from metpy.units import units
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -35,7 +37,7 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
         print('Data does not seem to have picked month or hour. Please check input data')
 
 
-    mean_years = data.groupby('time.year').mean(axis=0)
+    mean_years = data.groupby('time.year').mean(dim='time')
 
     # stack lat and lon into a single dimension called allpoints
     datastacked = mean_years.stack(allpoints=['latitude', 'longitude'])
@@ -107,7 +109,7 @@ def trend_all():
     press = da2['tcwv']
     #press = press[press['time.hour'] == 12]
     #press.values = press.values#*1000
-    low_press = 925
+    low_press = 950
     up_press = 650
     mid_press = 700
 
@@ -115,17 +117,29 @@ def trend_all():
     t2d = da2['t2m']
 
 
+
     theta_low = u_met.theta_e(low_press, da['t'].sel(level=slice(low_press-30, low_press)).mean('level').values-273.15, da['q'].sel(level=slice(low_press-30, low_press)).mean('level').values)
     theta_high = u_met.theta_e(mid_press, da['t'].sel(level=slice(up_press, mid_press)).mean('level').values-273.15, da['q'].sel(level=slice(up_press, mid_press)).mean('level').values)
     theta_high_d = u_met.theta(mid_press, da['t'].sel(level=slice(up_press, mid_press)).mean('level').values - 273.15)
     theta_low_d = u_met.theta(low_press, da['t'].sel(level=slice(low_press - 30, low_press)).mean('level').values - 273.15)
 
-    theta_diff = theta_low - theta_high
-    theta_diff_d = theta_low_d - theta_high_d
+    # punit = units.Quantity(mid_press, 'hPa')
+    # tunit = units.Quantity(da['t'].sel(level=slice(mid_press-30, mid_press)).mean('level').values, 'K')
+    # theta_high_d = calc.saturation_equivalent_potential_temperature(punit,tunit)
+    #
+    # punit = units.Quantity(low_press, 'hPa')
+    # tunit = units.Quantity(da['t'].sel(level=slice(low_press-30, low_press)).mean('level').values, 'K')
+    # theta_low_d = calc.saturation_equivalent_potential_temperature(punit, tunit)
 
+
+    theta_diff =  (theta_high / theta_low )*100#(np.array(theta_high)-273.15) #theta_low -
+    theta_diff_d = da2['cape']##np.array(theta_low_d) - np.array(theta_high_d)
+    #
     theta_e = t2d.copy(deep=True)
     theta_e.name = 'theta'
     theta_e.values = theta_diff
+
+    theta_e = da['r'].sel(level=slice(mid_press-30, mid_press)).mean('level')#da2['cape']
 
     theta_d = t2d.copy(deep=True)
     theta_d.name = 'theta'
@@ -235,10 +249,18 @@ def trend_all():
         dicmean[m[0]] = tirm_mean
 
         if len(m) == 1:
-            fp = fpath + 'use/ERA5_-70_use_windvec925_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_-70_use_cape925_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'use/ERA5_-70_use_windvec925_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
-        map = shear.salem.get_map()
+            fp = fpath + 'use/ERA5_-70_use_cape925_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+        map = shear.salem.get_map(countries=False)
+        # Change the country borders
+        map.set_shapefile(countries=True, color='grey', linewidths=0.5)
+        #map.set_lonlat_contours(interval=0)
+        # Change the lon-lat countour setting
+        map.set_lonlat_contours(add_ytick_labels=True, interval=5, linewidths=0.01,
+                                 linestyles='-', colors='white')
+
+
         ti_da = t2d.salem.transform(tirtrend_out)
 
         f = plt.figure(figsize=(15,8), dpi=300)
@@ -295,9 +317,9 @@ def trend_all():
         ax1 = f.add_subplot(221)
         map.set_data(t_da.values, interp='linear')  # interp='linear'
 
-        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.8,1], colors='darkturquoise', linewidths=2)
+        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.6,0.8], colors='k', linewidths=1.5)
         map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.0025)
+        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.002)
 
         # qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
         #                    labelpos='E', coordinates='figure')
@@ -305,39 +327,45 @@ def trend_all():
         #map.set_contour((t2_mean.values).astype(np.float64), interp='linear', colors='k', linewidths=0.5, levels=np.linspace(800,925,8))
         #map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,-0.02, 0.02,0.05,0.1,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
 
-        dic = map.visualize(ax=ax1, title='2m temperature | 925-600hPa wind shear | 600hPa wind vectors', cbar_title=r'K decade$^{-1}$')
+        dic = map.visualize(ax=ax1, title='2m temperature | 925-600hPa wind shear | 650hPa wind vectors', cbar_title=r'K decade$^{-1}$')
         contours = dic['contour'][0]
-        plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
+        plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+        qk = plt.quiverkey(qu, 0.45, 0.52, 1, '1 m s$^{-1}$decade$^{-1}$',
+                           labelpos='E', coordinates='figure')
 
         ax2 = f.add_subplot(222)
-        map.set_data(theta_da.values,interp='linear')  # interp='linear'
-        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='darkturquoise', levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6], linewidths=3) #[6,8,10,12,14,16]
-        map.set_plot_params(levels=[-1,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8,1], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
+        map.set_data(theta_da.values-0.2,interp='linear')  # interp='linear'
+        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='k',  linewidths=1.5, levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6]) #[6,8,10,12,14,16] #levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6],
+        map.set_plot_params(levels=np.array([-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3, 0.4])*10, cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
-        dic = map.visualize(ax=ax2, title=r'$\Delta \theta_e$ 925-600hPa | 925hPa specific humidity', cbar_title=r'K decade$^{-1}$')
+        qu = ax2.quiver(xx, yy, um, vm, scale=100, width=0.002)
+        qk = plt.quiverkey(qu, 0.94, 0.52, 3, '3 m s$^{-1}$',
+                           labelpos='E', coordinates='figure')
+
+        dic = map.visualize(ax=ax2, title=r'650hPa RH | 925hPa q | 925hPa wind vectors', cbar_title=r'% decade$^{-1}$')
         contours = dic['contour'][0]
-        plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
+        plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
 
         ax3 = f.add_subplot(223)
-        map.set_data(thetad_da.values, interp='linear')  # interp='linear'
-        map.set_contour(tcwv_da.values, interp='linear', levels=[-2,-1.5,-1,-0.5,0.5,1,1.5,2], colors='darkturquoise', linewidths=2)
+        map.set_data(tcwv_da.values-0.05, interp='linear')  # interp='linear'
+        map.set_contour(thetad_da.values, interp='linear', levels=np.array([-2,-1.5,-1,-0.5,0.5,1,1.5,2])*100, colors='k', linewidths=1.5)
 
-        map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6, 0.8], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,-0.4,0.4,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
 
-        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.0025)
+        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.002)
 
         qk = plt.quiverkey(qu, 0.45, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
                            labelpos='E', coordinates='figure')
 
 
-        dic = map.visualize(ax=ax3, title=r'$\Delta \theta$ 925-600hPa | TCWV | 925hPa wind vectors', cbar_title=r'K decade$^{-1}$')
+        dic = map.visualize(ax=ax3, title=r'TCWV | CAPE | 925hPa wind vectors', cbar_title=r'kg m$^{-2}$ decade$^{-1}$')
         contours = dic['contour'][0]
-        plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
+        plt.clabel(contours, inline=True, fontsize=9, fmt='%1.0f')
 
 
         ax4 = f.add_subplot(224)
-        map.set_contour((tirm_mean), interp='linear', levels=[0.1,1,2,4], colors='darkturquoise', linewidths=2)
+        map.set_contour((tirm_mean), interp='linear', levels=[0.1,1,2,4], colors='k', linewidths=1)
 
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
@@ -351,15 +379,23 @@ def trend_all():
 
         #ax4.scatter(xitd, yitd, color='r', s=50, edgecolors='k', linewidths=1)
 
-        qu = ax4.quiver(xx, yy, um, vm, scale=90, width=0.0025)
-        qk = plt.quiverkey(qu, 0.94, 0.03, 3, '2 m s$^{-1}$',
-                           labelpos='E', coordinates='figure')
 
-        dic = map.visualize(ax=ax4, title='-70$^{\circ}$C cloud cover change | >5000km$^{2}$', cbar_title='$\%$ decade$^{-1}$')
+
+        dic = map.visualize(ax=ax4, title='-70$^{\circ}$C cloud cover change ', cbar_title='$\%$ decade$^{-1}$')
         contours = dic['contour'][0]
-        plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
+        plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
         plt.tight_layout()
+
+        plt.annotate('a)', xy=(0.02, 0.96), xytext=(0, 4), size=13, xycoords=('figure fraction', 'figure fraction'),
+                     textcoords='offset points')
+        plt.annotate('b)', xy=(0.49, 0.96), xytext=(0, 4), size=13, xycoords=('figure fraction', 'figure fraction'),
+                     textcoords='offset points')
+        plt.annotate('c)', xy=(0.02, 0.48), xytext=(0, 4), size=13, xycoords=('figure fraction', 'figure fraction'),
+                     textcoords='offset points')
+        plt.annotate('d)', xy=(0.49, 0.48), xytext=(0, 4), size=13, xycoords=('figure fraction', 'figure fraction'),
+                     textcoords='offset points')
+
         plt.savefig(fp)
         plt.close('all')
 

@@ -35,17 +35,22 @@ def run_hours():
 
 def composite(hour):
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_'+str(hour)+'.csv')
+    key = '2hOverlap'
+
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
     # msgopen = pd.read_csv(
     #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
     #         hour) + '.csv')
 
-    msg = pd.DataFrame.from_dict(msgopen)# &  &
+    msg = pd.DataFrame.from_dict(msgopen)
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msgin = msg[(msg['SMmean0']>-900) & (msg['LSTA_flag']>-900) & (msg['month'])!=8]#[msg['initTime']<=3]#[msg['SMwet']==2]
+
+    msg = msg[np.isfinite(msg['SMmean0']) & np.isfinite(msg['LSTA_flag'])]
+    msgin = msg[(msg['lat']>12) & (msg['topo']<600)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+
     print('Number of cores', len(msgin))
 
     # calculate the chunk size as an integer
@@ -53,12 +58,11 @@ def composite(hour):
     msgin.sort_values(by='date')
 
 
-
-    msgy = msgin#[msgin['year']==year]
+    msgy = msgin
 
     chunk, chunk_ind, chunk_count = np.unique(msgy.date, return_index=True, return_counts=True)
 
-    chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
+    chunks = [msgy.loc[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
     # res = []
     # for m in chunks[0:100]:
@@ -160,7 +164,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_-60_AMSRE_LSTA.p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + key + "_"+".p", "wb"))
     print('Save file written!')
 
 
@@ -298,9 +302,9 @@ def file_loop(df):
         print('lsta_da on LSTA interpolation problem')
         return None
 
-    lsta_da.values[np.isnan(lsta_da.values)] = 0
+    #lsta_da.values[np.isnan(lsta_da.values)] = 0
 
-    lsta_da.values[ttopo.values >= 450] = np.nan
+    lsta_da.values[ttopo.values >= 600] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
     wav_input = lsta_da.values.copy()

@@ -216,7 +216,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             derived = v
             v = 'u_pl'
 
-        if (v == 'theta') :
+        if (v == 'q_srfc') | (v == 'q_mid') :
+            derived = v
+            v = 'q_pl'
+
+        if (v == 't_srfc') | (v == 't_mid') |  (v == 'theta'):
             derived = v
             v = 't_pl'
 
@@ -280,6 +284,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
                 dar2.values = np.array(dar2.values / 100).astype(float) / 1000
 
+
                 theta_up = u_met.theta_e(650, dar.sel(pressure=650).values, dar2.sel(pressure=650).values)
                 theta_low = u_met.theta_e(925, dar.sel(pressure=925).values, dar2.sel(pressure=925).values)
                 dar = dar.sum(dim='pressure').squeeze()
@@ -314,10 +319,13 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             da.values[np.isnan(da.values)] = 0 # set ocean nans to 0
 
 
-            try:
-                date = da.time.values[0]
-            except IndexError:
-                date = da.time.values
+            # try:
+            #     date = da.time.values[0]
+            # except IndexError:
+            #     date = da.time.values
+
+            date = pd.Timestamp(datestring)
+            date = date.replace(hour=h)
 
             labels, numL = label(da.values)
 
@@ -361,7 +369,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             if np.nansum(ds_box['totRain'])==0:
                 return
 
-        savefile = out_dir + os.sep + pd.Timestamp(date).strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+        savefile = out_dir + os.sep + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
         try:
             os.remove(savefile)
         except OSError:
@@ -378,11 +386,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N'  # out directory to save MCS files
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N_new'  # out directory to save MCS files
 box = [-12, 12, 5, 20]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-years = np.array(np.arange(2000,2007), dtype=str)
+years = np.array(np.arange(1999,2007), dtype=str)
 months = np.array([ '03', '04', '05','06','07','08','09', '10', '11'])#([ '03', '04', '05', '06', '09', '10', '11'])
 days = np.array(np.arange(1,32), dtype=str)
 
@@ -394,9 +402,11 @@ vars['lsRain'] =  ([], h)   # pressure levels, hour
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
-vars['q_pl'] = ([925], 12)  # INPUT IN T * 100!!
-vars['theta'] = ([650, 925], 12)
-vars['t_pl'] = ([650], 12)   # INPUT IN T * 100!!
+vars['q_mid'] = ([650], 12)  # INPUT IN T * 100!!
+#vars['theta'] = ([650, 925], 12)
+vars['t_mid'] = ([650], 12)   # INPUT IN T * 100!!
+vars['t_srfc'] = ([925], 12)
+vars['q_srfc'] = ([925], 12)
 
 datelist = []
 for y,m,d in itertools.product(years, months, days):

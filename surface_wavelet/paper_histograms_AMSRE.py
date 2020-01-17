@@ -40,7 +40,7 @@ def composite(h):
     msg = msg[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
-    msg = msg.sel( lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
+    msg = msg.sel( lat=slice(10,19.5), lon=slice(-9.8, 9.8))
 
     msg.attrs['refhour'] = h
 
@@ -54,7 +54,7 @@ def composite(h):
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"SlotFilter_+150km_validCheck.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_noOverlapFilter.p", "wb"))
 
 
 
@@ -142,7 +142,7 @@ def file_loop(fi):
             return None
         print('Doing ' + sp)
 
-        lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+        lsta = lsta.sel(lon=slice(-12, 12), lat=slice(8, 22))
 
         lsta_da = lsta['SM'].squeeze()
 
@@ -157,8 +157,8 @@ def file_loop(fi):
             print('lsta_da on LSTA interpolation problem')
             return None
 
-        lsta_da.values[ttopo.values >= 450] = np.nan
-        lsta_da.values[gradsum > 30] = np.nan
+        # lsta_da.values[ttopo.values >= 450] = np.nan
+        # lsta_da.values[gradsum > 30] = np.nan
 
         smlist.append(lsta_da)
         del lsta
@@ -185,7 +185,7 @@ def file_loop(fi):
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
-    mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19.3), lon=slice(-9.8, 9.8))
+    mcsimage = mcsimage.sel(time=fi.time,  lat=slice(10,19.5), lon=slice(-9.8, 9.8))
 
     labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600,100000], max_area=None)
 
@@ -194,9 +194,9 @@ def file_loop(fi):
         lat = fi['lat'][y]
         lon = fi['lon'][x]
 
-        if (labels[y,x] not in goodinds) | (labels[y,x] == 0):
-            print('MCS too small!!')
-            continue
+        # if (labels[y,x] not in goodinds) | (labels[y,x] == 0):
+        #     print('MCS too small!!')
+        #     continue
 
         if (mcsimage.values[y,x] > -60):
             print('Core too warm!!')
@@ -215,7 +215,7 @@ def file_loop(fi):
         if (chour >= 0) & (chour <= 13):
             chour += 24
 
-        if (mhour < chour) | (np.isnan(mhour)):
+        if (mhour+1 < chour):  # | (np.isnan(mhour)
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
 

@@ -26,6 +26,9 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 
+key = '2hOverlap'
+
+
 def diurnal_loop():
     afternoon = list(range(14,24))
     night = list(range(0,8))
@@ -62,7 +65,7 @@ def eh_loop():
 def rewrite_list(hour):
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
     dic = pkl.load(
-        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_" + str(hour) + ".p", "rb"))
+        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_" + key + '_' + str(hour) + ".p", "rb"))
     # new = dic.copy()
     # for k in new.keys():
     #     new[k] = []
@@ -75,15 +78,15 @@ def rewrite_list(hour):
     # pkl.dump(new, open(path + "cores_gt15000km2_table_1640_580_" + str(hour) + "_new.p", "wb"))
 
     df = pd.DataFrame.from_dict(dic)
-    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1', 'LSTA_flag'])
-    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_" + str(hour) + ".csv", na_rep=-999, index_label='id')
+    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'topo','SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1', 'LSTA_flag', 'dtime'])
+    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_" + key + '_' + str(hour) + ".csv", na_rep=-999, index_label='id')
 
 
 def composite(h):
 
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
     msgopen = pd.read_csv(
-        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h)+'.csv')
+        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h) + '_' + key +'.csv')
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
@@ -100,11 +103,12 @@ def composite(h):
     msg['SMdry-1'] = np.nan
     msg['SMwet-1'] = np.nan
     msg['LSTA_flag'] = np.nan
+    #msg['topo'] = np.nan
 
     chunk, chunk_ind, chunk_count = np.unique(msg.date, return_index=True, return_counts=True)
 
 
-    chunks = [msg.ix[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
+    chunks = [msg.loc[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
     res = []
     # for m in chunks[0:100]:
@@ -128,7 +132,7 @@ def composite(h):
 
     #ipdb.set_trace()
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking_"+str(hour)+".p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking_" + key + "_" +str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
 
@@ -190,7 +194,7 @@ def cut_kernel_lsta(xpos, ypos, arr, nbslot=False):
 
     if nbslot is not False:
         nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
-        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67])) <=0.5:
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>2) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67])) <=0.5:
             print('TOO FEW SLOTS!')
             isgood = 0
 
@@ -220,9 +224,6 @@ def file_loop(df):
 
     fdate = str(lsta_date.year) + str(lsta_date.month).zfill(2) + str(lsta_date.day).zfill(2)
 
-    # topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    # topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7.8, 23.2))
-    # ttopo = topo['h']
 
     topo = xr.open_dataset(cnst.LSTA_TOPO)
     ttopo = topo['h']
@@ -247,7 +248,6 @@ def file_loop(df):
         print('Doing '+ sp)
 
         lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 22))
-        #lsta = lsta.sel(lon=slice(-11, 11), lat=slice(8, 23))
 
         sm_da = lsta['SM'].squeeze()
 
@@ -262,10 +262,6 @@ def file_loop(df):
             print('lsta_da on LSTA interpolation problem')
             return None
 
-
-        sm_da.values[ttopo.values>=450] = np.nan
-        sm_da.values[gradsum>30] = np.nan
-
         smlist.append(sm_da)
         del lsta
 
@@ -279,7 +275,10 @@ def file_loop(df):
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
     lsta_da = lsta['LSTA'].squeeze()
+
+
     slot_da = lsta['NbSlot'].squeeze().values
+
 
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
@@ -330,6 +329,7 @@ def file_loop(df):
         df.loc[dids, 'SMdry-1'] = dryflag[1]
         df.loc[dids, 'SMwet-1'] = wetflag[1]
         df.loc[dids, 'LSTA_flag'] = lsta_kernel
+       # df.loc[dids, 'topo'] = topo[ypos,xpos]
     #ipdb.set_trace()
 
     return df
