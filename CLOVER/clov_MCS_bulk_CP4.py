@@ -13,13 +13,17 @@ from utils import u_met
 import cartopy
 import pdb
 from utils import constants as cnst
+import metpy
+from metpy import calc
+from metpy.units import units
+
 
 def dictionary():
 
     dic = {}
     vars = ['hour', 'month', 'year', 'area',
             'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean', 'thetamean', 'thetamax',
+            'tmin', 'tmean', 'thetamean', 'thetamax', 'tmidmax', 'tmidmean', 'tsrfcmax', 'tsrfcmean',
             'pmax', 'pmean',
             'qmax' , 'qmean',
             'umax_srfc', 'umean_srfc',
@@ -37,14 +41,14 @@ def perSys():
 
     pool = multiprocessing.Pool(processes=4)
     tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
-    # res = pool.map(file_loop, files)
-    # pool.close()
-    res=[]
-    for f in files:
-        res.append(file_loop(f))
+    res = pool.map(file_loop, files)
+    pool.close()
+    # res=[]
+    # for f in files:
+    #     res.append(file_loop(f))
 
     #
     #res = [item for sublist in res for item in sublist]  # flatten list of lists
@@ -76,7 +80,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_new.p',
                            'wb'))
 
 
@@ -93,10 +97,23 @@ def file_loop(f):
     outu_srfc = dic['u_srfc'].values
     outu_mid = dic['u_mid'].values
     outshear = dic['shear'].values
-    outq = dic['q_pl'].values
-    theta = dic['theta'].values
-    tmid = dic['t_pl'].values
+    outq = dic['q_srfc'].values
+    #theta = dic['theta'].values
+    tmid = dic['t_mid'].values
+    tsrfc = dic['t_srfc'].values
 
+    pes = units.Quantity(650, 'hPa')
+    tes = units.Quantity(tmid+273.15, 'K')
+
+    theta_low = u_met.theta_e(925, tsrfc, outq/1000.)
+
+    theta_es = calc.saturation_equivalent_potential_temperature(pes, tes)
+
+    theta = theta_low-(np.array(theta_es)-273.15)
+
+    print(theta)
+
+    #ipdb.set_trace()
 
     out['lon'] = dic['longitude'].values
     out['lat'] = dic['latitude'].values
@@ -121,7 +138,7 @@ def file_loop(f):
     minshear = np.unravel_index(np.nanargmin(outshear), outt.shape)
     maxq = np.unravel_index(np.nanargmax(outq), outt.shape)
 
-    out['area'] = np.sum(mask)
+    out['area'] = np.sum((outt<=t_thresh))
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
@@ -150,6 +167,8 @@ def file_loop(f):
     out['thetamean'] = np.mean(theta[mask])
     out['tmidmax'] = np.max(tmid[mask])
     out['tmidmean'] = np.mean(tmid[mask])
+    out['tsrfcmax'] = np.max(tsrfc[mask])
+    out['tsrfcmean'] = np.mean(tsrfc[mask])
 
     out['pgt30'] = np.sum(outp[mask]>30)
     out['isvalid'] = np.sum(mask)

@@ -596,8 +596,8 @@ def plot_doug_all(h, eh):
     plt.title('LSTA day0, Contours: CMORPH rainP>5mm [6am|day-1 to 10am|day0]', fontsize=9)
 
     ax1 = f.add_subplot(223)
-    plt.contourf(((dic['q'])*1000/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.linspace(-0.9,0.9,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='g kg-1')
+    plt.contourf(((dic['v650_orig'])/ dic['cntp']), extend='both',  cmap='RdBu',levels=np.linspace(-1.5,1.5,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.colorbar(label='m s-1')
     contours = plt.contour((dic['shear'] / dic['cntp']), extend='both',levels=np.arange(-17,-12,0.5), cmap='viridis_r', linewidths=2) #np.arange(-15,-10,0.5)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     plt.plot(extent, extent, 'bo')
@@ -606,7 +606,7 @@ def plot_doug_all(h, eh):
     ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax1.set_xlabel('km')
     ax1.set_ylabel('km')
-    plt.title('925hPa q anomaly, contours: 650hPa-925hPa zonal shear', fontsize=9)
+    plt.title('650hPa v-wind, contours: 650hPa-925hPa zonal shear', fontsize=9)
 
     ax1 = f.add_subplot(224)
  #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)

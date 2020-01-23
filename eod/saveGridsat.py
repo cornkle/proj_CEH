@@ -97,3 +97,15 @@ def loop(y):
     enc = {'tir': {'complevel': 5, 'shuffle': True, 'zlib': True}}
     da.to_netcdf(out + filename, encoding=enc)
     da.close()
+
+def rewrite(file):
+
+    ds = xr.open_dataset(file).load()
+    # ds = ds.where(ds['time.day'] == 1, drop=True)
+    #ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
+    out = file.replace('.nc', '_compressed.nc')
+    ipdb.set_trace()
+
+    comp = dict(zlib=True, complevel=5)
+    encoding = {var: comp for var in ds.data_vars}
+    ds.to_netcdf(out, mode='w', format='NETCDF4')
