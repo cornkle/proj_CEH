@@ -84,7 +84,7 @@ def perSys():
     # plt.title('bulk', fontsize=9)
 
     #ipdb.set_trace()
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-20N.p',
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-20N_p15.p',
                            'wb'))
 
 
@@ -174,7 +174,9 @@ def file_loop(f):
 
     out['tmin'] = np.min(outt[mask])
     out['tmean'] = np.mean(outt[mask])
-    out['pmax'] = np.max(outp[mask])
+
+    maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) #np.max(outp[mask])
     out['pmean'] = np.mean(outp[mask])
     try:
         out['q925'] =float(e925['q'])

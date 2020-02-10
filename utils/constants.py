@@ -70,7 +70,8 @@ CLOVER_SAVES = network_data + '/data/CLOVER/saves/'
 ########## DIRECTORIES
 
 LSTA = network_data + 'data/OBS/MSG_LSTA/lsta_netcdf/'
-LSTA_NEW = network_data + 'data/OBS/MSG_LSTA/lsta_netcdf_new/'
+LSTA_NEW = network_data + 'data/OBS/MSG_LSTA/lsta_netcdf_new/'  # lsta_netcdf_new
+LSTA_1330 = network_data + 'data/OBS/MSG_LSTA/lsta_netcdf_1330/'
 LSTA_NEW_MEAN = network_data + 'data/OBS/MSG_LSTA/lsta_netcdf_new_-mean/'
 LSTA_TESTFILE = LSTA_NEW + 'lsta_daily_20060624.nc'
 LSTA_DOMSCALE = network_data + 'data/OBS/MSG_LSTA/power_maps/'

@@ -80,7 +80,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_new.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_p13.p',
                            'wb'))
 
 
@@ -147,11 +147,11 @@ def file_loop(f):
     out['tmean'] = np.mean(outt[mask])
 
 
-    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],2)) # degrade rainfall to 13km
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 30km
 
-    #out['pmax'] = np.max(outp[mask]) # degrade rainfall to 20km
+    #out['pmax'] = np.max(outp[mask]) # rain at 4.4km
     out['pmean'] = np.mean(outp[mask])
-    out['qmax'] = np.nanmean(ua.cut_kernel(outq,maxq[1], maxq[0],2)) #np.max(outq[mask])
+    out['qmax'] = np.nanmean(ua.cut_kernel(outq,minpos[1], minpos[0],3)) #np.max(outq[mask]) #30km q and shear
 
     out['qmean'] = np.nanmean(outq[mask])
     out['umax_srfc'] = np.max(outu_srfc[mask])
@@ -160,10 +160,13 @@ def file_loop(f):
     out['umean_mid'] = np.mean(outu_mid[mask])
 
 
-    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minshear[1], minshear[0],2))
+    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minpos[1], minpos[0],3))
 
     out['shearmean'] = np.mean(outshear[mask])
-    out['thetamax'] = np.max(theta[mask])
+    #out['thetamax'] = np.max(theta[mask])
+
+    out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
+
     out['thetamean'] = np.mean(theta[mask])
     out['tmidmax'] = np.max(tmid[mask])
     out['tmidmean'] = np.mean(tmid[mask])

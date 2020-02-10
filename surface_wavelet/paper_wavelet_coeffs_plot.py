@@ -229,7 +229,7 @@ def plot_map_AMSRE(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     key = '2hOverlap'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + (key) + "_.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     #dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(hour) + "UTC_15000_AMSLST_3slot_noOverplotFilter.p",
     #                    "rb"))  # UTC_15000_ALL_-60_5slotSmall
 
@@ -250,7 +250,7 @@ def plot_map_AMSRE(hour):
     pos = np.array([2,4,6,8])#np.array([1,4,6,10])
     print(scales[pos])
     #ipdb.set_trace()
-    kernel = (dic['kernel'])[0] #/ dic['cnt'][0]
+    kernel = (dic['kernel'])[0] / dic['cnt'][0]
     random = (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['cnt'][0][0,:,:]
 
@@ -259,7 +259,7 @@ def plot_map_AMSRE(hour):
     mask = (dic['kernel'])[2]
     extent = ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
-    levels = np.array(list(np.arange(-0.3, 0, 0.05)) + list(np.arange(0.05, 0.31, 0.05)))*3000
+    levels = np.array(list(np.arange(-0.5, 0, 0.05)) + list(np.arange(0.05, 0.51, 0.05)))
 
     f = plt.figure(figsize=(10, 8), dpi=200)
     ax = f.add_subplot(221)
@@ -317,7 +317,7 @@ def plot_map_AMSRE(hour):
 
 
     plt.tight_layout()
-    #plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
+    plt.savefig(path + '/amsreVSlsta/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
     plt.show()
 
 
@@ -325,7 +325,7 @@ def plot_map(hour):
 
     key = '2hOverlap'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_" + key +".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_1330_" + key +".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
 
     scales = dic['scales']
     nbcores = dic['nbcores']
@@ -353,12 +353,13 @@ def plot_map(hour):
 
     extent = ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
-    levels = list(np.arange(-0.3, 0, 0.05)) + list(np.arange(0.05, 0.31, 0.05))
+    levels = list(np.arange(-0.15, 0, 0.01)) + list(np.arange(0.01, 0.16, 0.01))
+    llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))
 
     f = plt.figure(figsize=(10, 8), dpi=200)
     ax = f.add_subplot(221)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , cnt , cmap='RdBu_r', extend='both')  #,levels=list(np.arange(-1, 0, 0.2)) + list(np.arange(0.2, 1.2, 0.2))
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both', levels=llevels)  #,levels=list(np.arange(-1, 0, 0.2)) + list(np.arange(0.2, 1.2, 0.2))
     plt.colorbar(label='K')
     #plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3, mask[3,:,:], colors='none', hatches='.', levels = [0.5,1], linewidth=0.25)
     ax.plot(0,0, 'bo')
@@ -411,7 +412,7 @@ def plot_map(hour):
 
 
     plt.tight_layout()
-    #plt.savefig(path + '/initVSprop/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
+    plt.savefig(path + '/amsreVSlsta/wcoeff_maps_all_cnt_'+str(hour)+'.png')
     plt.show()
 
 def plot_all():

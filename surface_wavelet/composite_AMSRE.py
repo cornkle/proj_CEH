@@ -34,7 +34,7 @@ def composite(h):
     hour = h
 
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (
+    msg = msg[(msg['time.hour'] == h)  & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
     msg = msg.sel( lat=slice(12,25), lon=slice(-11,11))
@@ -144,7 +144,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         xpos = xpos - lx
         ypos = ypos - ly
 
-    dist = 21
+    dist = 11
     #dist=100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
@@ -186,7 +186,7 @@ def file_loop(fi):
 
     lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(5, 23))
+    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(8, 23))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 

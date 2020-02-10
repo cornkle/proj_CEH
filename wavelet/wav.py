@@ -23,12 +23,13 @@ class wavelet(object):
         :param mother2d: a wavelet object, by default Mexican hat
         """
         if start:
-            s0 = 2 * start / mother2d.flambda()  # user-defined start scale
+            s0 =  2* start / mother2d.flambda()  # user-defined start scale 2 *
         else:
             print('No start scale given, set to 2*dx')
-            s0 = 4 * res / mother2d.flambda()  # default start scale: 2 * dx
+            s0 = 4 * res / mother2d.flambda()  # default start scale: 2 * dx, conversion into Fourier wavelength
 
         a = s0 * 2. ** (np.arange(0, nb + 1) * dist)  # The scales in wavelet space ('wavelet scale')
+        print(a)
         freqs = 1. / (mother2d.flambda() * a)  # As of Mallat 1999
         period = 1. / freqs
         scales = period/2. #(period/3)*2 # # 'real' scale approximation, alternative: (period/3)*2

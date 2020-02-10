@@ -47,18 +47,18 @@ def composite(h):
     dic = u_parallelise.run_flat(3,file_loop,msg,['c30', 's100', 'e100', 'r30', 'rs100', 're100'])
     #
     # res = []
-    # for m in msg[15:16]:
+    # for m in msg[15:18]:
     #     out = file_loop(m)
     #     res.append(out)
     # return
 
     print('Writing pickle')
 
-    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_noOverlapFilter.p", "wb"))
+    pkl.dump(dic, open(path + "/LSTA_histograms_AMSRE_"+str(hour).zfill(2)+"_SMFINITE.p", "wb"))
 
 
 
-def cut_kernel(xpos, ypos, arr, dist):
+def cut_kernel(xpos, ypos, arr, dist, smtest, lat, lon):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -72,30 +72,22 @@ def cut_kernel(xpos, ypos, arr, dist):
     ycirc30, xcirc30 = u_arrays.draw_circle(dist+1, dist+1,6) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
-    # if np.sum(np.isfinite(k30)) / k30.size < 0.25:
-    #     return
-
-    # if not np.sum(np.isfinite(kmean))/kmean.size >=0.1:
-    #     return
-
-    #kernel[ycirc30, xcirc30] = 700
-
     ycirc100, xcirc100 = u_arrays.draw_circle(dist+1, dist-67, 17)  # at - 200km, draw 50km radius circle
-    #s100 = np.nanmean(kmean[ycirc100,xcirc100])
     s100 = np.nanmean(kmean[dist-67-17:dist-67+17, dist-50:dist]) #at -200km in box 100km high
 
-    #kernel[ycirc100,xcirc100] = 1000
 
     ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
 
 
     e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
-    if np.sum(np.isfinite(e100)) / e100.size < 0.1:
+    if np.sum(np.isfinite(e100)) / e100.size < 0.05:
         return
     # kernel[ycirc100e, xcirc100e] = 500
 
-    #
-    # return
+    outmean = np.nanmean(kernel[dist - 10:dist + 10, dist:dist + 67])
+    if np.min(np.abs(outmean-smtest['SMmean0'])) > 0.001:
+        print('Outmean not in smtest!!')
+        return
 
     return k30, s100, e100
 
@@ -105,8 +97,23 @@ def file_loop(fi):
 
     print('Doing day: ', fi.time)
 
+    key = '2hOverlap'
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(fi['time.hour'].values)+'.csv', na_values=-999)
+    msg = pd.DataFrame.from_dict(msgopen)
+    msg['date'] = pd.to_datetime(msg[['year','month','day']])
+    print('Start core number ', len(msg))
+    msg = msg[(msg['LSTAslotfrac']>=0.025) & (msg['dtime']<=2) & (np.isfinite(msg['SMmean0'])) ] # & (msg['SMmean0']>1) & (np.isfinite(msg['SMmean0']))
+    msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+
+
+
     date = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
+
+    smtest = msgin[(msg['year']==fi['time.year'].values) &(msg['month']==fi['time.month'].values) & (msg['day']==fi['time.day'].values)]
+    if len(smtest)==0:
+        print('DAY NOT IN LIST')
+        return None
 
     dayd = pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
@@ -121,8 +128,8 @@ def file_loop(fi):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    topo = xr.open_dataset(cnst.WA_TOPO_3KM)  # LSTA_TOPO
-    topo = topo.sel(lat=slice(5,26), lon=slice(-16,16))
+    topo = xr.open_dataset(cnst.LSTA_TOPO)  # LSTA_TOPO
+    #topo = topo.sel(lat=slice(5,26), lon=slice(-16,16))
     ttopo = topo['h']
     #
     grad = np.gradient(ttopo.values)
@@ -157,8 +164,8 @@ def file_loop(fi):
             print('lsta_da on LSTA interpolation problem')
             return None
 
-        # lsta_da.values[ttopo.values >= 450] = np.nan
-        # lsta_da.values[gradsum > 30] = np.nan
+        lsta_da.values[ttopo.values >= 450] = np.nan
+        lsta_da.values[gradsum > 30] = np.nan
 
         smlist.append(lsta_da)
         del lsta
@@ -181,7 +188,7 @@ def file_loop(fi):
     e100 = []
     re100 = []
 
-    dist = 100
+    dist = 200
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
@@ -215,9 +222,14 @@ def file_loop(fi):
         if (chour >= 0) & (chour <= 13):
             chour += 24
 
-        if (mhour+1 < chour):  # | (np.isnan(mhour)
+        deltatime = chour - mhour
+        if deltatime>2:
             print('Core overlaps: earliest:', mhour, ' core: ', chour)
             continue
+
+        # if (mhour+1 < chour):  # | (np.isnan(mhour)
+        #     print('Core overlaps: earliest:', mhour, ' core: ', chour)
+        #     continue
 
 
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
@@ -230,7 +242,7 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            kc30, kcs100, kce100 = cut_kernel(xpos, ypos, lsta_da.values, dist)
+            kc30, kcs100, kce100 = cut_kernel(xpos, ypos, lsta_da.values, dist, smtest, lat, lon)
         except TypeError:
             continue
 

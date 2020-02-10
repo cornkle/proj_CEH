@@ -18,6 +18,9 @@ import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
 from scipy.interpolate import griddata
 import multiprocessing
+import metpy
+from metpy import calc
+from metpy.units import units
 
 import pickle as pkl
 
@@ -64,7 +67,8 @@ def eh_loop():
 
 def composite(h, eh):
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(h)+'.csv')
+    key = '2hOverlap'
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(h)+'.csv', na_values=-999)
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
     msg['eh'] = eh
@@ -73,11 +77,12 @@ def composite(h, eh):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    #msgin = msg[(msg['SMmean0']<-3) & (msg['SMmean-1']<-1.5) & (msg['SMmean0']>-900)& (msg['SMmean-1']>-900)] #[(msg['initTime']>=12.5) & (msg['initTime']<h)]#[msg['SMwet']==2]
-    #######msgin = msg[(msg['SMdry0'] ==1) & (msg['SMdry-1']==1) & (msg['SMmean0']>-900)& (msg['SMmean-1']>-900)& (msg['SMmean-1']<-1.8)]
-    ######msgin = msg[(msg['SMwet0'] == 1) & (msg['SMwet-1'] == 1) & (msg['SMmean0'] > 0.3) & (msg['SMmean-1'] > 0.9)]
-    msgin = msg[(msg['SMmean0'] > 0.01) & (msg['SMmean-1'] > 0.01)]
+    msg = msg[ (msg['dtime']<=1) & (msg['SMmean0']>=1.87)] #  & (np.isfinite(msg['SMmean0'])) # (msg['SMmean0']<=-5.1) (msg['LSTAslotfrac']>=0.3) &
+
+    msgin = msg[(msg['lat']>9) & (msg['lat']<19) & (msg['topo']<450)]
+
     print('Number of cores', len(msgin))
+    #ipdb.set_trace()
 
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
@@ -100,7 +105,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_SM0GT0.01_SM-1GT0.01_noMeteosatFilter_AMSRE"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_WET_slot03_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -207,12 +212,12 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     ## latitude in surface is already flipped, not for pressure levels though... ?!
 
 
-    cmp = cmp.sel(longitude=slice(-13.5, 13.5), latitude=slice(8, 21))
+    cmp = cmp.sel(longitude=slice(-13.5, 13.5), latitude=slice(7, 23))
     #css = css.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
-    pl_clim = pl_clim.sel(longitude=slice(-13.5, 13.5), latitude=slice(8, 21))
+    pl_clim = pl_clim.sel(longitude=slice(-13.5, 13.5), latitude=slice(7, 23))
 
     #srfc_clim = srfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
-    esrfc_clim = esrfc_clim.sel(longitude=slice(-13.5, 13.5), latitude=slice(8, 21))
+    esrfc_clim = esrfc_clim.sel(longitude=slice(-13.5, 13.5), latitude=slice(7, 23))
 
     cmm = cmp.sel(time=t1)
     pl_clim = pl_clim.squeeze()
@@ -245,31 +250,33 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     div = cmm['d'].sel(level=925).squeeze()
 
-    theta_e_diff = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15,
-                            cmm['q'].sel(level=925).squeeze()) - \
-                   u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15,
+    theta_925 = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15,
+                            cmm['q'].sel(level=925).squeeze())
+
+    theta_650 =  u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15,
                                  cmm['q'].sel(level=650).squeeze())
 
-    theta_e_diff_clim = u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
-                                 pl_clim['q'].sel(level=925).squeeze()) - \
-                   u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
+    theta_clim_925 = u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
+                                 pl_clim['q'].sel(level=925).squeeze())
+
+    theta_clim_650 = u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
                                  pl_clim['q'].sel(level=650).squeeze())
 
-    theta_e = theta_e_diff - theta_e_diff_clim
-    theta_mid = u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15,
-                                 cmm['q'].sel(level=650).squeeze()) - u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
-                                 pl_clim['q'].sel(level=650).squeeze())
+    pp = units.Quantity(650, 'hPa')
+    tt = units.Quantity(cmm['t'].sel(level=650).squeeze().values, 'K')
+    tclim = units.Quantity(pl_clim['t'].sel(level=650).squeeze().values, 'K')
 
-    theta_diff = u_met.theta(925, cmm['t'].sel(level=925).squeeze().values - 273.15) - \
-                   u_met.theta(650, cmm['t'].sel(level=650).squeeze().values - 273.15)
+    thetaes_up = np.array(calc.saturation_equivalent_potential_temperature(pp, tt)) - 273.15
+    thetaes_up_clim = np.array(calc.saturation_equivalent_potential_temperature(pp, tclim)) - 273.15
+    #ipdb.set_trace()
+    theta_ediff = (theta_925 - theta_650) - (theta_clim_925 - theta_clim_650)
+    theta_e = theta_925 - theta_clim_925
+    theta_es = (theta_925 - thetaes_up)
+    theta_es_clim = (theta_clim_925 - thetaes_up_clim)
 
-    # theta_diff_clim = u_met.theta(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15) - \
-    #                u_met.theta(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15)
-    #
-    #
-    # theta = theta_diff - theta_diff_clim
 
-    q = cmm['q'].sel(level=925).squeeze() - pl_clim['q'].sel(level=925).squeeze()
+    q = cmm['q'].sel(level=925).squeeze()
+    qclim = pl_clim['q'].sel(level=925).squeeze()
 
     cm['shear'] = shear
     cm['u925'] = uwind_srfc
@@ -277,8 +284,8 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v925_orig'] = cmm['v'].sel(level=925).squeeze()
     cm['u925_orig'] = cmm['u'].sel(level=925).squeeze()
 
-    cm['tciw'] = css['w'].sel(level=350).squeeze() #- srfc_clim['tciw'].squeeze()
-    cm['tciwlow'] = css['w'].sel(level=850).squeeze()
+    # cm['tciw'] = css['w'].sel(level=350).squeeze() #- srfc_clim['tciw'].squeeze()
+    # cm['tciwlow'] = css['w'].sel(level=850).squeeze()
     cm['tciwmid'] = css['w'].sel(level=500).squeeze()
     #ipdb.set_trace()
     #cm['sp'] = scm['sp'].squeeze() - esrfc_clim['sp'].squeeze()
@@ -297,10 +304,12 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     cm['div'] = div *1000
     cm['q'] = q
+    cm['qclim'] = qclim
     cm['t'] = t
+    cm['theta_ediff'] = theta_ediff
     cm['theta_e'] = theta_e
-    cm['theta_mid'] = theta_mid
-    #cm['theta'] = theta
+    cm['theta_es'] = theta_es
+    cm['theta_es_clim'] = theta_es_clim
 
     #del srfc_clim
     del pl_clim
@@ -433,7 +442,7 @@ def file_loop(df):
     pfdate = str(prev_lsta_date.year) + str(prev_lsta_date.month).zfill(2) + str(prev_lsta_date.day).zfill(2)
 
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7.8, 23.2))
+    topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(6, 23.5))
     ttopo = topo['h']
 
     #
@@ -459,7 +468,7 @@ def file_loop(df):
                 return None
         print('Doing '+ sp)
 
-        lsta = lsta.sel(lon=slice(-13, 13), lat=slice(8, 23))
+        lsta = lsta.sel(lon=slice(-13, 13), lat=slice(7, 23))
 
         lsta_da = lsta['SM'].squeeze()
 
@@ -592,8 +601,6 @@ def file_loop(df):
         if np.nanmin((vdic['tciwmid'][dist-30:dist+30,dist-30:dist+67]))<=-0.4:   # 0.03 for tciw, -0.3 for w [dist-50:dist+50,dist-30:dist+100] ,filter out cases with MCSs at 12
             print('ERA MCS continue')
             continue
-
-
 
         for ids in np.arange(4):
             smkernels[ids] = np.nansum(np.stack([smkernels[ids], smoutlist[ids]]), axis=0)
@@ -812,7 +819,7 @@ def plot_doug_all(h, eh):
 def plot_doug_small(h, eh):
 
     dic = {}
-    name = "ERA5_cores_propagation_WET_noERAfilter_AMSRE"  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_cores_2hOverlap_AMSRE_WET" # "ERA5_cores_propagation_noMeteosatFilter_AMSRE"#  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
     def coll(dic, h, eh, year):
         print(h)
@@ -920,7 +927,7 @@ def plot_doug_small(h, eh):
 
     ax1 = f.add_subplot(224)
     #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf(((dic['theta_e']) / dic['cnte']), extend='both', cmap='RdBu', levels=np.linspace(-2.3,2.3,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['theta_es']) / dic['cnte']), extend='both', cmap='RdBu', levels=np.linspace(-2.3,2.3,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label=r'K')
 
     plt.plot(extent, extent, 'bo')
@@ -963,12 +970,12 @@ def plot_timeseries_small():
 
     outdic = {}
     dummyfile = glob.glob(
-        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE*.p")
     dummy = pkl.load(open(dummyfile[0], "rb"))
 
     #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
     #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
-    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY"
     for k in dummy.keys():
         outdic[k] = np.zeros((y, x))
 
@@ -1306,12 +1313,13 @@ def plot_timeseries_diff_coarse():
     outdic1 = {}
     outdic2 = {}
     dummyfile = glob.glob(
-        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY*.p")
     dummy = pkl.load(open(dummyfile[0], "rb"))
 
-    file1 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
-    file2 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
-    #file2 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
+    # file1 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"   #ERA5_cores_2hOverlap_AMSRE_ALL_slot01_
+    # file2 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
+    file1 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY_slot01_"   #ERA5_cores_2hOverlap_AMSRE_ALL_slot01_
+    file2 = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_WET_slot01_"
     files = [file1, file2]
     outdics = [outdic1, outdic2]
 
@@ -1437,11 +1445,11 @@ def plot_timeseries_diff_coarse():
     plt.contour(ranges, yax, (diff['q']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
      colors = 'k', linewidths = 0.1)
 
-    contours = plt.contour(ranges, yax, diff['theta_e'],colors='r', levels=np.arange(1,3,0.5), linewidths=1.5)
+    contours = plt.contour(ranges, yax, diff['theta_es'],colors='r', levels=np.arange(0.1,1.7,0.3), linewidths=1.5)
 
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
 
-    ax.streamplot(ranges, yax, diff['u650_orig'] * 0.1, diff['v650_orig'], density=[0.5, 1], linewidth=0.5, color='k')
+    #ax.streamplot(ranges, yax, diff['u650_orig'] * 0.1, diff['v650_orig'], density=[0.5, 1], linewidth=0.5, color='k')
 
 
     # contours = plt.contour(ranges, yax,(diff['v650_orig_1']), extend='both',colors='b', linewidths=0.5, levels=[-2,-1,0,0.25,0.5])  #np.arange(-15,-10,0.5)
@@ -1463,7 +1471,7 @@ def plot_timeseries_diff_coarse():
 
     plt.tight_layout()
     #plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_SMALL_DIFF_coarse.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_slot01_DIFF_coarse.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 
@@ -1483,11 +1491,11 @@ def plot_timeseries_coarse():
 
     outdic = {}
     dummyfile = glob.glob(
-        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY*.p")
     dummy = pkl.load(open(dummyfile[0], "rb"))
-
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY"
     #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
-    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
+    #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
     #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
     for k in dummy.keys():
         outdic[k] = np.zeros((y, x))
@@ -1634,7 +1642,7 @@ def plot_timeseries_coarse():
 
     plt.tight_layout()
     #plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_SMALL_'+tag+'_coarse.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_2hOverlap_"+str(h).zfill(2)+'_timeseries_SMALL_'+tag+'_coarse.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 
@@ -1654,12 +1662,17 @@ def plot_timeseries_coarse_noStreamline():
     h = 17
 
     outdic = {}
+    # dummyfile = glob.glob(
+    #     cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+    # dummy = pkl.load(open(dummyfile[0], "rb"))
+
     dummyfile = glob.glob(
-        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE*.p")
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_ALL_slot03_*.p")
     dummy = pkl.load(open(dummyfile[0], "rb"))
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_WET_slot03_"
 
     #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
-    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
+    #file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
     #####file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
     for k in dummy.keys():
         outdic[k] = np.zeros((y, x))
@@ -1685,7 +1698,7 @@ def plot_timeseries_coarse_noStreamline():
             coll(dic, h, eh, y, file)
 
         for k in dic.keys():
-            outdic[k][:, ids] = dic[k][:, 190:211].mean(axis=1)
+            outdic[k][:, ids] = dic[k][:, 190:217].mean(axis=1) # [190:211]
 
     outdic['v925'][50:90, 5:9] = np.nan
     #
@@ -1745,16 +1758,16 @@ def plot_timeseries_coarse_noStreamline():
 
 
     contours = plt.contour(ranges, yax, (diff['u650']), extend='both', colors='k',
-                           levels=np.arange(-2.5,0,0.5), linewidths=1)
+                           levels=np.arange(-3.5,0,0.25), linewidths=1)
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
 
 
     #contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0,50])  #np.arange(-15,-10,0.5)
 
 
-    contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
-    contours = plt.contour(ranges, yax, (diff['v925']), extend='both', colors='k', linewidths=3,
-                           levels=[-50, 0.06, 50])
+    # contours = plt.contour(ranges, yax,(diff['v925']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
+    # contours = plt.contour(ranges, yax, (diff['v925']), extend='both', colors='k', linewidths=3,
+    #                        levels=[-50, 0.06, 50])
 
 
     contours = plt.contour(ranges, yax,(diff['v925_orig']), extend='both',colors='k', linewidths=5, levels=[-50,0.06,50])
@@ -1783,11 +1796,11 @@ def plot_timeseries_coarse_noStreamline():
     ax = f.add_subplot(212)
 
 
-    plt.contourf(ranges, yax, (diff['q']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+    plt.contourf(ranges, yax, (diff['q']-diff['qclim']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
                  cmap='RdBu', extend='both')
     plt.colorbar(label=r'g kg$^{-1}$')
 
-    plt.contour(ranges, yax, (diff['q']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
+    plt.contour(ranges, yax, (diff['q']-diff['qclim']) * 1000, levels=[-0.8, -0.7, -0.6, -0.5, -0.4, -0.2, -0.1, 0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8],
      colors = 'k', linewidths = 0.1)
 
     #contours = plt.contour(ranges, yax, diff['theta_e'], colors='k', levels=np.arange(1, 3, 0.5), linewidths=3, linestyle='dotted')
@@ -1822,11 +1835,147 @@ def plot_timeseries_coarse_noStreamline():
 
     plt.tight_layout()
     #plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_SMALL_'+tag+'_coarse_streamOFF.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_WETslot03_'+tag+'_coarse_streamOFF_v6.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 
+def plot_doug_timeseries():
 
+    x = len(list(range(-38, 4, 3)))
+    y = 401
+
+    # outticks = list(range(-30, 1, 5))
+    # ranges = np.arange(-30,1,3)
+    #
+    # outticks = [12,17,22,3,8,13,18]
+    #outticks = [1, 6, 11, 16, 21, 2, 7, 12, 17]
+    ranges = np.arange(-38, 4, 3)
+
+    h=17
+
+    outdic = {}
+    dummyfile = glob.glob(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_*_small_cores.p")
+    dummy = pkl.load(open(dummyfile[0], "rb"))
+
+    dummyfile = glob.glob(
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY*.p")
+    dummy = pkl.load(open(dummyfile[0], "rb"))
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE"
+
+    for k in dummy.keys():
+        outdic[k] = np.zeros((y, x))
+
+    for ids, eh in enumerate(range(-38,4,3)):
+
+        dic = {}
+
+        def coll(dic, h, eh, year):
+            print(h)
+            core = pkl.load(open(
+                cnst.network_data + file + str(eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + ".p", "rb")) #ERA5_composite_cores_LSTA_500w04_15k_"+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores
+            for id, k in enumerate(core.keys()):
+                try:
+                    dic[k] = dic[k] + core[k]
+                except KeyError:
+                    dic[k] = core[k]
+
+
+        for y in range(2006,2011):
+            coll(dic, h, eh, y)
+
+        for k in dic.keys():
+            outdic[k][:,ids] = dic[k][:,190:211].mean(axis=1)
+
+    print(outdic.keys())
+    f = plt.figure(figsize=(15,10))
+    ax = f.add_subplot(321)
+
+    plt.contourf(ranges,np.arange(401), (outdic['q'])*1000/ outdic['cnte'],levels=np.linspace(-0.5,0.5,14), cmap='RdBu', extend='both')
+    plt.colorbar(label=r'g kg$^{-1}$')
+    contours = plt.contour(ranges, np.arange(401), (outdic['v650']) / outdic['cnte'], levels=np.linspace(-0.8,0.8,11), cmap='RdBu')
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+
+    plt.title('Shading: q-anomaly, contours: 650hpa v-wind anomaly')
+    plt.xlabel('Hour relative to convective core at 1700UTC')
+    plt.ylabel('North-South distance from core (km)')
+
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+
+
+    ax = f.add_subplot(324)
+
+    plt.contourf(ranges,np.arange(401), (outdic['t'] / outdic['cnte']), extend='both',levels=[ -0.8,-0.7, -0.6,-0.5,-0.4,-0.2,-0.1, 0.1,0.2,0.4,0.5,0.6, 0.7, 0.8], cmap='RdBu_r')
+    plt.colorbar(label=r'K')
+    contours = plt.contour(ranges, np.arange(401), (outdic['u650_orig'] / outdic['cnte']), extend='both', cmap='viridis', levels=np.arange(-15,-8,0.5)) #levels=np.arange(-15,-8,0.5)) #
+
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+
+    plt.title('Shading: t-anomaly, contours: 650hPa u-wind')
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+    plt.xlabel('Hour of day')
+    plt.ylabel('North-South distance from core (km)')
+
+
+    ax = f.add_subplot(323)
+    plt.contourf(ranges,np.arange(401), (outdic['t'])/ outdic['cnte'], extend='both',  cmap='RdBu_r',levels=[ -0.8,-0.7, -0.6,-0.5,-0.4,-0.2,-0.1, 0.1,0.2,0.4,0.5,0.6, 0.7, 0.8])
+    plt.colorbar(label=r'K')
+    contours = plt.contour(ranges, np.arange(401), (outdic['u650'] / outdic['cnte']), extend='both', cmap='RdBu', levels=np.linspace(-0.7,0.7,9))
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+
+    plt.title('Shading:t-anomaly, contours: 650hpa u-wind anomaly')
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+    plt.xlabel('Hour of day')
+    plt.ylabel('North-South distance from core (km)')
+
+
+
+    ax = f.add_subplot(322)
+    plt.contourf(ranges,np.arange(401), (outdic['q'])*1000/ outdic['cnte'],levels=np.linspace(-0.5,0.5,14), cmap='RdBu', extend='both')
+    plt.colorbar(label=r'g kg$^{-1}$')
+    contours = plt.contour(ranges, np.arange(401), (outdic['u925'] / outdic['cnte']), extend='both', cmap='RdBu', levels=np.linspace(-0.7,0.7,9))
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+    plt.title('Shading: q-anomaly, contours: 925hpa u-wind anomaly')
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+    plt.xlabel('Hour of day')
+    plt.ylabel('North-South distance from core (km)')
+
+    ax = f.add_subplot(325)
+    plt.contourf(ranges,np.arange(401), (outdic['theta_e'] / outdic['cnte']), extend='both', levels=np.linspace(-2,2,12), cmap='PuOr_r')
+    plt.colorbar(label=r'K')
+    contours = plt.contour(ranges, np.arange(401), (outdic['v925'] / outdic['cnte']), extend='both', cmap='RdBu', levels=np.linspace(-0.7,0.7,9))
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+
+    plt.title(r'Shading:$\Delta \theta_{e} anomaly$, contours: 925hpa v-wind anomaly')
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+    plt.xlabel('Hour of day')
+    plt.ylabel('North-South distance from core (km)')
+
+    ax = f.add_subplot(326)
+    plt.contourf(ranges,np.arange(401), (outdic['div'])/ outdic['cnte']*100, extend='both',  cmap='RdBu', levels=np.linspace(-0.5,0.5,10))
+    plt.colorbar(label=r'10$^{-2}$ s$^{-1}$')
+    contours = plt.contour(ranges, np.arange(401),(outdic['v925_orig'] / outdic['cnte']), extend='both',levels=np.linspace(-3,3,11), cmap='RdBu')
+    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    ax.set_yticklabels(np.array((np.linspace(0, 200 * 2, 9) - 200) * 3, dtype=int))
+    #ax.set_xticklabels(outticks)
+    plt.title(r'Shading:Divergence, contours: 925hpa v-wind')
+    plt.hlines(200,xmin=ranges[0], xmax=ranges[-1], linestyle='dashed')
+    plt.xlabel('Hour of day')
+
+
+    plt.tight_layout()
+    plt.show()
+    #plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_"+str(h).zfill(2)+'_timeseries_short.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    #plt.close()
 
 def plot_all():
 

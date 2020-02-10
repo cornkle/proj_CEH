@@ -35,10 +35,10 @@ def composite(h):
     # 16UTC - 18UTC
     # 0-3 UTC
     msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] >=15) & (msg['time.hour'] <=18) &(
+    msg = msg[(msg['time.hour'] >=15) & (msg['time.hour'] <=16) &(
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
-    msg = msg.sel(lat=slice(12, 20), lon=slice(-10, 10))
+    msg = msg.sel(lat=slice(8, 20), lon=slice(-12, 12))
 
     dic = u_parallelise.run_arrays(7, file_loop, msg, ['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
@@ -139,7 +139,7 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         xpos = xpos - lx
         ypos = ypos - ly
     #AMSRE 0.25 degrees ~ 27.5 km
-    dist = 21
+    dist = 11
     #dist = 100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)

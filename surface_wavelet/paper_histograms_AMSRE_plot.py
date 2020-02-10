@@ -30,7 +30,7 @@ def diurnal_loop():
 
 def plot(hour):
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    dic = pkl.load(open(path+"/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "_noOverlapFilter.p", "rb"))
+    dic = pkl.load(open(path+"/AMSL_histograms_" + str(hour).zfill(2) + "_SMFINITE.p", "rb"))
     #dic = pkl.load(open(path + "/LSTA_histograms_AMSRE_" + str(hour).zfill(2) + "SlotFilter_+150km_validCheck.p", "rb"))
 
     for k in dic.keys():

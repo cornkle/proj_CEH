@@ -38,18 +38,21 @@ def composite(hour):
     key = '2hOverlap'
 
     msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
+    # msgopen = pd.read_csv(
+    #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
+    #         hour) + '.csv')
 
-    msg = pd.DataFrame.from_dict(msgopen)# &  &
-
-    msg = msg[np.isfinite(msg['SMmean0']) & np.isfinite(msg['LSTA_flag'])]
-
-    msg = msg[(msg['lat']>12) & (msg['topo']<600)]
+    msg = pd.DataFrame.from_dict(msgopen)
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msgin = msg#[msg['initTime']<=3]#[msg['SMwet']==2]
+    msg = msg[(msg['LSTAslotfrac']>=0.025) & (msg['dtime']<=2) & (np.isfinite(msg['SMmean0'])) ] # & (msg['SMmean0']>1) & (np.isfinite(msg['SMmean0']))
+    #msg = msg[(msg['LSTAslotfrac'] >= 0.5) & (msg['dtime'] <= 2) & (np.isfinite(msg['SMmean0']))]
+    msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+
     print('Number of cores', len(msgin))
+    ipdb.set_trace()
 
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
@@ -166,7 +169,7 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_1330_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -177,8 +180,8 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     kernel = u_arrays.cut_kernel_3d(arr,xpos, ypos,dist)
 
-    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
-        return
+    # if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
+    #     return
 
     if kernel.shape != (arr.shape[0], 2*dist+1, 2*dist+1):
         return
@@ -210,10 +213,10 @@ def cut_kernel_lsta(xpos, ypos, arr, msg=None, nbslot=None):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    kernel = kernel#-np.nanmean(kernel)
+    kernel = kernel
 
-    if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
-        return
+    # if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
+    #     return
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         return
@@ -268,10 +271,6 @@ def get_previous_hours_msg(lsta_date):
 
 def file_loop(df):
 
-    msg_latlon = np.load(cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon.npz')
-    mlon = msg_latlon['lon'].flatten()
-    mlat = msg_latlon['lat'].flatten()
-
     date = df['date'].iloc[0]
     hour = df['hour'].iloc[0]
     print('Doing day: ', date)
@@ -290,7 +289,7 @@ def file_loop(df):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(cnst.LSTA_1330 + 'lsta_daily_' + fdate + '.nc')
     except OSError:
         return None
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
@@ -303,21 +302,11 @@ def file_loop(df):
     lsta_da = lsta['LSTA'].squeeze()
     slot_da = lsta['NbSlot'].squeeze().values
 
-    #### remove mean from LSTA
 
-    # f = plt.figure()
-    # plt.imshow(lsta_da, origin='lower')
-
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
-        print('Not enough valid')
-        return None
-
-    #lsta_da.values[np.isnan(lsta_da.values)] = 0
-
-    lsta_da.values[ttopo.values >= 600] = np.nan
+    lsta_da.values[ttopo.values >= 450] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
-    wav_input = lsta_da.values.copy()
+    wav_input = lsta_da.values
     #points = np.where(np.isfinite(wav_input))
     inter1 = np.where(np.isnan(wav_input))
 
@@ -342,28 +331,23 @@ def file_loop(df):
 
     for inds, wava in enumerate(wavarr):
         wava[inter1] = np.nan
-        #wavarr[inds,:,:] = wava/np.nanstd(wava)
-        #wavarr[inds, :, :] = (wava-np.nanmean(wava)) / np.nanstd(wava)
-        #input[np.abs(input)<1] = np.nan # minimum of 1*std, significance test
+
         wavarr[inds, :, :] = (wava) / (np.nanstd(wava))
 
-        #wavarr[inds, inter1[0], inter1[1]] = np.nan
+        wavarr[inds, inter1[0], inter1[1]] = np.nan
     del wavpos
     wav_input[inter1] = np.nan
 
 
-    probs_msg = get_previous_hours_msg(daybefore)
-    probsm_on_lsta = topo.salem.transform(probs_msg, interp='nearest')
-    del probs_msg
+    # probs_msg = get_previous_hours_msg(daybefore)
+    # probsm_on_lsta = topo.salem.transform(probs_msg, interp='nearest')
     del topo
-
 
     rnspos = []
     rwepos = []
     rkernel = []
     lsta = []
     slot = []
-
 
     ###############################Blob loop
 
@@ -427,7 +411,7 @@ def file_loop(df):
         ypos = int(ypos[0])
 
         try:
-            lsta_kernel, msg_kernel, nbkernel = cut_kernel_lsta(xpos, ypos, wav_input,msg=False, nbslot=slot_da)
+            lsta_kernel, msg_kernel, nbkernel = cut_kernel_lsta(xpos, ypos, lsta_da.values,msg=False, nbslot=slot_da)
         except TypeError:
             print('Kernel error')
             continue
@@ -521,8 +505,6 @@ def file_loop(df):
         rkernel_cnt = np.sum(np.isfinite(np.stack(rkernel, axis=0)), axis=0)[np.newaxis,...]
 
 
-
-    #ipdb.set_trace()
     print('Returning with kernel, success!!')
 
     return (nspos_sum, wepos_sum,

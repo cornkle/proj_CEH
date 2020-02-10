@@ -645,6 +645,11 @@ def plot_doug_timeseries():
     dummyfile = glob.glob(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_*_small_cores.p")
     dummy = pkl.load(open(dummyfile[0], "rb"))
 
+    dummyfile = glob.glob(
+        cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRY*.p")
+    dummy = pkl.load(open(dummyfile[0], "rb"))
+    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_DRYgt9N"
+
     for k in dummy.keys():
         outdic[k] = np.zeros((y, x))
 
@@ -655,7 +660,7 @@ def plot_doug_timeseries():
         def coll(dic, h, eh, year):
             print(h)
             core = pkl.load(open(
-                cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/ERA5_composite_cores_LSTA_500w04_15k_"+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores.p", "rb"))
+                cnst.network_data + file + str(eh) + "UTCERA" + str(h).zfill(2) + '_' + str(year) + ".p", "rb")) #ERA5_composite_cores_LSTA_500w04_15k_"+str(eh) + "UTCERA"+str(h).zfill(2)+'_'+str(year)+"_small_cores
             for id, k in enumerate(core.keys()):
                 try:
                     dic[k] = dic[k] + core[k]

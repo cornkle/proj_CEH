@@ -16,6 +16,9 @@ import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
 from scipy.interpolate import griddata
 import multiprocessing
+import metpy
+from metpy import calc
+from metpy.units import units
 
 import pickle as pkl
 import os
@@ -43,7 +46,8 @@ def diurnal_loop():
 
 
 def composite(h, eh):
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(h)+'.csv')
+    key = '2hOverlap'
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(h)+'.csv', na_values=-999)
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
     msg['eh'] = eh
@@ -52,7 +56,10 @@ def composite(h, eh):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msgin = msg#[msg['initTime']>=13]#[msg['SMwet']==2]
+    msg = msg[(msg['LSTAslotfrac']>=0.02) & (msg['dtime']<=1) & (np.isfinite(msg['SMmean0']))] #  & (np.isfinite(msg['SMmean0']))
+
+    msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]
+
     print('Number of cores', len(msgin))
 
     # calculate the chunk size as an integer
@@ -67,7 +74,7 @@ def composite(h, eh):
 
         chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
-        # res = []
+        res = []
         # for m in chunks[0:30]:
         #     out = file_loop(m)
         #     res.append(out)
@@ -76,7 +83,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_propagation_noMeteosatfilter_LSTA"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_noSlots_1H"+key+"_LSTA"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -86,11 +93,11 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
 
-    if nbslot is not False:
-        nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
-        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+50]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+50])) <=0.5:
-            print('TOO FEW SLOTS!')
-            return
+    # if nbslot is not False:
+    #     nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
+    #     if np.sum(nbsl[dist-10:dist+10,dist-10:dist+50]>5) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+50])) <=0.5:
+    #         print('TOO FEW SLOTS!')
+    #         return
 
     vdic = {}
 
@@ -114,7 +121,7 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         print('Kernels shape wrong!')
         ipdb.set_trace()
 
-    kernel = kernel - np.nanmean(kernel)
+    kernel = kernel #- np.nanmean(kernel)
 
 
     if np.nansum(probs2) > 0:
@@ -144,30 +151,6 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
         plsta = np.zeros_like(kernel)
         lcnt = np.zeros_like(kernel)
 
-    # kmean = kernel #- np.nanmean(kernel)
-    # ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    # e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
-
-    # if e100 >= -3.5:   ### random LSTA p10
-    #     return
-    #
-    # if e100 <= 2.7:   ### random LSTA p90
-    #     return
-
-    # if e100 >= -3:  ### core LSTA p10
-    #     return
-
-    # if e100 <= 2.88:  ### random LSTA p90
-    #     return
-    #
-    # if e100 >= -1.36:  ### core LSTA p25
-    #     return
-    #
-    # if e100 <= 1.45:  ### random LSTA p75
-    #     return
-
-    # if (e100 >= 1.1) | (e100<=1):
-    #     return
 
     return kernel,  cnt, cnt2, vdic, prob, cnt3, probcm, cnt4,plsta, lcnt
 
@@ -257,17 +240,27 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     div = cmm['d'].sel(level=925).squeeze()
 
-    theta_e_diff = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15,
-                            cmm['q'].sel(level=925).squeeze()) - \
-                   u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15,
+    theta_925 = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15,
+                            cmm['q'].sel(level=925).squeeze())
+
+    theta_650 =  u_met.theta_e(650, cmm['t'].sel(level=650).squeeze().values - 273.15,
                                  cmm['q'].sel(level=650).squeeze())
 
-    theta_e_diff_clim = u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
-                                 pl_clim['q'].sel(level=925).squeeze()) - \
-                   u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
+    theta_clim_925 = u_met.theta_e(925, pl_clim['t'].sel(level=925).squeeze().values - 273.15,
+                                 pl_clim['q'].sel(level=925).squeeze())
+
+    theta_clim_650 = u_met.theta_e(650, pl_clim['t'].sel(level=650).squeeze().values - 273.15,
                                  pl_clim['q'].sel(level=650).squeeze())
 
-    theta_e = theta_e_diff - theta_e_diff_clim
+    pp = units.Quantity(650, 'hPa')
+    tt = units.Quantity(cmm['t'].sel(level=650).squeeze().values, 'K')
+    tclim = units.Quantity(pl_clim['t'].sel(level=650).squeeze().values, 'K')
+
+    thetaes_up = np.array(calc.saturation_equivalent_potential_temperature(pp, tt)) - 273.15
+    thetaes_up_clim = np.array(calc.saturation_equivalent_potential_temperature(pp, tclim)) - 273.15
+    #ipdb.set_trace()
+    theta_e = (theta_925 - theta_650) - (theta_clim_925 - theta_clim_650)
+    theta_es = (theta_925 - thetaes_up) - (theta_clim_925 - thetaes_up_clim)
 
     q = cmm['q'].sel(level=925).squeeze() - pl_clim['q'].sel(level=925).squeeze()
 
@@ -277,8 +270,8 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v925_orig'] = cmm['v'].sel(level=925).squeeze()
     cm['u925_orig'] = cmm['u'].sel(level=925).squeeze()
 
-    cm['tciw'] = css['w'].sel(level=350).squeeze() #- srfc_clim['tciw'].squeeze()
-    cm['tciwlow'] = css['w'].sel(level=850).squeeze()
+    #cm['tciw'] = css['w'].sel(level=350).squeeze() #- srfc_clim['tciw'].squeeze()
+    #cm['tciwlow'] = css['w'].sel(level=850).squeeze()
     cm['tciwmid'] = css['w'].sel(level=500).squeeze()
     #ipdb.set_trace()
     #cm['sp'] = scm['sp'].squeeze() - esrfc_clim['sp'].squeeze()
@@ -295,7 +288,9 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['div'] = div *1000
     cm['q'] = q
     cm['t'] = t
+    #ipdb.set_trace()
     cm['theta_e'] = theta_e
+    cm['theta_es'] = theta_es
 
     #del srfc_clim
     del pl_clim
@@ -443,9 +438,9 @@ def file_loop(df):
     lsta_da = lsta['LSTA'].squeeze()
     slot_da = lsta['NbSlot'].squeeze().values
 
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
-        print('Not enough valid')
-        return None
+    # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
+    #     print('Not enough valid')
+    #     return None
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
@@ -504,8 +499,8 @@ def file_loop(df):
         lon = dit.lon
 
         #initiation filter:
-        initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        if os.path.isfile(initpath):
+        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
+        # if os.path.isfile(initpath):
             # dic = pd.read_table(initpath, delim_whitespace=True, header=None,
             #                     names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
             #                            'core_time', 'initiation_time'])
@@ -525,10 +520,10 @@ def file_loop(df):
 
             # initiation filter:
 
-            if (dit['xdiff'] < 100) & (dit['initTime']!=2):
-                # & (ddic['initiation_time'].values >= 12):
-                print('Initiation point too close')
-                continue
+            # if (dit['xdiff'] < 100) & (dit['initTime']!=2):
+            #     # & (ddic['initiation_time'].values >= 12):
+            #     print('Initiation point too close')
+            #     continue
 
                 # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
                 #
@@ -781,7 +776,7 @@ def plot_doug(h, eh):
 def plot_doug_small(h, eh):
 
     dic = {}
-    name = "ERA5_cores_propagation2_noERAfilter_LSTA"  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
+    name = "ERA5_cores_noSlots_1H2hOverlap_LSTA"  # "ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
     def coll(dic, h, eh, year):
         print(h)
@@ -888,7 +883,7 @@ def plot_doug_small(h, eh):
 
     ax1 = f.add_subplot(224)
     #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.contourf(((dic['theta_e']) / dic['cntp']), extend='both', cmap='RdBu', levels=np.linspace(-2.5,2.5,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
+    plt.contourf(((dic['theta_es']) / dic['cntp']), extend='both', cmap='RdBu', levels=np.linspace(-3,3,16)) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label=r'K')
     plt.plot(extent, extent, 'bo')
     contours = plt.contour((dic['probmsg'] / dic['cntm']), extend='both', cmap='PuOr_r', levels=[-0.4,-0.3,-0.2,-0.1, 0,0.1,0.2,0.3,0.4]) #np.arange(-15,-10,0.5)
