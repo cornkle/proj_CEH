@@ -39,6 +39,7 @@ DATASETS = {
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
     'METSRFC': _create_dic(3, 0.45, 9, 10), # nb =14 also tested
+    'METSRFC24': _create_dic(3, 0.45, 24, 10), # nb =14 also tested
     'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10)  # nb =14 also tested
 }
 
@@ -299,7 +300,7 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
             power_locMax = power[ind]
             if (coeff_locMax < 0) | (tt < -1.) :  # coefficient negative or small negative T
                 scal = scal * -1
-            if power_locMax < 0.02:   # minimum power val, should find a more objective way
+            if power_locMax < 0.02:   # minimum power val, should find a more objective way, like standard deviation!
                 scal = np.nan
 
             dom_scale[i, j] = scal

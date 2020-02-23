@@ -34,7 +34,7 @@ def plot_map_AMSRE(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     key = '2hOverlap'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_DRYtest_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_mini_day+1_DRY_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
 
     lsta = (dic['lsta'])[0] / dic['lsta'][1]
     amsr = (dic['amsr'])[0] / dic['amsr'][1]
@@ -116,3 +116,62 @@ def plot_map_AMSRE(hour):
     #plt.savefig(path + '/amsreVSlsta/wcoeff_maps_all_AMSL_SMFINITE_'+str(hour).zfill(2)+'.png')
     #plt.show()
     #plt.close('all')
+
+
+def plot_amsr_lsta_only(hour):
+
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+    key = '2hOverlap'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_mini_day-1_DRY_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+
+    lsta = (dic['lsta'])[0] / dic['lsta'][1]
+    amsr = (dic['amsr'])[0] / dic['amsr'][1]
+
+    cores = dic['cores']
+
+    lcnt = dic['lsta'][1]
+    acnt = dic['amsr'][1]
+
+    dist=200
+    # llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))#*12000
+    # alevels = np.array(list(np.arange(-2.5, 0, 0.25)) + list(np.arange(0.25, 2.51, 0.25)))#*12000
+
+    # llevels = np.array(list(np.arange(-1.6, 0, 0.2)) + list(np.arange(0.2, 1.61, 0.2)))#*12000  WET
+    # alevels = np.array(list(np.arange(-3, 0, 0.25)) + list(np.arange(0.25, 3.25, 0.25)))#*12000
+
+    llevels = np.array(list(np.arange(-1.5, 0, 0.2)) + list(np.arange(0.2, 1.51, 0.2)))#*12000 DRY
+    alevels = np.array(list(np.arange(-5, 0, 0.5)) + list(np.arange(0.5, 5.5, 0.5)))#*12000
+
+    f = plt.figure(figsize=(10, 4), dpi=200)
+    ax = f.add_subplot(121)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , lsta , cmap='RdBu_r', extend='both', levels=llevels)
+    plt.colorbar(label='K')
+    cs = plt.contour((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , amsr , colors='k', linewidths=1, linestyles=['dotted'])
+    plt.clabel(cs, inline=1, fontsize=8, fmt="%1.1f")
+    ax.plot(0,0, 'bo')
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.axvline(x=0, linestyle='dashed', color='k',linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+
+    plt.title('LSTA | Nb cores: ' + str(cores) + '| ' + str(hour).zfill(2) + '00UTC',
+              fontsize=10)
+
+    ax = f.add_subplot(122)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , amsr , cmap='RdBu', extend='both', levels=alevels)
+    plt.colorbar(label='%')
+    # plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, lsta, colors='k',
+    #             linewidths=0.8, linestyles=['dashed'])
+
+
+    ax.plot(0,0, 'bo')
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.axvline(x=0, linestyle='dashed', color='k', linewidth=1)
+    plt.axhline(y=0, linestyle='dashed', color='k', linewidth=1)
+    plt.title('AMSRE| Nb cores: ' + str(cores) + '| ' + str(hour).zfill(2) + '00UTC', fontsize=10)
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_dry-1_' + str(hour).zfill(2) + '.png')

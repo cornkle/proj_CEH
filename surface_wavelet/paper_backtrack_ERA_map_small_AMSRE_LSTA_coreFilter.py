@@ -20,6 +20,7 @@ import os
 import glob
 
 import pickle as pkl
+from wavelet import util as wutil
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -38,7 +39,7 @@ def run_hours():
 def rewrite_list(hour):
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
     dic = pkl.load(
-        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_bigWin_" + key + '_' + str(hour) + ".p", "rb"))
+        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMcircle_" + key + '_' + str(hour) + ".p", "rb"))
     # new = dic.copy()
     # for k in new.keys():
     #     new[k] = []
@@ -51,8 +52,8 @@ def rewrite_list(hour):
     # pkl.dump(new, open(path + "cores_gt15000km2_table_1640_580_" + str(hour) + "_new.p", "wb"))
 
     df = pd.DataFrame.from_dict(dic)
-    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'topo','SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1', 'LSTAmean', 'LSTAslotfrac', 'dtime'])
-    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_bigWin_" + key + '_' + str(hour) + ".csv", na_rep=-999, index_label='id')
+    df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'topo','SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1', 'LSTAmean', 'LSTAslotfrac', 'dtime', 'ERAqmean', 'SMscale'])
+    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMcircle_" + key + '_' + str(hour) + ".csv", na_rep=-999, index_label='id')
 
 
 def composite(h):
@@ -77,6 +78,8 @@ def composite(h):
     msg['SMwet-1'] = np.nan
     msg['LSTAmean'] = np.nan
     msg['LSTAslotfrac'] = np.nan
+    msg['ERAqmean'] = np.nan
+    msg['SMscale'] = np.nan
     #msg['topo'] = np.nan
 
     chunk, chunk_ind, chunk_count = np.unique(msg.date, return_index=True, return_counts=True)
@@ -85,13 +88,13 @@ def composite(h):
     chunks = [msg.loc[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
     res = []
-    # for m in chunks[0:100]:
-    #     out = file_loop(m)
-    #     res.append(out)
-    #
-    # ipdb.set_trace()
-    # return
-    pool = multiprocessing.Pool(processes=4)
+    for m in chunks[100:101]:
+        out = file_loop(m)
+        res.append(out)
+
+    ipdb.set_trace()
+    return
+    #pool = multiprocessing.Pool(processes=4)
 
     res = pool.map(file_loop, chunks)
     pool.close()
@@ -106,7 +109,8 @@ def composite(h):
 
     #ipdb.set_trace()
 
-    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking_bigWin_" + key + "_" +str(hour)+".p", "wb"))  #"+str(hour)+"
+    pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking"
+                            "_SMcircle_" + key + "_" +str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
 
@@ -114,11 +118,13 @@ def composite(h):
 
 
 
-def cut_kernel(xpos, ypos, arrlist, dist):
+def cut_kernel(xpos, ypos, arrlist, dist, era=False):
 
-    wetflag = np.array([0,0])
-    dryflag = np.array([0,0])
+    wetflag = np.array([np.nan, np.nan])
+    dryflag = np.array([np.nan, np.nan])
     smean = np.array([np.nan, np.nan])
+    outscale = 0
+    emean = np.nan
 
     for ids, arr in enumerate(arrlist):
 
@@ -128,28 +134,38 @@ def cut_kernel(xpos, ypos, arrlist, dist):
         if kernel.shape != (dist*2+1, dist*2+1):
             print('Kernels shape wrong!')
 
+        ycirc100e, xcirc100e = ua.draw_circle(dist + 51, dist + 1, 34)  # at - 150km, draw 50km radius circle 17pixel
+        #ipdb.set_trace()
         if ids == 0:
+
             if (np.sum(np.isfinite(kernel)) < 2):
-                return smean, wetflag, dryflag
-        # if (np.sum(np.isfinite(kernel)) > 2):
-        #     ipdb.set_trace()
+                return smean, wetflag, dryflag, outscale
 
 
-        outmean = np.nanmean(kernel[dist-30:dist+30, dist:dist+100])  # dist-30 / dist + 30, dist+100
+        #outmean = np.nanmean(kernel[dist-10:dist+10, dist:dist+67])  # dist-30 / dist + 30, dist+100
+
+        outmean = np.nanmean(kernel[ycirc100e,xcirc100e])
         smean[ids] = outmean
 
         #ycirc100e, xcirc100e = ua.draw_circle(dist + 100, dist + 1, 100)  # at - 150km, draw 50km radius circle
-        wet = np.nansum(kernel[dist-30:dist+30, dist:dist+100]>=0.1)/np.sum(np.isfinite(kernel[dist-30:dist+30, dist:dist+100]))
-        dry = np.nansum(kernel[dist - 30:dist + 30, dist:dist + 100] <= -1) / np.sum(
-            np.isfinite(kernel[dist - 30:dist + 30, dist:dist + 100]))
+        # wet = np.nansum(kernel[dist-10:dist+10, dist:dist+67]>=0.1)/np.sum(np.isfinite(kernel[dist-10:dist+10, dist:dist+67]))
+        # dry = np.nansum(kernel[dist - 10:dist + 10, dist:dist + 67] <= -1) / np.sum(
+        #     np.isfinite(kernel[dist - 10:dist + 10, dist:dist + 67]))
 
-        if wet >= 0.5:
-            wetflag[ids] +=1
+        wet = np.nansum(kernel[ycirc100e,xcirc100e]>=0.1)/np.sum(np.isfinite(kernel[ycirc100e,xcirc100e]))
+        dry = np.nansum(kernel[ycirc100e,xcirc100e] <= -1) / np.sum(
+            np.isfinite(kernel[ycirc100e,xcirc100e]))
 
-        if dry >= 0.5:
-            dryflag[ids] +=1
 
-    return smean, wetflag, dryflag
+        wetflag[ids] = wet
+        dryflag[ids] = dry
+
+    if era is not False:
+        ekernel = ua.cut_kernel(era, xpos, ypos, dist)
+        emean = np.round(np.nanmean(ekernel[dist - 10:dist + 10, dist:dist + 67]) * 1000, 2)
+
+
+    return smean, wetflag, dryflag, outscale, emean
 
 
 def cut_kernel_lsta(xpos, ypos, arr, nbslot=False):
@@ -168,12 +184,14 @@ def cut_kernel_lsta(xpos, ypos, arr, nbslot=False):
 
     if nbslot is not False:
         nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
-        if np.sum(nbsl[dist-30:dist+30,dist-30:dist+100]>2) / np.sum(np.isfinite(nbsl[dist-30:dist+30,dist-30:dist+100])) <=0.5:
+        if np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>2) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67])) <=0.5:
             print('TOO FEW SLOTS!')
             isgood = 0
 
-    outmean = np.nanmean(kernel[dist - 30:dist + 30, dist:dist + 100])
-    slot2frac = np.sum(nbsl[dist-30:dist+30,dist-30:dist+100]>2) / np.sum(np.isfinite(nbsl[dist-30:dist+30,dist-30:dist+100]))
+    outmean = np.nanmean(kernel[dist - 10:dist + 10, dist:dist + 67])
+    slot2frac = np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>2) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67]))
+
+
 
     return outmean, slot2frac
 
@@ -200,7 +218,8 @@ def file_loop(df):
     fdate = str(lsta_date.year) + str(lsta_date.month).zfill(2) + str(lsta_date.day).zfill(2)
 
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
+    topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    topo = topo.sel(lon=slice(-12, 12), lat=slice(8, 21))
     ttopo = topo['h']
 
     #
@@ -219,10 +238,11 @@ def file_loop(df):
         try:
             lsta = xr.open_dataset(sp)
         except OSError:
+                print('AMSRE OS ERROR')
                 return None
         print('Doing '+ sp)
 
-        lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 22))
+        lsta = lsta.sel(lon=slice(-12.5, 12.5), lat=slice(7.7, 22))
 
         sm_da = lsta['SM'].squeeze()
 
@@ -244,8 +264,9 @@ def file_loop(df):
         return None
 
     try:
-        lsta = xr.open_dataset(cnst.LSTA_NEW + 'lsta_daily_' + fdate + '.nc')
+        lsta = xr.open_dataset(cnst.LSTA_1330 + 'lsta_daily_' + fdate + '.nc')
     except OSError:
+        print('LSTA OS ERROR')
         return None
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
@@ -259,38 +280,79 @@ def file_loop(df):
         print('Not enough valid')
         return None
 
-    del topo
+    file = cnst.ERA5
+    edate = storm_date
+    edate = edate.replace(hour=12)
+    pl_clim = xr.open_dataset(
+        file + 'monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_' + str(edate.month).zfill(2) + '-' + str(
+            edate.day).zfill(2) + '-' + str(edate.hour).zfill(2) + '_pl.nc').load()
+    pl_clim = u_darrays.flip_lat(pl_clim)
+    try:
+        pl_clim = pl_clim.rename({'lat': 'latitude', 'lon': 'longitude'})
+    except:
+        pass
 
+
+    lowq = pl_clim['q'].sel(level=925).squeeze()
+
+    try:
+        era_da = topo.salem.transform(lowq)
+    except RuntimeError:
+        print('lsta_da on LSTA interpolation problem')
+        return None
+
+    del topo
     for dids, dit in df.iterrows():
 
+        nolat = 1
         try:
-            point = sm_da.sel(lat=dit.lat, lon=dit.lon, method='nearest', tolerance=0.04)
+            point = lsta_da.sel(lat=dit.lat, lon=dit.lon, method='nearest', tolerance=0.04)
         except KeyError:
+            print('LSTA tolerance error')
+            nolat = 0
+            lsta_kernel = np.nan
+            slot2frac = np.nan
+
+        if nolat:
+            plat = point['lat'].values
+            plon = point['lon'].values
+
+            xpos = np.where(lsta_da['lon'].values == plon)
+            xpos = int(xpos[0])
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
+
+            try:
+                lsta_kernel, slot2frac = cut_kernel_lsta(xpos, ypos, lsta_da, nbslot=slot_da)
+            except TypeError:
+                print('LSTA Kernel error')
+                lsta_kernel = np.nan
+                slot2frac = np.nan
+
+
+        try:
+            point = smlist[0].sel(lat=dit.lat, lon=dit.lon, method='nearest', tolerance=0.04)
+        except KeyError:
+            ipdb.set_trace()
+            print('AMSR tolerance error')
             continue
+
         plat = point['lat'].values
         plon = point['lon'].values
 
+        xxpos = np.where((smlist[0])['lon'].values == plon)
+        xxpos = int(xxpos[0])
+        yypos = np.where((smlist[0])['lat'].values == plat)
+        yypos = int(yypos[0])
 
-
-        xpos = np.where((smlist[0])['lon'].values == plon)
-        xpos = int(xpos[0])
-        ypos = np.where((smlist[0])['lat'].values == plat)
-        ypos = int(ypos[0])
 
         try:
-            lsta_kernel, slot2frac = cut_kernel_lsta(xpos, ypos, lsta_da, nbslot=slot_da)
-        except TypeError:
-            print('LSTA Kernel error')
-            continue
-        # if isgood == 0:
-        #     print('LSTA Kernel error')
-        #     continue
 
-        try:
-            smmean, wetflag, dryflag = cut_kernel(xpos, ypos, smlist, dist)
-        except TypeError:
+            smmean, wetflag, dryflag, scale, emean = cut_kernel(xxpos, yypos, smlist, dist, era=era_da)
+        except:
             print('SM TypeError')
             continue
+
 
         # if np.isfinite(smmean):
         #     ipdb.set_trace()
@@ -306,6 +368,8 @@ def file_loop(df):
         df.loc[dids, 'LSTAmean'] = lsta_kernel
         df.loc[dids, 'LSTAslotfrac'] = slot2frac  # percentage of >2 slots in centred area
        # df.loc[dids, 'topo'] = topo[ypos,xpos]
+        df.loc[dids,'ERAqmean'] = emean
+        df.loc[dids,'SMscale'] = scale
     #ipdb.set_trace()
 
     return df

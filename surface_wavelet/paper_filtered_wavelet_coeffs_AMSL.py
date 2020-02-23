@@ -37,7 +37,7 @@ def composite(hour):
 
     key = '2hOverlap'
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_bigWin_' + key + '_'+str(hour)+'.csv', na_values=-999)
+    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
     # msgopen = pd.read_csv(
     #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
     #         hour) + '.csv')
@@ -48,9 +48,11 @@ def composite(hour):
     print('Start core number ', len(msg))
 
 
-    msg = msg[ (msg['dtime']<=2) & ((msg['SMmean0']<=-4)) & ((msg['SMmean-1']<=-0.5)) ] #  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
-    #msg = msg[(msg['LSTAslotfrac'] >= 0.5) & (msg['dtime'] <= 2) & (np.isfinite(msg['SMmean0']))]
-    msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+
+    #msg = msg[ (msg['dtime']<=2) & (np.isfinite(msg['SMmean0']) & (msg['LSTAslotfrac'] >= 0.05)) ] #  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
+    msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.05) ] #& (msg['LSTAslotfrac'] >= 0.1)
+   # msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0'] < -0.5) & (msg['SMmean-1'] < -3.5) & (msg['LSTAslotfrac'] >= 0.05)] # slotfrac is an okay filter to make sure it doesnt rain on itself
+    msgin = msg[(msg['lat']>9.5) & (msg['lat']<19) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
 
     print('Number of cores', len(msgin))
     #ipdb.set_trace()
@@ -69,8 +71,8 @@ def composite(hour):
     # for m in chunks[::]:
     #     out = file_loop(m)
     #     res.append(out)
-
-    #return
+    #
+    # #return
     pool = multiprocessing.Pool(processes=5)
 
     res = pool.map(file_loop, chunks)
@@ -124,7 +126,7 @@ def composite(hour):
 
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_DRYtest_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_mini_day-1_WET_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -132,7 +134,7 @@ def composite(hour):
 
 def cut_kernel_lsta(xpos, ypos, arr):
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -165,13 +167,31 @@ def file_loop(df):
         print('Daytime')
         daybefore = storm_date
 
-    fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
+    prev_day = storm_date - dayd
+    next_day = storm_date + dayd
+
+    ctimes = {'day0' : daybefore,
+              'day-1' : prev_day,
+              'day+1' : next_day}
+
+    tag = 'day-1'
+
+    fdate = str(ctimes[tag].year) + str(ctimes[tag].month).zfill(2) + str(ctimes[tag].day).zfill(2)
+
+
+    topo = xr.open_dataset(cnst.LSTA_TOPO)
+    #topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    #topo = topo.sel(lat=slice(7,25), lon=slice(-14,14))
+
+    ttopo = topo['h']
+    grad = np.gradient(ttopo.values)
+    gradsum = abs(grad[0]) + abs(grad[1])
 
     amsre = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
-    amsre = amsre.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
+    amsre = amsre.sel(time=str(ctimes[tag].year)+'-'+str(ctimes[tag].month)+'-'+str(ctimes[tag].day))
     amsre = amsre.sel(lon=slice(-11, 11), lat=slice(8, 21))
-    print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
-        daybefore.day).zfill(2) + '.nc')
+    print('Doing '+ 'AMSR_' + str(ctimes[tag].year) + str(ctimes[tag].month).zfill(2) + str(
+        ctimes[tag].day).zfill(2) + '.nc')
 
     amsr_da = amsre['SM'].squeeze()
 
@@ -189,13 +209,7 @@ def file_loop(df):
     #     print('Not enough valid')
     #     return None
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
-    #topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    #topo = topo.sel(lat=slice(7,25), lon=slice(-14,14))
 
-    ttopo = topo['h']
-    grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0]) + abs(grad[1])
 
     # if (np.sum(np.isfinite(amsr_da)) / amsr_da.size) < 0.01:
     #     print('Not enough valid')

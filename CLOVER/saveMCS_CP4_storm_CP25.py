@@ -446,12 +446,15 @@ vars = OrderedDict()   # dictionary which contains info on pressure level and ho
 vars['lw_out_PBLtop'] = ([], 20)
 vars['totRain'] =  ([], 20)   # pressure levels, hour # totRain for CP25, lsRain for CP
 vars['q_pl'] = ([925], 12)  # 925, 650 available
+
 vars['shear'] = ([650, 925], 12) # should use 925 later
 vars['u_mid'] = ([650], 12)
 vars['u_srfc'] = ([925], 12)
-vars['q_pl'] = ([925], 12)  # 925, 650 available
-vars['theta'] = ([650, 925], 12)
-vars['t_pl'] = ([650], 12)
+vars['q_mid'] = ([650], 12)  # INPUT IN T * 100!!
+#vars['theta'] = ([650, 925], 12)
+vars['t_mid'] = ([650], 12)   # INPUT IN T * 100!!
+vars['t_srfc'] = ([925], 12)
+vars['q_srfc'] = ([925], 12)
 
 
 dummy = xr.open_mfdataset(data_path+os.sep+'lw_out_PBLtop'+os.sep+'*.nc', autoclose=True)  #check for q_pl timeseries cause pressure level dates are missing

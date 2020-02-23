@@ -681,6 +681,110 @@ def plot_diurn_double_relative():
     plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_100km.png')
 
 
+def plot_diurn_relative():
+
+
+    loop = [('e100', 're100', '100km upstream, 100km length scale')]
+    f = plt.figure(figsize=(5,8), dpi=200)
+    for ids, input in enumerate(loop):
+        rrange = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]#, 6,7,8,9,10]
+        percmmax = []
+        percmmin = []
+        nbmax = []
+        nbmin = []
+        err90_up = []
+        err90_low = []
+        err10_up = []
+        err10_low = []
+
+        for h in rrange:
+            path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+            #dic = pkl.load(open(path + "LSTA_histograms_AMSRE_"+str(h).zfill(2)+"SlotFilter_+150km_validCheck.p", "rb"))
+            dic = pkl.load(
+                open(path + "LSTA_histograms_AMSRE_" + str(h).zfill(2) + "SlotFilter_+100km_validCheck.p", "rb"))
+            print('Open')
+
+            for k in dic.keys():
+                coll = []
+                for ll in dic[k]:
+                    coll.extend(ll)
+                dic[k] = coll
+
+            cinput = np.array(dic[input[0]])
+            rinput = np.array(dic[input[1]])
+            point = cinput[np.isfinite(cinput)]
+            all = rinput[np.isfinite(rinput)]
+
+            p = 75
+            pprob = np.sum(point > np.percentile(all, p))
+            prob = pprob / point.size
+
+            percmax = prob  *100 # percentage of cells in warmest 25% of LSTA
+            percmmax.append(percmax)
+            nbmax.append(point > np.percentile(all, p))
+
+            low90, upp90 = proportion_confint(pprob, point.size)
+
+            err90_up.append((upp90 *100) - percmax)
+            err90_low.append(percmax -(low90 * 100) )
+
+            p = 25
+            pprob = np.sum(point < np.percentile(all, p))
+            prob = pprob / point.size
+            #ipdb.set_trace()
+            percmin =  prob  *100 # percentage of cells in warmest 25% of LSTA
+
+            print(h, '10prob', prob)
+            print(h, 'percent increase', (prob-0.1)/0.1*100)
+
+            percmmin.append(percmin)
+            nbmin.append(len(point))
+            low10, upp10 = proportion_confint(pprob, point.size)
+
+            err10_up.append((upp10 *100) - percmin)
+            err10_low.append( percmin - (low10 *100 ))
+
+        ax = f.add_subplot(1,1,ids+1)
+        ax.bar(np.arange(0,len(rrange)), np.array(percmmin)-25,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='darkorange') #
+        ax.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax.set_xticks(np.arange(0, len(rrange)))
+        ax.set_xticklabels(rrange)
+
+        lw = 0.5
+
+
+        ax.set_xlabel('Hour')
+
+        plt.ylabel('Probability (%)')
+        plt.legend()
+
+        ax1 = ax.twiny()
+        ax1.bar(np.arange(0, len(rrange)), np.array(percmmin)-25, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.8, color='darkorange')
+        ax1.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax1.set_xticks(np.arange(0,len(rrange)))
+        ax1.set_xticklabels(nbmin, rotation=45)
+        ax1.set_xlabel('Number of convective cores')
+
+        ax.set_ylim(0 - 25, 60 - 25)
+        locs, ylabels = plt.yticks()
+        # print(ids, locs)
+        ax.set_yticklabels(locs+25)
+
+
+        plt.title(input[2])
+
+        # plt.axhline(y=-50, linewidth=lw, color='k', linestyle='dashed')
+        #plt.axhline(y=25, linewidth=lw, color='k', linestyle='dashed')
+        plt.axhline(y=0, linewidth=3, color='k', linestyle='solid')
+        #plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
+    plt.tight_layout()
+    #plt.annotate('a)', xy=(0.04, 0.94), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+    #             textcoords='offset points')  # transform=ax.transAxes,
+    plt.show()
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_100km_SINGLE.png')
+
+
+
 def plot_scatter():
 
     percmmax = []
