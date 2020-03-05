@@ -272,7 +272,7 @@ def saveStddev_pl_day():
 def saveClimatology_srfc_day():
     flist = []
     for y in range(2006,2011):
-        fs = glob.glob(cnst.local_data + '/ERA5/hourly/surface/ERA5_'+str(y)+'*_srfc.nc')
+        fs = glob.glob(cnst.local_data + '/ERA5/hourly/surface/ERA5_'+str(y)+'*_srfc_SM.nc')
         flist.extend(fs)
 
     mf = xr.open_mfdataset(flist, concat_dim='time', combine='by_coords')  #
@@ -340,6 +340,6 @@ def saveClimatology_srfc_day():
                 # encoding = {var: comp for var in ds.data_vars}
 
 
-                ds.to_netcdf(cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc.nc')#, mode='w', encoding=encoding, format='NETCDF4')
-                print('Wrote '+'ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc.nc')
+                ds.to_netcdf(cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc_SM.nc')#, mode='w', encoding=encoding, format='NETCDF4')
+                print('Wrote '+'ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc_SM.nc')
                 del sliced
