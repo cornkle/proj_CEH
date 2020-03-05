@@ -5,6 +5,7 @@ import scipy.stats as stats
 import statsmodels.api as sm
 import pandas as pd
 from sklearn import linear_model
+from utils import u_statistics as ustat
 
 class MidPointNorm(Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
@@ -151,6 +152,40 @@ def multi_partial_correlation(input_df):
             residual2 = data_column2 - (np.dot(data_control_variable, fit2.coef_) + fit2.intercept_)
             partial_corr_matrix[i,j] = stats.pearsonr(residual1, residual2)[0]
     return pd.DataFrame(partial_corr_matrix, columns = input_df.columns, index = input_df.columns)
+
+
+def welch_t_test(mu1, s1, N1, mu2, s2, N2):
+    """http://en.wikipedia.org/wiki/Welch%27s_t_test"""
+
+    mu1 = np.asarray(mu1)
+    mu2 = np.asarray(mu2)
+    s1 = np.asarray(s1)
+    s2 = np.asarray(s2)
+
+    if not np.allclose(mu1.shape, mu2.shape):
+        raise ValueError('mu1 and mu2 should have the same shape')
+
+    if not np.allclose(s1.shape, s2.shape):
+        raise ValueError('s2 and s2 should have the same shape')
+
+    if not mu1.shape:
+        # Construct arrays to make calculations more succint.
+        N_i = np.array([N1, N2])
+        dof_i = N_i - 1
+        v_i = np.array([s1, s2]) ** 2
+        # Calculate t-stat, degrees of freedom, use scipy to find p-value.
+        t = (mu1 - mu2) / np.sqrt(np.sum(v_i / N_i))
+        dof = (np.sum(v_i / N_i) ** 2) / np.sum((v_i ** 2) / ((N_i ** 2) * dof_i))
+        p = stats.distributions.t.sf(np.abs(t), dof) * 2
+        return t, p
+    else:
+        ps = []
+        ts = []
+        for _mu1, _mu2, _s1, _s2 in zip(mu1.flatten(), mu2.flatten(), s1.flatten(), s2.flatten()):
+            t, p = welch_t_test(_mu1, _mu2, N1, _s1, _s2, N2)
+            ps.append(p)
+            ts.append(t)
+        return np.asarray(ts).reshape(mu1.shape), np.asarray(ps).reshape(mu1.shape)
 
 # # Generating data in our minion world
 # test_sample = 10000;

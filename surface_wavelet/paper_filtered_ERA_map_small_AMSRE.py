@@ -68,8 +68,13 @@ def eh_loop():
 
 def composite(h, eh):
 
-    key = '2hOverlap'
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
+    key = 'NEWTRACKING'
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
+
+    msgopen = pd.read_csv(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged/cores_gt15000km2_table_AMSRE_tracking_' + str(
+            h) + '_init.csv', na_values=[-999, -99])
+
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
     msg['eh'] = eh
@@ -78,16 +83,26 @@ def composite(h, eh):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msg = msg[ (msg['dtime']<=2) & (msg['LSTAslotfrac'] >= 0.03) ] #  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
-    ###msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.05) ] #& (msg['LSTAslotfrac'] >= 0.1)
-    ###msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0'] < -0.5) & (msg['SMmean-1'] < -3.5) & (msg['LSTAslotfrac'] >= 0.05)] # slotfrac is an okay filter to make sure it doesnt rain on itself
+    msgopen = msg
 
-    #msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.03) ] #& (msg['LSTAslotfrac'] >= 0.1)
-    #msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0'] < -6) & (msg['SMmean-1'] < -3.3) & (msg['LSTAslotfrac'] >= 0.03)] # slotfrac is an okay filter to make sure it doesnt rain on itself
+    #basic filter
+    msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
+    #propagation filter
+    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    #lsta filter
+    msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
+    #wetness_filter
+    # msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
+    # #eraq_filter
+    # msgopen = msgopen[(msgopen['ERAqmean'] >= 13.5)]#& (msgopen['ERAqmean'] <= 15.7)]
+    # #dry_filter
+    # #msgopen = msgopen[(msgopen['SMmean0']<=-6.7)&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    # # #wet_filter
+    # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
 
-    msgin = msg[(msg['lat']>9) & (msg['lat']<19) & (msg['topo']<450) ] #& (msgopen['ERAqmean']>14.8) & (msgopen['ERAqmean']<16.5)
-
+    msgin = msgopen
     print('Number of cores', len(msgin))
+
     #ipdb.set_trace()
 
     # calculate the chunk size as an integer
@@ -103,15 +118,15 @@ def composite(h, eh):
         chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
         # res = []
-        # for m in chunks[0:30]:
+        # for m in chunks:
         #     out = file_loop(m)
         #     res.append(out)
-        #
+
         # ipdb.set_trace()
         # return
         dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_SMALL_MCSfilter"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_ALL_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -124,7 +139,7 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False, msg=False, cmorph=False):
     wetflag = 0
     for ids, arr in enumerate(arrlist):
         kernel = ua.cut_kernel(arr,xpos, ypos,dist)
-        kernel = kernel #- np.nanmean(kernel)
+        kernel = kernel - np.nanmean(kernel)
         if kernel.shape != (dist*2+1, dist*2+1):
             print('Kernels shape wrong!')
             ipdb.set_trace()
@@ -600,7 +615,7 @@ def file_loop(df):
         # lon = (msg_latlon['lon'])[ddic['j_initiation'], ddic['i_initiation']]
         # lat = (msg_latlon['lat'])[ddic['j_initiation'], ddic['i_initiation']]
         try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.042)
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
             continue
         plat = point['lat'].values
@@ -618,11 +633,11 @@ def file_loop(df):
         except TypeError:
             print('TypeError')
             continue
-        #
-        if np.nansum(probm[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
-            print('Meteosat MCS continue')
-            continue
 
+        # if np.nansum(probm[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
+        #     print('Meteosat MCS continue')
+        #     continue
+        #
         if np.nanmin((vdic['tciwmid'][dist-30:dist+30,dist-30:dist+67]))<=-0.4:   # 0.03 for tciw, -0.3 for w [dist-50:dist+50,dist-30:dist+100] ,filter out cases with MCSs at 12
             print('ERA MCS continue')
             continue
@@ -662,6 +677,8 @@ def file_loop(df):
     for ek in edic.keys():
         outnames.append(ek)
         outlist.append(edic[ek])
+
+    #ipdb.set_trace()
 
     print('Returning')
 

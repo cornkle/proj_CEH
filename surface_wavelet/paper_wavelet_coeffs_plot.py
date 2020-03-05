@@ -54,7 +54,7 @@ def merge():
             pkl.dump(dic, open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_15000_-60_merge_median.p", "wb"))
 
 def plot(hour):
-    name = 'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+    name = 'UTC_15000_WAVELET_INIT_2hOverlap'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
@@ -91,7 +91,7 @@ def plot(hour):
 
     f = plt.figure(figsize=(9, 9))
     ax = f.add_subplot(221)
-    levels= np.linspace(-0.3,0.3,20)#[-0.14, -0.12,-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1, 0.12, 0.14]
+    levels= np.linspace(-0.5,0.5,20)#[-0.14, -0.12,-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1, 0.12, 0.14]
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales ,  (snrandom) , cmap='RdBu_r', levels = levels, extend='both')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1])
@@ -140,7 +140,7 @@ def plot(hour):
     plt.title('West-East scales', fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(path + '/initVSprop/'+name+'_cross_'+str(hour)+'.png')
+    plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT_WAVELET_'+str(hour)+'.png')
     plt.show()
     #plt.close()
 

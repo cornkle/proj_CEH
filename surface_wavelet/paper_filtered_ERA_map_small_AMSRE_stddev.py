@@ -208,7 +208,7 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     csm = u_darrays.flip_lat(csm)
 
 
-    pl_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.day).zfill(2)+'-'+str(edate.hour).zfill(2)+'_pl.nc').load()
+    pl_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_STD_'+str(edate.month).zfill(2)+'-'+str(edate.day).zfill(2)+'-'+str(edate.hour).zfill(2)+'_pl.nc').load()
     pl_clim = u_darrays.flip_lat(pl_clim)
     try:
         pl_clim = pl_clim.rename({'lat':'latitude', 'lon':'longitude'})
@@ -641,7 +641,7 @@ def file_loop(df):
 
         for ks in vdic.keys():
             if ks in edic:
-                edic[ks] = np.nansum(np.stack([edic[ks], vdic[ks]]), axis=0)
+                edic[ks] = np.nanstd(np.stack([edic[ks], vdic[ks]]), axis=0)
             else:
                 edic[ks] = vdic[ks]
         counter += 1

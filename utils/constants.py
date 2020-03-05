@@ -51,6 +51,7 @@ MCS_POINTS_DOM = network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dom
 MCS_HOUR_DAILY = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_14UTC.nc'
 MCS_TMIN = network_data + 'MCSfiles/blob_map_JJAS_-70minT_15k.nc'
 MCS_15K = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k.nc'
+MCS_ALL = network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS.nc'
 MCS_CENTRE70 = network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_15k.nc'
 MCS_CENTRE70_SMALL = network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_1-5k.nc'
 MCS_CENTRE70_GT5 = network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_GT5k.nc'

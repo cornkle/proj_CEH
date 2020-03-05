@@ -28,7 +28,7 @@ matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 
-daykey = 'day-1'
+daykey = 'day+1'
 
 
 def run_hours():
@@ -41,26 +41,34 @@ def composite(hour):
 
     key = '2hOverlap'
 
-    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
+    # msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
     msgopen = pd.read_csv(
         cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_' + str(
-            hour) + '_init.csv')
+            hour) + '_init.csv', na_values=[-999, -99])
 
-    msg = pd.DataFrame.from_dict(msgopen)
+    hour = hour
+    msg = pd.DataFrame.from_dict(msgopen)# &  &
+
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msg = msg[((msg['xdiff'] >= 100) & np.isfinite(msg['xinit'])) | (msg['initTime'] <= 2)]
+    msg = msg[ ((msg['xdiff']>=100) & np.isfinite(msg['xinit'])) | (msg['initTime']<=2)]
 
-#################
+    # msg = pd.DataFrame.from_dict(msgopen)
+    #
+    # msg['date'] = pd.to_datetime(msg[['year','month','day']])
+    # print('Start core number ', len(msg))
+    #
 
-    #msg = msg[ (msg['dtime']<=2) ] # #& (np.isfinite(msg['SMmean0']) & (msg['LSTAslotfrac'] >= 0.03)  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
-   #msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.05) ] #& (msg['LSTAslotfrac'] >= 0.1)
-    #msg = msg[(msg['SMmean0'] < -5.3) & (msg['SMmean-1'] < -3.3) & (msg['LSTAslotfrac'] >= 0.03)] # slotfrac is an okay filter to make sure it doesnt rain on itself
-    msgin = msg[(msg['lat']>10) & (msg['lat']<20)]#& (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+    #
+    # msg = msg[ (msg['dtime']<=2) ] # #& (np.isfinite(msg['SMmean0']) & (msg['LSTAslotfrac'] >= 0.03)  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
+    # msg = msg[(msg['SMmean0']>0.1) & (msg['SMmean-1']>0.5) & (msg['LSTAslotfrac'] >= 0.03) ] #& (msg['LSTAslotfrac'] >= 0.1)
+    #msg = msg[(msg['SMmean0'] < -4.6) & (msg['SMmean-1'] < -1) & (msg['LSTAslotfrac'] >= 0.03)] # slotfrac is an okay filter to make sure it doesnt rain on itself
+    msg = msg[(msg['lat']>10) & (msg['lat']<20) ]  #& (msg['topo']<450)
 
-#################
+    msgin = msg[(msg['SMmean0'] < -2.5) & (msg['SMmean-1'] < -0.5)]
+    #msgin = msg[(msg['SMmean0'] >= 0.01) & (msg['SMmean-1'] >=0.01)]
 
     print('Number of cores', len(msgin))
     #ipdb.set_trace()
@@ -80,7 +88,7 @@ def composite(hour):
     #     out = file_loop(m)
     #     res.append(out)
     #
-    # #return
+    # return
     pool = multiprocessing.Pool(processes=5)
 
     res = pool.map(file_loop, chunks)
@@ -95,6 +103,10 @@ def composite(hour):
     lsta_cnt = []
     amsr_list = []
     amsr_cnt = []
+    msg_list = []
+    msg_cnt = []
+    cmorph_list = []
+    cmorph_cnt = []
     cores = 0
     for r in res:
 
@@ -103,12 +115,18 @@ def composite(hour):
         lsta_cnt.append(r[1])
         amsr_list.append(r[2])
         amsr_cnt.append(r[3])
-        cores += r[4]
+        msg_list.append(r[4])
+        msg_cnt.append(r[5])
+        cmorph_list.append(r[6])
+        cmorph_cnt.append(r[7])
+        cores += r[8]
 
     dic = collections.OrderedDict([
 
                                    ('lsta' , [lsta_list, lsta_cnt]),
                                    ('amsr' , [amsr_list, amsr_cnt]),
+                                   ('msg' , [msg_list, msg_cnt]),
+                                   ('cmorph' , [cmorph_list, cmorph_cnt]),
                                    ('cores', cores)])
 
     keys = list(dic.keys())
@@ -134,7 +152,7 @@ def composite(hour):
 
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_"+daykey+"_ALLS_minusMean_INIT_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_"+daykey+"_ALLS_minusMean_CMORPH_DRY_INIT_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -155,6 +173,82 @@ def cut_kernel_lsta(xpos, ypos, arr):
     # plt.imshow(kernel, origin='lower')
 
     return kernel
+
+
+def get_previous_hours_msg(storm_date, daykey):
+
+
+    edate = storm_date#.replace(hour=12)  # make 12 reference hour for MCS filter
+    if daykey == 'day0':
+        t1 = edate -  pd.Timedelta('7 hours')
+        t2 = edate + pd.Timedelta('17 hours')
+    if daykey == 'day+1':
+        t1 = edate -  pd.Timedelta('7 hours')
+        t2 = edate + pd.Timedelta('17 hours')
+
+    file = cnst.MCS_ALL# MCS_15K #_POINTS_DOM
+    msg = xr.open_dataarray(file)
+    try:
+        msg = msg.sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
+    except OverflowError:
+        print('MSG date problem')
+        return None
+
+    #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
+    pos = np.where((msg.values <= -50) ) #(msg.values >= 5) & (msg.values < 65)) # #
+
+    out = np.zeros_like(msg.values)
+    out[pos] = 1
+    out[np.isnan(msg.values)] = np.nan
+    out = np.nansum(out, axis=0)
+    out[out>0]=1
+    # if np.sum(out>1) != 0:
+    #     'Stop!!!'
+    #     pdb.set_trace()
+
+    msg = msg.sum(axis=0)*0
+
+    xout = msg.copy()
+    del msg
+    xout.name = 'probs'
+    xout.values = out
+
+    return xout
+
+
+
+def get_previous_hours_CMORPH(date, daykey):
+
+    if daykey == 'day0':
+        t1 = date -  pd.Timedelta('7 hours')
+        t2 = date + pd.Timedelta('17 hours')
+    if daykey == 'day+1':
+        t1 = date -  pd.Timedelta('7 hours')    # 17UTC - 17UTC
+        t2 = date + pd.Timedelta('17 hours')
+    # before2 = pd.Timedelta('15 minutes')
+    #
+    # t1 = date #- before
+    # t2 = date + before2
+
+    file = cnst.CMORPH
+    try:
+        cmm = xr.open_dataarray(file + 'CMORPH_WA_' + str(date.year) + '.nc')
+    except:
+        return None
+    cmm = cmm.sel( time=slice(t1, t2)).sum(dim='time')
+    # cmm = cmm.sel(lat=slice(10.9, 19), lon=slice(-9.8, 9.8))
+
+    cm = cmm
+    pos = np.where(cm.values>=5)
+
+    out = np.zeros_like(cm)
+    out[pos] = 1
+
+    xout = cm.copy()
+    xout.name = 'probs'
+    xout.values = out
+
+    return xout
 
 
 
@@ -235,23 +329,28 @@ def file_loop(df):
         return None
 
 
-    # try:
-    #     lsta_da = topo.salem.transform(lsta_da)
-    # except RuntimeError:
-    #     print('lsta_da on LSTA interpolation problem')
-    #     return None
+    probs_msg = get_previous_hours_msg(outime, daykey)
+    probsm_on_lsta = topo.salem.transform(probs_msg, interp='nearest')
+    del probs_msg
 
+    probs_cm = get_previous_hours_CMORPH(outime, daykey)   # get previous rain to storm
+    try:
+        probscm_on_lsta = topo.salem.transform(probs_cm, interp='nearest')
+    except RuntimeError:
+        return None
 
-    lsta_da.values[ttopo.values >= 450] = np.nan
-    lsta_da.values[gradsum > 30] = np.nan
-
-    amsr_da.values[ttopo.values >= 450] = np.nan
-    amsr_da.values[gradsum > 30] = np.nan
+    # lsta_da.values[ttopo.values >= 450] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
+    #
+    # amsr_da.values[ttopo.values >= 450] = np.nan
+    # amsr_da.values[gradsum > 30] = np.nan
 
     del topo
 
     lsta = []
     amsr = []
+    msg = []
+    cmorph = []
 
 
     ###############################Blob loop
@@ -288,13 +387,29 @@ def file_loop(df):
             print('AMSR kernel error')
             continue
 
+        try:
+            msg_kernel = cut_kernel_lsta(xpos, ypos, probsm_on_lsta.values)
+        except TypeError:
+            print('AMSR kernel error')
+            continue
+
+        try:
+            cmorph_kernel = cut_kernel_lsta(xpos, ypos, probscm_on_lsta.values)
+        except TypeError:
+            print('AMSR kernel error')
+            continue
+
         lsta.append(lsta_kernel)
         amsr.append(amsre_kernel)
+        msg.append(msg_kernel)
+        cmorph.append(cmorph_kernel)
         cores += 1
 
 
     del lsta_da
     del amsr_da
+    del probsm_on_lsta
+    del probscm_on_lsta
 
     if (np.array(amsr).ndim == 1) | (np.array(lsta).ndim == 1):
         return None
@@ -313,13 +428,17 @@ def file_loop(df):
         except ValueError:
             ipdb.set_trace()
         amsr_cnt = np.sum(np.isfinite(np.stack(amsr, axis=0)), axis=0)[np.newaxis,...]
-    # except TypeError:
-    #     ipdb.set_trace()
+
+        msg_sum = np.nansum(np.stack(msg, axis=0), axis=0)[np.newaxis,...]
+        msg_cnt = np.sum(np.isfinite(np.stack(msg, axis=0)), axis=0)[np.newaxis,...]
+
+        cmorph_sum = np.nansum(np.stack(cmorph, axis=0), axis=0)[np.newaxis,...]
+        cmorph_cnt = np.sum(np.isfinite(np.stack(cmorph, axis=0)), axis=0)[np.newaxis,...]
 
 
     print('Returning with kernel, success!!')
 
-    return (lsta_sum, lsta_cnt, amsr_sum, amsr_cnt, cores)
+    return (lsta_sum, lsta_cnt, amsr_sum, amsr_cnt, msg_sum, msg_cnt, cmorph_sum, cmorph_cnt, cores)
 
 if __name__ == "__main__":
     run_hours()

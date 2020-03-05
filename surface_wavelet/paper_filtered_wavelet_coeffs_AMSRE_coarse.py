@@ -27,32 +27,17 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
-
 def run_hours():
 
-    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7] #15,16,
+    l = [17,19,20,23]#[15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
 def composite(hour):
 
-    key = 'NEWTRACKING'
+    key = '2hOverlap'
 
-    # msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
-    # # msgopen = pd.read_csv(
-    # #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
-    # #         hour) + '.csv')
-    #
-    # msg = pd.DataFrame.from_dict(msgopen)
-    #
-    # msg['date'] = pd.to_datetime(msg[['year','month','day']])
-    # print('Start core number ', len(msg))
-    #
-    # msg = msg[(msg['LSTAslotfrac']>=0.025) & (msg['dtime']<=2) & (np.isfinite(msg['SMmean0'])) ] # & (msg['SMmean0']>1) & (np.isfinite(msg['SMmean0']))
-    # #msg = msg[(msg['LSTAslotfrac'] >= 0.5) & (msg['dtime'] <= 2) & (np.isfinite(msg['SMmean0']))]
-    # msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
-
-
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_' + key + '_'+str(hour)+'.csv', na_values=-999)
     msgopen = pd.read_csv(
         cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_' + str(
             hour) + '_init.csv', na_values=[-999, -99])
@@ -62,42 +47,34 @@ def composite(hour):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    #basic filter
-    msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
-    #propagation filter
-    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
-    #wetness_filter
-    msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
-    #eraq_filter
-    msgopen = msgopen[(msgopen['ERAqmean'] >= 15.2) & (msgopen['ERAqmean'] <= 15.7)]
-    #dry_filter
-    msgopen = msgopen[(msgopen['SMmean0']<=-6.1)&(msgopen['SMmean-1']<=-1.4)] #294 cases, with q 153
-    #wet_filter
-    msgopen = msgopen[(msgopen['SMmean0']>=0.03)&(msgopen['SMmean-1']>=-0.8)] #295 cases, with q 151
+    msg = msg[ ((msg['xdiff']>=100) & np.isfinite(msg['xinit'])) | (msg['initTime']<=2)] #  (msg['dtime']<=2) &#400km #& (msg['LSTAslotfrac'] >= 0.03) #  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
+    msgin = msg[(msg['lat']>9) & (msg['lat']<20) ]
 
-    msgin = msgopen
+    # msg = msg[(msg['dtime']<=2) & (np.isfinite(msg['SMmean0'])) ] # (msg['LSTAslotfrac']>=0.025) &  & (msg['SMmean0']>1) & (np.isfinite(msg['SMmean0']))
+    # #msg = msg[(msg['LSTAslotfrac'] >= 0.5) & (msg['dtime'] <= 2) & (np.isfinite(msg['SMmean0']))]
+    # msgin = msg[(msg['lat']>10) & (msg['lat']<20) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
 
     print('Number of cores', len(msgin))
-    ipdb.set_trace()
+    #ipdb.set_trace()
 
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
     msgin.sort_values(by='date')
+    #ipdb.set_trace()
 
-    msgy = msgin#[msgin['year']==year]
+    msgy = msgin
 
     chunk, chunk_ind, chunk_count = np.unique(msgy.date, return_index=True, return_counts=True)
 
     chunks = [msgy.loc[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
     # res = []
-    # for m in chunks[0:100]:
+    # for m in chunks[115:120]:
     #     out = file_loop(m)
     #     res.append(out)
     #
-    # ipdb.set_trace()
     # return
-    pool = multiprocessing.Pool(processes=4)
+    pool = multiprocessing.Pool(processes=5)
 
     res = pool.map(file_loop, chunks)
     pool.close()
@@ -122,8 +99,6 @@ def composite(hour):
     lsta_list = []
     lsta_cnt = []
 
-    slot_list = []
-
     for r in res:
         snpos_list.append(np.squeeze(r[0]))
         wepos_list.append(np.squeeze(r[1]))
@@ -142,15 +117,12 @@ def composite(hour):
         lsta_list.append(r[9])
         lsta_cnt.append(r[10])
 
-        slot_list.append(r[11])
-
     dic = collections.OrderedDict([('SN-pos' , [snpos_list, rsnpos_list]),
                                    ('WE-pos' , [wepos_list, rwepos_list]),
                                    ('kernel' , [vkernel_list, rkernel_list]),
                                    ('lsta' , [lsta_list, lsta_cnt]),
                                    ('cnt' , [vkernel_cnt, rkernel_cnt]),
-                                   ('scales' , scales),
-                                  ('slots', [slot_list])])
+                                   ('scales' , scales)])
 
     keys = list(dic.keys())
 
@@ -167,7 +139,7 @@ def composite(hour):
     dic['nbrcores'] = dic['SN-pos'][1].shape[0]
 
     for l in keys:
-        if (l == 'scales') | (l in ['lsta', 'slots']):
+        if (l == 'scales') | (l == 'lsta'):
             continue
 
         a =  dic[l][0]
@@ -195,14 +167,14 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_LSTAA_1330_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT_" + key + ".p", "wb"))
     print('Save file written!')
 
 
 
 def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel_3d(arr,xpos, ypos,dist)
 
@@ -210,6 +182,7 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
     #     return
 
     if kernel.shape != (arr.shape[0], 2*dist+1, 2*dist+1):
+        print('Wavelet kernel wrong shape')
         return
 
     if rotate:
@@ -217,11 +190,11 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmean(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmean(kernel[:,:, 99:104], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmean(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,99:104,:], axis=1) #kernel[:,50,:] #
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -233,31 +206,26 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
     return wav_ns, wav_we, kernel[[2,4,6,8], :, :]  #[1,4,6,10]
 
 
-def cut_kernel_lsta(xpos, ypos, arr, msg=None, nbslot=None):
+def cut_kernel_lsta(xpos, ypos, arr):
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
     kernel = kernel
 
     # if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
+    #     print('Not enough valid in kernel')
     #     return
 
     if kernel.shape != (2*dist+1, 2*dist+1):
+        print('Kernel wrong shape')
         return
 
-    if msg is not False:
-        msgkernel = u_arrays.cut_kernel(msg, xpos, ypos, dist)
-    else:
-        msgkernel = kernel*np.nan
+    # plt.figure()
+    # plt.imshow(kernel, origin='lower')
 
-    if nbslot is not False:
-        nbkernel = u_arrays.cut_kernel(nbslot, xpos, ypos, dist)
-    else:
-        nbkernel = kernel*np.nan
-
-    return kernel, msgkernel, nbkernel
+    return kernel
 
 
 def get_previous_hours_msg(lsta_date):
@@ -281,9 +249,6 @@ def get_previous_hours_msg(lsta_date):
     out[pos] = 1
     out = np.sum(out, axis=0)
     out[out>0]=1
-    # if np.sum(out>1) != 0:
-    #     'Stop!!!'
-    #     pdb.set_trace()
 
     msg = msg.sum(axis=0)*0
 
@@ -314,19 +279,27 @@ def file_loop(df):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    try:
-        lsta = xr.open_dataset(cnst.LSTA_1330 + 'lsta_daily_' + fdate + '.nc')
-    except OSError:
-        return None
-    print('Doing ' + 'lsta_daily_' + fdate + '.nc')
+    lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
+    lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
+    lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+    print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+        daybefore.day).zfill(2) + '.nc')
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
+    lsta_da = lsta['SM'].squeeze()
+
+    topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    topo = topo.sel(lon=slice(-13, 13), lat=slice(7.5, 21))
+
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
     gradsum = abs(grad[0]) + abs(grad[1])
 
-    lsta_da = lsta['LSTA'].squeeze()
-    slot_da = lsta['NbSlot'].squeeze().values
+
+    try:
+        lsta_da = topo.salem.transform(lsta_da)
+    except RuntimeError:
+        print('lsta_da on LSTA interpolation problem')
+        return None
 
 
     lsta_da.values[ttopo.values >= 450] = np.nan
@@ -357,23 +330,23 @@ def file_loop(df):
 
     for inds, wava in enumerate(wavarr):
         wava[inter1] = np.nan
-
         wavarr[inds, :, :] = (wava) / (np.nanstd(wava))
 
-        wavarr[inds, inter1[0], inter1[1]] = np.nan
+        #wavarr[inds, inter1[0], inter1[1]] = np.nan
     del wavpos
     wav_input[inter1] = np.nan
 
-
     # probs_msg = get_previous_hours_msg(daybefore)
     # probsm_on_lsta = topo.salem.transform(probs_msg, interp='nearest')
+    #del probs_msg
     del topo
+
 
     rnspos = []
     rwepos = []
     rkernel = []
     lsta = []
-    slot = []
+
 
     ###############################Blob loop
 
@@ -389,6 +362,7 @@ def file_loop(df):
         try:
             point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
+            print('Nearest point finding error')
             continue
         #ipdb.set_trace()
         plat = point['lat'].values
@@ -400,12 +374,12 @@ def file_loop(df):
         ypos = int(ypos[0])
 
         try:
-            lsta_kernel, msg_kernel, nbkernel = cut_kernel_lsta(xpos, ypos, lsta_da.values,msg=False, nbslot=slot_da)
+            lsta_kernel = cut_kernel_lsta(xpos, ypos, wav_input)
         except TypeError:
-            print('Kernel error')
+            print('LSTA kernel error')
             continue
-        dist=100
 
+        # dist=100
         # if np.nansum(msg_kernel[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
         #     print('Meteosat MCS continue')
         #     continue
@@ -414,7 +388,7 @@ def file_loop(df):
         try:
             wavpos_ns, wavpos_we, vvkernel = cut_kernel(xpos, ypos, wavarr, daybefore, plon, plat, rotate=False)
         except TypeError:
-            print('Kernel error')
+            print('Wavelt kernel error')
             continue
 
 
@@ -422,7 +396,6 @@ def file_loop(df):
         wepos.append(wavpos_we)  # west-east wavelet
         vkernel.append(vvkernel)
         lsta.append(lsta_kernel)
-        slot.append(nbkernel)
 
         ##### random
 
@@ -485,19 +458,16 @@ def file_loop(df):
         vkernel_cnt = np.sum(np.isfinite(np.stack(vkernel, axis=0)), axis=0)[np.newaxis,...]
         lsta_sum = np.nansum(np.stack(lsta, axis=0), axis=0)[np.newaxis,...]
         lsta_cnt = np.sum(np.isfinite(np.stack(lsta, axis=0)), axis=0)[np.newaxis,...]
-        slot_sum = np.nansum(np.stack(slot, axis=0), axis=0)[np.newaxis, ...]
-
 
         rnspos_sum = np.squeeze(np.stack(rnspos, axis=0))
         rwepos_sum = np.squeeze(np.stack(rwepos, axis=0))
         rkernel_sum = np.nansum(np.stack(rkernel, axis=0), axis=0)[np.newaxis,...]
         rkernel_cnt = np.sum(np.isfinite(np.stack(rkernel, axis=0)), axis=0)[np.newaxis,...]
 
-
     print('Returning with kernel, success!!')
 
     return (nspos_sum, wepos_sum,
-            rnspos_sum, rwepos_sum, vkernel_sum, rkernel_sum, scales, vkernel_cnt, rkernel_cnt, lsta_sum, lsta_cnt, slot_sum)
+            rnspos_sum, rwepos_sum, vkernel_sum, rkernel_sum, scales, vkernel_cnt, rkernel_cnt, lsta_sum, lsta_cnt)
 # rcns_sum, rcwe_sum, cns_sum, cwe_sum,
 
 

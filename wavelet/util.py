@@ -39,7 +39,8 @@ DATASETS = {
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
     'METSRFC': _create_dic(3, 0.45, 9, 10), # nb =14 also tested
-    'METSRFC24': _create_dic(3, 0.45, 24, 10), # nb =14 also tested
+    'METSRFC_LS': _create_dic(3, 0.4, 9, 15), # larger scales
+    'METSRFC24': _create_dic(3, 0.25, 50, 10), # nb =14 also tested
     'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10)  # nb =14 also tested
 }
 

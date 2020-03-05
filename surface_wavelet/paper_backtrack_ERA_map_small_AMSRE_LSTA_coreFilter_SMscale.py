@@ -86,15 +86,15 @@ def composite(h):
 
 
     chunks = [msg.loc[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
-
+    #
     # res = []
-    # for m in chunks[150:155]:
+    # for m in chunks:
     #     out = file_loop(m)
     #     res.append(out)
     #
     # #ipdb.set_trace()
     # return
-    pool = multiprocessing.Pool(processes=4)
+    pool = multiprocessing.Pool(processes=5)
 
     res = pool.map(file_loop, chunks)
     pool.close()
@@ -158,25 +158,44 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False):
             orig = wavpos['scales']
 
             scales = np.round(orig,0)
-            #print(scales)
+            print(scales)
 
 
             for inds, wava in enumerate(wavarr):
                 wava[inter1] = np.nan
                 wavarr[inds, :, :] = (wava) / (np.nanstd(wava))
 
+            minar = np.nanmean(wavarr[:,dist-10:dist+10,dist+15:dist+84], axis=1)
+
+
             try:
-                maxx = np.nanmin(wavarr[:, ycirc100e, xcirc100e])
+                maxx = np.nanmin(minar) #ycirc100e, xcirc100e wavarr[1::, dist+10:, dist:dist+100]
+                maxpos = np.where(minar == maxx)
 
                 # if np.isfinite(outmean):
-                #     plt.figure()
-                #     plt.contourf(np.arange(dist*2+1), scales, wavarr[:, dist+1, :], cmap='RdBu', levels=np.linspace(-3,3,6))
+                #     f=plt.figure()
+                #     ax = f.add_subplot(221)
+                #     plt.contourf(np.arange(dist*2+1), scales, wavarr[:, dist+1, :], cmap='RdBu', levels=np.linspace(-4,4,8), extend='both')
+                #     plt.axhline(scales[maxpos[0]], color='k')
                 #     plt.colorbar()
-                #
-                #     ipdb.set_trace()
+                #     ax = f.add_subplot(222)
+                #     plt.contourf(np.arange(dist*2+1), np.arange(dist*2+1), wavarr[0, :, :], cmap='RdBu', levels=np.linspace(-3,3,6), extend='both')
+                #     plt.colorbar()
+                #     plt.title('Scale: '+str(scales[0]))
+                #     ax = f.add_subplot(223)
+                #     plt.contourf(np.arange(dist*2+1), np.arange(dist*2+1),wav_input, cmap='RdBu', levels=np.linspace(-3,3,6), extend='both')
+                #     plt.colorbar()
+                #     plt.title(str(maxx) + ' | ' + str(scales[maxpos[0]]))
+                #     ax = f.add_subplot(224)
+                #     plt.contourf(np.arange(dist*2+1), np.arange(dist*2+1), wavarr[5, :, :], cmap='RdBu', levels=np.linspace(-3,3,6), extend='both')
+                #     plt.title('Scale: '+str(scales[5]))
+                #     plt.colorbar()
 
 
-                maxpos = np.where(wavarr==maxx)
+                    #ipdb.set_trace()
+
+
+
                 if len(maxpos[0]) > 1:
                     print('More than one dominant wavelet scale!')
                 outscale = scales[(maxpos[0])[0]]

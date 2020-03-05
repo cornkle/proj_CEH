@@ -29,30 +29,48 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [17,19,20,23]#[15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13] #15,16,
+    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7]#,8,9,10,11,12,13] #15,16,
     for ll in l:
         composite(ll)
 
-def composite(hour):
+def composite(h):
 
-    key = '2hOverlap'
+    #key = '2hOverlap'
 
-    msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
-    # msgopen = pd.read_csv(
-    #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_' + str(
-    #         hour) + '.csv')
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_' + key + '_'+str(hour)+'.csv', na_values=-999)
+    key = 'NEWTRACKING'
+    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
 
-    msg = pd.DataFrame.from_dict(msgopen)
+    msgopen = pd.read_csv(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged/cores_gt15000km2_table_AMSRE_tracking_' + str(
+            h) + '_init.csv', na_values=[-999, -99])
+
+    hour = h
+    msg = pd.DataFrame.from_dict(msgopen)# &  &
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msg = msg[(msg['LSTAslotfrac']>=0.025) & (msg['dtime']<=2) & (np.isfinite(msg['SMmean0'])) ] # & (msg['SMmean0']>1) & (np.isfinite(msg['SMmean0']))
-    #msg = msg[(msg['LSTAslotfrac'] >= 0.5) & (msg['dtime'] <= 2) & (np.isfinite(msg['SMmean0']))]
-    msgin = msg[(msg['lat']>8.5) & (msg['lat']<20.5) & (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+    msgopen = msg
+
+    #basic filter
+    msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
+    #propagation filter
+    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    #wetness_filter
+    # msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
+    # #eraq_filter
+    # msgopen = msgopen[(msgopen['ERAqmean'] >= 13.5)]#& (msgopen['ERAqmean'] <= 15.7)]
+    # #dry_filter
+    # #msgopen = msgopen[(msgopen['SMmean0']<=-6.7)&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    # # #wet_filter
+    # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+
+    msgin = msgopen
 
     print('Number of cores', len(msgin))
-    ipdb.set_trace()
+    #ipdb.set_trace()
+
     # calculate the chunk size as an integer
     #'chunk_size = int(msg.shape[0] / pnumber)
     msgin.sort_values(by='date')
@@ -163,14 +181,14 @@ def composite(hour):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT_" + key + ".p", "wb"))
     print('Save file written!')
 
 
 
 def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel_3d(arr,xpos, ypos,dist)
 
@@ -186,11 +204,11 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmean(kernel[:,:, 100:103], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmean(kernel[:,:, 99:104], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmean(kernel[:,100:103,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,99:104,:], axis=1) #kernel[:,50,:] #
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -204,7 +222,7 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
 def cut_kernel_lsta(xpos, ypos, arr):
 
-    dist = 100
+    dist = 200
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -283,8 +301,8 @@ def file_loop(df):
 
     lsta_da = lsta['SM'].squeeze()
 
-    topo = xr.open_dataset(cnst.LSTA_TOPO)
-    #topo = topo.sel(lon=slice(-13, 13), lat=slice(9, 21))
+    topo = xr.open_dataset(cnst.WA_TOPO_3KM)
+    topo = topo.sel(lon=slice(-13, 13), lat=slice(7.5, 21))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -319,7 +337,7 @@ def file_loop(df):
     # except ValueError:
     #     wav_input[inter]=0
 
-    wavpos = wutil.applyHat_pure(wav_input, dataset='METSRFC')
+    wavpos = wutil.applyHat_pure(wav_input, dataset='METSRFC_LS')
 
     wavarr = wavpos['coeffs'].copy()
     scales = wavpos['scales'].copy()
@@ -354,38 +372,6 @@ def file_loop(df):
 
         lat = dit.lat
         lon = dit.lon
-
-        #initiation filter:
-        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        # if os.path.isfile(initpath):
-            # dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-            #                     names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-            #                            'core_time', 'initiation_time'])
-            # ddic = dic[
-            #     (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-            #                 dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
-            #
-            # #ipdb.set_trace()
-            # if len(ddic) == 0:
-            #     continue
-            # #ipdb.set_trace()
-            # if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-            #     continue
-
-            # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
-            #     continue
-
-            # initiation filter:
-
-            # if (dit['xdiff'] < 100) & (dit['initTime']!=2):
-            #     # & (ddic['initiation_time'].values >= 12):
-            #     print('Initiation point too close')
-            #     continue
-
-                # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
-                #
-                #     print('Initiation point too far', dit['initTime'])
-                #     continue
 
         try:
             point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
