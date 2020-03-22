@@ -98,7 +98,6 @@ def file_loop(f):
     outu_mid = dic['u_mid'].values
     outshear = dic['shear'].values
     outq = dic['q_srfc'].values
-    #theta = dic['theta'].values
     tmid = dic['t_mid'].values
     tsrfc = dic['t_srfc'].values
 

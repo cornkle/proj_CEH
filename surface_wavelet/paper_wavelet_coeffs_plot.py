@@ -54,7 +54,7 @@ def merge():
             pkl.dump(dic, open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + "UTC_15000_-60_merge_median.p", "wb"))
 
 def plot(hour):
-    name = 'UTC_15000_WAVELET_INIT_2hOverlap'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+    name = 'UTC_15000_WAVELET_INIT2_NEWTRACKING'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
@@ -72,7 +72,6 @@ def plot(hour):
 
 
     l=0
-    dist=100
 
     snblob = (dic[keys[l]])[0] #/ (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
     snrandom = (dic[keys[l]])[1] #/ (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
@@ -87,7 +86,7 @@ def plot(hour):
     # werandom_std = (dic[keys[l+1]])[4]
 
     l=2
-    dist=100
+    dist=200
 
     f = plt.figure(figsize=(9, 9))
     ax = f.add_subplot(221)
@@ -116,7 +115,7 @@ def plot(hour):
 
     ax = f.add_subplot(223)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob,  cmap='RdBu_r', levels =levels, extend='both') #, vmin = -0.1, vmax=0.1)
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob-snrandom,  cmap='RdBu_r', levels =levels, extend='both') #, vmin = -0.1, vmax=0.1)
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -129,7 +128,7 @@ def plot(hour):
 
     ax = f.add_subplot(224)
 
-    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob    , cmap='RdBu_r', levels =levels, extend='both')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob-werandom    , cmap='RdBu_r', levels =levels, extend='both')
     plt.colorbar(label='Power difference (Blob-random)')
     plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,wemask, colors='none', hatches='.', levels=[0.5, 1],
                  linewidth=0.25)
@@ -140,7 +139,7 @@ def plot(hour):
     plt.title('West-East scales', fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT_WAVELET_'+str(hour)+'.png')
+    plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT2_WAVELET_'+str(hour)+'.png')
     plt.show()
     #plt.close()
 
@@ -228,8 +227,8 @@ def plot_diurnal():
 def plot_map_AMSRE(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
-    key = '2hOverlap'
-    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_AMSRL_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    key = 'NEWTRACKING'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT2_" + (key) + ".p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     #dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(hour) + "UTC_15000_AMSLST_3slot_noOverplotFilter.p",
     #                    "rb"))  # UTC_15000_ALL_-60_5slotSmall
 
@@ -258,7 +257,7 @@ def plot_map_AMSRE(hour):
 
     mask = (dic['kernel'])[2]
     extent = ((dic['lsta'][0]).shape[1] - 1) / 2
-    dist=100
+    dist=200
     levels = np.array(list(np.arange(-0.5, 0, 0.05)) + list(np.arange(0.05, 0.51, 0.05)))
 
     f = plt.figure(figsize=(10, 8), dpi=200)
@@ -317,7 +316,7 @@ def plot_map_AMSRE(hour):
 
 
     plt.tight_layout()
-    plt.savefig(path + '/amsreVSlsta/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
+    #plt.savefig(path + '/amsreVSlsta/wcoeff_maps_all_AMSRE_'+str(hour)+'.png')
     plt.show()
 
 

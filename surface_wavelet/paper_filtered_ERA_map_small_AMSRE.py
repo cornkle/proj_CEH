@@ -48,8 +48,8 @@ def diurnal_loop():
 
 
 def eh_loop():
-    #all = np.arange(-38, 4, 3)
-    all = np.arange(-50,31,3)
+    all = np.arange(-38, 4, 3)  #-38, 4
+    #all = np.arange(-50,31,3)
     #all= np.arange(4,30,3)
 
     #hlist = []
@@ -72,7 +72,7 @@ def composite(h, eh):
     #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
 
     msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged/cores_gt15000km2_table_AMSRE_tracking_' + str(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged2/cores_gt15000km2_table_AMSRE_tracking2_' + str(
             h) + '_init.csv', na_values=[-999, -99])
 
     hour = h
@@ -90,15 +90,15 @@ def composite(h, eh):
     #propagation filter
     msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
     #lsta filter
-    msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
+    #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
     #wetness_filter
-    # msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
-    # #eraq_filter
-    # msgopen = msgopen[(msgopen['ERAqmean'] >= 13.5)]#& (msgopen['ERAqmean'] <= 15.7)]
-    # #dry_filter
-    # #msgopen = msgopen[(msgopen['SMmean0']<=-6.7)&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
-    # # #wet_filter
-    # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+    #msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
+    #eraq_filter
+    msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]
+    # # #dry_filter
+    #msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    # # # #wet_filter
+    msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)]#& (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318, 0.16-> 317, noMCS filter
 
     msgin = msgopen
     print('Number of cores', len(msgin))
@@ -118,15 +118,15 @@ def composite(h, eh):
         chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
         # res = []
-        # for m in chunks:
+        # for m in chunks[5:8]:
         #     out = file_loop(m)
         #     res.append(out)
-
+        #
         # ipdb.set_trace()
         # return
-        dic = u_parallelise.era_run_arrays(4, file_loop, chunks)
+        dic = u_parallelise.era_run_arrays(5, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_ALL_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_WET20-1_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -154,10 +154,38 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False, msg=False, cmorph=False):
 
     vdic = {}
 
+    itd = np.zeros_like(kernel)
+
     for d in era.data_vars:
 
         var = ua.cut_kernel(era[d].values,xpos, ypos,dist)
         vdic[d] = var
+
+        # if d == 'v925_orig':
+        #
+        #     itdvar = var.copy()
+        #     #itdvar[np.isnan(itdvar)] = -999
+        #
+        #     try:
+        #         pos = np.nanargmin(np.abs(itdvar), axis=0)
+        #     except ValueError:
+        #         print('ITD VALUE ERROR')
+        #         return
+            #ipdb.set_trace()
+            # for p, xx in zip(pos, np.arange(itd.shape[1])) :
+            #     if np.abs(itdvar)[p,xx] > 0.5:
+            #         continue
+            #     itd[p-17:p+17, xx-17:xx+17] = 1
+
+            #itd[pos,np.arange(itd.shape[1])] =1
+
+    #
+    #         plt.figure()
+    #         plt.pcolormesh(itd)
+    #         ipdb.set_trace()
+    #
+    # vdic['itd'] = itd
+
 
     cntera = np.zeros_like(kernel)
     cntera[np.isfinite(vdic[list(vdic.keys())[0]])] = 1
@@ -204,8 +232,6 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     file = cnst.ERA5
 
-    #ipdb.set_trace()
-
     try:
         cmp = xr.open_dataset(file + 'hourly/pressure_levels/ERA5_'+str(edate.year)+'_' + str(edate.month).zfill(2) + '_pl.nc')
         cmp = u_darrays.flip_lat(cmp)
@@ -222,6 +248,10 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
         file + 'hourly/surface/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(2) + '_srfc.nc')
     csm = u_darrays.flip_lat(csm)
 
+    # csmm = xr.open_dataset(
+    #     file + 'hourly/surface/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(2) + '_srfc_SM.nc')
+    # csmm = u_darrays.flip_lat(csmm)
+
 
     pl_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.day).zfill(2)+'-'+str(edate.hour).zfill(2)+'_pl.nc').load()
     pl_clim = u_darrays.flip_lat(pl_clim)
@@ -229,6 +259,13 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
         pl_clim = pl_clim.rename({'lat':'latitude', 'lon':'longitude'})
     except:
         pass
+
+    # sm_clim = xr.open_dataset(file + 'monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(edate.month).zfill(2)+'-'+str(edate.day).zfill(2)+'-'+str(edate.hour).zfill(2)+'_srfc_SM.nc').load()
+    # sm_clim = u_darrays.flip_lat(sm_clim)
+    # try:
+    #     sm_clim = sm_clim.rename({'lat':'latitude', 'lon':'longitude'})
+    # except:
+    #     pass
 
     esrfc_clim = xr.open_dataset(
         file + 'monthly/synop_selfmade/CLIM_2006-2010_new/ERA5_2006-2010_CLIM_' + str(edate.month).zfill(
@@ -243,11 +280,15 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     #srfc_clim = srfc_clim.sel(longitude=slice(-13, 13), latitude=slice(8, 21))
     esrfc_clim = esrfc_clim.sel(longitude=slice(-12.5, 12.5), latitude=slice(7, 23))
 
+    # csmm = csmm.sel(longitude=slice(-12.5, 12.5), latitude=slice(7, 23))
+    # sm_clim = sm_clim.sel(longitude=slice(-12.5, 12.5), latitude=slice(7, 23))
+
     cmm = cmp.sel(time=t1)
     pl_clim = pl_clim.squeeze()
 
     css = cmp.sel(time=t1_MCScheck)
     scm = csm.sel(time=t1)
+    #ssm = csmm.sel(time=t1)
 
     #srfc_clim = srfc_clim.squeeze()
 
@@ -255,6 +296,7 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
 
     skt = scm['skt'].squeeze() - esrfc_clim['skt'].squeeze()
     sp = scm['sp'].squeeze() - esrfc_clim['sp'].squeeze()
+    # soil_moisture = ssm['swvl1'] - sm_clim['swvl1'].squeeze()
 
     t = cmm['t'].sel(level=level_low).squeeze()
     ttclim = pl_clim['t'].sel(level=level_low).squeeze() #* 1000
@@ -296,6 +338,8 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     #ipdb.set_trace()
 
 
+
+
     pp = units.Quantity(650, 'hPa')
     tt = units.Quantity(cmm['t'].sel(level=650).squeeze().values, 'K')
     tclim = units.Quantity(pl_clim['t'].sel(level=650).squeeze().values, 'K')
@@ -321,9 +365,30 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v925_orig'] = cmm['v'].sel(level=level_low).squeeze()
     cm['u925_orig'] = cmm['u'].sel(level=level_low).squeeze()
 
-    # cm['tciw'] = css['w'].sel(level=350).squeeze() #- srfc_clim['tciw'].squeeze()
-    # cm['tciwlow'] = css['w'].sel(level=850).squeeze()
+    vitd = np.abs(cmm['v'].sel(level=level_low).squeeze().values)
+    vitd[np.isnan(vitd)] = -999
+
+    try:
+        pos = np.nanargmin(vitd, axis=0)
+    except ValueError:
+        print('ITD VALUE ERROR')
+        return
+
+    itd = np.zeros_like(cmm['v'].sel(level=level_low).squeeze().values)
+    for p, xx in zip(pos,np.arange(itd.shape[1])):
+        if np.abs(vitd)[p,xx] > 0.5:
+                continue
+        try:
+            itd[p-3:p+3, xx-3:xx+3] = 1
+        except IndexError:
+            pass
+
+    outitd = cmm['v'].sel(level=level_low).squeeze().copy()
+    outitd.values = itd
+
     cm['tciwmid'] = css['w'].sel(level=500).squeeze()
+
+    cm['itd'] = outitd
 
     cm['u650'] = uwind_up
     cm['v650'] = vwind_up
@@ -335,6 +400,7 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v650_clim'] = vwind_up_clim
     cm['skt'] = skt
     cm['sp'] = sp
+    # cm['sm'] = soil_moisture
 
     cm['div'] = div *1000
     cm['q'] = q
@@ -356,7 +422,10 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     del css
     #del csm
     del cmm
+    # del sm_clim
+    # del csmm
     return cm
+
 
 def get_previous_hours_msg(storm_date, lsta_date, ehour, refhour):
 
@@ -482,7 +551,7 @@ def file_loop(df):
     pfdate = str(prev_lsta_date.year) + str(prev_lsta_date.month).zfill(2) + str(prev_lsta_date.day).zfill(2)
 
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lon=slice(-12, 12), lat=slice(7, 23))
+    topo = topo.sel(lon=slice(-12, 12), lat=slice(7.5, 22.5))
     ttopo = topo['h']
 
     #
@@ -548,6 +617,11 @@ def file_loop(df):
         print('ERA failed')
         return
     print('Era5 collect')
+
+    # plt.figure()
+    # plt.pcolormesh(probs['itd'])
+
+
     try:
         probs_on_lsta = topo.salem.transform(probs)
     except RuntimeError:
@@ -576,44 +650,6 @@ def file_loop(df):
         lat = dit.lat
         lon = dit.lon
 
-        #initiation filter:
-        # initpath = cnst.network_data + 'data/OBS/MSG_WA30/track_back_cores_vn1_'+str(hour)+'Z.txt'
-        # if os.path.isfile(initpath):
-            # dic = pd.read_table(initpath, delim_whitespace=True, header=None,
-            #                     names=['year', 'mon', 'day', 'i_core', 'j_core', 'i_initiation', 'j_initiation',
-            #                            'core_time', 'initiation_time'])
-            # ddic = dic[
-            #     (dic['i_core'] == dit['xloc']) & (dic['j_core'] == dit['yloc']) & (dic['year'] == dit['year']) & (
-            #                 dic['mon'] == dit['month']) & (dic['day'] == dit['day'])]
-            #
-            # #ipdb.set_trace()
-            # if len(ddic) == 0:
-            #     continue
-            # #ipdb.set_trace()
-            # if (ddic['initiation_time'].values >3 ) | (ddic['initiation_time'].values < 0  ): #& (ddic['initiation_time'].values >= 12):
-            #     continue
-
-            # if (ddic['initiation_time'].values <=12 ) | (ddic['initiation_time'].values >= hour ): #& (ddic['initiation_time'].values >= 12):
-            #     continue
-
-            # initiation filter:
-
-            # if (dit['xdiff'] < 100) & (dit['initTime']!=2):
-            #     # & (ddic['initiation_time'].values >= 12):
-            #     print('Initiation point too close')
-            #     continue
-
-                # if np.abs((dit['xdiff']) > 33) | (dit['xinit'] < 0):
-                #
-                #     print('Initiation point too far', dit['initTime'])
-                #     continue
-
-
-
-        # msg_latlon = np.load(cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon.npz')
-        #
-        # lon = (msg_latlon['lon'])[ddic['j_initiation'], ddic['i_initiation']]
-        # lat = (msg_latlon['lat'])[ddic['j_initiation'], ddic['i_initiation']]
         try:
             point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
@@ -661,10 +697,8 @@ def file_loop(df):
                 edic[ks] = vdic[ks]
         counter += 1
         print('Saved core ', counter)
+        #ipdb.set_trace()
 
-
-
-    # ipdb.set_trace()
     if np.sum(smcnt) == 0:
         return None
 
@@ -683,6 +717,7 @@ def file_loop(df):
     print('Returning')
 
     return outlist, outnames
+
 
 
 def plot_doug_all(h, eh):

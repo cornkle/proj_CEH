@@ -28,7 +28,12 @@ matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 
-daykey = 'day-1'
+#daykey = 'day-1'
+
+def loopdays():
+
+    for dk in ['night-1', 'day-1', 'night0', 'day0', 'night+1', 'day+1']:
+        composite(17,dk)
 
 
 def run_hours():
@@ -37,31 +42,66 @@ def run_hours():
     for ll in l:
         composite(ll)
 
-def composite(hour):
+def composite(h, daykey):
 
-    key = '2hOverlap'
+#     key = '2hOverlap'
+#
+#     #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
+#     # msgopen = pd.read_csv(
+#     #     cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_' + str(
+#     #         hour) + '_init.csv')
+#
+#     msg = pd.DataFrame.from_dict(msgopen)
+#
+#     msg['daykey'] = daykey
+#
+#     msg['date'] = pd.to_datetime(msg[['year','month','day']])
+#     print('Start core number ', len(msg))
+#
+#     msg = msg[((msg['xdiff'] >= 100) & np.isfinite(msg['xinit'])) | (msg['initTime'] <= 2)]
+#
+# #################
+#
+#     #msg = msg[ (msg['dtime']<=2) ] # #& (np.isfinite(msg['SMmean0']) & (msg['LSTAslotfrac'] >= 0.03)  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
+#    #msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.05) ] #& (msg['LSTAslotfrac'] >= 0.1)
+#     #msg = msg[(msg['SMmean0'] < -5.3) & (msg['SMmean-1'] < -3.3) & (msg['LSTAslotfrac'] >= 0.03)] # slotfrac is an okay filter to make sure it doesnt rain on itself
+#     msgin = msg[(msg['lat']>10) & (msg['lat']<20)]#& (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
+#
+# #################
 
-    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_' + key + '_'+str(hour)+'.csv', na_values=-999)
+    key = 'NEWTRACKING'
+
     msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_' + str(
-            hour) + '_init.csv')
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged2/cores_gt15000km2_table_AMSRE_tracking2_' + str(
+            h) + '_init.csv', na_values=[-999, -99])
 
-    msg = pd.DataFrame.from_dict(msgopen)
+    hour = h
+    msg = pd.DataFrame.from_dict(msgopen)# &  &
+
+    msg['refhour'] = h
+    msg['daykey'] = daykey
 
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
-    msg = msg[((msg['xdiff'] >= 100) & np.isfinite(msg['xinit'])) | (msg['initTime'] <= 2)]
+    msgopen = msg
 
-#################
+    #basic filter
+    msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
+    #propagation filter
+    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    #lsta filter
+    #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
+    #wetness_filter
+    #msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
+    #eraq_filter
+    #msgopen = msgopen[(msgopen['ERAqmean'] >= 14)] #14
+    # #dry_filter
+    #msgopen = msgopen[(msgopen['SMmean0']<=-5.23)]#&(msgopen['SMmean0']<=-7.19)] #294 cases, with q 312
+    # # #wet_filter
+    #msgopen = msgopen[(msgopen['SMmean0']>=0.18) ]#& (msgopen['SMmean0']>=1.8)] #295 cases, with q 318, 0.16-> 317, noMCS filter
 
-    #msg = msg[ (msg['dtime']<=2) ] # #& (np.isfinite(msg['SMmean0']) & (msg['LSTAslotfrac'] >= 0.03)  & (np.isfinite(msg['SMmean0'])) & (np.isfinite(msg['SMmean0'])) #& (msg['SMmean0']<-1)
-   #msg = msg[(msg['dtime'] <= 2) & (msg['SMmean0']>0.01) & (msg['SMmean-1']>0.8) & (msg['LSTAslotfrac'] >= 0.05) ] #& (msg['LSTAslotfrac'] >= 0.1)
-    #msg = msg[(msg['SMmean0'] < -5.3) & (msg['SMmean-1'] < -3.3) & (msg['LSTAslotfrac'] >= 0.03)] # slotfrac is an okay filter to make sure it doesnt rain on itself
-    msgin = msg[(msg['lat']>10) & (msg['lat']<20)]#& (msg['topo']<450)]#[msg['initTime']<=3]#[msg['SMwet']==2]
-
-#################
-
+    msgin = msgopen
     print('Number of cores', len(msgin))
     #ipdb.set_trace()
     # calculate the chunk size as an integer
@@ -164,6 +204,7 @@ def file_loop(df):
     hour = df['hour'].iloc[0]
     print('Doing day: ', date)
 
+    daykey = df['daykey'].iloc[0]
     storm_date = date
 
     dayd = pd.Timedelta('1 days')

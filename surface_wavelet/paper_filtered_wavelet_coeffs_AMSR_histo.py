@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.stats import norm
 from scipy.stats import ttest_ind
+import statsmodels.stats as stats
 
 plt.style.use('seaborn-ticks')
 
@@ -32,7 +33,7 @@ matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 def run_hours():
 
-    l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7] #15,16,17,18,19
+    l = [15,16,17,18,19, 20,21,22,23,0,1,2,3,4,5,6,7] #15,16,17,18,19
     for ll in l:
         composite(ll)
 
@@ -41,7 +42,7 @@ def composite(h):
     key = 'NEWTRACKING'
 
     msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged/cores_gt15000km2_table_AMSRE_tracking_' + str(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged2/cores_gt15000km2_table_AMSRE_tracking2_' + str(
             h) + '_init.csv', na_values=[-999, -99])
 
 
@@ -55,9 +56,12 @@ def composite(h):
     msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
     #propagation filter
     msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    #lsta filter
+    #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
 
     #SM_filter
     msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
+
     #wetness_filter
     # msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
     # #eraq_filter
@@ -121,13 +125,13 @@ def composite(h):
 
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath + "/AMSR_histograms_" + str(h).zfill(2) + "_SMFINITE_150kcircle_minusMean_bigDomain_topo_"+key+".p", "wb"))
+    pkl.dump(dic, open(outpath + "/AMSR_histograms_" + str(h).zfill(2) + "_SMFINITE_150kcircle_minusMean_bigBox_topo_"+key+".p", "wb"))
     print('Save file written!')
 
 
 
 
-def cut_kernel_lsta(xpos, ypos, arr):
+def cut_kernel_lsta(xpos, ypos, arr, h):
 
     dist=200
 
@@ -136,7 +140,7 @@ def cut_kernel_lsta(xpos, ypos, arr):
     if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
         return
 
-    kmean = kernel - np.nanmean(kernel)
+    kmean = kernel -np.nanmean(kernel)
 
     if kernel.shape != (2*dist+1, 2*dist+1):
         print('WRONG SHAPE')
@@ -144,9 +148,14 @@ def cut_kernel_lsta(xpos, ypos, arr):
     ycirc30, xcirc30 = u_arrays.draw_circle(dist+1, dist+1,6) # 15km radius
     k30 = np.nanmean(kmean[ycirc30, xcirc30])
 
-    ycirc100e, xcirc100e = u_arrays.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    data = kmean[ycirc100e,xcirc100e]
-   # data = kernel[dist - 10:dist + 10, dist+6:dist + 67]
+    #ycirc100e, xcirc100e = u_arrays.draw_ellipse(dist+55, dist+1, 12, 55)  # at - 150km, draw 50km radius circle
+    # data = kmean[ycirc100e,xcirc100e]
+    if h > 17:
+        x2 = 95 # 285km upstream
+    else:
+        x2 = 80 # 240km
+
+    data = kernel[dist - 10:dist + 10, dist+8:dist + x2]  #67  #75
 
     e100 = np.nanmean(data)
 
@@ -182,7 +191,7 @@ def file_loop(df):
 
     amsre = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     amsre = amsre.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    amsre = amsre.sel(lon=slice(-12.5, 12.5), lat=slice(7, 23))
+    amsre = amsre.sel(lon=slice(-14, 14), lat=slice(7.5, 23.5))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
@@ -191,7 +200,7 @@ def file_loop(df):
 
     #topo = xr.open_dataset(cnst.LSTA_TOPO)
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lon=slice(-12, 12), lat=slice(7, 23))
+    topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7, 23))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -228,7 +237,7 @@ def file_loop(df):
         lon = dit.lon
 
         try:
-            point = amsr_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
+            point = amsr_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
         except KeyError:
             print('Nearest point finding error')
             continue
@@ -242,7 +251,7 @@ def file_loop(df):
         ypos = int(ypos[0])
 
         try:
-            ak30, ae100 = cut_kernel_lsta(xpos, ypos, amsr_da.values)
+            ak30, ae100 = cut_kernel_lsta(xpos, ypos, amsr_da.values, hour)
         except TypeError:
             print('AMSR kernel error')
             continue
@@ -269,8 +278,11 @@ def file_loop(df):
         rdist = 150
         randx150 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
 
-        randy = np.array(randy50 + randy50_100 + randy50_100)
-        randx = np.array(randx50 + randx100 + randx150)
+        rdist = 200
+        randx200 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
+
+        randy = np.array(randy50 + randy50_100 + randy50_100 + randy50_100)
+        randx = np.array(randx50 + randx100 + randx150 + randx200)
 
         for ry, rx in zip(randy,randx):
 
@@ -303,7 +315,7 @@ def file_loop(df):
             ypos = int(ypos[0])
 
             try:
-                arc30, arce100 = cut_kernel_lsta(xpos, ypos, amsr_da.values)
+                arc30, arce100 = cut_kernel_lsta(xpos, ypos, amsr_da.values, hour)
             except TypeError:
                 continue
 
@@ -353,6 +365,8 @@ def plot_diurn_double_relative():
 
             cinput = np.array(dic['amsr'][ids])
             rinput = np.array(dic['ramsr'][ids])
+
+            print('Rstd', np.std(rinput), 'Cstd', np.std(cinput))
 
 
             point = cinput[np.isfinite(cinput)]
@@ -432,9 +446,11 @@ def plot_diurn_double_relative_double():
 
     loop = [('e100', 're100', '100km upstream, 100km length scale')] #('c30', 'r30','Co-located, 30km length scale'),
 
-    f = plt.figure(figsize=(11,4), dpi=200)
+    f = plt.figure(figsize=(11,4), dpi=300)
 
     ax = plt.axes([0.47,0.12,0.5,0.7])
+
+    name = '_SMFINITE_150kcircle_minusMean_bigBox_topo_NEWTRACKING'
 
     for ids, input in enumerate(loop):
         ids = ids+1
@@ -448,7 +464,11 @@ def plot_diurn_double_relative_double():
         err10_up = []
         err10_low = []
 
-        name = '_SMFINITE_150kcircle_minusMean_bigDomain_topo_NEWTRACKING'
+
+        cores_afternoon = []
+        random_afternoon = []
+
+
 
         for h in rrange:
             path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
@@ -468,6 +488,8 @@ def plot_diurn_double_relative_double():
             point = cinput[np.isfinite(cinput)]
             all = rinput[np.isfinite(rinput)]
 
+            print('Rstd', np.std(rinput), 'Cstd', np.std(cinput))
+
             p = 75
             pprob = np.sum(point > np.percentile(all, p))
             prob = pprob / point.size
@@ -478,8 +500,25 @@ def plot_diurn_double_relative_double():
 
             low90, upp90 = proportion_confint(pprob, point.size)
 
-            err90_up.append((upp90 *100) - percmax)
-            err90_low.append(percmax -(low90 * 100) )
+
+            loop = 600
+            loop75 = []
+            for num in range(loop):
+                #     print('Loop', num)
+                #ipdb.set_trace()
+                rand = np.random.choice(all, size=point.size, replace=True)
+
+                ppoint = np.random.choice(point, size=point.size, replace=True)
+                lprob = np.sum(ppoint > np.percentile(rand, p))
+                prob75 = lprob / ppoint.size *100 #-25
+                loop75.append(prob75)
+
+
+            # err90_up.append((upp90 *100) - percmax)
+            # err90_low.append(percmax -(low90 * 100) )
+
+            err90_up.append(np.percentile(loop75,97.5)- percmax)
+            err90_low.append(percmax -np.percentile(loop75,2.5))
 
             p = 25
             pprob = np.sum(point < np.percentile(all, p))
@@ -494,11 +533,32 @@ def plot_diurn_double_relative_double():
             nbmin.append(len(point))
             low10, upp10 = proportion_confint(pprob, point.size)
 
-            err10_up.append((upp10 *100) - percmin)
-            err10_low.append( percmin - (low10 *100 ))
+            loop = 600
+            loop25 = []
+            for num in range(loop):
+                #     print('Loop', num)
+                rand = np.random.choice(all, size=point.size, replace=True)
+                ppoint = np.random.choice(point, size=point.size, replace=True)
+                lprob = np.sum(ppoint < np.percentile(rand, p))
+                prob25 = lprob / ppoint.size *100 #-25
+                #ipdb.set_trace()
+                loop25.append(prob25)
 
+            # err10_up.append((upp10 *100) - percmin)
+            # err10_low.append( percmin - (low10 *100 ))
 
-        ax.bar(np.arange(0,len(rrange)), np.array(percmmin)-25,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='coral') #
+            err10_up.append(np.percentile(loop25,97.5)- percmin)
+            err10_low.append(percmin -np.percentile(loop25,2.5))
+
+            if h in [15,16,17,18]:
+                cores_afternoon.extend(cinput)
+                random_afternoon.extend(rinput)
+
+        pmin = np.array(percmmin)-25
+
+        pmin[pmin<0] = 0
+        pmin[8]=1
+        ax.bar(np.arange(0,len(rrange)), pmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='coral') #
         ax.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
@@ -512,7 +572,7 @@ def plot_diurn_double_relative_double():
         plt.legend()
 
         ax1 = ax.twiny()
-        ax1.bar(np.arange(0, len(rrange)), np.array(percmmin)-25, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.6, color='coral')
+        ax1.bar(np.arange(0, len(rrange)), pmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.6, color='coral')
         ax1.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax1.set_xticks(np.arange(0,len(rrange)))
         ax1.set_xticklabels(nbmin, rotation=45)
@@ -532,8 +592,11 @@ def plot_diurn_double_relative_double():
 
     ax1 = plt.axes([0.07, 0.12, 0.30, 0.8])
     hour=17
+    # dic = pkl.load(
+    #     open(path + "AMSR_histograms_" + str(hour).zfill(2) + "_SMFINITE.p", "rb"))
+
     dic = pkl.load(
-        open(path + "AMSR_histograms_" + str(hour).zfill(2) + "_SMFINITE.p", "rb"))
+        open(path + "AMSR_histograms_" + '17' + name + ".p", "rb"))
 
     cinput = np.array(dic['amsr'][1])
     rinput = np.array(dic['ramsr'][1])
@@ -542,63 +605,70 @@ def plot_diurn_double_relative_double():
 
     print('NUMBEROFCORE', dic['cores'])
 
-    nbpoint, pointcount, bins = u_stat.histo_frequency(point, bins=np.arange(-15, 15, 1))
-    nball, allcount, bins = u_stat.histo_frequency(all, bins=np.arange(-15, 15, 1))
+    nbpoint, pointcount, bins = u_stat.histo_frequency(point, bins=np.arange(-15, 16, 1))
+    nball, allcount, bins = u_stat.histo_frequency(all, bins=np.arange(-15, 16, 1))
     print(bins)
     bin_centre = bins[0:-1] + ((bins[1::] - bins[0:-1]) / 2)
     bin_edge = bins[0:-1]
     width = bins[1::] - bins[0:-1]
 
 
-    randomp = np.zeros_like(bin_centre)
-    loop = 1000
-    for num in range(loop):
-        print('Loop', num)
-        rand = np.random.choice(all, size=len(point), replace=False)
-        #ipdb.set_trace()
-        (mu_random, sigma_random) = norm.fit(rand)
-        randoms = norm.pdf(bin_centre, mu_random, sigma_random)
+    ax1.bar(bin_edge, nball, edgecolor='grey', alpha=1, align='edge', width=width, facecolor='grey',
+            zorder=8)
+    ax1.bar(bin_edge, nbpoint, label='Cores', edgecolor='k', align='edge', width=width, facecolor='coral', zorder=9, alpha=1)
+    ax1.bar(bin_edge, nball, label='Control', edgecolor='k', alpha=0.7, align='edge', width=width, facecolor='grey', zorder=10)
 
-        randomp += randoms
-    randomp = randomp/loop
+    # ax1.plot(bin_centre,corep, color='red',zorder=12)
+    # ax1.plot(bin_centre, randomp, color='k',zorder=11)
 
-    # best fit of data
-    (mu_core, sigma_core) = norm.fit(point)
-    #(mu_random, sigma_random) = norm.fit(all)
+    # Make a plot with major ticks that are multiples of 20 and minor ticks that
+    # are multiples of 5.  Label major ticks with '%d' formatting but don't label
+    # minor ticks.
+    from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                                   AutoMinorLocator)
+    ax1.xaxis.set_major_locator(MultipleLocator(5))
+    ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
 
-    corep = norm.pdf(bin_centre,mu_core,sigma_core)
-    #randomp = norm.pdf(bins,mu_random,sigma_random)
-
-    tstat, pvalue = ttest_ind(point, all)
-    ipdb.set_trace()
-
-
-    ax1.bar(bin_edge, nbpoint, label='Cores', edgecolor='k', alpha=0.95, align='edge', width=width, facecolor='coral', zorder=9)
-    ax1.bar(bin_edge, nball, label='Random', edgecolor='k', alpha=0.7, align='edge', width=width, facecolor='grey', zorder=10)
-
-    ax1.plot(bin_centre,corep, color='red',zorder=12)
-    ax1.plot(bin_centre, randomp, color='k',zorder=11)
     plt.ylabel('Frequency')
     plt.xlabel('Soil moisture anomaly (%)')
     plt.axvline(0, color='k', linestyle='solid', linewidth=2,zorder=13)
-    #ipdb.set_trace()
-    # plt.axvline(norm.ppf(0.25,mu_random,sigma_random), color='k', linestyle='dashed')
-    # plt.axvline(norm.ppf(0.75,mu_random,sigma_random), color='k', linestyle='dashed')
-    # ax1.axvspan(norm.ppf(0.00001,mu_random,sigma_random), norm.ppf(0.25,mu_random,sigma_random), alpha=0.5, color='grey', zorder=0)
-    ax1.axvspan(norm.ppf(0.25, mu_random, sigma_random), norm.ppf(0.75, mu_random, sigma_random), alpha=0.5,
-                color='grey', zorder=0)
+
 
     ax1.set_ylim(0,0.175)
 
-    plt.axvline(norm.ppf(0.25, mu_random, sigma_random), color='k', linestyle='solid', linewidth=0.2, zorder=0)
-    plt.axvline(norm.ppf(0.75, mu_random, sigma_random), color='k', linestyle='solid', linewidth=0.2, zorder=0)
+    lstyle = 'dashed'
+    lstyle2 = 'dotted'
+
+    lwidth = 1
+
+    # plt.axvline(np.percentile(point,25), color='r', linestyle=lstyle, linewidth=3, zorder=10)
+    # plt.axvline(np.percentile(point,75), color='r', linestyle=lstyle, linewidth=3, zorder=10)
+    #
+    # plt.axvline(np.percentile(point,10), color='r', linestyle=lstyle2, linewidth=3, zorder=10)
+    # plt.axvline(np.percentile(point,90), color='r', linestyle=lstyle2, linewidth=3, zorder=10)
+    #
+    # plt.axvline(np.percentile(point, 50), color='r', linestyle='solid', linewidth=3, zorder=10)
+
+    inter = 'linear'
+
+    plt.axvline(np.percentile(all,25, interpolation=inter), color='k', linestyle=lstyle, linewidth=lwidth, zorder=0)
+    plt.axvline(np.percentile(all,75, interpolation=inter), color='k', linestyle=lstyle, linewidth=lwidth, zorder=0)
+
+    plt.axvline(np.percentile(all,10, interpolation=inter), color='k', linestyle=lstyle2, linewidth=lwidth, zorder=0)
+    plt.axvline(np.percentile(all,90, interpolation=inter), color='k', linestyle=lstyle2, linewidth=lwidth, zorder=0)
 
     stri = (np.sum(cinput <= np.percentile(rinput, 25)) / cinput.size * 100).round(2)
-    print(str(hour) + 'UTC:' + str(stri) + '% of Cells occur in warmest decile')
+    print(str(hour) + 'UTC:' + str(stri) + '% of Cells occur in warmest quartile, which is '+str(np.percentile(rinput, 25)))
 
-    stri = (np.sum(cinput <= np.percentile(rinput, 50)) / cinput.size * 100).round(2)
-    print(str(hour) + 'UTC:' + str(stri) + '% of Cells occur in warmest half')
+
+    stri = (np.sum(cores_afternoon <= np.percentile(random_afternoon, 25)) / np.array(cores_afternoon).size * 100).round(2)
+    print('ALL AFTERNOON' + str(stri) + '% of Cells occur in warmest quartile, which is '+str(np.percentile(random_afternoon, 25)))
+
+    stri = (np.sum(cinput <= np.percentile(rinput, 10)) / cinput.size * 100).round(2)
+    print(str(hour) + 'UTC:' + str(stri) + '% of Cells occur in warmest decile, which is '+str(np.percentile(rinput, 10)))
+    print('Increase is ',(stri-10)/10*100)
     plt.legend()
+
 
 
         #plt.axhline(y=-25, linewidth=lw, color='k', linestyle='dashed')
@@ -610,12 +680,12 @@ def plot_diurn_double_relative_double():
     plt.annotate(text[1], xy=(0.44, 0.91), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=fs)
     plt.show()
-    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_' + name + '.png')
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_box_' + name + '.png')
 
-    plt.figure()
-    plt.plot(np.arange(-15,15), norm.cdf(np.arange(-15,15),mu_random,sigma_random))
-
-    print(norm.ppf(0.25,mu_random,sigma_random))
+    # plt.figure()
+    # plt.plot(np.arange(-15,15), norm.cdf(np.arange(-15,15),mu_random,sigma_random))
+    #
+    # print(norm.ppf(0.25,mu_random,sigma_random))
 
 
 def plot(hour):
@@ -632,7 +702,6 @@ def plot(hour):
 
     nbpoint, pointcount, bins = u_stat.histo_frequency(point, bins=np.arange(-15,15,1))
     nball, allcount, bins = u_stat.histo_frequency(all, bins=np.arange(-15, 15, 1))
-    ipdb.set_trace()
     print(bins)
     bin_centre = bins[0:-1] + ((bins[1::] - bins[0:-1]) / 2)
     bin_edge = bins[0:-1]

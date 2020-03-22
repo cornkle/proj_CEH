@@ -19,7 +19,7 @@ import ipdb
 from scipy.ndimage.measurements import label
 import matplotlib.pyplot as plt
 from utils import u_grid, u_interpolate as u_int
-
+import glob
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
@@ -642,4 +642,46 @@ def rewrite_topo():
     da.name = 'h'
 
     da.to_netcdf(path=path+ 'gtopo_3km_WA.nc', mode='w',  format='NETCDF4')
+
+
+def rewrite_CP4_TCWV():
+    tags = ['CP4hist', 'CP4fut', 'CP25hist', 'CP25fut']
+    for t in tags:
+        path = '/media/ck/Elements/Africa/WestAfrica/CP4/'+t+'/'
+
+        dcol = glob.glob(path+'colDryMass/*')
+        #wcol = glob.glob(path+'colWetMass/*')
+
+        for dry in dcol:
+
+            date = dry[-28:-5]
+            darr = xr.open_dataset(dry)
+            # pos = np.where(date in wcol)
+            #
+            # cnt=0
+            # ipdb.set_trace()
+            # for ids, wc in wcol:
+            #     if date not in wc:
+            #         continue
+            #     else:
+            #         cnt+=1
+            # ipdb.set_trace()
+            wet = dry.replace('colDryMass', 'colWetMass')
+            try:
+                warr = xr.open_dataset(wet)
+            except:
+                ipdb.set_trace()
+
+
+            diff = darr.copy('deep')
+            diff = diff.rename({'colDryMass' : 'tcwv'})
+
+            diff['tcwv'].values = warr['colWetMass'].values-darr['colDryMass'].values
+            comp = dict(zlib=True, complevel=5)
+            encoding = {var: comp for var in diff.data_vars}
+            name = dry.replace('colDryMass', 'tcwv')
+            diff.to_netcdf(path=name, mode='w', encoding=encoding, format='NETCDF4')
+
+
+
 

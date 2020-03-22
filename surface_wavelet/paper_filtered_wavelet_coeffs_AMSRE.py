@@ -19,6 +19,7 @@ from scipy.interpolate import griddata
 import pickle as pkl
 from utils import u_arrays as ua
 import os
+from scipy import ndimage
 import collections
 import warnings
 import salem
@@ -42,7 +43,7 @@ def composite(h):
     #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
 
     msgopen = pd.read_csv(
-        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged/cores_gt15000km2_table_AMSRE_tracking_' + str(
+        cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged2/cores_gt15000km2_table_AMSRE_tracking2_' + str(
             h) + '_init.csv', na_values=[-999, -99])
 
     hour = h
@@ -58,11 +59,11 @@ def composite(h):
     #propagation filter
     msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
     #wetness_filter
-    # msgopen = msgopen[np.isfinite(msgopen['SMmean0']) & np.isfinite(msgopen['SMmean-1'])]
+    msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & (msgopen['LSTAslotfrac']>=0.05)]# & np.isfinite(msgopen['SMmean-1'])]
     # #eraq_filter
-    # msgopen = msgopen[(msgopen['ERAqmean'] >= 13.5)]#& (msgopen['ERAqmean'] <= 15.7)]
+    msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]#& (msgopen['ERAqmean'] <= 15.7)]
     # #dry_filter
-    # #msgopen = msgopen[(msgopen['SMmean0']<=-6.7)&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    msgopen = msgopen[(msgopen['SMmean0']<=-5.23)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
     # # #wet_filter
     # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
 
@@ -88,7 +89,8 @@ def composite(h):
     #     res.append(out)
     #
     # return
-    pool = multiprocessing.Pool(processes=5)
+    #ipdb.set_trace()
+    pool = multiprocessing.Pool(processes=3)
 
     res = pool.map(file_loop, chunks)
     pool.close()
@@ -181,7 +183,7 @@ def composite(h):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT2_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -204,11 +206,11 @@ def cut_kernel(xpos, ypos, arr, date, lat, lon, rotate=False):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_ns = np.nanmean(kernel[:,:, 99:104], axis=2) #kernel[:,:,50] #
+        wav_ns = np.nanmean(kernel[:,:, 90:111], axis=2) #kernel[:,:,50] #
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        wav_we = np.nanmean(kernel[:,99:104,:], axis=1) #kernel[:,50,:] #
+        wav_we = np.nanmean(kernel[:,90:111,:], axis=1) #kernel[:,50,:] #
 
 
     # filler = kernel[[1,2,4,6,10], :, :]
@@ -226,7 +228,7 @@ def cut_kernel_lsta(xpos, ypos, arr):
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    kernel = kernel
+    kernel = kernel - np.mean(kernel)
 
     # if (np.sum(np.isfinite(kernel)) < 0.01 * kernel.size):
     #     print('Not enough valid in kernel')
@@ -295,14 +297,14 @@ def file_loop(df):
 
     lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-11, 11), lat=slice(9, 21))
+    lsta = lsta.sel(lon=slice(-13, 13), lat=slice(7, 23))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
     lsta_da = lsta['SM'].squeeze()
 
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lon=slice(-13, 13), lat=slice(7.5, 21))
+    topo = topo.sel(lon=slice(-12, 12), lat=slice(7.5, 22.5))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -383,7 +385,7 @@ def file_loop(df):
         plon = point['lon'].values
 
         xpos = np.where(lsta_da['lon'].values == plon)
-        xpos = int(xpos[0])
+        xpos = int(xpos[0])+10
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
 
@@ -413,28 +415,46 @@ def file_loop(df):
 
         ##### random
 
-        rdist = 1.5
-        y = lat
-        x = lon
-        randy50 = [y-rdist, y-rdist, y-rdist, y, y, y+rdist, y+rdist, y+rdist]
-        randx50 = [x-rdist, x, x+rdist, x-rdist, x+rdist, x-rdist, x, x + rdist]
-        randy50_100 = [y - rdist,  y - rdist, y, y, y + rdist, y + rdist]
+        y = ypos
+        x = xpos
 
-        rdist = 3
-        randx100 = [x-rdist,  x+rdist, x-rdist, x+rdist, x-rdist, x + rdist]
+        rdist = 50
+        randy50 = [y - rdist, y - rdist, y - rdist, y, y, y + rdist, y + rdist, y + rdist]
+        randx50 = [x - rdist, x, x + rdist, x - rdist, x + rdist, x - rdist, x, x + rdist]
+        randy50_100 = [y - rdist, y - rdist, y, y, y + rdist, y + rdist]
 
-        rdist = 4
-        randx150 = [x-rdist,  x+rdist, x-rdist, x+rdist, x-rdist, x + rdist]
+        rdist = 100
+        randx100 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
 
+        rdist = 150
+        randx150 = [x - rdist, x + rdist, x - rdist, x + rdist, x - rdist, x + rdist]
 
         randy = np.array(randy50 + randy50_100 + randy50_100)
         randx = np.array(randx50 + randx100 + randx150)
-        #ipdb.set_trace()
 
-        for ry, rx in zip(randy, randx):
+        for ry, rx in zip(randy, randx+10):
+
+            if ry < 0:
+                continue
+            if ry > lsta_da.shape[0] - 1:
+                continue
+
+            if rx < 0:
+                continue
+            if rx > lsta_da.shape[1] - 1:
+                continue
 
             try:
-                point = lsta_da.sel(lat=ry, lon=rx, method='nearest', tolerance=0.04)
+                lat = lsta_da['lat'][ry]
+            except IndexError:
+                ipdb.set_trace()
+            try:
+                lon = lsta_da['lon'][rx]
+            except IndexError:
+                ipdb.set_trace()
+
+            try:
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.04)
             except KeyError:
                 continue
             plat = point['lat'].values
@@ -487,3 +507,211 @@ def file_loop(df):
 
 if __name__ == "__main__":
     run_hours()
+
+
+
+def plot(hour):
+    name = 'UTC_15000_WAVELET_INIT2_NEWTRACKING'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
+
+    scales = dic['scales']
+    nbcores = dic['nbcores']
+    nbrcores = dic['nbrcores']
+    del dic['scales']
+    del dic['nbcores']
+    del dic['nbrcores']
+    del dic['kernel']
+
+
+    keys = list(dic.keys())
+    cnt = (dic['SN-pos'][0]).shape[0]
+
+
+    l=0
+
+    snblob = (dic[keys[l]])[0] #/ (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
+    snrandom = (dic[keys[l]])[1] #/ (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
+    snmask = (dic[keys[l]])[2]#-(dic[keys[l+2]])[2]
+    # snblob_std = (dic[keys[l]])[3]
+    # snrandom_std = (dic[keys[l]])[4]
+
+    weblob = (dic[keys[l+1]])[0] #/ (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
+    werandom = (dic[keys[l+1]])[1] #/ (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
+    wemask = (dic[keys[l+1]])[2]#-(dic[keys[l+3]])[2]
+    # weblob_std = (dic[keys[l+1]])[3]
+    # werandom_std = (dic[keys[l+1]])[4]
+
+    l=2
+    dist=200
+
+    f = plt.figure(figsize=(9, 9))
+    ax = f.add_subplot(221)
+    levels= np.linspace(-0.5,0.5,20)#[-0.14, -0.12,-0.1, -0.08,-0.06, -0.04, -0.02,0.02,0.04,0.06,0.08,0.1, 0.12, 0.14]
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales ,  (snrandom) , cmap='RdBu_r', levels = levels, extend='both')
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels = [0.5,1])
+
+    ax.set_xlabel('km')
+    ax.set_ylabel('Scales')
+
+    plt.title('South-North scales, Nb cores: ' + str(nbcores) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
+              fontsize=10)
+
+    ax = f.add_subplot(222)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3,scales,   (werandom) , cmap='RdBu_r', levels =levels, extend='both')
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, wemask, colors='none', hatches='.', levels = [0.5,1])
+
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('West-East scales', fontsize=10)
+
+
+    ax = f.add_subplot(223)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,  snblob-snrandom,  cmap='RdBu_r', levels =levels, extend='both') #, vmin = -0.1, vmax=0.1)
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, snmask, colors='none', hatches='.', levels=[0.5, 1],
+                 linewidth=0.25)
+
+    ax.set_xlabel('km')
+    ax.set_ylabel('Scales')
+
+    plt.title('South-North scales, Nb cores: ' + str(nbrcores) + '| ' + str(hour).zfill(2) + '00UTC, Jul-Sep',
+              fontsize=10)
+
+    ax = f.add_subplot(224)
+
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob-werandom    , cmap='RdBu_r', levels =levels, extend='both')
+    plt.colorbar(label='Power difference (Blob-random)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,wemask, colors='none', hatches='.', levels=[0.5, 1],
+                 linewidth=0.25)
+
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+
+    plt.title('West-East scales', fontsize=10)
+
+    plt.tight_layout()
+    #plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT2_WAVELET_'+str(hour)+'.png')
+    plt.show()
+    #plt.close()
+
+
+
+def plot_single(hour):
+    name = 'UTC_15000_WAVELET_INIT2real_NEWTRACKING'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+    dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
+
+    scales = dic['scales']
+    nbcores = dic['nbcores']
+    nbrcores = dic['nbrcores']
+    del dic['scales']
+    del dic['nbcores']
+    del dic['nbrcores']
+    del dic['kernel']
+
+
+    keys = list(dic.keys())
+    cnt = (dic['SN-pos'][0]).shape[0]
+    levels = np.linspace(-0.4, 0.4, 20)
+
+    l=0
+
+    snblob = (dic[keys[l]])[0] #/ (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
+    snrandom = (dic[keys[l]])[1] #/ (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
+    snmask = (dic[keys[l]])[2]#-(dic[keys[l+2]])[2]
+    # snblob_std = (dic[keys[l]])[3]
+    # snrandom_std = (dic[keys[l]])[4]
+
+    weblob = (dic[keys[l+1]])[0] #/ (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
+    werandom = (dic[keys[l+1]])[1] #/ (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
+    wemask = (dic[keys[l+1]])[2]#-(dic[keys[l+3]])[2]
+    # weblob_std = (dic[keys[l+1]])[3]
+    # werandom_std = (dic[keys[l+1]])[4]
+
+    weblob = ndimage.gaussian_filter(weblob, 3, mode='nearest')
+
+    l=2
+    dist=200
+
+    f = plt.figure(figsize=(7, 5), dpi=200)
+    ax = f.add_subplot(111)
+
+    cs = ax.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales, weblob , cmap='RdBu_r', levels =levels, extend='both')
+    plt.colorbar(cs, label='Wavelet coefficient (-)')
+    plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, scales,wemask, colors='none', hatches='.', levels=[0.5, 1],
+                 linewidth=0.25)
+
+    ax.set_xlabel('West-east distance from core (km)')
+    ax.set_ylabel('SMA scales')
+    ax.set_yscale('log')
+    ax.set_yticks([30,50,100,150,200,250,300])
+    ax.set_yticklabels([30,50,100,150,200,250,300])
+
+    plt.title(str(hour).zfill(2) + '00 UTC', fontsize=10)
+
+    plt.tight_layout()
+    plt.savefig(path + '/2hOverlap/'+name+'_cross_AMSRE_INIT2_WAVELET_'+str(hour)+'.png')
+    plt.show()
+    #plt.close()
+
+def plot_trio():
+    f = plt.figure(figsize=(7, 5))
+    for ids,h in enumerate([15,17,19]):
+
+        name = 'UTC_15000_WAVELET_INIT2_NEWTRACKING'  # 'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+        path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
+        dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + name + ".p", "rb"))
+
+        scales = dic['scales']
+        nbcores = dic['nbcores']
+        nbrcores = dic['nbrcores']
+        del dic['scales']
+        del dic['nbcores']
+        del dic['nbrcores']
+        del dic['kernel']
+
+        keys = list(dic.keys())
+        cnt = (dic['SN-pos'][0]).shape[0]
+        levels = np.linspace(-0.4, 0.4, 20)
+
+        l = 0
+
+        snblob = (dic[keys[l]])[0]  # / (dic[keys[l]])[3]).T#-(dic[keys[l+2]])[0]
+        snrandom = (dic[keys[l]])[1]  # / (dic[keys[l]])[4]).T#-(dic[keys[l+2]])[1]
+        snmask = (dic[keys[l]])[2]  # -(dic[keys[l+2]])[2]
+        # snblob_std = (dic[keys[l]])[3]
+        # snrandom_std = (dic[keys[l]])[4]
+
+        weblob = (dic[keys[l + 1]])[0]  # / (dic[keys[l+1]])[3]).T#-(dic[keys[l+3]])[0]
+        werandom = (dic[keys[l + 1]])[1]  # / (dic[keys[l+1]])[4]).T#-(dic[keys[l+3]])[1]
+        wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
+        # weblob_std = (dic[keys[l+1]])[3]
+        # werandom_std = (dic[keys[l+1]])[4]
+
+        l = 2
+        dist = 200
+
+
+        ax = f.add_subplot(1,3,ids+1)
+
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, weblob, cmap='RdBu_r', levels=levels,
+                     extend='both')
+        plt.colorbar(label='Power difference (Blob-random)')
+        plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, scales, wemask, colors='none', hatches='.',
+                     levels=[0.5, 1],
+                     linewidth=0.25)
+
+        ax.set_xlabel('West-east distance from core (km)')
+        ax.set_ylabel('SMA scales')
+
+        plt.title(str(h).zfill(2)+'00 UTC', fontsize=10)
+
+    plt.tight_layout()
+    plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT2_WAVELET_TRIO.png')
+    plt.show()

@@ -12,6 +12,7 @@ import pickle as pkl
 import statsmodels.stats.proportion as stats
 from matplotlib.colors import from_levels_and_colors
 from matplotlib import colors
+from utils import constants as cnst
 
 
 def scale_T_p():
@@ -128,9 +129,9 @@ def probability(precip=None,thresh=None):
     if thresh == None:
         thresh = 30
 
-    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
-  #  path = 'D://data/wavelet/saves/pandas/'
+    fpath = cnst.network_data + '/data/papers/wavelet/figs/paper/'
+    path = cnst.network_data + '/data/papers/wavelet/saves/pandas/'
+
     dic = pkl.load(open(path + '3dmax_gt15000_lax_nonan_dominant.p', 'rb')) #noR lax_nonan
 
     scales = np.array(dic['scale'])
@@ -172,6 +173,7 @@ def probability(precip=None,thresh=None):
 
     print('Convective fraction <-80', np.sum((tconv<=-80) & (pconv>=8)) / np.sum((tconv<=-80) & (pconv2>=0)))
     print('Convective fraction <-90', np.sum((tconv <= -87) & (pconv >= 8)) / np.sum((tconv <= -87) & (pconv2 >= 0)))
+    print('Extreme fraction <-80', np.sum((tconv <= -80) & (pconv >= 30)) / np.sum((tconv <= -80) & (pconv2 >= 0)))
 
     print('Convective fraction <-50', np.sum((tconv <= -50) & (pconv >= 8)) / np.sum((tconv <= -50) & (pconv2 >= 0)))
     print('Extreme fraction <-50', np.sum((tconv <= -50) & (pconv2 >= 30)) / np.sum((tconv <= -50) & (pconv2 >= 0)))

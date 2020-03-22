@@ -9,7 +9,7 @@ import pandas as pd
 import ipdb
 import itertools
 from collections import OrderedDict
-from utils import constants as cnst, u_met
+from utils import constants as cnst, u_met, u_darrays as uda
 import matplotlib.pyplot as plt
 
 def olr_to_bt(olr):
@@ -224,6 +224,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
             derived = v
             v = 't_pl'
 
+
         try:
             filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
         except IndexError:
@@ -350,16 +351,31 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
         if (gi == 0):  # index 0 is always background, ignore!
             continue
         inds = np.where(labels == gi)
+        # cut a box for every single blob from msg - get min max lat lon of the blob
+        latmax, latmin = np.nanmax(lats[inds]), np.nanmin(lats[inds])
+        lonmax, lonmin = np.nanmax(lons[inds]), np.nanmin(lons[inds])
         mask = np.where(labels!=gi)
 
         dbox = ds.copy(deep=True)
 
+        tgrad = dbox['t_srfc'].sel(longitude=slice(lonmin,lonmax)).mean('longitude')
+
+        tmin = np.nanargmin(tgrad.values)
+        tmax = np.nanargmax(tgrad.values)
+        tgrad = tgrad.isel(latitude=slice(tmin,tmax))
+        #ipdb.set_trace()
+        lingress = uda.linear_trend_lingress(tgrad)
+
+        dbox.attrs['Tgrad'] = lingress['slope'].values
+
+        tgrad2 = dbox['t_srfc'].sel(longitude=slice(lonmin, lonmax), latitude=slice(10,20)).mean(['longitude', 'latitude'])- \
+        dbox['t_srfc'].sel(longitude=slice(lonmin, lonmax), latitude=slice(5,7)).mean(['longitude', 'latitude'])
+        dbox.attrs['Tgradbox'] = tgrad2.values
+
+
         for v in dbox.data_vars:
             (dbox[v].values)[mask] = np.nan
 
-        # cut a box for every single blob from msg - get min max lat lon of the blob
-        latmax, latmin = np.nanmax(lats[inds]), np.nanmin(lats[inds])
-        lonmax, lonmin = np.nanmax(lons[inds]), np.nanmin(lons[inds])
 
         ds_box = dbox.sel(latitude=slice(latmin,latmax), longitude=slice(lonmin, lonmax))
         try:
@@ -384,17 +400,17 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
 ### Inputs:
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
+data_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP4fut' #cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N_new'  # out directory to save MCS files
-box = [-12, 12, 5, 20]  # W- E , S - N geographical coordinates box
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-40C_TCWV'  # out directory to save MCS files
+box = [-12, 15, 5, 25]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
-years = np.array(np.arange(1999,2007), dtype=str)
+years = np.array(np.arange(1998,2007), dtype=str)
 months = np.array([ '03', '04', '05','06','07','08','09', '10', '11'])#([ '03', '04', '05', '06', '09', '10', '11'])
 days = np.array(np.arange(1,32), dtype=str)
 
-tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
+tthresh = -40 # chosen temperature threshold, e.g. -50, -60, -70
 h=17
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], h)  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
@@ -405,8 +421,9 @@ vars['u_srfc'] = ([925], 12)
 vars['q_mid'] = ([650], 12)  # INPUT IN T * 100!!
 #vars['theta'] = ([650, 925], 12)
 vars['t_mid'] = ([650], 12)   # INPUT IN T * 100!!
-vars['t_srfc'] = ([925], 12)
+vars['t_srfc'] = ([850], 12)
 vars['q_srfc'] = ([925], 12)
+vars['tcwv'] = ([], 12)
 
 datelist = []
 for y,m,d in itertools.product(years, months, days):

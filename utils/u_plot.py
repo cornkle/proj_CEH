@@ -14,9 +14,22 @@ import salem
 import pdb
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
+from matplotlib import colors
 
 
-def quick_map_xr(xar, save = None, title=None, **kwargs):
+class MidpointNormalize(colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+        self.vcenter = vcenter
+        colors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        return np.interp(value, x, y)
+
+
+def quick_map_xr(xar, save = None, title=None, cmap=None, **kwargs):
 
     f = plt.figure(figsize=(10, 6), dpi=300)
     if not cmap:

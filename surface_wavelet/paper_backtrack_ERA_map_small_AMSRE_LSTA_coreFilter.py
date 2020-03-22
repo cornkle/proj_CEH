@@ -39,7 +39,7 @@ def run_hours():
 def rewrite_list(hour):
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
     dic = pkl.load(
-        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMcircle_" + key + '_' + str(hour) + ".p", "rb"))
+        open(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMbox90_" + key + '_' + str(hour) + ".p", "rb"))
     # new = dic.copy()
     # for k in new.keys():
     #     new[k] = []
@@ -53,14 +53,18 @@ def rewrite_list(hour):
 
     df = pd.DataFrame.from_dict(dic)
     df = df.reindex(columns=['year', 'month', 'day', 'hour', 'lon', 'lat', 'xloc', 'yloc', 'area', 'csize', 't', 'storm_id', 'topo','SMmean0', 'SMdry0', 'SMwet0','SMmean-1', 'SMdry-1', 'SMwet-1', 'LSTAmean', 'LSTAslotfrac', 'dtime', 'ERAqmean', 'SMscale'])
-    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMcircle_" + key + '_' + str(hour) + ".csv", na_rep=-999, index_label='id')
+    df.to_csv(path + "cores_gt15000km2_table_AMSRE_LSTA_tracking_SMbox90_" + key + '_' + str(hour) + ".csv", na_rep=-999, index_label='id')
 
 
 def composite(h):
 
     path = '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/'
+    # msgopen = pd.read_csv(
+    #     '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h) + '_' + key +'.csv')
+    #
     msgopen = pd.read_csv(
-        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/core_txt/cores_gt15000km2_table_1640_580_'+str(h) + '_' + key +'.csv')
+        '/home/ck/DIR/cornkle/figs/LSTA/corrected_LSTA/new/ERA5/core_txt/totrack/cores_gt15000km2_table_AMSRE_tracking_SM0finite_'+str(h) +'.csv')
+
     hour = h
     msg = pd.DataFrame.from_dict(msgopen)# &  &
 
@@ -87,14 +91,14 @@ def composite(h):
 
     chunks = [msg.loc[msg.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
-    res = []
-    for m in chunks[100:101]:
-        out = file_loop(m)
-        res.append(out)
-
-    ipdb.set_trace()
-    return
-    #pool = multiprocessing.Pool(processes=4)
+    # res = []
+    # for m in chunks[100:101]:
+    #     out = file_loop(m)
+    #     res.append(out)
+    #
+    # ipdb.set_trace()
+    # return
+    pool = multiprocessing.Pool(processes=4)
 
     res = pool.map(file_loop, chunks)
     pool.close()
@@ -110,7 +114,7 @@ def composite(h):
     #ipdb.set_trace()
 
     pkl.dump(dic, open(path+"/cores_gt15000km2_table_AMSRE_LSTA_tracking"
-                            "_SMcircle_" + key + "_" +str(hour)+".p", "wb"))  #"+str(hour)+"
+                            "_SMbox90_" + key + "_" +str(hour)+".p", "wb"))  #"+str(hour)+"
     print('Save file written!')
     print('Dumped file')
 
@@ -143,8 +147,8 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False):
 
 
         #outmean = np.nanmean(kernel[dist-10:dist+10, dist:dist+67])  # dist-30 / dist + 30, dist+100
-
-        outmean = np.nanmean(kernel[ycirc100e,xcirc100e])
+        outmean = np.nanmean(kernel[dist - 15:dist + 15, dist+10:dist + 90])
+        #outmean = np.nanmean(kernel[ycirc100e,xcirc100e])
         smean[ids] = outmean
 
         #ycirc100e, xcirc100e = ua.draw_circle(dist + 100, dist + 1, 100)  # at - 150km, draw 50km radius circle
