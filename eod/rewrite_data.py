@@ -249,7 +249,7 @@ def rewriteMODISLstLonLat(file, nx, ny):
 
 def rewriteLSTA_toNetcdf(file, interp, write=None):
 
-    out = file.replace('lsta_raw_binary_new', 'lsta_netcdf_new')
+    out = file.replace('lsta_raw_binary_1330', 'lsta_netcdf_1330')
     if '.gz' in out:
         out = out.replace('.gra.gz', '.nc')
     else:

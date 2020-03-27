@@ -14,7 +14,7 @@ import ipdb
 
 def saveNetcdf():
 
-    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = '/users/global/cornkle/shared/data/OBS/MSG_LSTA/lsta_raw_binary_1330'
     pool = multiprocessing.Pool(processes=7)
     files = glob.glob(modis_folder+'/lsta_daily_2*.gra')
 
@@ -96,7 +96,7 @@ def saveDailyMCS():
 
 def saveNetcdf_blobs():
 
-    modis_folder = cnst.network_data + 'data/OBS/MSG_LSTA/lsta_raw_binary_new'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = cnst.network_data + 'data/OBS/MSG_LSTA/lsta_raw_binary_1330'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     td = pd.Timedelta('16 hours')
     files = glob.glob(modis_folder + '/lsta_daily_*.gra') #2*.gra')
 
@@ -156,8 +156,11 @@ def saveNetcdf_blobs():
 
             ds['cell'].values[0,ypos,xpos] = m.values[0,y,x]
 
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+
         try:
-            ds.to_netcdf(out)
+            ds.to_netcdf(out, format='NETCDF4', encoding=encoding)
         except OSError:
             print('Did not find ' + out)
             print('Out directory not found')
