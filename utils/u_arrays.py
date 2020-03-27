@@ -101,13 +101,13 @@ y: y index of center point
 radius: radius in pixels, floats are handled including the farthest point
 Returns a tuple of (y index, x index)
 """
-def draw_ellipse(x, y, short, long):
+def draw_ellipse(x, y, xlength, ylength):
 
 
-    xloc = np.arange(x-np.round(short), x+np.round(short)+1)
-    yloc = np.arange(y-np.round(long), y+np.round(long)+1)[:,None]
+    xloc = np.arange(x-np.round(xlength), x+np.round(xlength)+1)
+    yloc = np.arange(y-np.round(ylength), y+np.round(ylength)+1)[:,None]
     #xloc, yloc = np.meshgrid(xloc1, yloc1)
-    distloc = ((xloc - x)/short)**2 + ((yloc - y)/long)**2 <=1
+    distloc = ((xloc - x)/xlength)**2 + ((yloc - y)/ylength)**2 <=1
 
     pos = np.where(distloc)
 

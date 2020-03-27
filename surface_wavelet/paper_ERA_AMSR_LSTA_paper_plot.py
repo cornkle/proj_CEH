@@ -19,6 +19,7 @@ import multiprocessing
 import glob
 from scipy import ndimage
 from utils import u_statistics as ustats
+import salem
 
 
 import pickle as pkl
@@ -310,24 +311,25 @@ def plot_amsr_paper_trio(h, eh):
     dic = {}
     dic2 = {}
     dic3={}
+    dic4 = {}
 
 
-    # name2='ERA5_cores_2hOverlap_AMSRE_SMALL_MCSfilter_minusMean_smallDomain_'
+    name2='ERA5_cores_2hOverlap_AMSRE_SMALL_MCSfilter_minusMean_smallDomain_'
     #
-    # name3 = 'ERA5_cores_2hOverlap_AMSRE_SMALL_AMSL_MCSfilter'
-    # name="ERA5_cores_2hOverlap_AMSRE_SMALL_MCSfilter_minusMean_bigDomain_init400km_"
+    name3 = 'ERA5_cores_2hOverlap_AMSRE_SMALL_AMSL_MCSfilter'
+    name="ERA5_cores_2hOverlap_AMSRE_SMALL_MCSfilter_minusMean_bigDomain_init400km_"
 
     # name ='ERA5_cores_NEWTRACKING_AMSRE_DRY2_'
     # name2 ='ERA5_cores_NEWTRACKING_AMSRE_DRY2_'
     # name3 ='ERA5_cores_NEWTRACKING_AMSRE_DRY2_'
 
-    # name ='ERA5_cores_NEWTRACKING_AMSRE_WET2_'
-    # name2 ='ERA5_cores_NEWTRACKING_AMSRE_WET2_'
-    # name3 ='ERA5_cores_NEWTRACKING_AMSRE_WET2_'
+    # name ='ERA5_cores_NEWTRACKING_AMSRE_WET2f_'
+    # name2 ='ERA5_cores_NEWTRACKING_AMSRE_WET2f_'
+    # name3 ='ERA5_cores_NEWTRACKING_AMSRE_WET2f_'
 
-    name ='ERA5_cores_NEWTRACKING_AMSRE_ALL_'
-    name2 ='ERA5_cores_NEWTRACKING_AMSRE_ALL_'
-    name3 ='ERA5_cores_NEWTRACKING_AMSRE_ALL_'
+    #name ='ERA5_cores_NEWTRACKING_AMSRE_ALL222_'
+    #name2 ='ERA5_cores_NEWTRACKING_AMSRE_ALL222_'
+    name4 ='ERA5_cores_NEWTRACKING_AMSRE_ALL222_'
 
 
 
@@ -356,8 +358,11 @@ def plot_amsr_paper_trio(h, eh):
     for y in range(2006, 2010):
         coll(dic3, h, eh, y, name3)
 
+    for y in range(2006, 2010):
+        coll(dic4, h, eh, y, name4)
 
-    print('NUMBER CORES ', np.max(dic['cnte']))
+
+    print('NUMBER CORES ', np.max(dic4['cnte']))
 
 
 
@@ -398,6 +403,11 @@ def plot_amsr_paper_trio(h, eh):
                            colors='k',linestyles = 'solid', linewidths = 1)
 
 
+    # t = ndimage.gaussian_filter((dic['skt'])/ dic['cnte'], 6, mode='nearest')
+    # contours = plt.contour(t, extend='both', levels=np.linspace(-1.5,1.6,20),
+    #                        colors='r',linestyles = 'solid', linewidths = 1)
+
+
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
@@ -423,11 +433,11 @@ def plot_amsr_paper_trio(h, eh):
     plt.colorbar(label='g kg-1')
     plt.contourf(mask, colors='none', hatches='...',
                  levels=[0.5, 1], linewidth=0.1)
-    # shear = ndimage.gaussian_filter((dic3['shear'] / dic3['cnte']), 3, mode='nearest')
-    # contours = plt.contour(shear, extend='both',levels=np.arange(-15.25,-12.75,0.5), colors='k', linestyles='solid', linewidths=1) #np.arange(-15,-10,0.5)
+    shear = ndimage.gaussian_filter((dic3['shear'] / dic3['cnte']), 3, mode='nearest')
+    contours = plt.contour(shear, extend='both',levels=np.arange(-15.25,-12.75,0.5), colors='k', linestyles='solid', linewidths=1) #np.arange(-15,-10,0.5)
 
-    contours = plt.contour((dic2['u650']-dic2['u650_clim']) / dic2['cnte'], extend='both', levels=np.arange(-2, 2, 0.3), colors='k',
-                           linestyles='solid', linewidths=1)  # np.arange(-15,-10,0.5)
+    # contours = plt.contour((dic2['u650']-dic2['u650_clim']) / dic2['cnte'], extend='both', levels=np.arange(-2, 2, 0.3), colors='k',
+    #                        linestyles='solid', linewidths=1)  # np.arange(-15,-10,0.5)
 
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
@@ -444,7 +454,7 @@ def plot_amsr_paper_trio(h, eh):
  #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     div = ndimage.gaussian_filter(((dic2['div'])/ dic2['cnte'])*100, 3, mode='nearest')
     vals = np.percentile(div,[10,90])
-
+    #ipdb.set_trace()
     plt.contourf(div, extend='both',  cmap='RdBu', levels=divlevels) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     mask =  (div <= vals[0])
     plt.colorbar(label=r'10$^{-3}$s$^{-1}$')
@@ -452,9 +462,26 @@ def plot_amsr_paper_trio(h, eh):
                  levels=[0.5, 1], linewidth=0.1)
 
     v925 = ndimage.gaussian_filter(dic3['v925_orig'] / dic3['cnte'], 3, mode='nearest')
-
     plt.contour(v925, extend='both', colors='k', linewidths=5,
                            levels=[-50, 0.06, 50])
+
+    #itd = ndimage.gaussian_filter(dic3['itd'] / dic3['cnte'], 8, mode='nearest')
+
+    #
+    #itd = xr.DataArray(np.array((dic4['itd']/dic4['cnte'])[1::,1::]).astype(float))
+    itd = xr.DataArray(np.array((dic4['itd'] / dic4['cnte'])).astype(float))
+    # cnt = xr.DataArray(np.array(dic3['cnte'][1::, 1::]).astype(float))
+    #
+    #itd = salem.reduce(itd, factor=8,how=np.sum)
+    # cnt = salem.reduce(cnt, factor=16,how=np.max)
+
+    itd = ndimage.gaussian_filter((itd)*100, 28, mode='nearest')
+
+    #ipdb.set_trace()
+    #cs = plt.contour(np.arange(0,400, 8),np.arange(0,400,8),itd, extend='both', colors='r', linewidths=2) #
+    cs = plt.contour( itd, extend='both', colors='k', linewidths=0.5, levels=[24.9,30,35], linestyles='dashed')
+    cs = plt.contourf(itd, colors='lightgrey',levels=[24.9, 31, 35], alpha=0.27)
+    plt.clabel(cs, inline=True, fontsize=9, fmt='%1.0f')
 
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.axhline(y=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
@@ -472,8 +499,6 @@ def plot_amsr_paper_trio(h, eh):
     #plt.title('shading: divergence, vectors: 925hPa wind anomaly', fontsize=9)
 
     plt.tight_layout()
-
-    plt.tight_layout()
     text = ['a', 'b', 'c']
     plt.annotate(text[0], xy=(0.006, 0.92), xytext=(0, 4),xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
@@ -485,6 +510,9 @@ def plot_amsr_paper_trio(h, eh):
     plt.show()
     plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+"_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
+
+    # plt.figure()
+    # plt.imshow(itd*100)
 
 def plot_amsr_paper_quatro(h, eh):
 

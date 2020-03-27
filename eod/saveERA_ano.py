@@ -313,7 +313,7 @@ def saveClimatology_srfc_day():
 
                 dt = pd.to_datetime([tstep.values])
 
-                if (dt.month < 6) | (dt.month > 9):
+                if (dt.month < 5) | (dt.month > 10):
                     continue
 
 
@@ -338,8 +338,17 @@ def saveClimatology_srfc_day():
                 ds.attrs = clim.attrs
                 # comp = dict(zlib=True, complevel=5)
                 # encoding = {var: comp for var in ds.data_vars}
+                path_file = cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc_SM.nc'
+                if os.path.isfile(path_file):
+                    try:
+                        os.remove(path_file)
+                    except OSError:
+                        pass
+                    # print('File exists, continue')
+                    # continue
 
 
-                ds.to_netcdf(cnst.local_data + '/ERA5/monthly/synop_selfmade/CLIM_2006-2010/ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc_SM.nc')#, mode='w', encoding=encoding, format='NETCDF4')
+
+                ds.to_netcdf(path_file)#, mode='w', encoding=encoding, format='NETCDF4')
                 print('Wrote '+'ERA5_2006-2010_CLIM_'+str(ds['time.month'].values[0]).zfill(2)+'-'+str(ds['time.day'].values[0]).zfill(2)+'-'+str(ds['time.hour'].values[0]).zfill(2)+'_srfc_SM.nc')
                 del sliced

@@ -86,19 +86,20 @@ def month_mean_hov():
         years = list(range(1983,2018))
 
         msg_folder = cnst.GRIDSAT
-        fname = 'aggs/gridsat_WA_-50_monthly_mean.nc'
 
         hov_box = None
         for y in years:
             y = str(y)
             da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-50_' + y + '.nc')
             print('Doing ' + y)
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -60) & (da1['tir'] >= -108) )
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
 
             WA_box = [-12,12,4.5,20]
             SA_box = [25,33,-28,-10]
             input = WA_box
-            hov_boxed = da1['tir'].sel(lat=slice(input[2],input[3]), lon=slice(input[0],input[1])).resample(time='m').mean(['lon','time'])
+            hov_boxed = da1['tir'].sel(lat=slice(input[2],input[3]), lon=slice(input[0],input[1])).resample(time='m').min(['lon','time'])
+            # hov_boxed = da1['tir'].sel(lat=slice(input[2], input[3]), lon=slice(input[0], input[1])).min(['lon']).resample(
+            #     time='m').mean(['time'])
 
             out = xr.DataArray(hov_boxed.values, coords={'month':hov_boxed['time.month'].values, 'lat':hov_boxed.lat}, dims=['month', 'lat'])
 
@@ -109,7 +110,7 @@ def month_mean_hov():
                 hov_box = out.copy()
 
         hov_box.year.values = hov_box.year.values+years[0]
-        hov_box.to_netcdf(msg_folder + 'aggs/WAbox_meanT-60_hov_5000km2.nc')
+        hov_box.to_netcdf(msg_folder + 'aggs/WAbox_minT-50_hov_5000km2.nc')
 
 
 

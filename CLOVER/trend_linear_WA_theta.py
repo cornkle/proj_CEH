@@ -314,12 +314,14 @@ def trend_all():
         #          open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
         #               'wb'))
 
+        map.set_shapefile(countries=True, linewidths=1.2, color='grey')
+
         ax1 = f.add_subplot(221)
         map.set_data(t_da.values, interp='linear')  # interp='linear'
 
-        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.6,0.8], colors='k', linewidths=1.5)
+        map.set_contour(s_da.values, interp='linear', levels=[0.4,0.6,0.8], colors='k', linewidths=1.8)
         map.set_plot_params(levels=[-0.5,-0.4,-0.3,-0.2,0.2,0.3,0.4,0.5], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1),
-        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.002)
+        qu = ax1.quiver(xx, yy, u, v, scale=30, width=0.002, headwidth=4)
 
         # qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
         #                    labelpos='E', coordinates='figure')
@@ -335,10 +337,10 @@ def trend_all():
 
         ax2 = f.add_subplot(222)
         map.set_data(theta_da.values-0.2,interp='linear')  # interp='linear'
-        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='k',  linewidths=1.5, levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6]) #[6,8,10,12,14,16] #levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6],
+        map.set_contour((q_da.values).astype(np.float64),interp='linear', colors='k',  linewidths=1.8, levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6]) #[6,8,10,12,14,16] #levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6],
         map.set_plot_params(levels=np.array([-0.4,-0.3,-0.2,-0.1,0.1,0.2,0.3, 0.4])*10, cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
 
-        qu = ax2.quiver(xx, yy, um, vm, scale=100, width=0.002)
+        qu = ax2.quiver(xx, yy, um, vm, scale=100, width=0.002, headwidth=4)
         qk = plt.quiverkey(qu, 0.94, 0.52, 3, '3 m s$^{-1}$',
                            labelpos='E', coordinates='figure')
 
@@ -349,11 +351,11 @@ def trend_all():
 
         ax3 = f.add_subplot(223)
         map.set_data(tcwv_da.values-0.05, interp='linear')  # interp='linear'
-        map.set_contour(thetad_da.values, interp='linear', levels=np.array([-2,-1.5,-1,-0.5,0.5,1,1.5,2])*100, colors='k', linewidths=1.5)
+        map.set_contour(thetad_da.values, interp='linear', levels=np.array([-2,-1.5,-1,-0.5,0.5,1,1.5,2])*100, colors='k', linewidths=1.8)
 
-        map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,-0.4,0.4,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
+        map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,-0.4,-0.2,0.2, 0.4,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
 
-        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.002)
+        qu = ax3.quiver(xx, yy, uu, vv, scale=30, width=0.002, headwidth=4)
 
         qk = plt.quiverkey(qu, 0.45, 0.03, 1, '1 m s$^{-1}$decade$^{-1}$',
                            labelpos='E', coordinates='figure')
@@ -365,7 +367,7 @@ def trend_all():
 
 
         ax4 = f.add_subplot(224)
-        map.set_contour((tirm_mean), interp='linear', levels=[0.1,1,2,4], colors='k', linewidths=1)
+        map.set_contour((tirm_mean), interp='linear', levels=[0.1,1,2,4], colors='k', linewidths=1.5)
 
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
