@@ -55,7 +55,7 @@ def composite(h):
     #basic filter
     msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
     #propagation filter
-    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    #msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
     #lsta filter
     #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
 
@@ -125,7 +125,7 @@ def composite(h):
 
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath + "/AMSR_histograms_" + str(h).zfill(2) + "_SMFINITE_150kcircle_minusMean_bigBox_topo_"+key+".p", "wb"))
+    pkl.dump(dic, open(outpath + "/AMSR_histograms_" + str(h).zfill(2) + "_SMFINITE_150kcircle_minusMean_bigBox_topo_INCLINIT_"+key+".p", "wb"))
     print('Save file written!')
 
 
@@ -191,7 +191,7 @@ def file_loop(df):
 
     amsre = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     amsre = amsre.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    amsre = amsre.sel(lon=slice(-14, 14), lat=slice(7.5, 23.5))
+    amsre = amsre.sel(lon=slice(-15, 15), lat=slice(6, 24))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
@@ -200,7 +200,7 @@ def file_loop(df):
 
     #topo = xr.open_dataset(cnst.LSTA_TOPO)
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lon=slice(-13.5, 13.5), lat=slice(7, 23))
+    topo = topo.sel(lon=slice(-14.5, 14.5), lat=slice(6.5, 23.5))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -450,7 +450,7 @@ def plot_diurn_double_relative_double():
 
     ax = plt.axes([0.47,0.12,0.5,0.7])
 
-    name = '_SMFINITE_150kcircle_minusMean_bigBox_topo_NEWTRACKING'
+    name = '_SMFINITE_150kcircle_minusMean_bigBox_topo_INCLINIT_NEWTRACKING'
 
     for ids, input in enumerate(loop):
         ids = ids+1

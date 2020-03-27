@@ -54,18 +54,38 @@ def composite(h):
 
     msgopen = msg
 
+    # #basic filter
+    # msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
+    # #propagation filter
+    # msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    # #wetness_filter
+    # msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & (msgopen['LSTAslotfrac']>=0.05)]# & np.isfinite(msgopen['SMmean-1'])]
+    # # #eraq_filter
+    # msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]#& (msgopen['ERAqmean'] <= 15.7)]
+    # # #dry_filter
+    # msgopen = msgopen[(msgopen['SMmean0']<=-5.23)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    # # # #wet_filter
+    # # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+
+
     #basic filter
     msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
     #propagation filter
-    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    msgopen = msgopen[(msgopen['xdiff']>=100) | ((msgopen['initTime'] <10 )&(msgopen['SMmean0'] >=-12)&(msgopen['SMmean0'] <=-7 ) & (msgopen['SMmean-1']<=-1) & (msgopen['SMdry0']==1))]# | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+    #msgopen = msgopen[(msgopen['xdiff'] >= 120) | ((msgopen['initTime'] < 10))]# & (msgopen['initTime'] > 2))]# & (msgopen['SMmean0'] >=0.1)  & (msgopen['SMmean-1'] >=0))]  # | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+
+    #lsta filter
+    #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
     #wetness_filter
-    msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & (msgopen['LSTAslotfrac']>=0.05)]# & np.isfinite(msgopen['SMmean-1'])]
-    # #eraq_filter
-    msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]#& (msgopen['ERAqmean'] <= 15.7)]
+    msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
+    #eraq_filter
+    #msgopen = msgopen[(msgopen['ERAqmean'] >= 14)] #14
     # #dry_filter
-    msgopen = msgopen[(msgopen['SMmean0']<=-5.23)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    msgopen = msgopen[(msgopen['SMmean0']<=-1.8)]# -1.8 & (msgopen['SMmean-1']<=-0.5)]# & (msgopen['SMmean-1']<=-1)]#&(msgopen['SMmean0']<=-7.19)] #294 cases, with q 312
     # # #wet_filter
-    # msgopen = msgopen[(msgopen['SMmean0']>=0.3) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+    #msgopen = msgopen[(msgopen['SMmean0']>=0.31) ]#& (msgopen['SMmean0']>=1.8)] #295 cases, with q 318, 0.16-> 317, noMCS filter
+
+
 
     msgin = msgopen
 
@@ -183,7 +203,7 @@ def composite(h):
                 continue
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT2_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_WAVELET_INIT_SCALES_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -603,7 +623,7 @@ def plot(hour):
 
 
 def plot_single(hour):
-    name = 'UTC_15000_WAVELET_INIT2real_NEWTRACKING'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+    name = 'UTC_15000_WAVELET_INIT_SCALES_NEWTRACKING'#'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
@@ -664,7 +684,7 @@ def plot_trio():
     f = plt.figure(figsize=(7, 5))
     for ids,h in enumerate([15,17,19]):
 
-        name = 'UTC_15000_WAVELET_INIT2_NEWTRACKING'  # 'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
+        name = 'UTC_15000_WAVELET_INIT_SCALES_NEWTRACKING'  # 'UTC_15000_AMSLST_3slot_noOverplotFilter'#'UTC_15000_-60_AMSRE'
         path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients'
         dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + name + ".p", "rb"))
 
@@ -713,5 +733,5 @@ def plot_trio():
         plt.title(str(h).zfill(2)+'00 UTC', fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT2_WAVELET_TRIO.png')
+    #plt.savefig(path + '/amsreVSlsta/'+name+'_cross_AMSRE_INIT2_WAVELET_TRIO.png')
     plt.show()

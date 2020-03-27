@@ -9,23 +9,14 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import multiprocessing
-import ipdb
-import pandas as pd
-from wavelet import util as wutil
 from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
 import pickle as pkl
-from matplotlib.gridspec import GridSpec
-import collections
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
-from scipy.ndimage.measurements import label
 from scipy import ndimage
-from utils import u_plot
+import matplotlib.patches as patches
 
 
 def run_all():
@@ -436,16 +427,16 @@ def plot_amsr_dry_wet(hour):
         plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
 
 
-        if ids in [0,2]:
-            cmorph2 = ((pick[ids])['cmorph'])[0] / ((pick[ids])['cmorph'])[1]
-            cmorph2 = ndimage.gaussian_filter(cmorph2, 6, mode='nearest')
-            lev = [-99,50]
-
-            cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
-                             cmorph2 * 100 * 1.2,
-                             linewidths=0.9, linestyles=['dotted'], levels=lev, colors='b')
-
-            plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
+        # if ids in [0,2]:
+        #     cmorph2 = ((pick[ids])['cmorph'])[0] / ((pick[ids])['cmorph'])[1]
+        #     cmorph2 = ndimage.gaussian_filter(cmorph2, 6, mode='nearest')
+        #     lev = [-99,50]
+        #
+        #     cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
+        #                      cmorph2 * 100 * 1.2,
+        #                      linewidths=0.9, linestyles=['dotted'], levels=lev, colors='b')
+        #
+        #     plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
 
 
         # cs = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100, cmap='viridis',
@@ -625,15 +616,15 @@ def plot_amsr_dry_wet_trio(hour):
     # dic4 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_2hOverlap.p", "rb"))
 
     dic0 = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(
-        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_WET_INIT_Q20_NEWTRACKING.p", "rb"))
-    dic1 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_WET_INIT_Q20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
-    dic2 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_WET_INIT_Q20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb"))
+    dic1 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic2 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     dic3 = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(
-        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_DRY_INIT_Q20_NEWTRACKING.p", "rb"))
-    dic4 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_Q20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
-    dic5 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_Q20_NEWTRACKING.p", "rb"))
+        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb"))
+    dic4 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic5 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb"))
 
-    names = ['DRY - night0','DRY - day0', 'DRY - day+1', 'WET - night0', 'WET - day0', 'WET - day+1']
+    names = ['DRY - day0, 0130UTC','DRY - day0, 1330UTC', 'DRY - day+1, 1330UTC', 'WET - day0, 0130UTC', 'WET - day0, 1330UTC', 'WET - day+1, 1330UTC']
 
     pick = ['',dic5, '','',dic2]
 
@@ -644,8 +635,8 @@ def plot_amsr_dry_wet_trio(hour):
         amsr = (dic['amsr'])[0] / dic['amsr'][1]
         cmorph = (dic['cmorph'])[0] / dic['cmorph'][1]
 
-        cmorph = ndimage.gaussian_filter(cmorph, 6, mode='nearest')
-        amsr = ndimage.gaussian_filter(amsr, 6, mode='nearest')
+        cmorph = ndimage.gaussian_filter(cmorph, 8, mode='nearest')
+        amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
 
         msg = (dic['msg'])[0] / dic['msg'][1]
         cores = dic['cores']
@@ -655,33 +646,34 @@ def plot_amsr_dry_wet_trio(hour):
 
         dist=200
 
-        alevels = [-5,-4,-3,-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2,3,4]
+        # alevels = [-5,-4,-3,-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2,3,4]
 
         cmap = matplotlib.cm.get_cmap('RdBu')
 
         vals_low = list(np.linspace(-0.01, 0.5,9))#+list([0.5])
         vals_high = (((np.linspace(0, 0.5,9)-1)[::-1])*-1)[1:-1]#(np.arange(0,0.5,0.05)+0.5+0.05)[0:-2]
 
-        allcol = list(vals_low)+list(vals_high)
+        # allcol = list(vals_low)+list(vals_high)
 
         #ipdb.set_trace()
-
-
-        def col_colors(l):
-            col = []
-            for ll in l :
-                col.append(cmap(ll))
-            return col
-
-        colours = col_colors(allcol)
+        #
+        #
+        # def col_colors(l):
+        #     col = []
+        #     for ll in l :
+        #         col.append(cmap(ll))
+        #     return col
+        #
+        # colours = col_colors(allcol)
 
         #ipdb.set_trace()
-
+        alevels = [-4, -3, -2, -1, -0.5, -0.25, 0.25, 0.5, 1, 2, 3, 4]
+        #alevels = [-3.9,-3.3, -2.7, -2.1, -1.5, -0.9, -0.3, 0.3, 0.9, 1.5, 2.1, 2.7, 3.3,3.9]
         ax = f.add_subplot(2,3,ids+1)
 
         amsr[np.isnan(amsr)]= 0
         #, norm=matplotlib.colors.Normalize(vmin=-6, vmax=4)
-        plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , amsr , colors=colours, extend='both', levels=alevels, norm=matplotlib.colors.Normalize(vmin=-5, vmax=4))
+        plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , amsr , cmap='RdBu', extend='both', levels=alevels)
         plt.colorbar(label='%')
 
         if ids == 3:
@@ -704,16 +696,16 @@ def plot_amsr_dry_wet_trio(hour):
             plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
 
 
-        if ids in [1,4]:
-            cmorph2 = ((pick[ids])['cmorph'])[0] / ((pick[ids])['cmorph'])[1]
-            cmorph2 = ndimage.gaussian_filter(cmorph2, 6, mode='nearest')
-            lev = [-99,50]
-
-            cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
-                             cmorph2 * 100 * 1.2,
-                             linewidths=0.9, linestyles=['dotted'], levels=lev, colors='b')
-
-            plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
+        # if ids in [1,4]:
+        #     cmorph2 = ((pick[ids])['cmorph'])[0] / ((pick[ids])['cmorph'])[1]
+        #     cmorph2 = ndimage.gaussian_filter(cmorph2, 6, mode='nearest')
+        #     lev = [-99,50]
+        #
+        #     cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
+        #                      cmorph2 * 100 * 1.2,
+        #                      linewidths=0.9, linestyles=['dotted'], levels=lev, colors='b')
+        #
+        #     plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
 
 
         # cs = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100, cmap='viridis',
@@ -725,8 +717,13 @@ def plot_amsr_dry_wet_trio(hour):
 
         #plt.colorbar()
 
-        if ids in [0,2]:
+        if ids in [0,3]:
             ax.set_ylabel('km')
+            rect = patches.Rectangle((-300, -300), 600, 600, linewidth=1.2, edgecolor='dimgrey', facecolor='none')
+            # Add the patch to the Axes
+            ax.add_patch(rect)
+
+
         ax.set_xlabel('km')
         plt.axvline(x=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
         plt.axhline(y=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
@@ -751,5 +748,5 @@ def plot_amsr_dry_wet_trio(hour):
     plt.annotate(text[5], xy=(0.68, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_Q20_TRIO_' + str(hour).zfill(2) + '.png')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_TRIO_' + str(hour).zfill(2) + '.png')
     plt.close('all')

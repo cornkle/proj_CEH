@@ -28,7 +28,6 @@ matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 
-
 def run_hours():
 
     l = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7] #15,16,
@@ -43,7 +42,7 @@ def loopdays():
 def composite(h, daykey):
 
     key = 'NEWTRACKING'
-    #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
+    # msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_tracking_'+str(h)+'_init.csv', na_values=-999)
 
     msgopen = pd.read_csv(
         cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/init_merged2/cores_gt15000km2_table_AMSRE_tracking2_' + str(
@@ -63,7 +62,9 @@ def composite(h, daykey):
     #basic filter
     msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
     #propagation filter
-    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    msgopen = msgopen[(msgopen['xdiff']>=100) | ((msgopen['initTime'] <10 )&(msgopen['SMmean0'] >=-12)&(msgopen['SMmean0'] <=-7 ) & (msgopen['SMmean-1']<=-1) & (msgopen['SMdry0']==1))]# | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+    #msgopen = msgopen[(msgopen['xdiff'] >= 120) | ((msgopen['initTime'] < 10))]# & (msgopen['initTime'] > 2))]# & (msgopen['SMmean0'] >=0.1)  & (msgopen['SMmean-1'] >=0))]  # | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+
     #lsta filter
     #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
     #wetness_filter
@@ -71,9 +72,9 @@ def composite(h, daykey):
     #eraq_filter
     #msgopen = msgopen[(msgopen['ERAqmean'] >= 14)] #14
     # #dry_filter
-    msgopen = msgopen[(msgopen['SMmean0']<=-5.23)]#&(msgopen['SMmean0']<=-7.19)] #294 cases, with q 312
+    msgopen = msgopen[(msgopen['SMmean0']<=-3)]# -1.8 & (msgopen['SMmean-1']<=-0.5)]# & (msgopen['SMmean-1']<=-1)]#&(msgopen['SMmean0']<=-7.19)] #294 cases, with q 312
     # # #wet_filter
-    #msgopen = msgopen[(msgopen['SMmean0']>=0.18) ]#& (msgopen['SMmean0']>=1.8)] #295 cases, with q 318, 0.16-> 317, noMCS filter
+    #msgopen = msgopen[(msgopen['SMmean0']>=0.31) ]#& (msgopen['SMmean0']>=1.8)] #295 cases, with q 318, 0.16-> 317, noMCS filter
 
     msgin = msgopen
     print('Number of cores', len(msgin))
@@ -117,19 +118,19 @@ def composite(h, daykey):
     for r in res:
 
 
-        lsta_list.append(r[0])
-        lsta_cnt.append(r[1])
-        amsr_list.append(r[2])
-        amsr_cnt.append(r[3])
-        msg_list.append(r[4])
-        msg_cnt.append(r[5])
-        cmorph_list.append(r[6])
-        cmorph_cnt.append(r[7])
-        cores += r[8]
+        # lsta_list.append(r[0])
+        # lsta_cnt.append(r[1])
+        amsr_list.append(r[0])
+        amsr_cnt.append(r[1])
+        msg_list.append(r[2])
+        msg_cnt.append(r[3])
+        cmorph_list.append(r[4])
+        cmorph_cnt.append(r[5])
+        cores += r[6]
 
     dic = collections.OrderedDict([
 
-                                   ('lsta' , [lsta_list, lsta_cnt]),
+                                  # ('lsta' , [lsta_list, lsta_cnt]),
                                    ('amsr' , [amsr_list, amsr_cnt]),
                                    ('msg' , [msg_list, msg_cnt]),
                                    ('cmorph' , [cmorph_list, cmorph_cnt]),
@@ -139,8 +140,10 @@ def composite(h, daykey):
 
     for l in keys:
 
-        if l == 'cores':
+        if l in ['cores', 'lsta']:
             continue
+
+        print(l)
 
         try:
             (dic[l])[0] = np.squeeze(np.vstack((dic[l])[0]))
@@ -150,7 +153,7 @@ def composite(h, daykey):
 
     for l in keys:
 
-        if l == 'cores':
+        if l in ['cores', 'lsta']:
             continue
 
         (dic[l])[0] = np.nansum((dic[l])[0], axis=0)
@@ -204,6 +207,7 @@ def get_previous_hours_msg(storm_date, daykey):
     # if daykey == 'day+5':
     #     t1 = date + pd.Timedelta('12 hours')
     #     t2 = date + pd.Timedelta('24 hours')
+
 
     file = cnst.MCS_ALL# MCS_15K #_POINTS_DOM
     msg = xr.open_dataarray(file)
@@ -336,7 +340,7 @@ def file_loop(df):
 
     #topo = xr.open_dataset(cnst.LSTA_TOPO)
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lat=slice(7,25), lon=slice(-14,14))
+    topo = topo.sel(lat=slice(6.5,26.5), lon=slice(-14.5,14.5))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -344,21 +348,21 @@ def file_loop(df):
 
     amsre = xr.open_dataset((ctimes[tag])[1] + 'sma_' + fdate + '.nc')
     amsre = amsre.sel(time=str(outime.year)+'-'+str(outime.month)+'-'+str(outime.day))
-    amsre = amsre.sel(lon=slice(-11, 11), lat=slice(8, 21))
+    amsre = amsre.sel(lon=slice(-15, 15), lat=slice(6, 27))
     print('Doing '+ 'AMSR_' + str(outime.year) + str(outime.month).zfill(2) + str(
         outime.day).zfill(2) + '.nc')
 
     amsr_da = amsre['SM'].squeeze()
 
 
-    try:
-        lstal = xr.open_dataset(cnst.LSTA_1330 + 'lsta_daily_' + fdate + '.nc')
-    except OSError:
-        return None
-    print('Doing ' + 'lsta_daily_' + fdate + '.nc')
-
-    lsta_da = lstal['LSTA'].squeeze()
-    slot_da = lstal['NbSlot'].squeeze().values
+    # try:
+    #     lstal = xr.open_dataset(cnst.LSTA_1330 + 'lsta_daily_' + fdate + '.nc')
+    # except OSError:
+    #     return None
+    # print('Doing ' + 'lsta_daily_' + fdate + '.nc')
+    #
+    # lsta_da = lstal['LSTA'].squeeze()
+    # slot_da = lstal['NbSlot'].squeeze().values
 
     # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.01:
     #     print('Not enough valid')
@@ -377,11 +381,11 @@ def file_loop(df):
         return None
 
 
-    try:
-        lsta_da = topo.salem.transform(lsta_da, interp='nearest')
-    except RuntimeError:
-        print('lsta_da on LSTA interpolation problem')
-        return None
+    # try:
+    #     lsta_da = topo.salem.transform(lsta_da, interp='nearest')
+    # except RuntimeError:
+    #     print('lsta_da on LSTA interpolation problem')
+    #     return None
 
 
     probs_msg = get_previous_hours_msg(outime, daykey)
@@ -431,11 +435,11 @@ def file_loop(df):
         ypos = np.where(amsr_da['lat'].values == plat)
         ypos = int(ypos[0])
 
-        try:
-            lsta_kernel = cut_kernel_lsta(xpos, ypos, lsta_da.values)
-        except TypeError:
-            print('LSTA kernel error')
-            continue
+        # try:
+        #     lsta_kernel = cut_kernel_lsta(xpos, ypos, lsta_da.values)
+        # except TypeError:
+        #     print('LSTA kernel error')
+        #     continue
 
         try:
             amsre_kernel = cut_kernel_lsta(xpos, ypos, amsr_da.values)
@@ -455,31 +459,33 @@ def file_loop(df):
             print('AMSR kernel error')
             continue
 
-        lsta.append(lsta_kernel)
+        #lsta.append(lsta_kernel)
         amsr.append(amsre_kernel)
         msg.append(msg_kernel)
         cmorph.append(cmorph_kernel)
         cores += 1
-        ERAq +=dit.ERAqmean
 
 
-    del lsta_da
+    #del lsta_da
     del amsr_da
     del probsm_on_lsta
     del probscm_on_lsta
 
-    if (np.array(amsr).ndim == 1) | (np.array(lsta).ndim == 1):
+    if (np.array(amsr).ndim == 1):
         return None
 
 
     #try:
-    if (len(lsta) <= 1) | (len(amsr) <= 1) | (np.array(amsr).ndim < 3) | (np.nansum(lsta) == 0)| (np.nansum(amsr)==0):
+    if  (len(amsr) <= 1) | (np.array(amsr).ndim < 3) |  (np.nansum(amsr)==0):
         print('NorthSouth 1')
         return None
     else:
-
-        lsta_sum = np.nansum(np.stack(lsta, axis=0), axis=0)[np.newaxis,...]
-        lsta_cnt = np.nansum(np.isfinite(np.stack(lsta, axis=0)), axis=0)[np.newaxis,...]
+        # try:
+        #     lsta_sum = np.nansum(np.stack(lsta, axis=0), axis=0)[np.newaxis,...]
+        #     lsta_cnt = np.nansum(np.isfinite(np.stack(lsta, axis=0)), axis=0)[np.newaxis,...]
+        # except:
+        #     lsta_sum = 0
+        #     lsta_cnt = 0
         try:
             amsr_sum = np.nansum(np.stack(amsr, axis=0), axis=0)[np.newaxis,...]
         except ValueError:
@@ -495,7 +501,7 @@ def file_loop(df):
 
     print('Returning with kernel, success!!')
 
-    return (lsta_sum, lsta_cnt, amsr_sum, amsr_cnt, msg_sum, msg_cnt, cmorph_sum, cmorph_cnt, cores)
+    return (amsr_sum, amsr_cnt, msg_sum, msg_cnt, cmorph_sum, cmorph_cnt, cores)
 
 if __name__ == "__main__":
     run_hours()

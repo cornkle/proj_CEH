@@ -29,8 +29,6 @@ matplotlib.rc('ytick', labelsize=10)
 matplotlib.rcParams['hatch.linewidth'] = 0.1
 
 
-daykey = 'day-1'
-
 
 def run_hours():
 
@@ -38,7 +36,12 @@ def run_hours():
     for ll in l:
         composite(ll)
 
-def composite(hour):
+def loopdays():
+
+    for dk in ['night0', 'day0', 'day+1']:
+        composite(17,dk)
+
+def composite(hour,daykey):
 
     key = 'NEWTRACKING'
     #msgopen = pd.read_csv(cnst.network_data + 'figs/LSTA/corrected_LSTA/new/ERA5/core_txt/cores_gt15000km2_table_AMSRE_LSTA_tracking_new_2hOverlap_'+str(h)+'.csv', na_values=-999)
@@ -52,22 +55,45 @@ def composite(hour):
     msg['date'] = pd.to_datetime(msg[['year','month','day']])
     print('Start core number ', len(msg))
 
+    # msgopen = msg
+    #
+    # #basic filter
+    # msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
+    # #propagation filter
+    # msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    # #lsta filter
+    # #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
+    # #wetness_filter
+    # msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
+    # # #eraq_filter
+    # msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]#& (msgopen['ERAqmean'] <= 15.7)]
+    # # #dry_filter
+    # msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    # # # #wet_filter
+    # # msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+
+    msg['daykey'] = daykey
+
     msgopen = msg
 
     #basic filter
     msgopen = msgopen[(msgopen['lat']>9.5) & (msgopen['lat']<20.5) & (msgopen['topo']<=450) & (msgopen['dtime']<=2)]
     #propagation filter
-    msgopen = msgopen[(msgopen['xdiff']>=100) | (msgopen['initTime'] <= 2.5)]
+    msgopen = msgopen[(msgopen['xdiff']>=100) | ((msgopen['initTime'] <10 )&(msgopen['SMmean0'] >=-11 )&(msgopen['SMmean0'] <=-6 ) & (msgopen['SMmean-1']<=-1) & (msgopen['SMdry0']==1))]# | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+    #msgopen = msgopen[(msgopen['xdiff'] >= 120) | ((msgopen['initTime'] < 10))]# & (msgopen['initTime'] > 2))]# & (msgopen['SMmean0'] >=0.1)  & (msgopen['SMmean-1'] >=0))]  # | ((msgopen['initTime'] <11 )&(msgopen['initTime'] >2 ))]
+
     #lsta filter
     #msgopen = msgopen[msgopen['LSTAslotfrac']>=0.05]
     #wetness_filter
     msgopen = msgopen[np.isfinite(msgopen['SMmean0'])]# & np.isfinite(msgopen['SMmean-1'])]
-    # #eraq_filter
-    msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]#& (msgopen['ERAqmean'] <= 15.7)]
+    #eraq_filter
+    #msgopen = msgopen[(msgopen['ERAqmean'] >= 14)] #14
     # #dry_filter
-    msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    msgopen = msgopen[(msgopen['SMmean0']<=-1)]# & (msgopen['SMmean-1']<=-0.5)]# & (msgopen['SMmean-1']<=-1)]#&(msgopen['SMmean0']<=-7.19)] #294 cases, with q 312
     # # #wet_filter
-    # msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318
+    #msgopen = msgopen[(msgopen['SMmean0']>=0.31) ]#& (msgopen['SMmean0']>=1.8)] #295 cases, with q 318, 0.16-> 317, noMCS filter
+
+
 
     msgin = msgopen
     print('Number of cores', len(msgin))
@@ -142,7 +168,7 @@ def composite(hour):
 
 
     outpath = cnst.network_data + '/figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMERA_"+daykey+"_ALLS_minusMean_INIT_" + key + ".p", "wb"))
+    pkl.dump(dic, open(outpath+"coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMERA_"+daykey+"_ALLS_minusMean_INIT_noQ_" + key + ".p", "wb"))
     print('Save file written!')
 
 
@@ -171,6 +197,8 @@ def file_loop(df):
 
     date = df['date'].iloc[0]
     hour = df['hour'].iloc[0]
+
+    daykey = df['daykey'].iloc[0]
     print('Doing day: ', date)
 
     storm_date = date
@@ -203,7 +231,7 @@ def file_loop(df):
 
     #topo = xr.open_dataset(cnst.LSTA_TOPO)
     topo = xr.open_dataset(cnst.WA_TOPO_3KM)
-    topo = topo.sel(lat=slice(7.5,23), lon=slice(-12,12))
+    topo = topo.sel(lat=slice(6.5,26.5), lon=slice(-14.5,14.5))
 
     ttopo = topo['h']
     grad = np.gradient(ttopo.values)
@@ -211,14 +239,14 @@ def file_loop(df):
 
     amsre = xr.open_dataset((ctimes[tag])[1] + 'sma_' + fdate + '.nc')
     amsre = amsre.sel(time=str(outime.year)+'-'+str(outime.month)+'-'+str(outime.day))
-    amsre = amsre.sel(lon=slice(-12.5, 12.5), lat=slice(7, 23.5))
+    amsre = amsre.sel(lon=slice(-15, 15), lat=slice(6, 27))
     print('Doing '+ 'AMSR_' + str(outime.year) + str(outime.month).zfill(2) + str(
         outime.day).zfill(2) + '.nc')
 
     amsr_da = amsre['SM'].squeeze()
 
     file = cnst.ERA5
-    t1 = outime.replace(hour=12)
+    t1 = outime.replace(hour=9)
     csmm = xr.open_dataset(
         file + 'hourly/surface/ERA5_' + str(t1.year) + '_' + str(t1.month).zfill(2) + '_srfc_SM.nc')
     csmm = u_darrays.flip_lat(csmm)
@@ -231,8 +259,8 @@ def file_loop(df):
     except:
         pass
 
-    csmm = csmm.sel(longitude=slice(-12.5, 12.5), latitude=slice(7, 23.5))
-    sm_clim = sm_clim.sel(longitude=slice(-12.5, 12.5), latitude=slice(7, 23.5))
+    csmm = csmm.sel(longitude=slice(-15, 15), latitude=slice(6, 27))
+    sm_clim = sm_clim.sel(longitude=slice(-15, 15), latitude=slice(6, 27))
     ssm = csmm.sel(time=t1)
 
     lsta_da = ssm['swvl1'] - sm_clim['swvl1'].squeeze()
@@ -356,11 +384,20 @@ def plot_amsr_ERA_trio(hour):
     names = ['',
 
         "/coeffs_nans_stdkernel_USE_" + str(
-            hour) + "UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_Q20_NEWTRACKING.p",
+            hour) + "UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p",
                     "/coeffs_nans_stdkernel_USE_" + str(
-            hour) + "UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_Q20_NEWTRACKING.p"
+            hour) + "UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p"
 
     ]
+
+    # names = ['',
+    #
+    #     "/coeffs_nans_stdkernel_USE_" + str(
+    #         hour) + "UTC_15000_2dAMERA_day0_ALLS_minusMean_INIT_noQ_" + (key) + ".p",
+    #                 "/coeffs_nans_stdkernel_USE_" + str(
+    #         hour) + "UTC_15000_2dAMERA_day+1_ALLS_minusMean_INIT_noQ_" + (key) + ".p"
+    #
+    # ]
 
     labels = ['Day-1', 'Day0', 'Day+1']
 
@@ -375,7 +412,7 @@ def plot_amsr_ERA_trio(hour):
 
 
         dic = pkl.load(
-            open(path + "/coeffs_nans_stdkernel_USE_" + str(hour) + "UTC_15000_2dAMERA_"+ll+"_ALLS_minusMean_INIT_" + (key) + ".p",
+            open(path + "/coeffs_nans_stdkernel_USE_" + str(hour) + "UTC_15000_2dAMERA_"+ll+"_ALLS_minusMean_INIT_noQ_" + (key) + ".p",
                  "rb"))
 
 
@@ -389,7 +426,7 @@ def plot_amsr_ERA_trio(hour):
                      "rb"))
             amsr = (dic2['amsr'])[0] / dic2['amsr'][1]
 
-        amsr = ndimage.gaussian_filter(amsr, 4, mode='nearest')
+        amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
         lsta = ndimage.gaussian_filter(lsta, 8, mode='nearest')
 
         cores = dic['cores']
@@ -403,7 +440,7 @@ def plot_amsr_ERA_trio(hour):
         alevels = [-2.5,-2,-1.5,-1,-0.5,-0.25,0,0.25,0.5,1,1.5,2,2.5]
         alevels = [-4,-3,-2,-1,-0.5, -0.25, 0.25,0.5,1,2,3,4]
         llevels = np.array(list(np.arange(-1.35, 0, 0.5)) + list(np.arange(0.5, 1.36, 0.5)))  # *12000
-        llevels = [-1.35,-1,-0.6,0,0.6,1,1.35]
+        llevels = [-1.5,-1,-0.5,0,0.5,1,1.5]
 
         # # llevels = np.array(list(np.arange(-1.6, 0, 0.2)) + list(np.arange(0.2, 1.61, 0.2)))#*12000  WET
         # # alevels = np.array(list(np.arange(-3, 0, 0.25)) + list(np.arange(0.25, 3.25, 0.25)))#*12000
@@ -453,5 +490,119 @@ def plot_amsr_ERA_trio(hour):
     cbar.ax.tick_params(labelsize=10)
     cbar.set_label('%', fontsize=10)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMERA_TRIO_ALLS_minusMean_noCore_INIT2_' + str(hour).zfill(2) + '.png')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMERA_TRIO_ALLS_minusMean_noCore_INIT2_noQ_' + str(hour).zfill(2) + '.png')
+    plt.close('all')
+
+
+def plot_amsr_ERA_duo(hour):
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+    key = 'NEWTRACKING'
+
+    f = plt.figure(figsize=(7, 3), dpi=300)
+
+    names = [
+             "/coeffs_nans_stdkernel_USE_" + str(
+                 hour) + "UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p",
+             "/coeffs_nans_stdkernel_USE_" + str(
+                 hour) + "UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p"
+
+             ]
+
+    # names = ['',
+    #
+    #     "/coeffs_nans_stdkernel_USE_" + str(
+    #         hour) + "UTC_15000_2dAMERA_day0_ALLS_minusMean_INIT_noQ_" + (key) + ".p",
+    #                 "/coeffs_nans_stdkernel_USE_" + str(
+    #         hour) + "UTC_15000_2dAMERA_day+1_ALLS_minusMean_INIT_noQ_" + (key) + ".p"
+    #
+    # ]
+
+    labels = ['Day0', 'Day+1']
+
+    left = 0.01
+    bottom = 0.1
+    width = 0.3
+    height = 0.8
+
+    spot = [[]]
+
+    for ids, ll in enumerate(['day0', 'day+1']):
+
+        dic = pkl.load(
+            open(path + "/coeffs_nans_stdkernel_USE_" + str(
+                hour) + "UTC_15000_2dAMERA_" + ll + "_ALLS_minusMean_INIT_noQ_" + (key) + ".p",
+                 "rb"))
+
+        lsta = (dic['lsta'])[0] / dic['lsta'][1]
+        amsr = (dic['amsr'])[0] / dic['amsr'][1]
+        #
+        if ids >= 0:
+            dic2 = pkl.load(
+                open(path + names[ids],
+                     "rb"))
+            amsr = (dic2['amsr'])[0] / dic2['amsr'][1]
+
+        amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
+        lsta = ndimage.gaussian_filter(lsta, 10, mode='nearest')
+
+        cores = dic['cores']
+
+        lcnt = dic['lsta'][1]
+        acnt = dic['amsr'][1]
+
+        dist = 200
+        llevels = np.array(list(np.arange(-1.5, 0, 0.25)) + list(np.arange(0.25, 1.6, 0.25)))  # *12000
+        alevels = np.array(list(np.arange(-2.5, 0, 0.5)) + list(np.arange(0.5, 2.51, 0.5)))  # *12000
+        alevels = [-2.5, -2, -1.5, -1, -0.5, -0.25, 0, 0.25, 0.5, 1, 1.5, 2, 2.5]
+        alevels = [-4, -3, -2, -1, -0.5, -0.25, 0.25, 0.5, 1, 2, 3, 4]
+        llevels = np.array(list(np.arange(-1.35, 0, 0.5)) + list(np.arange(0.5, 1.36, 0.5)))  # *12000
+        llevels = [ -0.85, -0.45, 0, 0.45,0.85]
+
+        # # llevels = np.array(list(np.arange(-1.6, 0, 0.2)) + list(np.arange(0.2, 1.61, 0.2)))#*12000  WET
+        # # alevels = np.array(list(np.arange(-3, 0, 0.25)) + list(np.arange(0.25, 3.25, 0.25)))#*12000
+        #
+        # llevels = np.array(list(np.arange(-1.5, 0, 0.2)) + list(np.arange(0.2, 1.51, 0.2)))  # *12000 DRY
+        # alevels = np.array(list(np.arange(-5, 0, 0.5)) + list(np.arange(0.5, 5.5, 0.5)))  # *12000
+
+        ax = f.add_subplot(1, 2, ids + 1)
+
+        mp1 = plt.contourf((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, amsr,
+                           levels=alevels, cmap='RdBu', extend='both')  # cmap='RdBu'
+
+        cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
+                         lsta * 100,
+                         extend='both', levels=llevels, colors='k', linewidths=1, linestyles=['solid'])
+
+        plt.clabel(cs, inline=1, fontsize=8, fmt="%1.1f")
+        # plt.colorbar(label='K')
+
+        ax.set_xlabel('km')
+        if ids == 0:
+            ax.set_ylabel('km')
+
+        # if ids > 0:
+        #     ax.set_yticklabels('')
+
+        plt.axvline(x=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
+        plt.axhline(y=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
+        plt.plot(0, 0, marker='o', color='dimgrey')
+
+        plt.title(labels[ids], fontsize=10)
+
+    plt.tight_layout()
+    text = ['a', 'b', 'c']
+    plt.annotate(text[0], xy=(0.06, 0.92), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+    plt.annotate(text[1], xy=(0.55, 0.92), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+
+
+    f.subplots_adjust(right=0.87)
+    cax = f.add_axes([0.88, 0.18, 0.015, 0.73])
+    cbar = f.colorbar(mp1, cax)
+    cbar.ax.tick_params(labelsize=10)
+    cbar.set_label('%', fontsize=10)
+
+    plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMERA_TRIO_ALLS_minusMean_noCore_INIT2_noQ_' + str(hour).zfill(
+        2) + '.png')
     plt.close('all')

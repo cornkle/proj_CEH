@@ -9,7 +9,7 @@ import pandas as pd
 import ipdb
 import itertools
 from collections import OrderedDict
-from utils import constants as cnst, u_met, u_darrays as uda, u_interpolate as u_int
+from utils import constants as cnst, u_met, u_darrays as uda
 import matplotlib.pyplot as plt
 
 def olr_to_bt(olr):
@@ -180,7 +180,7 @@ def cut_box(xpos, ypos, arr, dist=None):
     return kernel
 
 
-def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, lons, lats):
+def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh):
 
     keys = vars.keys()
 
@@ -188,7 +188,15 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         print('please provide ORL first in dictionary')
         return
 
+    #load seamask
+    landsea_path = glob.glob(ancils_dir+os.sep+'landseamask*.nc')[0]
+    landsea = xr.open_dataset(landsea_path, decode_times=False)
+    ls = landsea['lsm']
 
+    ls.rlon.values = ls.rlon.values-360
+    ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
+    pos = np.where(ls_arr[0, 0, :, :] == 0)
+    lons, lats = np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
     goodinds = 0
 
     #create empty dataset
@@ -203,13 +211,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         h = (vars[v])[1]
         pl = (vars[v])[0]
-
-        inds = (vars[v][2])[0]
-        weights = (vars[v][2])[1]
-        shape = (vars[v][2])[2]
-
-
-
         derived = False
         if (v == 'shear') | (v == 'u_mid') | (v == 'u_srfc'):
             derived = v
@@ -267,37 +268,49 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                 if derived:
                     v = derived
 
+            elif (len(pl) > 1) & (vv == 'theta'):
 
-            elif (len(pl) == 1)  & (vv != 'shear'):
+                try:
+                    filepath2 = glob.glob(cp_dir + os.sep + str('q_pl') + os.sep + '*' + datestring + '*.nc')[0]
+                except IndexError:
+                    print('No file found, return')
+                    return
+                arr2 = xr.open_dataset(filepath2)
+
+                dar2 = arr2['q_pl'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
+
+                del arr2
+
+                dar2 = dar2[dar2['time.hour'] == h].squeeze()
+
+                dar2.values = np.array(dar2.values / 100).astype(float) / 1000
+
+
+                theta_up = u_met.theta_e(650, dar.sel(pressure=650).values, dar2.sel(pressure=650).values)
+                theta_low = u_met.theta_e(925, dar.sel(pressure=925).values, dar2.sel(pressure=925).values)
+                dar = dar.sum(dim='pressure').squeeze()
+                dar.values = theta_low-theta_up
+                if derived:
+                    v = derived
+
+            elif (len(pl) == 1) & (vv != 'theta') & (vv != 'shear'):
                 dar = dar.sel(pressure=pl[0]).squeeze()
-
 
             if derived:
                 v = derived
 
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
-        if v in ['lw_out_PBLtop', 'tcwv', 'lsRain']:
-            try:
-                #regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
+        try:
+            regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
+        except ValueError:
+            ipdb.set_trace()
+        da = xr.DataArray(regrid,
+                          coords={'time': dar.time, 'latitude': ls_arr.rlat.values,
+                                  'longitude': ls_arr.rlon.values, },
+                          dims=['latitude', 'longitude'])
 
-                regrid = u_int.interpolate_data(dar.values, inds, weights, shape)
 
-            except ValueError:
-                ipdb.set_trace()
-            da = xr.DataArray(regrid,
-                              coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
-                                      'longitude': pl_dummy.longitude.values, },
-                              dims=['latitude', 'longitude'])
-            da.attrs = dar.attrs
-        else:
-            da = xr.DataArray(dar.values,
-                              coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
-                                      'longitude': pl_dummy.longitude.values, },
-                              dims=['latitude', 'longitude'])
-            da.attrs = dar.attrs
-
-            #ipdb.set_trace()
-
+        da.attrs = dar.attrs
         da.values[pos[0], pos[1]] = np.nan  # mask sea
 
         if v == 'lw_out_PBLtop':
@@ -389,7 +402,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
 data_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP4fut' #cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/test'  # out directory to save MCS files
+out_path = cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-40C_TCWV'  # out directory to save MCS files
 box = [-12, 15, 5, 25]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
@@ -399,45 +412,18 @@ days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -40 # chosen temperature threshold, e.g. -50, -60, -70
 h=17
-
-
-plglob = glob.glob(data_path + '/q_pl/*.nc')
-pl_dummy = xr.open_dataset(plglob[0])
-
-srfcglob = glob.glob(data_path + '/lw_out_PBLtop/*.nc')
-srfc_dummy = xr.open_dataset(srfcglob[0])
-
-pl_dummy = pl_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-srfc_dummy = srfc_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-# load seamask
-landsea_path = glob.glob(ancils_path + os.sep + 'landseamask*.nc')[0]
-landsea = xr.open_dataset(landsea_path, decode_times=False)
-ls = landsea['lsm']
-
-ls.rlon.values = ls.rlon.values - 360
-ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-
-pos = np.where(ls_arr[0, 0, :, :] == 0)
-lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
-
-#plinds, plweights, plshape = u_int.interpolation_weights(pl_dummy.longitude, pl_dummy.latitude, ls_arr.rlon, ls_arr.rlat)
-inds, weights, shape = u_int.interpolation_weights(srfc_dummy.longitude, srfc_dummy.latitude, pl_dummy.longitude, pl_dummy.latitude)
-#regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
-
-#ipdb.set_trace()
-
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
-vars['lw_out_PBLtop'] = ([], h, (inds,weights,shape))  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
-vars['lsRain'] =  ([], h, (inds,weights,shape))   # pressure levels, hour
-vars['shear'] = ([650, 925], 12, (0, 0, 0)) # (plinds, plweights, plshape) should use 925 later
-vars['u_mid'] = ([650], 12, (0, 0, 0))
-vars['u_srfc'] = ([925], 12, (0, 0, 0))
-vars['q_mid'] = ([650], 12, (0, 0, 0))  # INPUT IN T * 100!!
-vars['t_mid'] = ([650], 12, (0, 0, 0))   # INPUT IN T * 100!!
-vars['t_srfc'] = ([850], 12, (0, 0, 0))
-vars['q_srfc'] = ([925], 12, (0, 0, 0))
-vars['tcwv'] = ([], 12, (inds,weights,shape))
-
+vars['lw_out_PBLtop'] = ([], h)  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
+vars['lsRain'] =  ([], h)   # pressure levels, hour
+vars['shear'] = ([650, 925], 12) # should use 925 later
+vars['u_mid'] = ([650], 12)
+vars['u_srfc'] = ([925], 12)
+vars['q_mid'] = ([650], 12)  # INPUT IN T * 100!!
+#vars['theta'] = ([650, 925], 12)
+vars['t_mid'] = ([650], 12)   # INPUT IN T * 100!!
+vars['t_srfc'] = ([850], 12)
+vars['q_srfc'] = ([925], 12)
+vars['tcwv'] = ([], 12)
 
 datelist = []
 for y,m,d in itertools.product(years, months, days):
@@ -452,7 +438,7 @@ for d in datelist:
         continue
 
 
-    file_save(data_path, out_path, ancils_path, vars, d, box, tthresh, pos, lons, lats)
+    file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
 
 # for d in datelist[0:10]:
 #

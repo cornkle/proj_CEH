@@ -13,6 +13,7 @@ import statsmodels.stats.proportion as stats
 from matplotlib.colors import from_levels_and_colors
 from matplotlib import colors
 from utils import constants as cnst
+import ipdb
 
 
 def scale_T_p():
@@ -129,8 +130,10 @@ def probability(precip=None,thresh=None):
     if thresh == None:
         thresh = 30
 
-    fpath = cnst.network_data + '/data/papers/wavelet/figs/paper/'
-    path = cnst.network_data + '/data/papers/wavelet/saves/pandas/'
+    source = '/media/ck/TOURO/DIR/cornkle/' #cnst.network_data/data/
+
+    fpath =  source + '/data/papers/wavelet/figs/paper/'
+    path = source + 'papers/wavelet/saves/pandas/'
 
     dic = pkl.load(open(path + '3dmax_gt15000_lax_nonan_dominant.p', 'rb')) #noR lax_nonan
 
@@ -145,6 +148,9 @@ def probability(precip=None,thresh=None):
     psum = np.array(dic[precip])
     tmin = np.array(dic['circle_t'])
     pcsum=np.array(dic['circle_p'])
+
+    max = np.array(dic['circle_max'])[(np.array(dic['scale']) <= 65) & (np.array(dic['circle_Tcentre']) <= -80)]
+    ipdb.set_trace()
 
 
     pp = np.concatenate(psum)

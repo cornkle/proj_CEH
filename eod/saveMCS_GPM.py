@@ -61,7 +61,7 @@ def saveMCS_WA15(YRANGE):
 
                 da = t['HQprecipitation'].squeeze()
                 da = da.T
-                tdic = da.sel(lat=slice(4.5,20), lon=slice(-12,12))
+                tdic = da.sel(lat=slice(5,25), lon=slice(-12,15))   #[-12, 15, 5, 25]
 
                 if np.sum(tdic.values) <= 0.01:
                     continue
@@ -119,7 +119,7 @@ def saveMCS_WA15(YRANGE):
 
                 lon1 = mdic['lon'].values
                 lat1 = mdic['lat'].values
-                mdic['t'].values[mdic['t'].values >= -50] = 0  # T threshold -10
+                mdic['t'].values[mdic['t'].values >= -40] = 0  # T threshold -10
                 labels, numL = label(mdic['t'].values)
 
                 u, inv = np.unique(labels, return_inverse=True)
@@ -225,7 +225,7 @@ def saveMCS_WA15(YRANGE):
                     da.attrs['area'] = sum(mmask.flatten())
                     da.attrs['area_cut'] = sum(mask2)
                     da.close()
-                    savefile = cnst.network_data + 'MCSfiles/WA5000_4-20N_12W-12E_-50_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+                    savefile = cnst.network_data + 'MCSfiles/WA5000_5-25N_12W-15E_-40_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
                     try:
                         os.remove(savefile)
                     except OSError:
