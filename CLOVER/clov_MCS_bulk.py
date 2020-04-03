@@ -37,7 +37,7 @@ def dictionary():
 def perSys():
 
     pool = multiprocessing.Pool(processes=4)
-    tthresh = '-50'
+    tthresh = '-40'
     files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-8N_12W-12E_-50_afternoon_GPM_old/*.nc')
     #ipdb.set_trace()
 
@@ -121,6 +121,7 @@ def file_loop(f):
     era_day = era_day.sel(latitude=elat, longitude=elon , method='nearest')
 
     e925 = era_day.sel(level=925).mean()
+    e850 = era_day.sel(level=850).mean()
     elow = era_day.sel(level=slice(925,850)).mean('level').mean()
     e650 = era_day.sel(level=650).mean()
     emid = era_day.sel(level=slice(600,700)).mean('level').mean()
@@ -133,7 +134,7 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -50  # -40C ~ 167 W m-2
+    t_thresh = -40  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
     mask_area = (outt<=t_thresh) & np.isfinite(outt)
     mask70 = (outt<=-70) & np.isfinite(outt)

@@ -154,8 +154,8 @@ def plot_timeseries_coarse():
         if (fids <= 1):
             dpos = np.where((diff['lsta0']*-1)[:,-1] >=1.5)
             y=dpos[0]
-            line1 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=4., color='k', alpha=1, zorder=98)
-            line2 = lines.Line2D(np.array([ranges[-1]]*len(y)), y, lw=3., color='grey', alpha=1, zorder=99)
+            line1 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=5., color='k', alpha=1, zorder=98)
+            line2 = lines.Line2D(np.array([ranges[-1]]*len(y)), y, lw=4., color='white', alpha=1, zorder=99)
             line1.set_clip_on(False)
             line2.set_clip_on(False)
             ax.add_line(line1)
@@ -172,8 +172,8 @@ def plot_timeseries_coarse():
             dpos = np.where((diff['lsta0'])[:, -1] >= 0.1)
 
             y = (dpos[0])[dpos[0]>35]
-            line1 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=4., color='k', alpha=1, zorder=98)
-            line2 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=3., color='grey', alpha=1, zorder=99)
+            line1 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=5., color='k', alpha=1, zorder=98)
+            line2 = lines.Line2D(np.array([ranges[-1]] * len(y)), y, lw=4., color='white', alpha=1, zorder=99)
             line1.set_clip_on(False)
             line2.set_clip_on(False)
             ax.add_line(line1)
@@ -219,7 +219,8 @@ def plot_timeseries_coarse():
         plt.axvline(x=-29, color='slategrey')
         plt.axhline(y=50, color='slategrey')
         plt.plot(-5, 50, 'ko')
-        plt.plot(0, 50, 'ro')
+        #plt.plot(0, 50, 'ro')
+        plt.plot(0, 50, marker='o', color='dimgrey')
 
         ax.set_yticklabels(np.array((np.linspace(0, 100, 6) - 50) * 12, dtype=int))
         if (fids == 0):
@@ -241,8 +242,8 @@ def plot_timeseries_coarse():
         # if fids ==1:
         #     th = ((diff2['theta']) - diff2['theta_clim']) - ((diff2['theta_e'] - diff2['theta_e']))
 
-        contours = plt.contour(ranges, yax, th, colors='white',
-                                linewidths=2, levels=[0.4,0.8,1.2,1.6,2,2.4])#) #,
+        contours = plt.contour(ranges, yax, th, colors='k',
+                                linewidths=1.2, levels=[0.4,0.8,1.2,1.6,2,2.4])#) #,
         plt.clabel(contours, inline=True, fontsize=8, fmt='%1.1f')
 
         # cs = plt.contour(ranges, yax, (diff['probmsg'])*100,
@@ -254,7 +255,8 @@ def plot_timeseries_coarse():
         plt.axvline(x=-29, color='slategrey')
         plt.axhline(y=50, color='slategrey')
         plt.plot(-5, 50, 'ko')
-        plt.plot(0, 50, 'ro')
+        #plt.plot(0, 50, 'ro')
+        plt.plot(0, 50, marker='o', color='dimgrey')
 
         ax.set_yticklabels(np.array((np.linspace(0, 100, 6) - 50) *12 , dtype=int))
 
@@ -281,7 +283,7 @@ def plot_timeseries_coarse():
     plt.annotate(text[5], xy=(0.67, 0.48), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=fs)
 
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_ALL20_NEWTRACKING2.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_amsre_"+str(h).zfill(2)+'_timeseries_ALL20_NEWTRACKING2_new.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 

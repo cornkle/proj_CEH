@@ -13,6 +13,8 @@ from utils import u_met
 import cartopy
 import pdb
 from utils import constants as cnst
+from metpy import calc
+from metpy.units import units
 
 def dictionary():
 
@@ -36,8 +38,8 @@ def dictionary():
 def perSys():
 
     pool = multiprocessing.Pool(processes=4)
-    tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_18UTC_5000km2_-50_5-20N')  #CP25_-50C_5000km2
+    tthresh = '-40'
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_16-19UTC_future_5000km2_-40C_TCWV')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
@@ -47,7 +49,6 @@ def perSys():
     # for f in files:
     #     res.append(file_loop(f))
     #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
 
     keys = mdic.keys()
     for v in res:
@@ -59,25 +60,7 @@ def perSys():
                 continue
 
 
-        # if v[2]*25 > 1000000:
-        #     tplt = v[9]
-        #     tplt[np.where(tplt==np.nan)]=0
-            # f = plt.figure()
-            # ax = plt.axes(projection=ccrs.PlateCarree())
-            # plt.contourf(v[10], v[11], tplt, transform=ccrs.PlateCarree())
-            # ax.coastlines()
-            # plt.colorbar()
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
-
-
-    # f = plt.figure()
-    # siz = 3
-    #
-    # ax = f.add_subplot(1, 1, 1)
-    # plt.scatter(mdic['tmin'], mdic['pmax'])
-    # plt.title('bulk', fontsize=9)
-
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA5_WA_5-20N.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA5_30km_WA_5-20N_-40C_TCWV_fut.p',
                            'wb'))
     print('Saved file')
 
@@ -92,15 +75,28 @@ def file_loop(f):
         outp = dic['lsRain'].values
     except KeyError:
         outp = dic['totRain'].values
-
-    try:
-        outu_srfc = dic['u_srfc'].values
-    except KeyError:
-        print('Vars missing, return')
-        return
+    outu_srfc = dic['u_srfc'].values
     outu_mid = dic['u_mid'].values
     outshear = dic['shear'].values
-    outq = dic['q_pl'].values
+    outq = dic['q_srfc'].values
+    tmid = dic['t_mid'].values
+    tsrfc = dic['t_srfc'].values
+
+    pes = units.Quantity(650, 'hPa')
+    tes = units.Quantity(tmid+273.15, 'K')
+
+    theta_low = u_met.theta_e(925, tsrfc, outq/1000.)
+
+    theta_es = calc.saturation_equivalent_potential_temperature(pes, tes)
+
+    theta = theta_low-(np.array(theta_es)-273.15)
+    tcwv = dic['tcwv'].values
+    tgrad = dic.attrs['Tgrad']
+    tdiff = dic.attrs['Tgradbox']
+
+    print(theta)
+
+    #ipdb.set_trace()
 
     out['lon'] = dic['longitude'].values
     out['lat'] = dic['latitude'].values
@@ -109,29 +105,56 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -50  # -40C ~ 167 W m-2
+    t_thresh = -40  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
+    antimask = ~mask
+
+    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid]:
+        var[antimask] = np.nan
+
 
     if np.sum(mask) < 3:
-        print('Not enough valid, return')
         return
-    out['area'] = np.sum(mask)
+
+    maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
+    minpos = np.unravel_index(np.nanargmin(outt), outt.shape)
+
+    out['area'] = np.sum((outt<=t_thresh))
 
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
-    out['tmin'] = np.min(outt[mask])
+    out['tmin'] = np.nanmin(outt)
     out['tmean'] = np.mean(outt[mask])
-    out['pmax'] = np.max(outp[mask])
+    out['tgrad'] = tgrad
+    out['tdiff'] = tdiff
+
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 30km
+
+    #out['pmax'] = np.max(outp[mask]) # rain at 4.4km
     out['pmean'] = np.mean(outp[mask])
-    out['qmax'] = np.max(outq[mask])
-    out['qmean'] = np.mean(outq[mask])
+    out['qmax'] = np.nanmean(ua.cut_kernel(outq,minpos[1], minpos[0],3)) #np.max(outq[mask]) #30km q and shear
+
+    out['qmean'] = np.nanmean(outq[mask])
     out['umax_srfc'] = np.max(outu_srfc[mask])
-    out['umean_srfc'] = np.mean(outu_srfc[mask])
+    out['umean_srfc'] = np.nanmean(outu_srfc[mask])
     out['umin_mid'] = np.min(outu_mid[mask])
     out['umean_mid'] = np.mean(outu_mid[mask])
-    out['shearmin'] = np.min(outshear[mask])
-    out['shearmean'] = np.mean(outshear[mask])
+
+    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minpos[1], minpos[0],3))
+
+    out['shearmean'] = np.mean(outu_mid[mask]) - np.nanmean(outu_srfc[mask]) #np.mean(outshear[mask])
+    #out['thetamax'] = np.max(theta[mask])
+
+    out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
+    out['tcwv'] = np.nanmean(ua.cut_kernel(tcwv, minpos[1], minpos[0], 3))
+    out['tcwvmean'] = np.mean(tcwv[mask])
+
+    out['thetamean'] = np.mean(theta[mask])
+    out['tmidmax'] = np.max(tmid[mask])
+    out['tmidmean'] = np.mean(tmid[mask])
+    out['tsrfcmax'] = np.max(tsrfc[mask])
+    out['tsrfcmean'] = np.mean(tsrfc[mask])
 
     out['pgt30'] = np.sum(outp[mask]>30)
     out['isvalid'] = np.sum(mask)

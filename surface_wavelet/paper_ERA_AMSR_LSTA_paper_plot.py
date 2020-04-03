@@ -365,8 +365,6 @@ def plot_amsr_paper_trio(h, eh):
     print('NUMBER CORES ', np.max(dic4['cnte']))
 
 
-
-
     extent = (dic['lsta0'].shape[1]-1)/2
     xlen = dic['lsta0'].shape[1]
     ylen = dic['lsta0'].shape[0]
@@ -379,21 +377,33 @@ def plot_amsr_paper_trio(h, eh):
     u = (dic2['u925']/ dic2['cnte'])[4::st, 4::st]
     v = (dic2['v925']/ dic2['cnte'])[4::st, 4::st]
     levels = list(np.arange(-2.7,-0.1,0.3)) + list(np.arange(0.3,2.71,0.3))
-    qlevels = list(np.round(np.arange(-0.6, -0.01, 0.05),2)) + list(np.round(np.arange(0.05, 0.61, 0.05),2))
+    qlevels = list(np.round(np.arange(-0.55, -0.01, 0.05),2)) + list(np.round(np.arange(0.05, 0.56, 0.05),2))
     divlevels = list(np.arange(-0.8, -0.01, 0.1)) + list(np.arange(0.1, 0.805, 0.1))
-    f = plt.figure(figsize=(12,2.9), dpi=300)
+    f = plt.figure(figsize=(15.8,4), dpi=250)
 
 
     ax1 = f.add_subplot(131)
     amsr = ndimage.gaussian_filter(((dic2['lsta0']) / (dic2['cnt0'])), 2, mode='nearest')
-    vals = np.percentile(amsr,[10,90])
+    vals = np.percentile(amsr,[8,92])
     mask = (amsr <= vals[0]) | (amsr >= vals[1])
 
     plt.contourf(amsr, extend='both', cmap='RdBu',
                  levels=levels)  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='%')
-    plt.contourf(mask, colors='none', hatches='...',
-                 levels=[0.5, 1], linewidth=0.1)
+    cbar = plt.colorbar()
+    cbar.ax.tick_params(labelsize=12)
+    cbar.ax.set_ylabel(r'%', size=12)
+
+    plt.contour(amsr, extend='both', colors='k',
+                 levels=levels, linewidths=0.05)
+    cb=plt.contourf(mask, colors='none', hatches='.',
+                 levels=[0.5, 1])
+    for i, collection in enumerate(cb.collections):
+        collection.set_edgecolor('peachpuff')
+    for collection in cb.collections:
+        collection.set_linewidth(0.)
+
+    # stpos = np.where(mask)
+    # plt.scatter(stpos[1][::60], stpos[0][::60], color='white', s=0.5)
 
     lev = [-0.6, -0.5, -0.4,-0.3, -0.2, 0, 0.2,0.3, 0.4, 0.5,0.6]
     #lev = list(np.arange(-2.7,-0.1,0.3)) + list(np.arange(0.3,2.71,0.3))
@@ -408,21 +418,21 @@ def plot_amsr_paper_trio(h, eh):
     #                        colors='r',linestyles = 'solid', linewidths = 1)
 
 
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.1f')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.axhline(y=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.plot(extent, extent, marker='o', color='dimgrey')
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_xlabel('km')
-    ax1.set_ylabel('km')
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_xlabel('km', fontsize=12)
+    ax1.set_ylabel('km', fontsize=12)
     #plt.title('AMSR-E Day0, contours: 925hPa temperature anomaly', fontsize=9)
 
     ax1 = f.add_subplot(133)
     qq = ((dic['q']-dic['qclim'])*1000/ dic['cnte'])
     qq = ndimage.gaussian_filter(qq, 3, mode='nearest')
-    vals = np.percentile(qq,[10,93])
+    vals = np.percentile(qq,[9,95])
     #vals = dic3['qclim']*1000 / dic3['cnte']
 
     #tval, pval = ustats.welch_t_test(dic['q']/dic['cnte'], dic3['q']/dic3['cnte'], 5000, dic['qclim']/dic3['cnte'], dic3['qclim']/dic3['cnte'],50)
@@ -430,36 +440,57 @@ def plot_amsr_paper_trio(h, eh):
 
 
     plt.contourf(qq, extend='both',  cmap='RdBu',levels=qlevels) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
-    plt.colorbar(label='g kg-1')
-    plt.contourf(mask, colors='none', hatches='...',
-                 levels=[0.5, 1], linewidth=0.1)
+    cbar = plt.colorbar()
+    cbar.ax.tick_params(labelsize=12)
+    cbar.ax.set_ylabel(r'g kg$^{-1}$', size=12)
+
+    plt.contour(qq, extend='both', colors='k',
+                 levels=qlevels, linewidths=0.05)
+
+    cb=plt.contourf(mask, colors='none', hatches='.',
+                 levels=[0.5, 1])
+    for i, collection in enumerate(cb.collections):
+        collection.set_edgecolor('peachpuff')
+    for collection in cb.collections:
+        collection.set_linewidth(0.)
+
     shear = ndimage.gaussian_filter((dic3['shear'] / dic3['cnte']), 3, mode='nearest')
     contours = plt.contour(shear, extend='both',levels=np.arange(-15.25,-12.75,0.5), colors='k', linestyles='solid', linewidths=1) #np.arange(-15,-10,0.5)
 
     # contours = plt.contour((dic2['u650']-dic2['u650_clim']) / dic2['cnte'], extend='both', levels=np.arange(-2, 2, 0.3), colors='k',
     #                        linestyles='solid', linewidths=1)  # np.arange(-15,-10,0.5)
 
-    plt.clabel(contours, inline=True, fontsize=9, fmt='%1.2f')
+    plt.clabel(contours, inline=True, fontsize=11, fmt='%1.2f')
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.axhline(y=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.plot(extent, extent, marker='o', color='dimgrey')
     #qu = ax1.quiver(xquiv, yquiv, u, v, scale=50)
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_xlabel('km')
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_xlabel('km', fontsize=12)
     #ax1.set_ylabel('km')
     #plt.title('shading: 925hPa q anomaly, contours: 650hPa-925hPa wind shear ', fontsize=9)
 
     ax1 = f.add_subplot(132)
  #   plt.contourf(((dic['lsta'])/ dic['cnt']), extend='both',  cmap='RdBu_r', vmin=-1.5, vmax=1.5) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     div = ndimage.gaussian_filter(((dic2['div'])/ dic2['cnte'])*100, 3, mode='nearest')
-    vals = np.percentile(div,[10,90])
+    vals = np.percentile(div,[9,91])
     #ipdb.set_trace()
     plt.contourf(div, extend='both',  cmap='RdBu', levels=divlevels) # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     mask =  (div <= vals[0])
-    plt.colorbar(label=r'10$^{-3}$s$^{-1}$')
-    plt.contourf(mask, colors='none', hatches='...',
-                 levels=[0.5, 1], linewidth=0.1)
+    cbar = plt.colorbar()
+    cbar.ax.tick_params(labelsize=12)
+    cbar.ax.set_ylabel(r'10$^{-3}$s$^{-1}$', size=11)
+
+    plt.contour(div, extend='both', colors='k',
+                 levels=divlevels, linewidths=0.05)
+
+    cb = plt.contourf(np.arange(mask.shape[1])[::15], np.arange(mask.shape[0])[::15], mask[::15,::15], colors='none', hatches='.',
+                 levels=[0.5, 1])
+    for i, collection in enumerate(cb.collections):
+        collection.set_edgecolor('peachpuff')
+    for collection in cb.collections:
+        collection.set_linewidth(0.)
 
     v925 = ndimage.gaussian_filter(dic3['v925_orig'] / dic3['cnte'], 3, mode='nearest')
     plt.contour(v925, extend='both', colors='k', linewidths=5,
@@ -481,7 +512,7 @@ def plot_amsr_paper_trio(h, eh):
     #cs = plt.contour(np.arange(0,400, 8),np.arange(0,400,8),itd, extend='both', colors='r', linewidths=2) #
     cs = plt.contour( itd, extend='both', colors='k', linewidths=0.5, levels=[24.9,30,35], linestyles='dashed')
     cs = plt.contourf(itd, colors='lightgrey',levels=[24.9, 31, 35], alpha=0.27)
-    plt.clabel(cs, inline=True, fontsize=9, fmt='%1.0f')
+    plt.clabel(cs, inline=True, fontsize=11, fmt='%1.0f')
 
     plt.axvline(x=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
     plt.axhline(y=200, linestyle='dashed', color='dimgrey', linewidth=1.2)
@@ -492,23 +523,23 @@ def plot_amsr_paper_trio(h, eh):
     qk = plt.quiverkey(qu, 0.9, 0.03,1, r'1 m s$^{-1}$',
                        labelpos='E', coordinates='figure')
 
-    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -100) * 6, dtype=int))
-    ax1.set_xlabel('km')
+    ax1.set_xticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_yticklabels(np.array((np.linspace(0, extent*2, 9) -200) * 3, dtype=int))
+    ax1.set_xlabel('km', fontsize=12)
     #ax1.set_ylabel('km')
     #plt.title('shading: divergence, vectors: 925hPa wind anomaly', fontsize=9)
 
     plt.tight_layout()
     text = ['a', 'b', 'c']
     plt.annotate(text[0], xy=(0.006, 0.92), xytext=(0, 4),xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
-    plt.annotate(text[1], xy=(0.34, 0.92), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=16)
+    plt.annotate(text[1], xy=(0.33, 0.92), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=16)
     plt.annotate(text[2], xy=(0.66, 0.92), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=16)
 
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+"_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+"_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'-NEW.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
     # plt.figure()

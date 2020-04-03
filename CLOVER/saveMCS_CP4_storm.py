@@ -219,7 +219,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             derived = v
             v = 'q_pl'
 
-        if (v == 't_srfc') | (v == 't_mid') |  (v == 'theta'):
+        if (v == 't_srfc') | (v == 't_mid') |  (v == 'theta')|  (v == 't_low'):
             derived = v
             v = 't_pl'
 
@@ -345,7 +345,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         dbox = ds.copy(deep=True)
 
-        tgrad = dbox['t_srfc'].sel(longitude=slice(lonmin,lonmax)).mean('longitude')
+        tgrad = dbox['t_low'].sel(longitude=slice(lonmin,lonmax)).mean('longitude')
 
         tmin = np.nanargmin(tgrad.values)
         tmax = np.nanargmax(tgrad.values)
@@ -355,8 +355,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         dbox.attrs['Tgrad'] = lingress['slope'].values
 
-        tgrad2 = dbox['t_srfc'].sel(longitude=slice(lonmin, lonmax), latitude=slice(10,20)).mean(['longitude', 'latitude'])- \
-        dbox['t_srfc'].sel(longitude=slice(lonmin, lonmax), latitude=slice(5,7)).mean(['longitude', 'latitude'])
+        tgrad2 = dbox['t_low'].sel(longitude=slice(lonmin, lonmax), latitude=slice(10,20)).mean(['longitude', 'latitude'])- \
+        dbox['t_low'].sel(longitude=slice(lonmin, lonmax), latitude=slice(5,7)).mean(['longitude', 'latitude'])
         dbox.attrs['Tgradbox'] = tgrad2.values
 
 
@@ -432,7 +432,8 @@ vars['u_mid'] = ([650], 12, (0, 0, 0))
 vars['u_srfc'] = ([925], 12, (0, 0, 0))
 vars['q_mid'] = ([650], 12, (0, 0, 0))  # INPUT IN T * 100!!
 vars['t_mid'] = ([650], 12, (0, 0, 0))   # INPUT IN T * 100!!
-vars['t_srfc'] = ([850], 12, (0, 0, 0))
+vars['t_low'] = ([850], 12, (0, 0, 0))
+vars['t_srfc'] = ([925], 12, (0, 0, 0))
 vars['q_srfc'] = ([925], 12, (0, 0, 0))
 vars['tcwv'] = ([], 12, (inds,weights,shape))
 

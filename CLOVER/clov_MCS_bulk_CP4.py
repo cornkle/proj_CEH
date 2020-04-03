@@ -26,6 +26,8 @@ def dictionary():
             'tmin', 'tmean', 'thetamean', 'thetamax', 'tmidmax', 'tmidmean', 'tsrfcmax', 'tsrfcmean',
             'pmax', 'pmean',
             'qmax' , 'qmean',
+            'tcwv', 'tcwvmean',
+            'tgrad', 'tdiff',
             'umax_srfc', 'umean_srfc',
             'umin_mid', 'umean_mid',
             'shearmin', 'shearmean',
@@ -39,9 +41,9 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=4)
-    tthresh = '-50'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
+    pool = multiprocessing.Pool(processes=2)
+    tthresh = '-40'
+    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-40C_TCWV') # CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
     print('Nb files', len(files))
     mdic = dictionary() #defaultdict(list)
     res = pool.map(file_loop, files)
@@ -80,7 +82,7 @@ def perSys():
     # plt.scatter(mdic['tmin'], mdic['pmax'])
     # plt.title('bulk', fontsize=9)
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_p13.p',
+    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_-40C_TCWV_fut.p',
                            'wb'))
 
 
@@ -109,6 +111,9 @@ def file_loop(f):
     theta_es = calc.saturation_equivalent_potential_temperature(pes, tes)
 
     theta = theta_low-(np.array(theta_es)-273.15)
+    tcwv = dic['tcwv'].values
+    tgrad = dic.attrs['Tgrad']
+    tdiff = dic.attrs['Tgradbox']
 
     print(theta)
 
@@ -121,7 +126,7 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -50  # -40C ~ 167 W m-2
+    t_thresh = -40  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
     antimask = ~mask
 
@@ -134,8 +139,6 @@ def file_loop(f):
 
     maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
     minpos = np.unravel_index(np.nanargmin(outt), outt.shape)
-    minshear = np.unravel_index(np.nanargmin(outshear), outt.shape)
-    maxq = np.unravel_index(np.nanargmax(outq), outt.shape)
 
     out['area'] = np.sum((outt<=t_thresh))
 
@@ -144,7 +147,8 @@ def file_loop(f):
 
     out['tmin'] = np.nanmin(outt)
     out['tmean'] = np.mean(outt[mask])
-
+    out['tgrad'] = tgrad
+    out['tdiff'] = tdiff
 
     out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 30km
 
@@ -158,13 +162,14 @@ def file_loop(f):
     out['umin_mid'] = np.min(outu_mid[mask])
     out['umean_mid'] = np.mean(outu_mid[mask])
 
-
     out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minpos[1], minpos[0],3))
 
-    out['shearmean'] = np.mean(outshear[mask])
+    out['shearmean'] = np.mean(outu_mid[mask]) - np.nanmean(outu_srfc[mask]) #np.mean(outshear[mask])
     #out['thetamax'] = np.max(theta[mask])
 
     out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
+    out['tcwv'] = np.nanmean(ua.cut_kernel(tcwv, minpos[1], minpos[0], 3))
+    out['tcwvmean'] = np.mean(tcwv[mask])
 
     out['thetamean'] = np.mean(theta[mask])
     out['tmidmax'] = np.max(tmid[mask])

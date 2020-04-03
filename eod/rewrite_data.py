@@ -645,7 +645,7 @@ def rewrite_topo():
 
 
 def rewrite_CP4_TCWV():
-    tags = ['CP4hist', 'CP4fut', 'CP25hist', 'CP25fut']
+    tags = ['CP4fut', 'CP25hist']  #'CP4hist',  , 'CP25fut'
     for t in tags:
         path = '/media/ck/Elements/Africa/WestAfrica/CP4/'+t+'/'
 

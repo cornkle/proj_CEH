@@ -24,7 +24,7 @@ HOD = range(24)  # hours of day
 def multi():
     pool = multiprocessing.Pool(processes=5)
 
-    res = pool.map(saveMCS_WA15, range(2004,2019))
+    res = pool.map(saveMCS_WA15, range(2017,2019))
 
 
 

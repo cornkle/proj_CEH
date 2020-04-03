@@ -18,7 +18,7 @@ def dictionary():
     dic = {}
     vars = ['hour', 'month', 'year', 'area',
             'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean',
+            'tmin', 'tmean', 'tcwv', 'tgrad', 'tbox',
             'pmax', 'pmean',
             'q925', 'q650',
             'u925', 'u650',
@@ -39,9 +39,9 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=4)
-    tthresh = '-50'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_4-20N_12W-12E_-50_afternoon_GPM/*.nc')
+    pool = multiprocessing.Pool(processes=5)
+    tthresh = '-40'
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_12W-15E_-40_afternoon_GPM/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
@@ -51,11 +51,14 @@ def perSys():
 
     #
     # res = []
-    # for f in files[0:100]:
+    # for f in files[0:200]:
     #     out = file_loop(f)
     #     res.append(out)
-    #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
+    # ipdb.set_trace()
+    # res = [item for sublist in res for item in sublist]  # flatten list of lists
+
+    pkl.dump(res, open(cnst.network_data + 'data/CLOVER/saves/ERA5_res.p',
+                           'wb'))
 
     keys = mdic.keys()
     for v in res:
@@ -65,26 +68,8 @@ def perSys():
             except TypeError:
                 continue
 
-        # if v[2]*25 > 1000000:
-        #     tplt = v[9]
-        #     tplt[np.where(tplt==np.nan)]=0
-            # f = plt.figure()
-            # ax = plt.axes(projection=ccrs.PlateCarree())
-            # plt.contourf(v[10], v[11], tplt, transform=ccrs.PlateCarree())
-            # ax.coastlines()
-            # plt.colorbar()
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
 
-
-    # f = plt.figure()
-    # siz = 3
-    #
-    # ax = f.add_subplot(1, 1, 1)
-    # plt.scatter(mdic['tmin'], mdic['pmax'])
-    # plt.title('bulk', fontsize=9)
-
-    #ipdb.set_trace()
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-20N_p15.p',
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-25N_p15_-40C_TCWV.p',
                            'wb'))
 
 
@@ -94,6 +79,9 @@ def file_loop(f):
     dic = xr.open_dataset(f)
     edate = pd.Timestamp(dic.time.values)
 
+    if np.nanmin(dic['tc_lag0'].values) > -55:
+        return
+
     if edate.hour < 17:
         return
 
@@ -102,14 +90,18 @@ def file_loop(f):
     except:
         print('ERA5 missing')
         return
-    #era_srfc = xr.open_dataset(cnst.ERA5_HOURLY_SRFC+'ERA5_'+str(dic['time.year'].values)+'_'+str(dic['time.month'].values).zfill(2)+'_srfc.nc')
+    try:
+        era_srfc = xr.open_dataset(cnst.ERA5_HOURLY_SRFC+'ERA5_'+str(dic['time.year'].values)+'_'+str(dic['time.month'].values).zfill(2)+'_srfc.nc')
+    except:
+        print('ERA5 srfc missing')
+        return
     era_pl = uda.flip_lat(era_pl)
-    #era_srfc = uda.flip_lat(era_srfc)
+    era_srfc = uda.flip_lat(era_srfc)
 
     edate = edate.replace(hour=12, minute=0)
 
-    era_pl_day = era_pl.sel(time=edate, longitude=slice(-13,13), latitude=slice(4,22))
-    #era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-13, 13), latitude=slice(4, 22))
+    era_pl_day = era_pl.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
+    era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
 
     #ipdb.set_trace()
      # try:
@@ -136,14 +128,18 @@ def file_loop(f):
     elon = dic['lon'].values[tminpos]
     elat = dic['lat'].values[tminpos]
 
-    era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest')
+    era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest') # take point of minimum T
+    era_day_srfc = era_srfc_day.sel(latitude=elat, longitude=elon , method='nearest') # take point of minimum T
 
-    del era_pl_day
+    del era_srfc_day
 
     e925 = era_day.sel(level=925).mean()
+
+    e850 = era_pl_day['t'].sel(level=850)
     elow = era_day.sel(level=slice(925,850)).mean('level').mean()
     e650 = era_day.sel(level=650).mean()
     emid = era_day.sel(level=slice(600,700)).mean('level').mean()
+    srfc = era_day_srfc.mean()
 
 
     out['lon'] = dic['lon'].values
@@ -153,7 +149,7 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -50  # -40C ~ 167 W m-2
+    t_thresh = -40  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
     mask_area = (outt<=t_thresh) & np.isfinite(outt)
     mask70 = (outt<=-70) & np.isfinite(outt)
@@ -178,6 +174,28 @@ def file_loop(f):
     maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
     out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) #np.max(outp[mask])
     out['pmean'] = np.mean(outp[mask])
+
+    dbox = e850.copy(deep=True)
+    minlon = era_pl_day.sel(latitude=8, longitude=np.min(out['lon']), method='nearest')
+    maxlon = era_pl_day.sel(latitude=8, longitude=np.max(out['lon']), method='nearest')
+
+    del era_pl_day
+
+    tgrad = dbox.sel(longitude=slice(minlon.longitude.values, maxlon.longitude.values)).mean('longitude')
+
+    tmin = np.nanargmin(tgrad.values)
+    tmax = np.nanargmax(tgrad.values)
+    tgrad = tgrad.isel(latitude=slice(tmin, tmax))
+
+    lingress = uda.linear_trend_lingress(tgrad)
+
+    out['tgrad'] = lingress['slope'].values
+
+    tgrad2 = dbox.sel(longitude=slice(np.min(out['lon']), np.max(out['lon'])), latitude=slice(10, 20)).mean(
+        ['longitude', 'latitude']) - \
+             dbox.sel(longitude=slice(np.min(out['lon']), np.max(out['lon'])), latitude=slice(5, 7)).mean(['longitude', 'latitude'])
+    out['tbox'] = tgrad2.values
+
     try:
         out['q925'] =float(e925['q'])
     except TypeError:
@@ -200,15 +218,16 @@ def file_loop(f):
     out['div650'] = float(e650['d'])
     out['q_low'] = float(elow['q'])
     out['q_mid'] = float(emid['q'])
+    out['tcwv'] = float(srfc['tcwv'])
 
     out['shear'] = float(e650['u']-e925['u'])
 
     theta_down = u_met.theta_e(925,e925['t']-273.15, e925['q'])
     theta_up = u_met.theta_e(650,e650['t']-273.15, e650['q'])
 
-    out['dtheta'] =  theta_down-theta_up
-    out['thetaup'] = theta_up
-    out['thetadown'] = theta_down
+    out['dtheta'] =  (theta_down-theta_up).values
+    out['thetaup'] = theta_up.values
+    out['thetadown'] = theta_down.values
 
     out['pgt30'] = np.sum(outp[mask]>=30)
     out['isvalid'] = np.sum(mask)
