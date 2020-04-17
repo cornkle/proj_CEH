@@ -35,6 +35,9 @@ ERA5 = local_data + 'ERA5/'
 ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
 ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
 
+
+ERA5_MONTHLY_PL_SYNOP_HU = elements_drive + 'SouthAmerica/ERA5/monthly/pressure_levels/synop'
+
 ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
 ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
 
