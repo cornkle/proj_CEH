@@ -6,6 +6,16 @@ import matplotlib.pyplot as plt
 import bottleneck
 import scipy
 import ipdb
+import salem
+
+
+
+def coarsen(data, factor):
+    grid = data.salem.grid.regrid(factor=factor)
+    coarse = grid.lookup_transform(data)
+    grid = grid.to_dataset()
+    da = xr.DataArray(coarse, coords=[data['time'], grid['y'], grid['x']], dims=['time', 'lat', 'lon'])
+    return da
 
 
 def shift_lons(ds, lon_dim='lon', save=False):

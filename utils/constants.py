@@ -37,6 +37,8 @@ ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_mon
 
 
 ERA5_MONTHLY_PL_SYNOP_HU = elements_drive + 'SouthAmerica/ERA5/monthly/pressure_levels/synop'
+ERA5_HOURLY_PL_HU = elements_drive + 'SouthAmerica/ERA5/hourly/pressure_levels/'
+ERA5_HOURLY_SRFC_HU = elements_drive + 'SouthAmerica/ERA5/hourly/surface/'
 
 ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
 ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
@@ -96,6 +98,7 @@ TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 CMORPH = network_data + 'data/OBS/CMORPH/CMORPH_nc/'
 
 GRIDSAT = local_data + 'GRIDSAT/MCS18/'
+GRIDSAT_PERU = local_data + 'GRIDSAT/MCS18_peru/'
 GRIDSAT_RAW = local_data + 'GRIDSAT/'
 CHIRPS = network_data + 'data/OBS/CHIRPS/'
 CHIRPS_MONTHLY = network_data + 'data/OBS/CHIRPS/monthly/'

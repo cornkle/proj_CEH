@@ -60,7 +60,7 @@ def read_oldSahel(h):
 
 
 
-def read_NFLICSstorm(h):
+def read_NFLICSstorm(h):  # from core files
     pdic = pd.read_csv(
         '/home/ck/DIR/cornkle/data/NFLICS/tables/coresPower_MSG_-40_700km2_-50points_dominant_vcores_14-4W_'+str(h).zfill(2)+'UTC.csv',
         na_values=[-999])
@@ -76,7 +76,7 @@ def run():
     hours = np.arange(15,21)
 
     pool = multiprocessing.Pool(processes=4)
-    hours = [15,16,18,19,20,21,22,23]#,0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+    hours = [15,16,17,18,19,20,21,22,23]#,0,1,2,3,4,5,6,7,8,9,10,11,12,13]
     res = pool.map(read_lsta, hours)
     pool.close()
 
@@ -123,7 +123,7 @@ def cut_kernel_lsta(xpos, ypos, arr, h):
 def read_lsta(h):
 
     path = cnst.network_data + '/data/NFLICS/tables/prob_dictionary/'
-    dic = read_SahelStorm(h)
+    dic = read_NFLICSstorm(h)
 
     tab = dic[dic.hour == h]
     # tab = tab[::400]
@@ -252,10 +252,11 @@ def read_lsta(h):
             randy = np.random.randint(ymin, ymax, 30)
             #posr = (randy, randx)
 
-
+            rcnt = 0
             for ry, rx in zip(randy, randx):
 
                 # ax.plot(rx, ry, 'ro')
+                #print('Doing random', rcnt)
 
                 if ry < 0:
                     continue
@@ -270,17 +271,21 @@ def read_lsta(h):
                 try:
                     arc30, arce100, rkernel = cut_kernel_lsta(rx, ry, lsta_da.values, h)
                 except TypeError:
+                    print('Random type error')
                     continue
-
+                rcnt +=1
                 ramsrk30.append(arc30)
                 ramsre100.append(arce100)
 
-            if ramskern is not None:
-                ramskern = np.nansum(np.stack([ramskern, rkernel]), axis=0)
-                ramskernc = np.nansum(np.stack([ramskernc, np.isfinite(rkernel).astype(int)]), axis=0)
-            else:
-                ramskern = rkernel
-                ramskernc = np.isfinite(rkernel).astype(int)
+                if ramskern is not None:
+                   # print('stack')
+                    ramskern = np.nansum(np.stack([ramskern, rkernel]), axis=0)
+                    ramskernc = np.nansum(np.stack([ramskernc, np.isfinite(rkernel).astype(int)]), axis=0)
+                else:
+                    ramskern = rkernel
+                    ramskernc = np.isfinite(rkernel).astype(int)
+
+            #ipdb.set_trace()
 
             print('Core lonlat', xpos, ypos)
             print('Random lonlat', rx, ry)
@@ -303,7 +308,7 @@ def read_lsta(h):
            'tcord': [tlon, tlat]
            }
 
-    pkl.dump(dicout, open(path + "/Sahel_MCS10W10E_noOverlap_" + str(h).zfill(2) + ".p", "wb"))
+    pkl.dump(dicout, open(path + "/Sahel_MCS_Senegal_" + str(h).zfill(2) + ".p", "wb"))
 
 
 

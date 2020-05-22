@@ -750,3 +750,87 @@ def plot_amsr_dry_wet_trio(hour):
 
     plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_TRIO_' + str(hour).zfill(2) + '.png')
     plt.close('all')
+
+
+
+def plot_amsr_dry_wet_paper(hour):
+
+    path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
+
+    dic0 = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(
+        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb"))
+    dic1 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic2 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_WET_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic3 = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(
+        hour) + "UTC_15000_2dAMSL_night0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb"))
+    dic4 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
+    dic5 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_DRY_INIT_noQ20_NEWTRACKING.p", "rb"))
+
+    names = ['DRY - day0', 'DRY - day+1', 'WET - day0', 'WET - day+1']
+
+    f = plt.figure(figsize=(8.5, 6), dpi=300)
+    for ids, dic in enumerate([dic4,dic5,dic1,dic2]):
+
+        #lsta = (dic['lsta'])[0] / dic['lsta'][1]
+        amsr = (dic['amsr'])[0] / dic['amsr'][1]
+        cmorph = (dic['cmorph'])[0] / dic['cmorph'][1]
+
+        cmorph = ndimage.gaussian_filter(cmorph, 8, mode='nearest')
+        amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
+
+        msg = (dic['msg'])[0] / dic['msg'][1]
+        cores = dic['cores']
+
+        print('NUMBER OF CORES', cores)
+
+
+        dist=200
+
+        alevels = [-4, -3, -2, -1, -0.5, -0.25, 0.25, 0.5, 1, 2, 3, 4]
+        #alevels = [-3.9,-3.3, -2.7, -2.1, -1.5, -0.9, -0.3, 0.3, 0.9, 1.5, 2.1, 2.7, 3.3,3.9]
+        ax = f.add_subplot(2,2,ids+1)
+
+        amsr[np.isnan(amsr)]= 0
+        #, norm=matplotlib.colors.Normalize(vmin=-6, vmax=4)
+        plt.contourf((np.arange(0, 2*dist+1) - dist) * 3, (np.arange(0, 2*dist+1) - dist) * 3 , amsr , cmap='RdBu', extend='both', levels=alevels)
+        plt.colorbar(label='%')
+
+        if ids == 3:
+            lev = np.arange(10, 71, 20)
+            #lev = np.arange(10, 71, 5)
+
+        else:
+            lev = np.arange(10, 71, 20)
+            #lev = np.arange(10, 71, 5)
+
+        cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100*1.2,
+                    linewidths=1.2, linestyles=['solid'], levels=lev, colors='k')
+        plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
+
+        lev = [-99, 50]
+        cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100*1.2,
+                    linewidths=1.5, linestyles=['solid'], levels=lev, colors='k')
+        plt.clabel(cs, inline=1, fontsize=9, fmt="%1.0f")
+
+
+        ax.set_xlabel('km')
+        plt.axvline(x=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
+        plt.axhline(y=0, linestyle='dashed', color='dimgrey', linewidth=1.2)
+        plt.plot(0, 0, marker='o', color='dimgrey')
+
+        plt.title(names[ids] , fontweight='bold', fontname='Ubuntu', fontsize=10) #+ ' | ' + str(cores) + ' cores'
+
+
+    plt.tight_layout()
+    text = ['a', 'b', 'c', 'd']
+    plt.annotate(text[0], xy=(0.04, 0.96), xytext=(0, 4),xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+    plt.annotate(text[1], xy=(0.54, 0.96), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+    plt.annotate(text[2], xy=(0.04, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+    plt.annotate(text[3], xy=(0.54, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
+
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_PAPER_' + str(hour).zfill(2) + '.png')
+    plt.close('all')

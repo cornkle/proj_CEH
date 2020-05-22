@@ -21,21 +21,21 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
         if len(month)>1:
 
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
         else:
 
-            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
     else:
         if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
         else:
-            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
 
     if len(data.time)==0:
         print('Data does not seem to have picked month or hour. Please check input data')
 
 
-    mean_years = data.groupby('time.year').mean(axis=0)
+    mean_years = data.groupby('time.year').mean('time')
 
     # stack lat and lon into a single dimension called allpoints
     datastacked = mean_years.stack(allpoints=['latitude', 'longitude'])
@@ -110,14 +110,14 @@ def trend_all():
 
     q = da['q'].sel(level=slice(low_press-20, low_press)).mean('level')
     q = q[q['time.hour']==12]
-    t2d = da2['t2m']#['t2m']
+    t2d = da2['sshf']#['t2m']
     #t2d = da['t'].sel(level=slice(800, 850)).mean('level')
     t2d = t2d[t2d['time.hour']==12]
 
-    theta_low = u_met.theta_e(da.level.values, da['t'].sel(level=low_press), da['q'].sel(level=low_press))
-    theta_high = u_met.theta_e(da.level.values, da['t'].sel(level=mid_press), da['q'].sel(level=mid_press))
-
-    theta_e = theta_low - theta_high
+    # theta_low = u_met.theta_e(da.level.values, da['t'].sel(level=low_press), da['q'].sel(level=low_press))
+    # theta_high = u_met.theta_e(da.level.values, da['t'].sel(level=mid_press), da['q'].sel(level=mid_press))
+    #
+    # theta_e = theta_low - theta_high
 
     u600 = da['u'].sel(level=slice(up_press-20, up_press)).mean('level')
     u600 = u600[u600['time.hour']==12]
@@ -151,20 +151,20 @@ def trend_all():
 
     q.values = q.values*1000
 
-    grid = t2d.salem.grid.regrid(factor=0.5)
+    grid = t2d.salem.grid.regrid(factor=1)
     t2 = t2d # grid.lookup_transform(t2d)
     tir = grid.lookup_transform(da3)  #t2d.salem.lookup_transform(da3['tir']) #
 
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [2,3,4,5,6,7,8,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [4, (3,5), (6,8), (9,11)]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
 
     for m in months:
-        method = 'polyfit'
+        method = 'mk'
 
         if type(m)==int:
             m = [m]
@@ -192,8 +192,8 @@ def trend_all():
         v6trend, v6mean = calc_trend(v6, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
         v6_mean = v6mean.mean(axis=0)
 
-        thetatrend, thetamean = calc_trend(theta_e, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
-        theta_mean = thetamean.mean(axis=0)
+        # thetatrend, thetamean = calc_trend(theta_e, m, method=method, sig=sig, hour=12,wilks=False) #hour=12,
+        # theta_mean = thetamean.mean(axis=0)
 
         t2trend_unstacked = t2trend*10. # warming over decade
         qtrend_unstacked = qtrend * 10.  # warming over decade
@@ -201,7 +201,7 @@ def trend_all():
         u6trend_unstacked = u6trend * 10
         v6trend_unstacked = v6trend * 10
         presstrend_unstacked = presstrend * 10
-        thetatrend_unstacked = thetatrend * 10
+        # thetatrend_unstacked = thetatrend * 10
 
         tirtrend_unstacked = ((tirtrend.values)*10. / tirm_mean.values) * 100.
         #ipdb.set_trace()
@@ -217,12 +217,12 @@ def trend_all():
         s_da = sheartrend_unstacked
         ti_da = tirtrend_out
         tcwv_da = presstrend_unstacked
-        theta_da  = thetatrend_unstacked
+        # theta_da  = thetatrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_skt_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_skt_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
         ti_da = t2d.salem.transform(ti_da)
 
@@ -308,7 +308,7 @@ def trend_all():
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        dic = map.visualize(ax=ax4, title='-70C cloud cover change | >5000km2', cbar_title='$\%$ decade-1')
+        dic = map.visualize(ax=ax4, title='-70C cloud cover change | >5000km2', cbar_title='$\%$ decade-1', addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 

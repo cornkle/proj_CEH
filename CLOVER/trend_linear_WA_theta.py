@@ -17,21 +17,22 @@ from metpy.units import units
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
+    y0 = 2003
     if method is None:
         'Please provide trend calc method: polyfit or mk (mann kendall)'
     if hour is not None:
 
         if len(month)>1:
 
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1984) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= y0) & (data['time.year'] <= 2018)]
         else:
 
-            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1984) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= y0) & (data['time.year'] <= 2018)]
     else:
         if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1984) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= y0) & (data['time.year'] <= 2018)]
         else:
-            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1984) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= y0) & (data['time.year'] <= 2018)]
 
     if len(data.time)==0:
         print('Data does not seem to have picked month or hour. Please check input data')
@@ -86,7 +87,7 @@ def trend_all():
 
     fpath = cnst.network_data + 'figs/CLOVER/months/ERA5_WA/'
 
-    box=[-18,30,0,25]#  [-18,40,0,25] #
+    box=[-18,30,0,25]#[-18,30,0,25]#  [-18,40,0,25] #
 
     da = xr.open_dataset(pl) #xr.open_dataset(pl)
     #da = xr.decode_cf(da)
@@ -179,7 +180,7 @@ def trend_all():
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
 
-    months= [3,10]#[2,3,4,5,6,7,8,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [1,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -190,7 +191,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = False
+        sig = True
 
         t2trend, t2mean = calc_trend(t2, m,  method=method, sig=sig,hour=12, wilks=False) #hour=12,
         t2_mean = t2mean.mean(axis=0)
@@ -249,9 +250,9 @@ def trend_all():
         dicmean[m[0]] = tirm_mean
 
         if len(m) == 1:
-            fp = fpath + 'use/ERA5_-70_use_cape925_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_-70_use_nosig_2003_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'use/ERA5_-70_use_cape925_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'use/ERA5_-70_use_nosig_2003_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map(countries=False)
         # Change the country borders
         map.set_shapefile(countries=True, color='grey', linewidths=0.5)

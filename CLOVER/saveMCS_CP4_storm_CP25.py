@@ -436,9 +436,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
 ### Inputs:
 
-data_path = cnst.network_data + 'data/CP4/CLOVER/CP25fut'  # CP4 data directory
+data_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP25hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path = cnst.network_data + 'data/CP4/CLOVER/CP25_16-19UTC_future_5000km2_-40C_TCWV'  # out directory to save MCS files
+out_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP25_16-19UTC_historical_5000km2_-50C_TCWV'  # out directory to save MCS files
 box = [-12, 15, 5, 25]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
@@ -446,8 +446,8 @@ years = np.array(np.arange(1998,2007), dtype=str)
 months = np.array([ '03', '04', '05', '06', '07', '08', '09', '10', '11'])
 days = np.array(np.arange(1,31), dtype=str)
 
-tthresh = -40 # chosen temperature threshold, e.g. -50, -60, -70
-h= 16
+tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
+h= 19
 
 plglob = glob.glob(data_path + '/q_pl/*.nc')
 pl_dummy = xr.open_dataset(plglob[0])
