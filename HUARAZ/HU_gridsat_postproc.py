@@ -19,20 +19,20 @@ def month():
     years = list(range(1985,2018)) #+ list(range(2004,2014))
 
     msg_folder = cnst.GRIDSAT_PERU
-    fname='aggs/gridsat_WA_-40_allClouds_monthly.nc'
+    fname='aggs/gridsat_WA_-15_allClouds_monthly.nc'
 
 
     da = None
     for y in years:
         y = str(y)
         try:
-            da1 = xr.open_mfdataset(cnst.GRIDSAT_PERU+'daily_ALLkm2/gridsat_WA_-40Min_ALLkm2_UTCDay_' + y + '*.nc', combine='nested', concat_dim='time').load()
+            da1 = xr.open_mfdataset(cnst.GRIDSAT_PERU+'daily_-15ALLkm2_UTC_DAY/gridsat_WA_-15Min_ALLkm2_UTCDay_' + y + '*.nc', combine='nested', concat_dim='time').load()
         except:
             print('FAIL')
             return
 
         print('Doing '+y)
-        da1['tir'] = da1['tir'].where(da1['tir'] <= -40)
+        da1['tir'] = da1['tir'].where(da1['tir'] <= -15)
 
         da1 = da1.resample(time='m').mean('time')
         try:
@@ -166,7 +166,7 @@ def month_count():
     years = list(range(1985, 2018))
 
     msg_folder = cnst.GRIDSAT_PERU
-    fname = 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    fname = 'aggs/gridsat_WA_count_-40_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -177,7 +177,7 @@ def month_count():
             # _-40_1000km2_15-21UTC
             print('Doing ' + y)
             da1['tir'].values = da1['tir'].values/100  #ONLY FOR NEWER FILES
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -109), other=0) #-65
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -40) & (da1['tir'] >= -109), other=0) #-65
             da1['tir'].values[da1['tir'].values < 0] = 1
             #ipdb.set_trace()
             da1 = da1.resample(time='m').mean('time')

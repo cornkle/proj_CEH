@@ -256,7 +256,7 @@ def plot_amsr_lsta_trio(hour):
     cbar.ax.tick_params(labelsize=10)
     cbar.set_label('K', fontsize=10)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMSL_TRIO_ALLS_minusMean_noCore_INIT' + str(hour).zfill(2) + '.png')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMSL_TRIO_ALLS_minusMean_noCore_INIT' + str(hour).zfill(2) + '.pdf')
     plt.close('all')
 
 
@@ -470,7 +470,7 @@ def plot_amsr_dry_wet(hour):
     plt.annotate(text[3], xy=(0.54, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_Q20_' + str(hour).zfill(2) + '.png')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_Q20_' + str(hour).zfill(2) + '.pdf')
     plt.close('all')
 
 
@@ -832,5 +832,5 @@ def plot_amsr_dry_wet_paper(hour):
     plt.annotate(text[3], xy=(0.54, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_PAPER_' + str(hour).zfill(2) + '.png')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_PAPER_' + str(hour).zfill(2) + '.pdf')
     plt.close('all')

@@ -41,48 +41,40 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=2)
-    tthresh = '-40'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-40C_TCWV') # CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
+    pool = multiprocessing.Pool(processes=3)
+    tthresh = '-50'
+    #files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_16-19UTC_historical_5000km2_-50C_TCWV') # CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", '/media/ck/Elements/Africa/WestAfrica/CP4/CP4_16-19UTC_future_5000km2_-50C_TCWV')
     print('Nb files', len(files))
-    mdic = dictionary() #defaultdict(list)
-    res = pool.map(file_loop, files)
-    pool.close()
-    # res=[]
-    # for f in files:
-    #     res.append(file_loop(f))
+    for y in range(1998,2007):
 
-    #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
+        yfiles = []
+        for f in files:
+            if str(y) in f:
+                yfiles.append(f)
+        pool = multiprocessing.Pool(processes=4)
 
-    keys = mdic.keys()
-    for v in res:
-        for k in keys:
-            try:
-                mdic[k].append(v[k])
-            except TypeError:
-                continue
+        mdic = dictionary() #defaultdict(list)
+        print('Yearly files', len(yfiles))
+        res = pool.map(file_loop, yfiles)
+        pool.close()
 
-
-        # if v[2]*25 > 1000000:
-        #     tplt = v[9]
-        #     tplt[np.where(tplt==np.nan)]=0
-            # f = plt.figure()
-            # ax = plt.axes(projection=ccrs.PlateCarree())
-            # plt.contourf(v[10], v[11], tplt, transform=ccrs.PlateCarree())
-            # ax.coastlines()
-            # plt.colorbar()
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
+        # res=[]
+        # for f in files:
+        #     res.append(file_loop(f))
 
 
-    # f = plt.figure()
-    # siz = 3
-    #
-    # ax = f.add_subplot(1, 1, 1)
-    # plt.scatter(mdic['tmin'], mdic['pmax'])
-    # plt.title('bulk', fontsize=9)
+        keys = mdic.keys()
+        for v in res:
+            for k in keys:
+                try:
+                    mdic[k].append(v[k])
+                except TypeError:
+                    continue
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4_ERA5_30km_WA_5-20N_-40C_TCWV_fut.p',
+
+        #ipdb.set_trace()
+        pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_5-20N_-50C_TCWV_fut_'+str(y)+'.p',
                            'wb'))
 
 
@@ -115,7 +107,7 @@ def file_loop(f):
     tgrad = dic.attrs['Tgrad']
     tdiff = dic.attrs['Tgradbox']
 
-    print(theta)
+    #print(theta)
 
     #ipdb.set_trace()
 
@@ -130,7 +122,7 @@ def file_loop(f):
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
     antimask = ~mask
 
-    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid]:
+    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid,tsrfc]:
         var[antimask] = np.nan
 
 

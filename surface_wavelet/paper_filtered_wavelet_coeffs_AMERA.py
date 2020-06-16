@@ -604,5 +604,5 @@ def plot_amsr_ERA_duo(hour):
     cbar.set_label('%', fontsize=10)
 
     plt.savefig(path + '2hOverlap/amsreVSlsta/MAPS_AMERA_TRIO_ALLS_minusMean_noCore_INIT2_noQ_' + str(hour).zfill(
-        2) + '.png')
+        2) + '.pdf')
     plt.close('all')

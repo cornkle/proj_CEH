@@ -39,38 +39,44 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
-    tthresh = '-40'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_12W-15E_-40_afternoon_GPM/*.nc')
+    pool = multiprocessing.Pool(processes=3)
+    tthresh = '-50'
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_17W-15E_-50_afternoon_GPM/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
-    mdic = dictionary() #defaultdict(list)
-    res = pool.map(file_loop, files)
-    pool.close()
+    for y in range(2015,2016):
 
-    #
-    # res = []
-    # for f in files[0:200]:
-    #     out = file_loop(f)
-    #     res.append(out)
-    # ipdb.set_trace()
-    # res = [item for sublist in res for item in sublist]  # flatten list of lists
+        yfiles = []
+        for f in files:
+            if str(y) in f:
+                yfiles.append(f)
 
-    pkl.dump(res, open(cnst.network_data + 'data/CLOVER/saves/ERA5_res.p',
-                           'wb'))
+        pool = multiprocessing.Pool(processes=3)
+        mdic = dictionary() #defaultdict(list)
+        res = pool.map(file_loop, yfiles)
+        pool.close()
 
-    keys = mdic.keys()
-    for v in res:
-        for k in keys:
-            try:
-                mdic[k].append(v[k])
-            except TypeError:
-                continue
+        # res = []
+        # for f in files[500:1000]:
+        #     out = file_loop(f)
+        #     res.append(out)
+        #
+        #
+        # ipdb.set_trace()
+
+        print('Back from multiproc')
+        keys = mdic.keys()
+        for v in res:
+            for k in keys:
+                try:
+                    mdic[k].append(v[k])
+                except TypeError:
+                    continue
 
 
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-25N_p15_-40C_TCWV.p',
-                           'wb'))
+        pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_5-26N_16W17E_p15_ERA0.7_TCWV_hourly_'+str(y)+'.p',
+                               'wb'))
 
 
 def file_loop(f):
@@ -79,11 +85,31 @@ def file_loop(f):
     dic = xr.open_dataset(f)
     edate = pd.Timestamp(dic.time.values)
 
-    if np.nanmin(dic['tc_lag0'].values) > -55:
+    out = dictionary()
+    res = []
+    outt = dic['tc_lag0'].values
+    outp = dic['p'].values
+
+    out['lon'] = dic['lon'].values
+    out['lat'] = dic['lat'].values
+    out['hour'] = dic['time.hour'].item()
+    out['month'] = dic['time.month'].item()
+    out['year'] = dic['time.year'].item()
+    out['date'] = dic['time'].values
+
+    if np.nanmin(dic['tc_lag0'].values) > -53:
+        return
+    #ipdb.set_trace()
+    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
+    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
+
+    if (out['clat']<9) | (out['clon']<-15) | (out['clon']>15):
+        print('MCS out of box')
         return
 
-    if edate.hour < 17:
-        return
+
+    # if edate.hour < 17:
+    #     return
 
     try:
         era_pl = xr.open_dataset(cnst.ERA5_HOURLY_PL+'ERA5_'+str(dic['time.year'].values)+'_'+str(dic['time.month'].values).zfill(2)+'_pl.nc')
@@ -102,18 +128,6 @@ def file_loop(f):
 
     era_pl_day = era_pl.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
     era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
-
-    #ipdb.set_trace()
-     # try:
-    #     era_day = era.isel(time=int(getera[0]))
-    # except TypeError:
-    #     print('Era missing')
-    #     return
-
-    out = dictionary()
-    res = []
-    outt = dic['tc_lag0'].values
-    outp = dic['p'].values
 
 
     tminpos = np.where(dic['tc_lag0'].values == np.nanmin(dic['tc_lag0'].values)) # era position close to min temp
@@ -142,14 +156,7 @@ def file_loop(f):
     srfc = era_day_srfc.mean()
 
 
-    out['lon'] = dic['lon'].values
-    out['lat'] = dic['lat'].values
-    out['hour'] = dic['time.hour'].item()
-    out['month'] = dic['time.month'].item()
-    out['year'] = dic['time.year'].item()
-    out['date'] = dic['time'].values
-
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
     mask_area = (outt<=t_thresh) & np.isfinite(outt)
     mask70 = (outt<=-70) & np.isfinite(outt)
@@ -157,16 +164,10 @@ def file_loop(f):
     if np.sum(mask) < 3:
         return
 
-    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
-    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
-
     print(np.nanmax(outt[mask]))   # can be bigger than cutout threshold because of interpolation to 5km grid after cutout
 
     out['area'] = np.sum(mask_area)
     out['area70'] = np.sum(mask70)
-
-    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
-    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
     out['tmin'] = np.min(outt[mask])
     out['tmean'] = np.mean(outt[mask])

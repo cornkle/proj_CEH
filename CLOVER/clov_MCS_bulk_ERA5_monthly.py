@@ -13,6 +13,29 @@ import glob
 import ipdb
 import pandas as pd
 
+def read_write_dic():
+    infile = '/home/ck/DIR/cornkle/data/CLOVER/saves/ERA5_res_test.p'
+
+    res = pkl.load( open(infile, 'rb'))
+
+    mdic = dictionary()
+
+    keys = mdic.keys()
+    for v in res:
+        for k in keys:
+            try:
+                mdic[k].append(v[k])
+                del v[k]
+            except TypeError:
+                continue
+
+
+
+    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_-50C_5000km2_SAHEL_GPM_5-26N_16W17E_p15_ERA0.7_TCWV_monthly.p',
+                           'wb'))
+
+
+
 def dictionary():
 
     dic = {}
@@ -39,38 +62,50 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
-    tthresh = '-40'
-    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_12W-15E_-40_afternoon_GPM/*.nc')
+
+    tthresh = '-50'
+    files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_17W-15E_-50_afternoon_GPM/*.nc')
     #ipdb.set_trace()
 
     print('Nb files', len(files))
-    mdic = dictionary() #defaultdict(list)
-    res = pool.map(file_loop, files)
-    pool.close()
 
-    #
-    # res = []
-    # for f in files[0:200]:
-    #     out = file_loop(f)
-    #     res.append(out)
-    # ipdb.set_trace()
-    # res = [item for sublist in res for item in sublist]  # flatten list of lists
+    for y in range(2015,2019):
 
-    # pkl.dump(res, open(cnst.network_data + 'data/CLOVER/saves/ERA5_res.p',
-    #                        'wb'))
-
-    keys = mdic.keys()
-    for v in res:
-        for k in keys:
-            try:
-                mdic[k].append(v[k])
-            except TypeError:
-                continue
+        yfiles = []
+        for f in files:
+            if str(y) in f:
+                yfiles.append(f)
+        pool = multiprocessing.Pool(processes=3)
+        mdic = dictionary() #defaultdict(list)
+        res = pool.map(file_loop, yfiles)
+        pool.close()
 
 
-    pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_ERA5_5-25N_p15_-40C_TCWV_monthlyCLIM.p',
-                           'wb'))
+        # res = []
+        # for f in files[500:1000]:
+        #     out = file_loop(f)
+        #     res.append(out)
+
+
+
+        #pkl.dump(res, open(cnst.network_data + 'data/CLOVER/saves/ERA5_res_test.p', 'wb'))
+        #ipdb.set_trace()
+        print('Back from multiproc')
+        keys = mdic.keys()
+        for v in res:
+            for k in keys:
+                try:
+                    mdic[k].append(v[k])
+                except TypeError:
+                    continue
+
+
+        pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_5-26N_16W17E_p15_ERA0.7_TCWV_monthly_'+str(y)+'.p',
+                               'wb'))
+
+        del mdic
+        del res
+        del yfiles
 
 
 def file_loop(f):
@@ -79,38 +114,9 @@ def file_loop(f):
     dic = xr.open_dataset(f)
     edate = pd.Timestamp(dic.time.values)
 
-    if np.nanmin(dic['tc_lag0'].values) > -55:
+    if np.nanmin(dic['tc_lag0'].values) > -53:
         return
 
-    if edate.hour < 17:
-        return
-
-    try:
-        era_pl = xr.open_dataset('/home/ck/DIR/mymachine/ERA5/monthly/synoptic/pl_2004-2019_monthlyCLIM_synop_07x07.nc')
-    except:
-        print('ERA5 pl missing')
-        return
-    try:
-        era_srfc = xr.open_dataset('/home/ck/DIR/mymachine/ERA5/monthly/synoptic/srfc_2004-2019_monthlyCLIM_synop_07x07.nc')
-    except:
-        print('ERA5 srfc missing')
-        return
-    # era_pl = uda.flip_lat(era_pl)
-    # era_srfc = uda.flip_lat(era_srfc)
-
-    #edate = edate.replace(hour=12, minute=0)
-
-    era_pl_day = era_pl.sel(month=edate.month, longitude=slice(-16,17), latitude=slice(4,26))#.groupby('time.month').mean('time')
-    era_srfc_day = era_srfc.sel(month=edate.month, longitude=slice(-16,17), latitude=slice(4,26))#.groupby('time.month').mean('time')
-
-     # try:
-    #     era_day = era.isel(time=int(getera[0]))
-    # except TypeError:
-    #     print('Era missing')
-    #     return
-
-    out = dictionary()
-    res = []
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
 
@@ -127,8 +133,59 @@ def file_loop(f):
     elon = dic['lon'].values[tminpos]
     elat = dic['lat'].values[tminpos]
 
-    era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest', tolerance=1) # take point of minimum T
-    era_day_srfc = era_srfc_day.sel(latitude=elat, longitude=elon , method='nearest', tolerance=1) # take point of minimum T
+    out = dictionary()
+    out['lon'] = dic['lon'].values
+    out['lat'] = dic['lat'].values
+    out['hour'] = dic['time.hour'].item()
+    out['month'] = dic['time.month'].item()
+    out['year'] = dic['time.year'].item()
+    out['date'] = dic['time'].values
+
+
+    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
+    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
+
+    if (out['clat']<9) | (out['clon']<-15) | (out['clon']>15):
+        print('MCS out of box')
+        return
+
+    # if (edate.hour < 16):
+    #     return
+
+    try:
+        #era_pl = xr.open_dataset('/home/ck/DIR/mymachine/ERA5/monthly/synoptic/pl_2004-2019_monthlyCLIM_synop_07x07.nc')
+        era_pl = xr.open_dataset('/home/ck/DIR/mymachine/ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc')
+    except:
+        print('ERA5 pl missing')
+        return
+    try:
+        #era_srfc = xr.open_dataset('/home/ck/DIR/mymachine/ERA5/monthly/synoptic/srfc_2004-2019_monthlyCLIM_synop_07x07.nc')
+        era_srfc = xr.open_dataset(
+            '/home/ck/DIR/mymachine/ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc')
+    except:
+        print('ERA5 srfc missing')
+        return
+    era_pl = uda.flip_lat(era_pl)
+    era_srfc = uda.flip_lat(era_srfc)
+
+    edate = edate.replace(hour=12, minute=0, day=1)
+
+    era_pl_day = era_pl.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))#.groupby('time.month').mean('time')
+    era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))#.groupby('time.month').mean('time')
+
+     # try:
+    #     era_day = era.isel(time=int(getera[0]))
+    # except TypeError:
+    #     print('Era missing')
+    #     return
+
+    res = []
+
+    try:
+        era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest', tolerance=0.7) # take point of minimum T
+    except:
+        return
+    era_day_srfc = era_srfc_day.sel(latitude=elat, longitude=elon , method='nearest', tolerance=0.7) # take point of minimum T
 
     del era_srfc_day
 
@@ -141,14 +198,9 @@ def file_loop(f):
     srfc = era_day_srfc.mean()
 
 
-    out['lon'] = dic['lon'].values
-    out['lat'] = dic['lat'].values
-    out['hour'] = dic['time.hour'].item()
-    out['month'] = dic['time.month'].item()
-    out['year'] = dic['time.year'].item()
-    out['date'] = dic['time'].values
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+
+    t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outt)
     mask_area = (outt<=t_thresh) & np.isfinite(outt)
     mask70 = (outt<=-70) & np.isfinite(outt)
@@ -156,8 +208,7 @@ def file_loop(f):
     if np.sum(mask) < 3:
         return
 
-    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
-    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
+
 
     print(np.nanmax(outt[mask]))   # can be bigger than cutout threshold because of interpolation to 5km grid after cutout
 
@@ -236,5 +287,10 @@ def file_loop(f):
     out['t'] = outt[mask]
     #ipdb.set_trace()
     dic.close()
+
+    del era_day
+    del era_day_srfc
+    del era_pl
+    del era_srfc
 
     return out

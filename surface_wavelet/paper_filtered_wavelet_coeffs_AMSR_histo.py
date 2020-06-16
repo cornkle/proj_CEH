@@ -450,7 +450,7 @@ def plot_diurn_double_relative_double():
 
     ax = plt.axes([0.47,0.12,0.5,0.7])
 
-    name = '_SMFINITE_150kcircle_minusMean_bigBox_topo_INCLINIT_NEWTRACKING'
+    name = '_SMFINITE_150kcircle_minusMean_bigBox_topo_NEWTRACKING'
 
     for ids, input in enumerate(loop):
         ids = ids+1
@@ -558,8 +558,8 @@ def plot_diurn_double_relative_double():
 
         pmin[pmin<0] = 0
         pmin[8]=1
-        ax.bar(np.arange(0,len(rrange)), pmin,  label='25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='coral') #
-        ax.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax.bar(np.arange(0,len(rrange)), pmin,  label='$\leq$ 25th centile',yerr=np.vstack((err10_up, err10_low)), edgecolor='k', color='coral') #
+        ax.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label=r'$\geq$ 75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
 
@@ -572,8 +572,8 @@ def plot_diurn_double_relative_double():
         plt.legend()
 
         ax1 = ax.twiny()
-        ax1.bar(np.arange(0, len(rrange)), pmin, label='25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.6, color='coral')
-        ax1.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label='75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
+        ax1.bar(np.arange(0, len(rrange)), pmin, label=r'$\leq$ 25th centile', yerr=np.vstack((err10_up, err10_low)), edgecolor='k', alpha=0.6, color='coral')
+        ax1.bar(np.arange(0, len(rrange)), np.array(percmmax)-25, label=r'$\geq$ 75th centile', yerr=np.vstack((err90_up, err90_low)), edgecolor='k',color='powderblue')
         ax1.set_xticks(np.arange(0,len(rrange)))
         ax1.set_xticklabels(nbmin, rotation=45)
         ax1.set_xlabel('Number of convective cores')
@@ -680,7 +680,7 @@ def plot_diurn_double_relative_double():
     plt.annotate(text[1], xy=(0.44, 0.91), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=fs)
     plt.show()
-    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_box_' + name + '.png')
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_box_' + name + '.pdf')
 
     # plt.figure()
     # plt.plot(np.arange(-15,15), norm.cdf(np.arange(-15,15),mu_random,sigma_random))

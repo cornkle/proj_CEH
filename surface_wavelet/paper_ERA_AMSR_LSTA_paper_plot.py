@@ -176,7 +176,7 @@ def plot_amsr_lsta_paper(h, eh):
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_NEW_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'_u650_streamline.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/ERA5_NEW_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'_u650_streamline.eps')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
 def plot_amsr_paper(h, eh):
@@ -393,8 +393,8 @@ def plot_amsr_paper_trio(h, eh):
     cbar.ax.tick_params(labelsize=12)
     cbar.ax.set_ylabel(r'%', size=12)
 
-    plt.contour(amsr, extend='both', colors='k',
-                 levels=levels, linewidths=0.05)
+    # plt.contour(amsr, extend='both', colors='k',
+    #              levels=levels, linewidths=0.05)
     cb=plt.contourf(mask, colors='none', hatches='.',
                  levels=[0.5, 1])
     for i, collection in enumerate(cb.collections):
@@ -444,8 +444,8 @@ def plot_amsr_paper_trio(h, eh):
     cbar.ax.tick_params(labelsize=12)
     cbar.ax.set_ylabel(r'g kg$^{-1}$', size=12)
 
-    plt.contour(qq, extend='both', colors='k',
-                 levels=qlevels, linewidths=0.05)
+    # plt.contour(qq, extend='both', colors='k',
+    #              levels=qlevels, linewidths=0.05)
 
     cb=plt.contourf(mask, colors='none', hatches='.',
                  levels=[0.5, 1])
@@ -482,8 +482,8 @@ def plot_amsr_paper_trio(h, eh):
     cbar.ax.tick_params(labelsize=12)
     cbar.ax.set_ylabel(r'10$^{-3}$s$^{-1}$', size=11)
 
-    plt.contour(div, extend='both', colors='k',
-                 levels=divlevels, linewidths=0.05)
+    # plt.contour(div, extend='both', colors='k',
+    #              levels=divlevels, linewidths=0.05)
 
     cb = plt.contourf(np.arange(mask.shape[1])[::15], np.arange(mask.shape[0])[::15], mask[::15,::15], colors='none', hatches='.',
                  levels=[0.5, 1])
@@ -539,7 +539,7 @@ def plot_amsr_paper_trio(h, eh):
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=16)
 
     plt.show()
-    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+"_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'-NEW.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
+    plt.savefig(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/plots/"+name+"_"+str(h).zfill(2)+'_'+str(eh).zfill(2)+'-NEW2.pdf')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png)
     plt.close()
 
     # plt.figure()

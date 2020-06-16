@@ -15,21 +15,24 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
+    y1 = 1999
+    y2 = 2019
+
     if method is None:
         'Please provide trend calc method: polyfit or mk (mann kendall)'
     if hour is not None:
 
         if len(month)>1:
 
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= y1) & (data['time.year'] <= y2)]
         else:
 
-            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= y1) & (data['time.year'] <= y2)]
     else:
         if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= y1) & (data['time.year'] <= y2)]
         else:
-            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
+            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= y1) & (data['time.year'] <= y2)]
 
     if len(data.time)==0:
         print('Data does not seem to have picked month or hour. Please check input data')
@@ -79,9 +82,10 @@ def trend_all():
 
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_-40_allClouds_monthly.nc'
     mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc'
+
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    box = [-79, -74, -12, -8]  # small
+    box = [-79, -76, -11, -8] #[-79, -74, -12, -8]  # small
     #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
     #box = [-80, -53, -30, -1]
     #box = [-79,-69,-17,-7] #[-79, -75, -10.5, -8]
@@ -96,13 +100,13 @@ def trend_all():
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [1,2,3,4,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [1,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
 
 
-    f = plt.figure(figsize=(14, 5), dpi=300)
+    f = plt.figure(figsize=(14, 8), dpi=300)
 
     fname = '/home/ck/DIR/cornkle/data/HUARAZ/shapes/riosan_sel_one.shp'
 
@@ -117,7 +121,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = True
+        sig = False
 
 
         tirtrend, tirmean = calc_trend(tir, m, method=method, sig=sig, wilks=False)
@@ -143,13 +147,13 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_allClouds_smallMap_highres'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_allClouds_noSIG_highres'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
         map = ti_da.salem.get_map()
 
-        ax1 = f.add_subplot(2,4,ids+1)
+        ax1 = f.add_subplot(3,4,ids+1)
         map.set_contour((tirm_mean)*100, interp='linear', levels=[10, 20, 40,60,80], colors='k', linewidths=0.5)
         #map.set_contour((tirm_mean), interp='linear', levels=[-55,-50,-45], colors='k', linewidths=0.5)
         #.values).astype(np.float64)
@@ -157,15 +161,15 @@ def trend_all():
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
         #map.set_data(tirm_mean)
-        map.set_shapefile(sdf,facecolor='lightblue', color='red', linewidth=1.5, alpha=0.5)
+        map.set_shapefile(sdf,facecolor='white', color='red', linewidth=1.5, alpha=0.5)
         #map.set_geometry(sdf, linewidth=2)
         # coord = [18, 25, -28, -20]
         # geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         #map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-1.5,1.6,0.25)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(5, 36, 10))
-        dic = map.visualize(ax=ax1, title=str(m)+': -50C cloud cover change', cbar_title='% decade-1',addcbar=True)
+        map.set_plot_params(cmap='RdBu', extend='both', levels=np.arange(-40, 41, 10))
+        dic = map.visualize(ax=ax1, title=str(m)+': -50C cloud cover frequency change', cbar_title='% decade-1',addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 

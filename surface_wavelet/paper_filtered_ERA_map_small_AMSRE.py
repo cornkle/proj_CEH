@@ -96,9 +96,9 @@ def composite(h, eh):
     #eraq_filter
     msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]
     # # #dry_filter
-    #msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
     # # # #wet_filter
-    msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)]#& (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318, 0.16-> 317, noMCS filter
+    # msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)]#& (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318, 0.16-> 317, noMCS filter
 
     msgin = msgopen
     print('Number of cores', len(msgin))
@@ -126,7 +126,7 @@ def composite(h, eh):
         # return
         dic = u_parallelise.era_run_arrays(5, file_loop, chunks)
 
-        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_WET20-1_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_"+key+"_AMSRE_WET20-1_RH_"+str(eh) + "UTCERA"+str(hour).zfill(2)+'_'+str(year)+".p", "wb"))
         del dic
         print('Dumped file')
 
@@ -364,6 +364,9 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v925'] = vwind_srfc
     cm['v925_orig'] = cmm['v'].sel(level=level_low).squeeze()
     cm['u925_orig'] = cmm['u'].sel(level=level_low).squeeze()
+
+    cm['rh_orig'] = cmm['r'].sel(level=850).squeeze()
+    cm['rh'] = cmm['r'].sel(level=850).squeeze() - pl_clim['r'].sel(level=850).squeeze()
 
     vitd = np.abs(cmm['v'].sel(level=level_low).squeeze().values)
     vitd[np.isnan(vitd)] = -999

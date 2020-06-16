@@ -55,7 +55,7 @@ def saveYearly():
 def saveYearly_parallel():
 
 
-    years = np.arange(2018, 2020)  # list(next(os.walk(msg_folder))[1])
+    years = np.arange(1983, 2020)  # list(next(os.walk(msg_folder))[1])
 
     pool = multiprocessing.Pool(processes=4)
 
@@ -158,13 +158,13 @@ def rewrite_day():
 
 def rewrite_UTCday():
 
-    for y in np.arange(2018,2020): #(1984,2018)
+    for y in np.arange(1983,2020): #(1984,2018)
 
         print('Doing', y)
         inpath = cnst.elements_drive + 'SouthAmerica/GRIDSAT/3hourly/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'+str(y)+'/'
         #file = glob.glob(cnst.GRIDSAT_PERU + '*'+str(y)+'*.nc')
 
-        path = cnst.GRIDSAT_PERU +'daily_ALLkm2_UTC_DAY/gridsat_WA_-40Min_ALLkm2_UTCDay_'
+        path = cnst.GRIDSAT_PERU +'daily_-15ALLkm2_UTC_DAY/gridsat_WA_-15Min_ALLkm2_UTCDay_'
         try:
             dataset = xr.open_mfdataset(inpath + '*.nc', combine='nested', concat_dim='time')
         except:
@@ -174,11 +174,11 @@ def rewrite_UTCday():
         #ipdb.set_trace()
 
         datout = dataset.resample(time='1D').min()
-        ipdb.set_trace()
+        #ipdb.set_trace()
         for m in np.unique(datout['time.month']):
 
             monthly = datout['irwin_cdr'].sel(time=datout['time.month']==m).load()-273.15
-            monthly.values[(monthly.values>-40) | (monthly.values<-109)] = 0
+            monthly.values[(monthly.values>-15) | (monthly.values<-109)] = 0
 
             monthly.values = (np.round(monthly.values, decimals=2) * 100).astype(np.int16)
             monthly.name = 'tir'
