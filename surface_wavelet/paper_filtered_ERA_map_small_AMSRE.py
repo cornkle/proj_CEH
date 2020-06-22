@@ -96,7 +96,7 @@ def composite(h, eh):
     #eraq_filter
     msgopen = msgopen[(msgopen['ERAqmean'] >= 14)]
     # # #dry_filter
-    msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
+    #msgopen = msgopen[(msgopen['SMmean0']<=-5.48)]#&(msgopen['SMmean-1']<=-0.01)] #294 cases, with q 312
     # # # #wet_filter
     # msgopen = msgopen[(msgopen['SMmean0']>=0.31) & (msgopen['SMmean-1']>=-0.01)]#& (msgopen['SMmean-1']>=-0.01)] #295 cases, with q 318, 0.16-> 317, noMCS filter
 
@@ -365,8 +365,8 @@ def get_previous_hours(storm_date, lsta_date, ehour, refhour):
     cm['v925_orig'] = cmm['v'].sel(level=level_low).squeeze()
     cm['u925_orig'] = cmm['u'].sel(level=level_low).squeeze()
 
-    cm['rh_orig'] = cmm['r'].sel(level=850).squeeze()
-    cm['rh'] = cmm['r'].sel(level=850).squeeze() - pl_clim['r'].sel(level=850).squeeze()
+    cm['rh_orig'] = cmm['r'].sel(level=925).squeeze()
+    cm['rh'] = cmm['r'].sel(level=925).squeeze() - pl_clim['r'].sel(level=925).squeeze()
 
     vitd = np.abs(cmm['v'].sel(level=level_low).squeeze().values)
     vitd[np.isnan(vitd)] = -999

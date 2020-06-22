@@ -41,7 +41,8 @@ DATASETS = {
     'METSRFC': _create_dic(3, 0.45, 9, 10), # nb =14 also tested
     'METSRFC_LS': _create_dic(3, 0.25, 27, 15), # larger scales
     'METSRFC24': _create_dic(3, 0.25, 50, 10), # nb =14 also tested
-    'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10)  # nb =14 also tested
+    'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10),  # nb =14 also tested
+    'NOWCAST': _create_dic(4, 0.4, 50, 10),  # nb =14 also tested
 }
 
 
@@ -175,10 +176,11 @@ def applyHat_pure(t, dx=None, dist=None,start=None, nb=None, dataset=None):
     tir = t.copy()
     #tir[tir > 0] = 0
     tir = tir #- np.mean(tir)
+    #tir = (tir - np.mean(tir)) / np.std(tir)
 
     obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
-    coeffsTIR, powerTIR = obj.calc_coeffs(tir)
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, normed='stddev')
 
     dic['power'] = powerTIR
     dic['scales'] = obj.scales

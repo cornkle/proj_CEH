@@ -163,6 +163,20 @@ def plot_timeseries_coarse():
             line2.set_clip_on(False)
             ax.add_line(line1)
             ax.add_line(line2)
+        #ipdb.set_trace()
+        line1 = lines.Line2D(np.array([ranges[-5::]]), [diff['t'].shape[0]-1]*5, lw=5., color='k', alpha=1, zorder=98)
+        line2 = lines.Line2D(np.array([ranges[-5::]]), [diff['t'].shape[0]-1]*5, lw=4., color='slategrey', alpha=1, zorder=99)
+        line1.set_clip_on(False)
+        line2.set_clip_on(False)
+        ax.add_line(line1)
+        ax.add_line(line2)
+
+        line1 = lines.Line2D(np.array([ranges[-13:-8]]), [diff['t'].shape[0]-1]*5, lw=5., color='k', alpha=1, zorder=98)
+        line2 = lines.Line2D(np.array([ranges[-13:-8]]), [diff['t'].shape[0]-1]*5, lw=4., color='slategrey', alpha=1, zorder=99)
+        line1.set_clip_on(False)
+        line2.set_clip_on(False)
+        ax.add_line(line1)
+        ax.add_line(line2)
 
             # dpos = np.where((diff['lsta0']*-1)[:,10] >=1.5)
             # y=dpos[0]
@@ -248,6 +262,20 @@ def plot_timeseries_coarse():
         contours = plt.contour(ranges, yax, th, colors='k',
                                 linewidths=1.2, levels=[0.4,0.8,1.2,1.6,2,2.4])#) #,
         plt.clabel(contours, inline=True, fontsize=8, fmt='%1.1f')
+
+        line1 = lines.Line2D(np.array([ranges[-5::]]), [diff['t'].shape[0]-1]*5, lw=5., color='k', alpha=1, zorder=98)
+        line2 = lines.Line2D(np.array([ranges[-5::]]), [diff['t'].shape[0]-1]*5, lw=4., color='slategrey', alpha=1, zorder=99)
+        line1.set_clip_on(False)
+        line2.set_clip_on(False)
+        ax.add_line(line1)
+        ax.add_line(line2)
+
+        line1 = lines.Line2D(np.array([ranges[-13:-8]]), [diff['t'].shape[0]-1]*5, lw=5., color='k', alpha=1, zorder=98)
+        line2 = lines.Line2D(np.array([ranges[-13:-8]]), [diff['t'].shape[0]-1]*5, lw=4., color='slategrey', alpha=1, zorder=99)
+        line1.set_clip_on(False)
+        line2.set_clip_on(False)
+        ax.add_line(line1)
+        ax.add_line(line2)
 
         # cs = plt.contour(ranges, yax, (diff['probmsg'])*100,
         #  colors = 'k', linewidths = 0.5)

@@ -84,7 +84,7 @@ def create_2dhist(xvar, yvar, xbins, ybins, vardic, varpick):
 
 
 
-def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=90, valmin=10):
+def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=95, valmin=10):
     """
 
     :param xvar: xvar of the 2dhist
@@ -130,5 +130,34 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
 
     outdic['xbins'] = xbins
     outdic['ybins'] = ybins
+
+    return outdic
+
+
+
+def basic_1d_binning(xvar, xbins):
+    """
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+    outdic['nb'] = []
+
+
+    for issh, shl in enumerate(xbins[0:-1]):
+
+        poss_ds = np.sum((xvar >= shl) & (xvar < xbins[issh + 1]))
+
+        outdic['nb'].append(poss_ds)
+
+
+
+    outdic['xbins'] = (np.round(xbins[0:-1]+((xbins[1::]-xbins[0:-1])/2),2))
+
 
     return outdic
