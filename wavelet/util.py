@@ -42,7 +42,7 @@ DATASETS = {
     'METSRFC_LS': _create_dic(3, 0.25, 27, 15), # larger scales
     'METSRFC24': _create_dic(3, 0.25, 50, 10), # nb =14 also tested
     'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10),  # nb =14 also tested
-    'NOWCAST': _create_dic(4, 0.4, 50, 10),  # nb =14 also tested
+    'NOWCAST': _create_dic(4, 0.4, 20, 10),  # nb =14 also tested
 }
 
 
