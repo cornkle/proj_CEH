@@ -7,6 +7,13 @@ import os
 
 filepath = glob.glob('/prj/swift/SEVIRI_LST/data_anom_wrt_historic_clim_withmask/*/*.nc')
 for ff in filepath:
+
+    outpath = ff.replace('data_anom_wrt_historic_clim_withmask', 'data_anom_wrt_historic_clim_withmask_wavelet')
+    outpath = outpath.replace('withHistClim', 'withHistClim_wavelet')
+
+    if os.path.isfile(outpath):
+        continue
+
     dat = xr.open_dataarray(ff)
 
     dat.values[np.isnan(dat.values)] = 0
@@ -17,9 +24,6 @@ for ff in filepath:
                       coords={'scales': dic['scales'], 'phony_dim_0': dat.phony_dim_0, 'phony_dim_1': dat.phony_dim_1},
                       dims=['scales', 'phony_dim_0', 'phony_dim_1'])
     da.name = 'wavelet_coeff'
-
-    outpath = ff.replace('data_anom_wrt_historic_clim_withmask', 'data_anom_wrt_historic_clim_withmask_wavelet')
-    outpath = outpath.replace('withHistClim', 'withHistClim_wavelet')
 
     if not os.path.isdir(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
