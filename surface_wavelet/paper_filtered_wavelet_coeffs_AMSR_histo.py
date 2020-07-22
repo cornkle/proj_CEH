@@ -680,7 +680,7 @@ def plot_diurn_double_relative_double():
     plt.annotate(text[1], xy=(0.44, 0.91), xytext=(0, 4), xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=fs)
     plt.show()
-    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_box_' + name + '.pdf')
+    plt.savefig(path + '/initVSprop/AMSRE_core_probability_RELATIVE_box_' + name + '.png')
 
     # plt.figure()
     # plt.plot(np.arange(-15,15), norm.cdf(np.arange(-15,15),mu_random,sigma_random))

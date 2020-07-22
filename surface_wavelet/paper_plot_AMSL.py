@@ -832,5 +832,5 @@ def plot_amsr_dry_wet_paper(hour):
     plt.annotate(text[3], xy=(0.54, 0.49), xytext=(0, 4),  xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points', fontweight='bold', fontname='Ubuntu', fontsize=13)
 
-    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_PAPER_' + str(hour).zfill(2) + '.pdf')
+    plt.savefig(path + '2hOverlap/amsreVSlsta/wcoeff_maps_all_AMSL_DRYWET_CMORPH_NEWTRACKING_noQ20_PAPER_' + str(hour).zfill(2) + '.png')
     plt.close('all')

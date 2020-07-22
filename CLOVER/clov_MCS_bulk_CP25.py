@@ -21,9 +21,11 @@ def dictionary():
     dic = {}
     vars = ['hour', 'month', 'year', 'area',
             'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean',
+            'tmin', 'tmean', 'thetamean', 'thetamax', 'tmidmax', 'tmidmean', 'tsrfcmax', 'tsrfcmean',
             'pmax', 'pmean',
             'qmax' , 'qmean',
+            'tcwv', 'tcwvmean',
+            'tgrad', 'tdiff',
             'umax_srfc', 'umean_srfc',
             'umin_mid', 'umean_mid',
             'shearmin', 'shearmean',
@@ -37,32 +39,40 @@ def dictionary():
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=4)
-    tthresh = '-40'
-    files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP25_16-19UTC_future_5000km2_-40C_TCWV')  #CP25_-50C_5000km2
+    tthresh = '-50'
+    files = ua.locate(".nc", '/media/ck/Elements/Africa/WestAfrica/CP4/CP25_16-19UTC_future_5000km2_-50C_TCWV')  #CP25_-50C_5000km2
     print('Nb files', len(files))
-    mdic = dictionary() #defaultdict(list)
-    res = pool.map(file_loop, files)
-    pool.close()
+    for y in range(1998,1999):
 
-    # res=[]
-    # for f in files:
-    #     res.append(file_loop(f))
-    #
+        yfiles = []
+        for f in files:
+            if str(y) in f:
+                yfiles.append(f)
+        pool = multiprocessing.Pool(processes=4)
 
-    keys = mdic.keys()
-    for v in res:
-        for k in keys:
-            try:
-                mdic[k].append(v[k])
-            except TypeError:
-                print('Something wrong, return!')
-                continue
+        mdic = dictionary() #defaultdict(list)
+        print('Yearly files', len(yfiles))
+        # ipdb.set_trace()
+        # res = pool.map(file_loop, yfiles)
+        # pool.close()
+
+        res=[]
+        for f in yfiles:
+            res.append(file_loop(f))
+
+        ipdb.set_trace()
+        keys = mdic.keys()
+        for v in res:
+            for k in keys:
+                try:
+                    mdic[k].append(v[k])
+                except TypeError:
+                    continue
 
 
-    pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP25_ERA5_30km_WA_5-20N_-40C_TCWV_fut.p',
+        pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_P25means_hourly_SAHEL_15kmprecip_WA_5-20N_-50C_TCWV_fut_'+str(y)+'.p',
                            'wb'))
-    print('Saved file')
+        print('Saved file')
 
 
 def file_loop(f):
@@ -94,7 +104,7 @@ def file_loop(f):
     tgrad = dic.attrs['Tgrad']
     tdiff = dic.attrs['Tgradbox']
 
-    print(theta)
+    #print(theta)
 
     #ipdb.set_trace()
 
@@ -105,15 +115,16 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
     antimask = ~mask
 
-    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid]:
+    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid,tsrfc]:
         var[antimask] = np.nan
 
 
     if np.sum(mask) < 3:
+        print('NOT ENOUGH IN MASK')
         return
 
     maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
@@ -168,5 +179,7 @@ def file_loop(f):
     out['shear'] = outshear[mask]
 
     dic.close()
+
+    print(out['pmax'])
 
     return out

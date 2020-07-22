@@ -572,3 +572,54 @@ def storm_count_hov():
     pkl.dump(dic75, open(cnst.network_data + 'data/CLOVER/saves/storm_HOVcount_10W-12E_5-8N_-75C_5000km2_18.p',
                         'wb'))
 
+
+
+def storm_Areadistribution(area=False):
+    msg_folder = cnst.GRIDSAT
+    fname = msg_folder + 'gridsat_WA_-40_1000km2_15-21UTC'
+
+    def makedic():
+        mdic = {}
+        for m in range(1,13):
+            mdic[m] = []
+        return mdic
+
+
+    dic40 = makedic()
+
+
+    for ranges in [(1983,1990), (1990,2000), (2000,2010), (2010,2017)]:
+        area70 = makedic()
+
+        for y in range(ranges[0],ranges[1]): #2018
+            ds = xr.open_dataset(fname + str(y) + '.nc')
+            for m in range(1,13):
+
+
+                da = ds['tir'][(ds['time.month'] == m) & (ds['time.hour']==18)]#(ds['time.hour']>=15) & (ds['time.hour']<=21)]
+                da.values = da.values / 100
+
+                val = 0
+                storm = 0
+                ar = []
+                pixel = 78  # 78 # 78 = 5000km2 # 15000 = 253
+                for d in da:
+
+                    cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))  # 4.5,8.5
+                    labels, goodinds = ua.blob_define(cut.values, -70, minmax_area=[pixel, 25000],
+                                                      max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
+
+                    for gi in goodinds:
+                            ar.append(np.sum(labels == gi))
+
+
+                try:
+                    area70[m].append(ar)
+                except IndexError:
+                    area70[m].append(np.nan)
+
+
+        pkl.dump(area70, open(cnst.network_data + 'data/CLOVER/saves/storm_area_10W-12E_5-8N_-75C_5000km2_18_'+str(ranges[0])+'-'+str(ranges[1])+'.p',
+                            'wb'))
+
+

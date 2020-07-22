@@ -118,7 +118,7 @@ def file_loop(f):
     out['year'] = dic['time.year'].item()
     out['date'] = dic['time'].values
 
-    t_thresh = -40  # -40C ~ 167 W m-2
+    t_thresh = -50  # -40C ~ 167 W m-2
     mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
     antimask = ~mask
 

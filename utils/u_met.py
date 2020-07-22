@@ -3,8 +3,10 @@ from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
 from utils import constants
-from metpy import calc as metcalc
-
+import metpy
+from metpy import calc
+from metpy.units import units
+import ipdb
 
 Lv = 2.501e6 # heat of vapourisation
 Cp = 1005 # heat capacity of dry air at static pressure
@@ -207,4 +209,25 @@ def theta_e(pz, t, q):
         ist = ((ist.T + Lv/Cp*q.T)* ((1000 / pz) ** 0.286)).T  # (T + Lv/cpd * mixRat)(p0/p)**kappa, Stull 1988
 
     return  ist-273.15
+
+
+def qdeficit(q1,t2, p2):
+
+    pup = units.Quantity(p2, 'hPa')
+    tup = units.Quantity(t2, 'K')
+
+    thetae_up = np.array(calc.saturation_equivalent_potential_temperature(pup, tup))
+    theta_up = theta(p2, t2 - 273.15) + 273.15
+
+    qsat_inK = thetae_up - theta_up
+
+    try:
+        qsat =  ((qsat_inK * Cp / Lv)/ ((1000 / p2) ** 0.286))  # kappa = 0.286
+    except ValueError:
+        qsat = ((qsat_inK.T * Cp / Lv)/ ((1000 / p2) ** 0.286)).T  # (T + Lv/cpd * mixRat)(p0/p)**kappa, Stull 1988
+
+    qdef = qsat - q1
+
+    return qdef
+
 
