@@ -42,7 +42,7 @@ def perSys():
     tthresh = '-50'
     files = ua.locate(".nc", '/media/ck/Elements/Africa/WestAfrica/CP4/CP25_16-19UTC_future_5000km2_-50C_TCWV')  #CP25_-50C_5000km2
     print('Nb files', len(files))
-    for y in range(1998,1999):
+    for y in range(1999,2007):
 
         yfiles = []
         for f in files:
