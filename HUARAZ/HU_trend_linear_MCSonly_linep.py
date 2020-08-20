@@ -11,102 +11,45 @@ import numpy.ma as ma
 import pickle as pkl
 import shapely.geometry as shpg
 import seaborn
-
-
-def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
-
-    if method is None:
-        'Please provide trend calc method: polyfit or mk (mann kendall)'
-    if hour is not None:
-
-        if len(month)>1:
-
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
-        else:
-
-            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
-    else:
-        if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
-        else:
-            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1983) & (data['time.year'] <= 2017)]
-
-    if len(data.time)==0:
-        print('Data does not seem to have picked month or hour. Please check input data')
-
-    mean_years = data.groupby('time.year').mean('time')
-
-    # stack lat and lon into a single dimension called allpoints
-    datastacked = mean_years.stack(allpoints=['latitude', 'longitude'])
-
-
-    # apply the function over allpoints to calculate the trend at each point
-    print('Entering trend calc')
-
-    alpha = 0.05
-    # NaNs means there is not enough data, slope = 0 means there is no significant trend.
-    if method=='mk':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
-        dtrend = dtrend.unstack('allpoints')
-        if sig:
-            (dtrend['slope'].values)[dtrend['ind'].values==0] = 0
-
-    # NaNs means there is not enough data, slope = 0 means there is no significant trend.
-    if method=='polyfit':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_lingress,nb_missing=10)
-        dtrend = dtrend.unstack('allpoints')
-
-        if sig:
-            (dtrend['slope'].values)[dtrend['pval'].values > alpha] = 0
-
-    ddtrend = dtrend['slope']
-
-    if wilks and sig:
-        try:
-            pthresh = us.fdr_threshold(dtrend['pval'].values[np.isfinite(dtrend['pval'].values)], alpha=alpha)
-            ddtrend.values[(dtrend['pval'].values > pthresh) | np.isnan(dtrend['pval'].values)] = np.nan
-        except ValueError:
-            ddtrend.values = ddtrend.values * np.nan
-            pthresh = np.nan
-        print('p value threshold', pthresh)
-    #ipdb.set_trace()
-    # unstack back to lat lon coordinates
-    return ddtrend, mean_years
-
+import pandas as pd
 
 
 def trend_all():
 
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_-40_allClouds_monthly.nc'
-    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-55_allClouds_monthly.nc'
+    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc'
+    chirps = '/media/ck/Elements/SouthAmerica/CHIRPS/chirps-v2.0.monthly.nc'
+    enso = '/home/ck/DIR/mymachine/ENSO/ONI.csv'#'/home/ck/DIR/mymachine/ENSO/meiv2.data'
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    #box = [-79, -74, -12, -7]  # small
-    #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
-    #box = [-80, -53, -30, -1]
-    box = [-78, -75, -10.5, -8]
+    fname = '/home/ck/DIR/cornkle/data/HUARAZ/shapes/riosan_sel_one.shp'
+    isbuffer = [-79, -74, -12, -7]
 
-    da3 = xr.open_dataarray(mcs)#/100
-    da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
+    sdf = salem.read_shapefile(fname)
+    sdf = salem.transform_geopandas(sdf, to_crs=salem.wgs84)
 
-    grid = da3.salem.grid.regrid(factor=1)
+    da3 = xr.open_dataarray(mcs).sel(lon=slice(isbuffer[0], isbuffer[1]), lat=slice(isbuffer[2], isbuffer[3]))
+    ca = xr.open_dataarray(chirps).sel(longitude=slice(isbuffer[0], isbuffer[1]), latitude=slice(isbuffer[2], isbuffer[3]))
+    # This masks out the data which is not in the region
 
-    tir = grid.lookup_transform(da3, method=np.nanmean)  #t2d.salem.lookup_transform(da3['tir']) #
+    ens = pd.read_csv(enso, sep=',', engine='python', names=np.arange(0, 13),index_col=0)
 
-    grid = grid.to_dataset()
-    tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
+    ca[0,:,:].salem.roi(shape=sdf).plot.pcolormesh()
 
-    months= [11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    da3 = da3.salem.roi(shape=sdf).mean(['lat', 'lon'])*100
+    ca = ca.salem.roi(shape=sdf).mean(['latitude', 'longitude'])
+    months= [1,2,3,4,5,6,7,8,9,10,11,12]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+
 
     dicm = {}
     dicmean = {}
 
 
-    f = plt.figure(figsize=(9,5), dpi=300)
 
-    fname = '/home/ck/DIR/cornkle/data/HUARAZ/shapes/riosan_sel_one.shp'
 
-    sdf = salem.read_shapefile(fname)
+    f = plt.figure(figsize=(15,7.5), dpi=300)
+
+
     #sdf = salem.transform_geopandas(sdf, to_crs=salem.wgs84)
 
     for ids, m in enumerate(months):
@@ -115,44 +58,64 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
+        ensmonth = ens[m[0]]
+
+        eens = ensmonth.loc['2000':'2019']
+
         sig = True
 
+        da = da3[(da3['time.month'] == m[0]) & (da3['time.year'] >= 2000) & (
+                da3['time.year'] <= 2019)]
 
-        tirtrend, tirmean = calc_trend(tir, m, method=method, sig=sig, wilks=False)
+        ch = ca[(ca['time.month'] == m[0]) & (ca['time.year'] >= 2000) & (
+                ca['time.year'] <= 2019)]
 
-        tirm_mean = tirmean.mean('year')
+        da = da - np.mean(da.values)
+        ch = ch - np.mean(ch.values)
 
+        sslope, sint, srval, spval, serr = stats.linregress(np.arange(len(da.values)), da.values)
+        print('linear regression for shear', m, sslope, srval, spval)
 
-        
+        cslope, cint, crval, cpval, cerr = stats.linregress(np.arange(len(ch.values)), ch.values)
+        print('linear regression for shear', m, cslope, crval, cpval)
 
-        # plt.plot(np.arange(1985,2018), tirmean.mean(['latitude', 'longitude']))
-        # return
-
-        tirtrend_unstacked = ((tirtrend.values)*10./ tirm_mean.values) * 100.
-        linemean = tirmean.where(tirtrend_unstacked > 20).mean(['latitude', 'longitude'])
         #ipdb.set_trace()
-        tirtrend_out = xr.DataArray(tirtrend_unstacked, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
-        tirtrend_out.name = 'tir'
-        #tirmean_out = xr.DataArray(tirm_mean, coords=[grid['y'], grid['x']], dims=['latitude','longitude'])
 
-        dicm[m[0]] = tirtrend_out
-        dicmean[m[0]] = tirm_mean
 
-        ti_da = tirtrend_out
-
+        dslope = sslope*10
+        cdslope = cslope*10
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_lines_small'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_lines_Huaraz'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
-        ax1 = f.add_subplot(1,1,1)
+        ax = f.add_subplot(3,4,ids+1)
 
-        ax1.plot(linemean['year'], linemean, label=str(m))
+        x = np.arange(0, len(ch['time.year']))
+
+        ax.plot(ch['time.year'], ch, marker='o', markersize=3, label='Trend: '+str(np.round(cdslope,2))+ 'mm / month decade | '+ 'p='+str(np.round(cpval,2)), color='blue')
+        ax.plot(ch['time.year'], cint + cslope * np.arange(0, len(ch['time.year'])), linestyle='dashed', color='blue')
+        cc = []
+        for enb in eens.values:
+            if enb < 0:
+                cc.append('lightblue')
+            else:
+                cc. append('red')
+
+        ax.bar(eens.index.values, eens.values*30, color=cc)
+        plt.title('Month: '+ str(m[0]))
+        ax.set_ylabel('mm month$^{-1}$ (blue)')
+        ax.set_ylim(-90,90)
+        plt.legend(fontsize=6)
+        ax1 = ax.twinx()
+        ax1.plot(da['time.year'], da, color='orange', marker='o', markersize=3)
+        ax1.plot(da['time.year'], sint + sslope * np.arange(0, len(da['time.year'])), color='orange', linestyle='dashed')
+        ax1.set_ylabel('% cloud cover/month (orange)')
+        ax1.set_ylim(-20, 20)
 
 
-    plt.legend()
     plt.tight_layout()
     plt.savefig(fp)
     plt.close('all')

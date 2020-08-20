@@ -166,18 +166,18 @@ def month_count():
     years = list(range(1985, 2018))
 
     msg_folder = cnst.GRIDSAT_PERU
-    fname = 'aggs/gridsat_WA_count_-40_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    fname = 'aggs/gridsat_WA_count_-30_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
         for y in years:
             y = str(y)
-            da1 = xr.open_mfdataset(cnst.GRIDSAT_PERU + 'daily_ALLkm2/gridsat_WA_-40Min_ALLkm2_UTCDay_' + y + '*.nc',
+            da1 = xr.open_mfdataset(cnst.GRIDSAT_PERU + 'daily_-15ALLkm2_UTC_DAY/gridsat_WA_-15Min_ALLkm2_UTCDay_' + y + '*.nc',
                                     combine='nested', concat_dim='time').load()
             # _-40_1000km2_15-21UTC
             print('Doing ' + y)
             da1['tir'].values = da1['tir'].values/100  #ONLY FOR NEWER FILES
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -40) & (da1['tir'] >= -109), other=0) #-65
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -30) & (da1['tir'] >= -109), other=0) #-65
             da1['tir'].values[da1['tir'].values < 0] = 1
             #ipdb.set_trace()
             da1 = da1.resample(time='m').mean('time')

@@ -123,7 +123,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = False
+        sig = True
 
 
         tirtrend, tirmean = calc_trend(tir, m, method=method, sig=sig, wilks=False)
@@ -149,7 +149,7 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_noSIG_inPerc_since2000_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_SIG_inPerc_since2000_'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'CHIRPS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
@@ -171,7 +171,7 @@ def trend_all():
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         #map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-1.5,1.6,0.25)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.set_plot_params(cmap='RdBu', extend='both', levels=[-100, -80,-60,-40,-20,-10,-5,0,5,10,20,40,60,80,100])
+        map.set_plot_params(cmap='RdBu', extend='both', levels=[-100, -80,-60,-40,-20,-10,-5,-2,0,2,5,10,20,40,60,80,100])
         dic = map.visualize(ax=ax1, title=str(m)+': Monthly precipitation change', cbar_title='% decade-1',addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')

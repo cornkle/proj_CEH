@@ -126,7 +126,7 @@ def file_loop(fi):
 
     pos = np.where((fi.values >= 5) & (fi.values <= 65)) # (fi.values >= 5) & (fi.values < 65) #(fi.values >= 5) & (fi.values < 65)
 
-    if (np.sum(pos) == 0):
+    if (np.sum(pos[0]) == 0):
         print('No blobs found')
         return None
 

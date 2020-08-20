@@ -142,13 +142,13 @@ def trend_all():
         pllist.append([q_da,theta_da, tt_da,tcw_da])
 
 
-    f = plt.figure(figsize=(15,9), dpi=300)
+    f = plt.figure(figsize=(12,7), dpi=300)
     ax1 = f.add_subplot(2, 2, 1)
     map.set_shapefile(countries=True, linewidths=1.2, color='grey')
     map.set_data(pllist[0][3].values,interp='linear')  # interp='linear'
     map.set_contour((pllist[0][2].values).astype(np.float64),interp='linear', colors='k',  linewidths=1.8, levels=[-0.5,-0.4,-0.3,0.3,0.4,0.5]) #[6,8,10,12,14,16] #levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6],
     map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,-0.4,-0.2,0.2, 0.4,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
-    dic = map.visualize(ax=ax1, title=r'Mar: TCWV (shading) | 925hPa T (contours) ', cbar_title=r'% decade$^{-1}$')
+    dic = map.visualize(ax=ax1, title=r'Mar: TCWV (shading) | 925hPa T (contours) ', cbar_title=r'kg m$^{-2}$ decade$^{-1}$')
     contours = dic['contour'][0]
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
@@ -165,7 +165,7 @@ def trend_all():
     map.set_data(pllist[1][3].values,interp='linear')  # interp='linear'
     map.set_contour((pllist[1][2].values).astype(np.float64),interp='linear', colors='k',  linewidths=1.8, levels=[-0.5,-0.4,-0.3,0.3,0.4,0.5]) #[6,8,10,12,14,16] #levels=[-0.6,-0.4,-0.2,0.2,0.4, 0.6],
     map.set_plot_params(levels=[-1.5,-1,-0.8,-0.6,-0.4,-0.2,0.2, 0.4,0.6,0.8,1,1.5], cmap='RdBu', extend='both')  # levels=np.arange(-0.5,0.51,0.1), [-0.6,-0.4,-0.2,0.2,0.4,0.6]
-    dic = map.visualize(ax=ax3, title=r'Oct: TCWV (shading) | 925hPa T (contours)', cbar_title=r'% decade$^{-1}$')
+    dic = map.visualize(ax=ax3, title=r'Oct: TCWV (shading) | 925hPa T (contours)', cbar_title=r'kg m$^{-2}$ decade$^{-1}$')
     contours = dic['contour'][0]
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
@@ -178,6 +178,15 @@ def trend_all():
     plt.clabel(contours, inline=True, fontsize=9, fmt='%1.1f')
 
     plt.tight_layout()
+
+    plt.annotate('a)', xy=(0.02, 0.96), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('b)', xy=(0.49, 0.96), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('c)', xy=(0.02, 0.48), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
+    plt.annotate('d)', xy=(0.49, 0.48), xytext=(0, 4), size=15, xycoords=('figure fraction', 'figure fraction'),
+                 textcoords='offset points')
 
     plt.savefig(fp)
     plt.close('all')

@@ -26,6 +26,26 @@ def shift_lons(ds, lon_dim='lon', save=False):
     new_lons[mask] = -(360. - lons[mask])
     new_lons[~mask] = lons[~mask]
     ds[lon_dim].values = new_lons
+    ipdb.set_trace()
+    if save:
+        ds.to_netcdf(save)
+    return ds
+
+
+def shift_lons_data(ds, lon_dim='lon', save=False):
+    """ Shift longitudes from [0, 360] to [-180, 180] """
+    lons = ds[lon_dim].values
+    new_lons = np.empty_like(lons)
+    new_data = np.empty_like(ds.values)
+    mask = np.where(lons >= 180)
+    mask2 = np.where(lons < 180)
+    new_lons = lons - 180#179.0625
+    #ipdb.set_trace()
+    new_data[:,mask2[0]] = ds.values[:,mask[0]]
+    new_data[:,mask[0]] = ds.values[:,mask2[0]]
+    ds[lon_dim].values = new_lons
+    ds.values = new_data
+    #ipdb.set_trace()
     if save:
         ds.to_netcdf(save)
     return ds

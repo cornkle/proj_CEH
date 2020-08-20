@@ -15,7 +15,7 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
-    y1 = 1999
+    y1 = 2000
     y2 = 2019
 
     if method is None:
@@ -147,7 +147,7 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_allClouds_noSIG_highres'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_allClouds_noSIG_since2000'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
