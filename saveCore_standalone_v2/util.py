@@ -5,7 +5,7 @@ Created on Thu Jun  2 14:08:18 2016
 @author: cornkle
 """
 import numpy as np
-from saveCore_standalone import wav
+from saveCore_standalone_v2 import wav
 
 
 def read_dic(dic):
@@ -30,6 +30,7 @@ def _create_dic(dx, dist, start, nb):
 DATASETS = {
     'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),  # resolution, distance between scales,start scale, number of scales
     'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 2),  #28     0.5
+    'METEOSAT5K_veraV2': _create_dic(5, 0.45, 17, 4),  #28     0.5
     'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
@@ -60,7 +61,7 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
     #TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
 
-    dic['t']=powerTIR
+    dic['power']=powerTIR
     dic['scales'] = obj.scales
     dic['res'] = obj.res
     dic['coeffs'] = coeffsTIR

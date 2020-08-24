@@ -2,9 +2,9 @@
 
 
 import numpy as np
-from saveCore_standalone import util
+from saveCore_standalone_NFLICS import util
 import xarray as xr
-from saveCore_standalone import powerBlob_utils
+from saveCore_standalone_NFLICS import powerBlob_utils
 import datetime as dt
 
 
