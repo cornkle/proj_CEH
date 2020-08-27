@@ -14,6 +14,8 @@ from utils import u_darrays as uda
 from scipy import stats
 import warnings
 import multiprocessing
+import pandas as pd
+import scipy
 
 
 def corr(a, b, bsingle=None, c_box=None):
@@ -64,6 +66,77 @@ def corr(a, b, bsingle=None, c_box=None):
 
     return ds
 
+def lag_linregress_3D(x, y, lagx=0, lagy=0, stride=3):
+    """
+    Input: Two xr.Datarrays of any dimensions with the first dim being time.
+    Thus the input data could be a 1D time series, or for example, have three
+    dimensions (time,lat,lon).
+    Datasets can be provided in any order, but note that the regression slope
+    and intercept will be calculated for y with respect to x.
+    Output: Covariance, correlation, regression slope and intercept, p-value,
+    and standard error on regression between the two datasets along their
+    aligned time dimension.
+    Lag values can be assigned to either of the data, with lagx shifting x, and
+    lagy shifting y, with the specified lag amount.
+    """
+    #1. Ensure that the data are properly alinged to each other.
+    x,y = xr.align(x,y)
+
+    #2. Add lag information if any, and shift the data accordingly
+    if lagx!=0:
+
+        # If x lags y by 1, x must be shifted 1 step backwards.
+        # But as the 'zero-th' value is nonexistant, xr assigns it as invalid
+        # (nan). Hence it needs to be dropped
+        x   = x.shift(time = -lagx).dropna(dim='time')
+
+        # Next important step is to re-align the two datasets so that y adjusts
+        # to the changed coordinates of x
+        x,y = xr.align(x,y)
+
+    if lagy!=0:
+        y   = y.shift(time = -lagy).dropna(dim='time')
+        x,y = xr.align(x,y)
+
+    #3. Compute data length, mean and standard deviation along time axis:
+    n = y.notnull().sum(dim='time')
+    xmean = x.mean(axis=0)
+    ymean = y.mean(axis=0)
+    xstd  = x.std(axis=0)
+    ystd  = y.std(axis=0)
+
+    #4. Compute covariance along time axis
+    cov   =  np.sum((x - xmean)*(y - ymean), axis=0)/(n)
+
+    #5. Compute correlation along time axis
+    cor   = cov/(xstd*ystd)
+
+    #6. Compute regression slope and intercept:
+    slope     = cov/(xstd**2)
+    intercept = ymean - xmean*slope
+
+    #7. Compute P-value and standard error
+    #Compute t-statistics
+
+    #tstats = cor*np.sqrt(n-2)/np.sqrt(1-cor**2)  # Tstat with T normal distribution
+    TINY = 1.0e-20
+    tstats = cor * np.sqrt(n-2 / ((1.0 - cor + TINY)*(1.0 + cor + TINY)))
+
+    stderr = slope/tstats
+
+    from scipy.stats import t
+    pval   = t.sf(np.abs(tstats), n-2)*2
+    #pval = t.sf(np.abs(tstats), n - 2)*2
+    pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
+
+    #ipdb.set_trace()
+    # nullmask = np.sum((y.values == 0), axis=0)
+    # pos = np.where(nullmask>=0.75*stride)
+
+    return cov,cor,slope,intercept,pval,stderr
+
+
+
 def readERA():
 
     u200orig = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/u_15UTC_1981-2019_peru_big.nc')
@@ -76,12 +149,19 @@ def readERA():
     return u200orig
 
 
-def saveCHIRPS():
+
+def runCHIRPS():
+    ylist = [(1985,2005), (1998,2019), (1985,2019), (1985,1995), (1985,2002), (2002,2019), (1995,2005), (2005,2019)]
+    for y in ylist:
+        saveCHIRPS(y[0], y[1])
+
+def saveCHIRPS(y1,y2):
 
     chirpsbox = [-81, -68, -17, 0]
 
     u200orig = readERA()
-    u200 = u200orig.sel(longitude=slice(chirpsbox[0], chirpsbox[1]), latitude=slice(chirpsbox[3], chirpsbox[2]))
+    u200 = u200orig.sel(longitude=slice(chirpsbox[0], chirpsbox[1]), latitude=slice(chirpsbox[2], chirpsbox[3]))
+    u200 = u200.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
 
     chirps_all = xr.open_dataset('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_peru_onERA5.nc')
     pos = np.intersect1d(chirps_all.time, u200.time)
@@ -97,31 +177,40 @@ def saveCHIRPS():
     for doy in np.arange(1,366): #366
         dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
 
-    pool = multiprocessing.Pool(processes=6)
+    pool = multiprocessing.Pool(processes=4)
 
-    res = pool.map(run_doy, dslist)
-    pool.close()
+    # res = pool.map(run_doy_correlation, dslist)
+    # pool.close()
+
+    res = []
+    for d in dslist:
+        out = run_doy_correlation(d)
+        res.append(out)
 
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(chirps['time.year'])
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_u200_correlation_peru.nc')
+  #  ipdb.set_trace()
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_u200_correlation_peru_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
 
 
-def saveGRIDSAT():
+def runGridsat():
+    ylist = [(1985,2005), (1998,2019),(1985,2019), (1985,1995), (1985,2002), (2002,2019), (1995,2005), (2005,2019)]
+    for y in ylist:
+        saveGRIDSAT(y[0], y[1])
+
+def saveGRIDSAT(y1,y2):
 
     u200orig = readERA()
-    u200orig = u200orig.sel(time=(u200orig['time.year'] <= 1998))
+    u200orig = u200orig.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
 
-    gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_ALLkm2_UTC_DAY_onBIGERA/*.nc',
-                                combine='nested', concat_dim='time').load()
+    gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_-15ALLkm2_UTC_DAY_onBIGERA/*.nc',
+                                combine='nested', concat_dim='time')
     posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
 
     u200orig = u200orig.sel(time=posgrid)
-    gridsat = gridsat.sel(time=posgrid)
+    gridsat = gridsat.sel(time=posgrid).load()
 
-
-
-    udoy = u200orig['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
+    udoy = u200orig['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time') # time=3
     cdoy = gridsat['tir'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
 
     dslist = []
@@ -129,43 +218,32 @@ def saveGRIDSAT():
 
     for doy in np.arange(1,366): #366
         dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
-
-    pool = multiprocessing.Pool(processes=6)
-
-    res = pool.map(run_doy, dslist)
-    pool.close()
-
-    # #for d in np.arange(1, 6):  # 366
-    #     ccdoy = cdoy['tir'].sel(time=(cdoy['time.dayofyear'] == d))
-    #     uudoy = udoy['u'].sel(time=(udoy['time.dayofyear'] == d))
+    #ipdb.set_trace()
+    # pool = multiprocessing.Pool(processes=4)
     #
-    #     # ipdb.set_trace()
-    #
-    #     diff1 = xr.DataArray(ccdoy.values[1::, :, :] - ccdoy.values[0:-1, :, :],
-    #                          coords=[ccdoy.time[1::], ccdoy.latitude, ccdoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
-    #     diff2 = xr.DataArray(uudoy.values[1::, :, :] - uudoy.values[0:-1, :, :],
-    #                          coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
+    # res = pool.map(run_doy_correlation, dslist)
+    # pool.close()
+    res = []
+    for d in dslist:
+        out = run_doy_correlation(d)
+        res.append(out)
 
-        # outarr = corr(diff1, diff2)
-        # dslist.append(outarr)
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT_u_correlation_SouthAmerica_1985-2000.nc')
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT-15_u_correlation_SouthAmerica_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
 
 
 def saveGPM():
 
     u200orig = readERA()
-    #u200orig = u200orig.sel(time=(u200orig['time.year'] > 1998))
+    u200orig = u200orig.sel(time=((u200orig['time.year'] >= 2000) & (u200orig['time.year'] <= 2018)))
 
     gridsat = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/GPM/daily_onERA/*.nc',
-                                combine='nested', concat_dim='time').load()
+                                combine='nested', concat_dim='time')
     posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
 
     u200orig = u200orig.sel(time=posgrid)
-    gridsat = gridsat.sel(time=posgrid)
+    gridsat = gridsat.sel(time=posgrid).load()
 
     grid = gridsat.isel(time=0)
     grid = grid.where(np.isfinite(grid['precip']), drop=True)
@@ -174,7 +252,7 @@ def saveGPM():
     u200orig = u200orig.sel(latitude=slice(grid.latitude.min(), grid.latitude.max()), longitude=slice(grid.longitude.min(), grid.longitude.max()))
     gridsat = gridsat.sel(latitude=slice(grid.latitude.min(), grid.latitude.max()), longitude=slice(grid.longitude.min(), grid.longitude.max()))
 
-    ipdb.set_trace()
+    #ipdb.set_trace()
 
     udoy = u200orig['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
     cdoy = gridsat['precip'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
@@ -185,26 +263,17 @@ def saveGPM():
     for doy in np.arange(1,366): #366
         dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
 
-    pool = multiprocessing.Pool(processes=6)
-
-    res = pool.map(run_doy, dslist)
-    pool.close()
-
-    # #for d in np.arange(1, 6):  # 366
-    #     ccdoy = cdoy['tir'].sel(time=(cdoy['time.dayofyear'] == d))
-    #     uudoy = udoy['u'].sel(time=(udoy['time.dayofyear'] == d))
+    # pool = multiprocessing.Pool(processes=4)
     #
-    #     # ipdb.set_trace()
+    # res = pool.map(run_doy_correlation, dslist)
+    # pool.close()
     #
-    #     diff1 = xr.DataArray(ccdoy.values[1::, :, :] - ccdoy.values[0:-1, :, :],
-    #                          coords=[ccdoy.time[1::], ccdoy.latitude, ccdoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
-    #     diff2 = xr.DataArray(uudoy.values[1::, :, :] - uudoy.values[0:-1, :, :],
-    #                          coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
+    res = []
+    for d in dslist:
+        out = run_doy_correlation(d)
+        res.append(out)
 
-        # outarr = corr(diff1, diff2)
-        # dslist.append(outarr)
+
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
     chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GPM/GPM_u_correlation_SouthAmerica_2000-2018.nc')
@@ -243,7 +312,7 @@ def saveGPM_GRIDSAT():
 
     pool = multiprocessing.Pool(processes=6)
 
-    res = pool.map(run_doy, dslist)
+    res = pool.map(run_doy_correlation_optim, dslist)
     pool.close()
 
     # #for d in np.arange(1, 6):  # 366
@@ -316,65 +385,94 @@ def saveERA5():
 
 
 
-def saveGRIDSAT_fullYear():
+def saveGRIDSATPerYear_optim():
 
-    u200orig = readERA()
-    u200orig = u200orig.sel(time=(u200orig['time.year'] > 1998))
+    u200 = readERA()
 
-    gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_ALLkm2_UTC_DAY_onBIGERA/*.nc',
-                                combine='nested', concat_dim='time').load()
-    posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
+    for year in range(1985,2019):
+        u200orig = u200.sel(time=(u200['time.year'] == year))
 
-    u200orig = u200orig.sel(time=posgrid)
-    gridsat = gridsat.sel(time=posgrid)
+        gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_-40ALLkm2_UTC_DAY_onBIGERA/*.nc',
+                                    combine='nested', concat_dim='time')
+
+        posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
+
+        u200orig = u200orig.sel(time=posgrid)
+        gridsat = gridsat.sel(time=posgrid).load()
+
+        udoy = u200orig['u']
+        cdoy = gridsat['tir']
+
+        dslist = []
+        print('Did rolling aggregation')
+
+        # rw = rolling_window(np.arange(1,366), 15)
+        res = []
+
+        #for doy in np.arange(11,16): #366
+        stride=7
+
+        for doy in np.arange(1, 366):  # 366
+
+            d1 = doy - stride
+            d2 = doy + stride
+
+            try:
+                updoy = udoy.sel(time=((udoy['time.dayofyear'] >= d1) & (udoy['time.dayofyear'] <= d2)))
+            except:
+                continue
+            try:
+                cpdoy = cdoy.sel(time=((udoy['time.dayofyear'] >= d1) & (udoy['time.dayofyear'] <= d2)))
+            except:
+                continue
+
+            #ipdb.set_trace()
+            if (len(cpdoy.time) < stride) | (len(updoy.time) < stride) | (np.sum(udoy['time.dayofyear'] == doy)==0) | (np.sum(cdoy['time.dayofyear'] == doy)==0) :
+                continue
+
+            dslist.append(
+                (doy, updoy, cpdoy))
+
+        #ipdb.set_trace()
+        pool = multiprocessing.Pool(processes=4)
+
+        res = pool.map(run_doy_correlation_optim, dslist)
+        pool.close()
+
+        # for d in dslist:
+        #     run_doy_correlation_optim(d)
+        #
+        # ipdb.set_trace()
+
+        concat_ds = xr.concat(res, dim='time')
+        concat_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/rollingCorr/GRIDSAT_u200_rollingCorr_SouthAmerica_'+str(year)+'.nc')
 
 
 
-    udoy = u200orig['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
-    cdoy = gridsat['tir'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
 
-    dslist = []
-    print('Did rolling aggregation')
 
-    # for doy in np.arange(1,366): #366
-    #     dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
+def run_doy_correlation_optim(x):
 
-    pool = multiprocessing.Pool(processes=6)
+    doy = x[0]
 
-    res = pool.map(run_year, (udoy,cdoy))
-    pool.close()
+    udoy = x[1]
+    cdoy = x[2]
 
-    # #for d in np.arange(1, 6):  # 366
-    #     ccdoy = cdoy['tir'].sel(time=(cdoy['time.dayofyear'] == d))
-    #     uudoy = udoy['u'].sel(time=(udoy['time.dayofyear'] == d))
-    #
-    #     # ipdb.set_trace()
-    #
-    #     diff1 = xr.DataArray(ccdoy.values[1::, :, :] - ccdoy.values[0:-1, :, :],
-    #                          coords=[ccdoy.time[1::], ccdoy.latitude, ccdoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
-    #     diff2 = xr.DataArray(uudoy.values[1::, :, :] - uudoy.values[0:-1, :, :],
-    #                          coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
-    #                          dims=['time', 'latitude', 'longitude'])
+    print('Doing ', doy)
 
-        # outarr = corr(diff1, diff2)
-        # dslist.append(outarr)
-    chirps_ds = xr.concat(res, dim='dayofyear')
-    chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT_u_correlation_SouthAmerica_2000-2018_fullyear.nc')
+    ds = xr.Dataset()
+    try:
+        ds['pval'] = udoy.sel(time=((udoy['time.dayofyear'] == doy))) * np.nan
+    except:
+        ipdb.set_trace()
+    ds['r'] = udoy.sel(time=((udoy['time.dayofyear'] == doy))) * np.nan
+    ds['slope'] = udoy.sel(time=((udoy['time.dayofyear'] == doy))) * np.nan
 
-def run_year(x):
+    if (np.isnan(udoy.all())) | (np.isnan(cdoy.all())):
+        return ds
 
-    #d = x[0]
-    #print('Doing dayofyear', d)
-
-    uudoy = x[0]
-    ccdoy = x[1]
-
-    # ccdoy = cdoy.sel(time=(cdoy['time.dayofyear'] == d))
-    # uudoy = udoy.sel(time=(udoy['time.dayofyear'] == d))
-
-    # ipdb.set_trace()
+    uudoy = udoy#.sel(time=((udoy['time.dayofyear'] >= d1) & (udoy['time.dayofyear'] <= d2)))
+    ccdoy = cdoy
 
     diff1 = xr.DataArray(ccdoy.values[1::, :, :] - ccdoy.values[0:-1, :, :],
                          coords=[ccdoy.time[1::], ccdoy.latitude, ccdoy.longitude],
@@ -383,11 +481,72 @@ def run_year(x):
                          coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
                          dims=['time', 'latitude', 'longitude'])
 
-    outarr = corr(diff1, diff2)
+    cov, cor, slope, intercept, pval, stderr = lag_linregress_3D(diff2, diff1, lagx=0, lagy=0)
 
-    del diff1
-    del diff2
-    del ccdoy
-    del uudoy
+    try:
+        ds['r'].values = cor.values[np.newaxis, :]
+    except:
+        ipdb.set_trace()
+    try:
+        ds['pval'].values = pval.values[np.newaxis, :]
+    except:
+        ipdb.set_trace()
+    try:
+        ds['slope'].values = slope.values[np.newaxis, :]
+    except:
+        ipdb.set_trace()
+    #ipdb.set_trace()
 
-    return outarr
+    return ds
+
+
+def run_doy_correlation(x):
+
+    doy = x[0]
+
+    udoy = x[1]
+    cdoy = x[2]
+
+    print('Doing ', doy)
+
+    ds = xr.Dataset()
+
+    ds['pval'] = udoy.copy(deep=True).sum('time') * np.nan
+    ds['r'] = udoy.copy(deep=True).sum('time') * np.nan
+    ds['slope'] = udoy.copy(deep=True).sum('time') * np.nan
+    ds['intercept'] = udoy.copy(deep=True).sum('time') * np.nan
+
+    if (np.isnan(udoy.all())) | (np.isnan(cdoy.all())):
+        return ds
+
+    uudoy = udoy#.sel(time=((udoy['time.dayofyear'] >= d1) & (udoy['time.dayofyear'] <= d2)))
+    ccdoy = cdoy
+
+    diff1 = xr.DataArray(ccdoy.values[1::, :, :] - ccdoy.values[0:-1, :, :],
+                         coords=[ccdoy.time[1::], ccdoy.latitude, ccdoy.longitude],
+                         dims=['time', 'latitude', 'longitude'])
+    diff2 = xr.DataArray(uudoy.values[1::, :, :] - uudoy.values[0:-1, :, :],
+                         coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
+                         dims=['time', 'latitude', 'longitude'])
+
+    cov, cor, slope, intercept, pval, stderr = lag_linregress_3D(diff2, diff1, lagx=0, lagy=0)
+
+    try:
+        ds['r'].values = cor.values
+    except:
+        ipdb.set_trace()
+    try:
+        ds['pval'].values = pval.values
+    except:
+        ipdb.set_trace()
+    try:
+        ds['slope'].values = slope.values
+    except:
+        ipdb.set_trace()
+    try:
+        ds['intercept'].values = intercept.values
+    except:
+        ipdb.set_trace()
+    #ipdb.set_trace()
+
+    return ds

@@ -60,14 +60,14 @@ def trend_all():
 
         ensmonth = ens[m[0]]
 
-        eens = ensmonth.loc['2000':'2019']
+        eens = ensmonth.loc['1985':'2019']
 
         sig = True
 
-        da = da3[(da3['time.month'] == m[0]) & (da3['time.year'] >= 2000) & (
+        da = da3[(da3['time.month'] == m[0]) & (da3['time.year'] >= 1985) & (
                 da3['time.year'] <= 2019)]
 
-        ch = ca[(ca['time.month'] == m[0]) & (ca['time.year'] >= 2000) & (
+        ch = ca[(ca['time.month'] == m[0]) & (ca['time.year'] >= 1985) & (
                 ca['time.year'] <= 2019)]
 
         da = da - np.mean(da.values)
@@ -86,9 +86,9 @@ def trend_all():
         cdslope = cslope*10
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_lines_Huaraz'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'MCS_only_trendmap_Allmonths_count-50C_lines_Huaraz_1985-2018_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'MCS_only_trendmap_1985-2018_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
 
         ax = f.add_subplot(3,4,ids+1)

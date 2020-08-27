@@ -40,8 +40,17 @@ def saveCHIRPS():
 def saveGRIDSAT():
     chirpsbox = [-81,-68,-18.5,0]  # peru daily
 
-    chirpsall_list = glob.glob(cnst.GRIDSAT_PERU + '/daily_ALLkm2_UTC_DAY/*.nc')
+    chirpsall_list = glob.glob(cnst.GRIDSAT_PERU + '/daily_-15ALLkm2_UTC_DAY/*.nc')
+
     for ids, ch in enumerate(chirpsall_list):
+
+        fname = os.path.basename(ch)
+        fname = fname.replace('UTCDay', 'UTCDay_onERA')
+        outpath = cnst.GRIDSAT_PERU + '/daily_-15ALLkm2_UTC_DAY_onBIGERA/' + fname + '.nc'
+
+        if os.path.isfile(outpath):
+            print('File exists, continue')
+            continue
 
         chirpsall = xr.open_dataset(ch)
 
@@ -54,7 +63,7 @@ def saveGRIDSAT():
             u200 = uda.flip_lat(u200)
 
             chirps = chirpsall.isel(time=0).squeeze()
-            ipdb.set_trace()
+            #ipdb.set_trace()
             ch_on_e, lut = u200.salem.lookup_transform(chirps, return_lut=True)
         else:
             ch_on_e = u200.salem.lookup_transform(chirpsall, lut=lut)
@@ -64,7 +73,7 @@ def saveGRIDSAT():
         fname = os.path.basename(ch)
         fname = fname.replace('UTCDay', 'UTCDay_onERA')
         #ipdb.set_trace()
-        ch_on_e.to_netcdf(cnst.GRIDSAT_PERU + '/daily_ALLkm2_UTC_DAY_onBIGERA/'+fname+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        ch_on_e.to_netcdf(outpath, mode='w', encoding=encoding, format='NETCDF4')
         #ipdb.set_trace()
 
 def saveGPM():

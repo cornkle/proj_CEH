@@ -191,3 +191,42 @@ def cut_box(arr, xpos=None, ypos=None, dist=None):
                             coords={'level' : arr.level.values})
     else:
         return xr.DataArray(kernel, dims=['y','x'])
+
+
+
+def box_correlation(a, b, bsingle=None, c_box=None):
+    ds = xr.Dataset()
+    ds['pval'] = a.copy(deep=True).sum('year') * np.nan
+    ds['r'] = a.copy(deep=True).sum('year') * np.nan
+    ds['slope'] = a.copy(deep=True).sum('year') * np.nan
+
+    corr_box = c_box
+
+    if bsingle:
+        bb = b
+    else:
+        bb = b.sel(latitude=slice(corr_box[2], corr_box[3]), longitude=slice(corr_box[0], corr_box[1])).mean(dim=['latitude', 'longitude'])
+
+    for lat in a.latitude.values:
+        for lon in a.longitude.values:
+            aa = a.sel(latitude=lat, longitude=lon)
+            if bsingle:
+                r, p = stats.pearsonr(aa.values, bb)
+
+                pf = np.polyfit(aa.values, bb, 1)
+            else:
+                r, p = stats.pearsonr(aa.values, bb.values)
+                pf = np.polyfit(aa.values, bb.values, 1)
+
+
+            slope = pf[0]
+
+            if (np.nansum(aa.values == 0) >= 10):
+                p = np.nan
+                r = np.nan
+
+            ds['r'].loc[{'latitude': lat, 'longitude': lon}] = r
+            ds['pval'].loc[{'latitude': lat, 'longitude': lon}] = p
+            ds['slope'].loc[{'latitude': lat, 'longitude': lon}] = slope
+
+    return ds
