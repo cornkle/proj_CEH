@@ -15,7 +15,7 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
-    y1 = 1985
+    y1 = 2000
     y2 = 2019
 
     if method is None:
@@ -81,11 +81,11 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 def trend_all():
 
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_-40_allClouds_monthly.nc'
-    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-20_allClouds_monthly.nc'
+    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc'
 
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    box = [-81,-65,-25,0]#[-79, -76, -11, -8] #[-79, -74, -12, -8]  # small latitude=slice(-25,0), longitude=slice(-81,-65)
+    box = [-79, -76, -11, -8] #[-79, -74, -12, -8]  # small latitude=slice(-25,0), longitude=slice(-81,-65) [-81,-65,-25,0]
     #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
     #box = [-80, -53, -30, -1]
     #box = [-79,-69,-17,-7] #[-79, -75, -10.5, -8]
@@ -121,7 +121,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = True
+        sig = False
 
 
         tirtrend, tirmean = calc_trend(tir, m, method=method, sig=sig, wilks=False)
@@ -147,7 +147,7 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Allmonths_count-20C_allClouds_SIG_since1985'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'MCS_only_trendmap_Peru_count-50C_allClouds_noSIG_since2000_'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
@@ -169,7 +169,7 @@ def trend_all():
 
         #map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-1.5,1.6,0.25)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
         map.set_plot_params(cmap='RdBu', extend='both', levels=np.arange(-30, 31, 10))
-        dic = map.visualize(ax=ax1, title=str(m)+': -20C frequency change', cbar_title='% decade-1',addcbar=True)
+        dic = map.visualize(ax=ax1, title=str(m)+': -50C frequency change', cbar_title='% decade-1',addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 

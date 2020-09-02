@@ -372,15 +372,15 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     era5 = xr.open_mfdataset(cnst.ERA5_HOURLY_PL_HU + '/ERA5_*_pl.nc', concat_dim='time', combine='nested')
-    u200 = era5['u'].sel(level=200, time=(era5[
-                                              'time.hour'] == 15))  # .load()   #longitude=slice(bigbox[0], bigbox[1]), latitude=slice(bigbox[3], bigbox[2]),
+    u200 = era5['u'].sel(level=850, time=(era5[
+                                              'time.hour'] == 9))  # .load()   #longitude=slice(bigbox[0], bigbox[1]), latitude=slice(bigbox[3], bigbox[2]),
     u200 = uda.flip_lat(u200)
 
     u200 = u200.sel(time=((u200['time.year'] > 1980) & (u200['time.year'] < 2019)))
     u200.name = 'u'
     comp = dict(zlib=True, complevel=5)
     encoding = {'u': comp}
-    u200.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/u_15UTC_1981-2018_peru.nc', mode='w',
+    u200.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/u850_09UTC_1981-2018_peru.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 

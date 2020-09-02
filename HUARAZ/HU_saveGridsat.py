@@ -192,6 +192,45 @@ def rewrite_UTCday():
         del dataset
 
 
+def rewrite_hourly():
+
+    for y in np.arange(1983,2020): #(1984,2018)
+
+        print('Doing', y)
+        inpath = cnst.elements_drive + 'SouthAmerica/GRIDSAT/3hourly/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'+str(y)+'/'
+        #file = glob.glob(cnst.GRIDSAT_PERU + '*'+str(y)+'*.nc')
+
+        path = cnst.GRIDSAT_PERU +'hourly_-20ALLkm2_UTC_daytime/gridsat_-20ALLkm2_UTC_daytime'
+        try:
+            dataset = xr.open_mfdataset(inpath + '*.nc', combine='nested', concat_dim='time')
+        except:
+            print('FAIL')
+            continue
+
+        #ipdb.set_trace()
+        datout = dataset#.resample(time='1D').min()
+        #ipdb.set_trace()
+        for m in np.unique(datout['time.month']):
+
+            monthly = datout['irwin_cdr'].sel(time=((datout['time.month']==m) & (((datout['time.hour'] >= 12) & (datout['time.hour'] <= 21)) | (datout['time.hour'] == 0)))).load()-273.15
+            mask = (monthly.values>-20) | (monthly.values<-110)
+            #ipdb.set_trace()
+            monthly.values = mask
+
+            monthly = monthly.resample(time='1D').sum()
+
+            monthly.values = (np.round(monthly.values, decimals=2)).astype(np.int16)
+            monthly.name = 'nb_hours'
+
+            comp = dict(zlib=True, complevel=5)
+            #ipdb.set_trace()
+            encoding = {'nb_hours': comp}
+            out = path + str(y) + '-' + str(m).zfill(2) + '.nc'
+            monthly.to_netcdf(out, mode='w', format='NETCDF4', encoding=encoding)
+        del datout
+        del dataset
+
+
 def rewrite_UTCday_afternoon():
 
     for y in np.arange(1994,1995):#(1984,2018):
