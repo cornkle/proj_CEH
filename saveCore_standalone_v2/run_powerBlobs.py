@@ -6,17 +6,18 @@ from saveCore_standalone_v2 import util
 import xarray as xr
 from saveCore_standalone_v2 import powerBlob_utils
 import ipdb
+import os
 
 
-def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_resolution=5):
+def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_resolution=3, CLOBBER=False):
 
 
     outt, nogood, t_thresh_size, t_thresh_cut, pix_nb, area_img = powerBlob_utils.filter_img(meteosat_data, data_resolution)
 
-    wav = util.waveletT(outt, dataset='METEOSAT5K_veraV2')
+    wav = util.waveletT(outt, dataset='METEOSAT3K_veraLS')
     #meteosat_data[nogood] = np.nan
 
-    power_msg = powerBlob_utils.find_dominant_power(wav, nogood, area_img, data_resolution, dataset='MSG')
+    power_msg = powerBlob_utils.find_dominant_power(wav, outt, nogood, area_img, data_resolution) #, dataset='MSG'
 
     if power_msg is None:  # if power calculation failed
         print('Power calc fail, continue')
@@ -50,7 +51,9 @@ def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_
     ds.attrs['cutout_T'] = t_thresh_size
     ds.attrs['cutout_minPixelNb'] = pix_nb
 
-
+    if CLOBBER:
+        if os.path.isfile(savefile):
+            os.remove(savefile)
     comp = dict(zlib=True, complevel=5)
     enc = {var: comp for var in ds.data_vars}
 

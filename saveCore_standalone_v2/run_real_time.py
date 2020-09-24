@@ -20,8 +20,9 @@ def run():
     files = glob.glob(met_folder + 'IR_108_BT_*.nc')
     dummy = xr.open_dataset(files[0])
 
+    data_resolution = 3 # in km
     # make salem grid
-    grid = u_grid.make(np.arange(-19,0), np.arange(4,20), 5000)
+    grid = u_grid.make(np.arange(-19,0), np.arange(4,20), data_resolution*1000)
     dlon = dummy['lon_2d'].squeeze().values.T
     dlat = dummy['lat_2d'].squeeze().values.T
     inds, weights, shape = u_int.interpolation_weights_grid(dlon, dlat, grid)
@@ -60,5 +61,5 @@ def run():
         lon, lat = grid.ll_coordinates
 
         #ipdb.set_trace()
-        run_powerBlobs.wavelet_analysis(outt, lon, lat, date, outfile, data_resolution=5)
+        run_powerBlobs.wavelet_analysis(outt, lon, lat, date, outfile, data_resolution=data_resolution)
 

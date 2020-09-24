@@ -52,7 +52,7 @@ def filter_img(inarr, data_resolution):
 
     nogood = np.isnan(outt)  # filters edge maxima later, no maxima in -40 edge area by definition!
 
-    # tdiff = np.nanmax(outt) - np.nanmin(outt)  # define background temperature for image
+    tdiff = np.nanmax(outt) - np.nanmin(outt)  # define background temperature for image
     # if tdiff > 28:  # temp difference of 28 degrees
     #     xmin = 15
     # else:
@@ -65,20 +65,20 @@ def filter_img(inarr, data_resolution):
 
     xmin = 12
     outt[nogood] = t_thresh_cut - xmin
-    nok = np.where(abs(grad[0]) > 80)
-    d = 2
-    i = nok[0]
-    j = nok[1]
-    # edge smoothing for wavelet application
-    for ii, jj in zip(i, j):
-        kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
-        outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 1, mode='nearest')
+    # nok = np.where(abs(grad[0]) > 80)
+    # d = 2
+    # i = nok[0]
+    # j = nok[1]
+    # # edge smoothing for wavelet application
+    # for ii, jj in zip(i, j):
+    #     kern = outt[ii - d:ii + d + 1, jj - d:jj + d + 1]
+    #     outt[ii - d:ii + d + 1, jj - d:jj + d + 1] = ndimage.gaussian_filter(kern, 1, mode='nearest')
 
     return outt, nogood, t_thresh_size, t_thresh_cut, pix_nb, area_img
 
 
 
-def find_dominant_power(wav, no_good, area, data_resolution, dataset=None):
+def find_fixed_power(wav, no_good, area, data_resolution, dataset=None):
     """
     This routine sums up power values of all available scales and identifies areas of dominant power.
     :param wav: wavelet dictionary, output from standard wavelet routine
@@ -131,5 +131,82 @@ def find_dominant_power(wav, no_good, area, data_resolution, dataset=None):
         arr[np.where(labels != inds)] = 0
         pos = np.argmax(arr)
         power_img.flat[pos] = area.flat[pos]*(-1)  # maximum power in core replaced by MCS area
+
+    return power_img
+
+
+
+def find_dominant_power(wav, t, no_good, area, data_resolution):
+    """
+    This routine identifies dominant scales and identifies areas of dominant power.
+    :param wav: wavelet dictionary, output from standard wavelet routine
+    :param no_good: mask indicating cloud areas that are accepted for dominant power detection
+    :param area: 2d array indicating the number of pixels per MCS
+    :param dataset: string to define input dataset for threshold setting
+    :return: 2d array of dominant power areas, negative values indicate max power centres (-999)
+    The power values for different datasets are not directly comparable. They would have to be normalised.
+    Can directly used for frequency analysis though.
+    """
+
+    wll = wav['power']
+
+    power_img = np.sum(wll, axis=0)*0
+
+
+    maxoutt = (
+            wll == ndimage.maximum_filter(wll, (6, 5, 5), mode='reflect',  # 5,4,4
+                                          cval=np.amax(wll) + 1))  # (np.round(orig / 5))
+
+    for nb in range(wav['scales'].size)[::-1]:
+
+        orig = float(wav['scales'][nb])
+
+        scale = int(np.round(orig))
+
+        print(np.round(orig))
+
+        wl = wll[nb, :, :]
+        wl[no_good] = 0
+        maxout = maxoutt[nb, :, :]
+
+        try:
+            yy, xx = np.where((maxout == 1)  & (wl > orig ** .5))  # &  (wl > orig**.5)) #  #  &
+        except IndexError:
+            continue
+
+
+        vals = wl[wl > 0]
+        wl[(wl < orig ** .5) | (wl - np.mean(vals) < 1.3*np.std(vals))] = 0
+        labels, numL = label(wl)
+
+        for y, x in zip(yy, xx):
+
+            inds = labels[y,x]
+
+            if inds == 0:
+                continue
+
+            # remove cores that don't reach minimum wavelet scale representing noise.
+            if np.sum(labels == inds) * data_resolution ** 2 < (np.pi * (int(wav['scales'][0]) ** 2)) / 4:
+                power_img[np.where(labels == inds)] = 0
+                continue
+
+            # arr = t.copy()
+            # arr[np.where(labels != inds)] = 0
+            #power_img[arr<0] = scale
+            power_img[labels==inds] = wl[labels==inds]
+
+    labels, numL = label(power_img)
+    inds = np.unique(labels)
+
+    for ind in inds:
+        if ind == 0:
+            continue
+        arr = t.copy()
+        arr[np.where(labels != ind)] = 0
+        pos = np.argmin(arr)
+        power_img.flat[pos] = area.flat[pos] * (-1)
+
+        del arr
 
     return power_img

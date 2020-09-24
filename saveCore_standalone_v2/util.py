@@ -31,6 +31,8 @@ DATASETS = {
     'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),  # resolution, distance between scales,start scale, number of scales
     'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 2),  #28     0.5
     'METEOSAT5K_veraV2': _create_dic(5, 0.45, 17, 4),  #28     0.5
+    'METEOSAT5K_veraLS': _create_dic(5, 0.46, 15, 6),
+    'METEOSAT3K_veraLS': _create_dic(5, 0.43, 12, 8),
     'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
     'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
