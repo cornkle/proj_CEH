@@ -70,10 +70,14 @@ def run(orig_names=False):
                 try:
                   da = cut[var]
                 except KeyError:
-                   try:
-                      da = cut['c03238'] # stupid t2 problem
-                   except KeyError:
-                      pdb.set_trace()
+                    try:
+                        da = cut['c03238'] # stupid t2 problem
+                    except KeyError:
+                        try:
+                           da = cut['a04203'] # stupid lsRain_hFreq proble
+                        except KeyError:
+                           print('KEY ERROR, name missing')
+                           pdb.set_trace()
 
                 if pres != []:
                     da = da.sel(pressure=pres)
