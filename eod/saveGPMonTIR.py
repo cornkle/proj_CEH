@@ -75,14 +75,47 @@ def saveMCS_WA15(year):
                 m = mJJAS
 
             date = dt.datetime(_y, _m, _d, _h, _mi)
+            arr = np.array([15, 30, 45, 60, 0])
 
-            ndate = date #+ dt.timedelta(minutes=int(dt0))
+            # get closest minute
+            dm = arr - _mi
+            if (dm < 0).any():
+                dm = dm[dm < 0]
+
+            try:
+                ind = (np.abs(dm)).argmin()
+            except ValueError:
+                continue
+
+            # set zero shift time for msg
+
+            dt0 = dm[ind]
+            ndate = date + dt.timedelta(minutes=int(dt0))
             m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
 
-            mdic = m.get_data(llbox=[tdic['lon'].values.min(),  tdic['lon'].values.max(), tdic['lat'].values.min(),tdic['lat'].values.max()])
+            mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lon'].values.max(), tdic['lat'].values.min(),
+                                     tdic['lat'].values.max()])
 
+            # check whether date is completely missing or just 30mins interval exists
+            # if str(date) == '2004-05-02 13:15:00':
+            #     pdb.set_trace()
             if not mdic:
+                dm = np.delete(dm, np.argmin(np.abs(dm)), axis=0)
+                try:
+                    dummy = np.min(np.abs(dm)) > 15
+                except ValueError:
+                    continue
+                if dummy:
+                    print('Date missing')
+                    continue
+                ind = (np.abs(dm)).argmin()
+                dt0 = dm[ind]
+                ndate = date + dt.timedelta(minutes=int(dt0))
+                m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
+                mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lon'].values.max(), tdic['lat'].values.min(),
+                                         tdic['lat'].values.max()])
 
+                if not mdic:
                     print('Date missing')
                     continue
 
@@ -137,17 +170,15 @@ def saveMCS_WA15(year):
             except TypeError:
                 ds = df.copy()
 
-            ds.close()
-            savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/' + date.strftime('%Y-%m') + '.nc'
-            try:
-                os.remove(savefile)
-            except OSError:
-                print('OSError, no dir?')
-                pass
 
-            da.to_netcdf(path=savefile, mode='w')
-            print('Saved ' + savefile)
+        savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/' + date.strftime('%Y-%m') + '.nc'
+        try:
+            os.remove(savefile)
+        except OSError:
+            print('OSError, no dir?')
+            pass
 
-            cnt = cnt + 1
+        ds.to_netcdf(path=savefile, mode='w')
+        print('Saved ' + savefile)
+        ds.close()
 
-    print('Saved ' + str(cnt) + ' MCSs as netcdf.')
