@@ -171,7 +171,7 @@ def saveMCS_WA15(year):
                 ds = df.copy()
 
 
-        savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/' + date.strftime('%Y-%m') + '.nc'
+        savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/GPM_MCS_'+str(_y)+'-'+str(_m).zfill(2)+'.nc'
         try:
             os.remove(savefile)
         except OSError:
