@@ -30,6 +30,11 @@ def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_
 
     ds = xr.Dataset()
 
+    if latitudes.ndim == 2:
+        latitudes = latitudes[:,0]
+    if longitudes.ndim == 2:
+        longitudes = longitudes[0,:]
+
     blob = xr.DataArray(power_msg, coords={'time': date, 'lat': latitudes, 'lon': longitudes},
                                 dims=['lat', 'lon'])  # [np.newaxis, :])
     tir = xr.DataArray(new_savet, coords={'time': date, 'lat': latitudes, 'lon': longitudes},
