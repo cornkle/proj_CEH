@@ -125,7 +125,7 @@ class ReadMsg(object):
 
         rr = rr.astype(np.int32) - 173
 
-        if (self.nx < self.lon.shape[0]) & ~self.bpath:
+        if (self.nx < self.lon.shape[0]) & (self.bpath is None):
             print('Stitch file missing for big domain. Returning.', self.date)
             return
 
@@ -134,8 +134,11 @@ class ReadMsg(object):
         ssMDI = np.uint8(255)
         ss = np.fromfile(self.dpath, dtype=ssMDI.dtype)
         ss.shape = ssShape
-
-        ss = ss.astype(np.int32) - 173
+        try:
+            ss = ss.astype(np.int32) - 173
+        except:
+            print('Something wrong with strip file')
+            return
 
         stitched = np.flip(np.concatenate((ss,rr), axis=1), axis=0) #np.flip
 
@@ -207,7 +210,11 @@ class ReadMsg(object):
 
         ssShape = self.s_shape  # msg shape
         ssMDI = np.uint8(255)
-        ss = np.fromfile(self.bpath, dtype=ssMDI.dtype)
+        try:
+            ss = np.fromfile(self.bpath, dtype=ssMDI.dtype)
+        except:
+            print('Something wrong with strip file')
+            return
 
         ss.shape = ssShape
 

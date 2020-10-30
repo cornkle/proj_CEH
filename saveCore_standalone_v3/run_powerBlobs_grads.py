@@ -68,10 +68,6 @@ def run(dataset, CLOBBER=False):
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
             gridd = (inds,weights,shape, grid)
 
-            grid5k = u_grid.make(np.arange(-18,29.9), np.arange(4,21), 5000)
-            inds5k, weights5k, shape5k = u_int.interpolation_weights_grid(glon, glat, grid5k)
-            gridd5k = (inds5k,weights5k,shape5k, grid5k)
-
             files_str = []
 
             for f in files:
@@ -83,7 +79,7 @@ def run(dataset, CLOBBER=False):
 
             passit = []
             for f in files_str:
-                passit.append((gridd,gridd5k, m, f,tag))
+                passit.append((gridd, m, f,tag))
 
 
             res = pool.map(_loop, passit)
@@ -120,13 +116,11 @@ def run(dataset, CLOBBER=False):
 def _loop(passit):
 
     gridd = passit[0]
-    gridd5k = passit[1]
     inds, weights, shape, grid = gridd
-    inds5k, weights5k, shape5k, grid5k = gridd5k
 
-    m = passit[2]
-    file = passit[3]
-    tag = passit[4]
+    m = passit[1]
+    file = passit[2]
+    tag = passit[3]
 
 
     if tag == 'MFG':
