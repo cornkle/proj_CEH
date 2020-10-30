@@ -26,12 +26,12 @@ HOD = range(24)  # hours of day
 def multi():
     pool = multiprocessing.Pool(processes=5)
 
-    res = pool.map(saveMCS_WA15, [2000,2005])
+    res = pool.map(saveMCS_WA15, np.arange(2005,2010))
 
 
 
 def saveMCS_WA15(year):
-    trmm_folder = cnst.network_data + 'data/OBS/IMERG_HQ_precip_old'
+    trmm_folder = cnst.network_data + 'data/OBS/IMERG_HQ_precip'
     msg_folder = cnst.network_data + 'data/OBS/MSG_WA30' #meteosat_WA30'
     msg_folder2 = cnst.network_data + 'data/OBS/MSG_MAMON'
 
@@ -40,15 +40,15 @@ def saveMCS_WA15(year):
     cnt = 0
     _y = year
 
-    for ids, _m in enumerate(range(3,12)):
+    for ids, _m in enumerate(np.arange(3,12)):
 
         files = glob.glob(trmm_folder + '/'+str(_y) + '/'+str(_m).zfill(2) +'/*.nc4')# area=[-12, 12, 4, 9])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
 
         for tf in files:
-
+            
 
             t = xr.open_dataset(tf)
-
+            
             _h = t['time.hour'].values[0]
 
             _d = t['time.day'].values[0]
@@ -64,9 +64,9 @@ def saveMCS_WA15(year):
 
             da = t['HQprecipitation'].squeeze()
             da = da.T
-            tdic = da.sel(lat=slice(4.3,9), lon=slice(-14,14))   #[-12, 15, 5, 25]
+            da = da.sel(lat=slice(3.5,17))   #[-12, 15, 5, 25]
 
-            if np.sum(tdic.values) <= 0.01:
+            if np.sum(da.values) <= 0.01:
                 continue
 
             if _m in [3,4,5,10,11]:
@@ -81,7 +81,7 @@ def saveMCS_WA15(year):
             dm = arr - _mi
             if (dm < 0).any():
                 dm = dm[dm < 0]
-
+           
             try:
                 ind = (np.abs(dm)).argmin()
             except ValueError:
@@ -93,9 +93,9 @@ def saveMCS_WA15(year):
             ndate = date + dt.timedelta(minutes=int(dt0))
             m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
 
-            mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lon'].values.max(), tdic['lat'].values.min(),
-                                     tdic['lat'].values.max()])
-
+            mdic = m.get_data(llbox=[da['lon'].values.min(), da['lon'].values.max(), da['lat'].values.min(),
+                                     da['lat'].values.max()])
+            #mdic = m.get_data() 
             # check whether date is completely missing or just 30mins interval exists
             # if str(date) == '2004-05-02 13:15:00':
             #     pdb.set_trace()
@@ -112,10 +112,11 @@ def saveMCS_WA15(year):
                 dt0 = dm[ind]
                 ndate = date + dt.timedelta(minutes=int(dt0))
                 m.set_date(ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute)
-                mdic = m.get_data(llbox=[tdic['lon'].values.min(), tdic['lon'].values.max(), tdic['lat'].values.min(),
-                                         tdic['lat'].values.max()])
+                mdic = m.get_data(llbox=[da['lon'].values.min(), da['lon'].values.max(), da['lat'].values.min(),
+                                         da['lat'].values.max()])
 
                 if not mdic:
+                    #ipdb.set_trace()
                     print('Date missing')
                     continue
 
@@ -126,7 +127,7 @@ def saveMCS_WA15(year):
 
             if ids == 0:
 
-                inds, weights, shape = u_int.interpolation_weights_grid(lon1, lat1, t.salem.grid)
+                inds, weights, shape = u_int.interpolation_weights_grid(lon1, lat1, da.salem.grid)
 
             orig = mdic['t'].values
 
@@ -138,7 +139,7 @@ def saveMCS_WA15(year):
 
             outt = outorig.copy()
 
-            labels, goodinds = ua.blob_define(outt, -40, minmax_area=[556, 40000],
+            labels, goodinds = ua.blob_define(outt, -40, minmax_area=[278, 40000],
                                               max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
             outt[labels == 0] = 0
             outt[outt < -115] = 0
@@ -146,16 +147,18 @@ def saveMCS_WA15(year):
 
             outorig = (np.round(outorig, decimals=2) * 100).astype(np.int16)
 
+            rain = (np.round(da.values, decimals=2) * 100).astype(np.int16)
 
 
-            df = xr.Dataset({'rain': (['lon', 'lat'], da.values),
-                             'mcs': (['lon', 'lat'], outt),
-                             'tir': (['lon', 'lat'], outorig),
+            #ipdb.set_trace() 
+            ds = xr.Dataset({'rain': (['lat', 'lon'], rain),
+                             'mcs': (['lat', 'lon'], outt),
+                             'tir': (['lat', 'lon'], outorig),
                              },
                             coords={'lon': da.lon,
                                     'lat': da.lat,
-                                    'time': date})
-
+                                    'time': da.time})
+            #ipdb.set_trace()
             # try:
             #     blob = xr.DataArray(power_msg[np.newaxis, :],
             #                         coords={'time': date, 'lat': latitudes, 'lon': longitudes},
@@ -165,20 +168,21 @@ def saveMCS_WA15(year):
             # tir = xr.DataArray(new_savet[np.newaxis, :], coords={'time': date, 'lat': latitudes, 'lon': longitudes},
             #                    dims=['time', 'lat', 'lon'])
 
+            #try:
+            #    ipdb.set_trace()
+            #    ds = xr.concat([ds, df ], dim='time')
+            #except:
+            #    ds = df.copy()
+                
+
+            savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/GPM_MCS_'+str(_y)+str(_m).zfill(2)+str(_d).zfill(2)+'_'+str(_h).zfill(2)+str(_mi).zfill(2)+'.nc'
             try:
-                ds = xr.concat([ds, df ], dim='time')
-            except TypeError:
-                ds = df.copy()
+                os.remove(savefile)
+            except OSError:
+                print('OSError, no dir?')
+                pass
 
-
-        savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/GPM_MCS_'+str(_y)+'-'+str(_m).zfill(2)+'.nc'
-        try:
-            os.remove(savefile)
-        except OSError:
-            print('OSError, no dir?')
-            pass
-
-        ds.to_netcdf(path=savefile, mode='w')
-        print('Saved ' + savefile)
-        ds.close()
+            ds.to_netcdf(path=savefile, mode='w')
+            print('Saved ' + savefile)
+            ds.close()
 
