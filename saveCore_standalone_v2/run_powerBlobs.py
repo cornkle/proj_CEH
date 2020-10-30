@@ -31,6 +31,7 @@ def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_
     isnan = np.isnan(meteosat_data)
     meteosat_data[isnan] = 0
     new_savet = (meteosat_data * 100).astype(np.int16)
+    new_power = (power_msg * 100).astype(np.int16)
 
     ds = xr.Dataset()
 
@@ -39,12 +40,12 @@ def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_
     if longitudes.ndim == 2:
         longitudes = longitudes[0,:]
     try:
-        blob = xr.DataArray(power_msg[np.newaxis, :], coords={'time': date, 'lat': latitudes, 'lon': longitudes},
-                                dims=['time','lat', 'lon'])  # [np.newaxis, :])
+        blob = xr.DataArray(new_power[np.newaxis, :], coords={'time': date, 'lat': latitudes, 'lon': longitudes},
+                                dims=['time', 'lat', 'lon'])  # [np.newaxis, :])
     except ValueError:
         ipdb.set_trace()
     tir = xr.DataArray(new_savet[np.newaxis, :], coords={'time': date, 'lat': latitudes, 'lon': longitudes},
-                               dims=['time','lat', 'lon'])
+                               dims=['time', 'lat', 'lon'])
     ds['power'] = blob
     ds['BT'] = tir
 

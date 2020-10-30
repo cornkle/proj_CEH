@@ -5,7 +5,7 @@ from utils import u_darrays
 import ipdb
 from utils import constants as cnst, u_met
 import salem
-from utils import u_statistics as us
+from utils import u_statistics as us, u_darrays as uda
 from scipy import stats
 import numpy.ma as ma
 import pickle as pkl
@@ -49,14 +49,14 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
     alpha = 0.05
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='mk':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
+        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_valid=10)
         dtrend = dtrend.unstack('allpoints')
         if sig:
             (dtrend['slope'].values)[dtrend['ind'].values==0] = 0
 
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='polyfit':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_lingress,nb_missing=10)
+        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_lingress,nb_valid=10)
         dtrend = dtrend.unstack('allpoints')
 
         if sig:
@@ -74,7 +74,10 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
         print('p value threshold', pthresh)
     #ipdb.set_trace()
     # unstack back to lat lon coordinates
-    return ddtrend, mean_years
+    #ipdb.set_trace()
+    ddout = ddtrend #uda.flip_lat(ddtrend)
+
+    return ddout, mean_years
 
 
 
@@ -87,13 +90,13 @@ def trend_all():
 
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    box = [-79, -76, -11, -8] # [-79, -74, -12, -8]  # small
+    box =  [-78, -77, -10.2, -8.63]#[-80, -65, -20, -1] #[-79, -76, -11, -8] # [-79, -74, -12, -8]  # small
     #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
     #box = [-80, -53, -30, -1]
     #box = [-79,-69,-17,-7] #[-79, -75, -10.5, -8]
 
     da3 = xr.open_dataarray(mcs)#/100
-    da3 = da3.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
+    da3 = da3.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))#.sel(latitude=slice(-10.2,-8.63), longitude=slice(-78, -77))#.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
 
     #grid = da3.salem.grid.regrid(factor=1)
 
@@ -136,7 +139,7 @@ def trend_all():
         # plt.plot(np.arange(1985,2018), tirmean.mean(['latitude', 'longitude']))
         # return
 
-        tirtrend_unstacked = ((tirtrend.values)*10./ tirm_mean.values) * 100. #/ tirm_mean.values
+        tirtrend_unstacked = ((tirtrend.values)*10.)#/ tirm_mean.values) * 100. #/ tirm_mean.values
         #ipdb.set_trace()
         tirtrend_out = xr.DataArray(tirtrend_unstacked, coords=[da3.latitude, da3.longitude], dims=['latitude','longitude'])
         tirtrend_out.name = 'tir'
@@ -149,11 +152,11 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_SIG_inPerc_since2000_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_SIG_inPerc_since2000_mediumDomain_flip_'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'CHIRPS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
-        map = ti_da.salem.get_map()
+        map = da3.salem.get_map()
 
         ax1 = f.add_subplot(3,4,ids+1)
         map.set_contour((tirm_mean), interp='linear', levels=[10, 20, 40,60,80,100,200,300], colors='k', linewidths=0.5)
@@ -170,8 +173,8 @@ def trend_all():
         # geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
-        #map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-1.5,1.6,0.25)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
-        map.set_plot_params(cmap='RdBu', extend='both', levels=[-100, -80,-60,-40,-20,-10,-5,-2,0,2,5,10,20,40,60,80,100])
+        map.set_plot_params(cmap='RdBu_r', extend='both', levels = np.linspace(-20, 20, 8)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
+        #map.set_plot_params(cmap='RdBu', extend='both', levels=[-100, -80,-60,-40,-20,-10,-5,-2,0,2,5,10,20,40,60,80,100])
         dic = map.visualize(ax=ax1, title=str(m)+': Monthly precipitation change', cbar_title='% decade-1',addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')

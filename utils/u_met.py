@@ -11,6 +11,7 @@ import ipdb
 Lv = 2.501e6 # heat of vapourisation
 Cp = 1005 # heat capacity of dry air at static pressure
 g = 9.80665
+Rv =462 #[J kg-1 K-1]
 
 
 def u_v_to_ws_wd(u,v):

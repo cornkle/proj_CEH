@@ -25,8 +25,12 @@ def shift_lons(ds, lon_dim='lon', save=False):
     mask = lons > 180
     new_lons[mask] = -(360. - lons[mask])
     new_lons[~mask] = lons[~mask]
-    ds[lon_dim].values = new_lons
-    ipdb.set_trace()
+    new_lons = np.sort(new_lons)
+    #ds[lon_dim].values = new_lons
+    #ipdb.set_trace()
+
+    ds = ds.assign_coords({'lon':new_lons})
+
     if save:
         ds.to_netcdf(save)
     return ds
@@ -43,58 +47,129 @@ def shift_lons_data(ds, lon_dim='lon', save=False):
     #ipdb.set_trace()
     new_data[:,mask2[0]] = ds.values[:,mask[0]]
     new_data[:,mask[0]] = ds.values[:,mask2[0]]
-    ds[lon_dim].values = new_lons
+    ds = ds.assign_coords({'lon': new_lons})
     ds.values = new_data
     #ipdb.set_trace()
     if save:
         ds.to_netcdf(save)
     return ds
 
-def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_missing=None):
+def linear_trend_mk(x, eps=0.001, alpha=0.01, nb_valid=None):
 
-    #pf = np.polyfit(np.arange(len(x)), x, 1)
-    pf, slope, int, p, ind = mk.test(np.arange(len(x)),x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
+
+    xin = x.where(np.isfinite(x), drop=True).squeeze()
+
+    min_val = 3
+    if nb_valid is not None:
+        min_val = nb_valid
+
+    if np.sum(np.isfinite(xin)) < min_val:
+
+        pf, slope, int, p, ind = mk.test(np.arange(len(x)), x.squeeze().values, eps=eps, alpha=alpha, Ha='upordown')
+
+        ds = xr.Dataset()
+        ds['slope'] = xr.DataArray(slope*np.nan, )
+        ds['pval'] = xr.DataArray(p*np.nan, )
+        ds['ind'] = xr.DataArray(ind*np.nan, )
+
+        # try:
+        #     ds['allpoints']
+        # except KeyError:
+        #     ipdb.set_trace()
+
+        return ds
+
+    pf, slope, int, p, ind = mk.test(np.arange(len(xin)),xin.values, eps=eps, alpha=alpha, Ha='upordown')
 
     # we need to return a dataarray or else xarray's groupby won't be happy
-
-
-    if nb_missing is not None:
-        if np.nansum(x.values==0)>=nb_missing:
-            p = np.nan
-            slope = np.nan
-            ind = 0
 
     ds = xr.Dataset()
     ds['slope'] = xr.DataArray(slope,)
     ds['pval'] = xr.DataArray(p, )
-    ds['ind'] = xr.DataArray(ind)
+    ds['ind'] = xr.DataArray(ind,)
+
+    # try:
+    #     ds['allpoints']
+    # except KeyError:
+    #     ipdb.set_trace()
 
     return ds
 
-def linear_trend_lingress(x, nb_missing=None):
+def linear_trend_lingress(x, nb_valid=None):
 
-    if np.isnan(x).all():
+    xin = x.where(np.isfinite(x), drop=True).squeeze()
+
+    min_val = 3
+    if nb_valid is not None:
+        min_val = nb_valid
+
+    if np.sum(np.isfinite(xin)) < min_val:
         ds = xr.Dataset()
         ds['slope'] = xr.DataArray(np.nan, )
         ds['pval'] = xr.DataArray(np.nan, )
         ds['r'] = xr.DataArray(np.nan, )
+
+        # try:
+        #     ds['allpoints']
+        # except KeyError:
+        #     ipdb.set_trace()
+
         return ds
 
-    slope, intercept, r, p, std_err = stats.linregress(np.arange(len(x)), x)
+    slope, intercept, r, p, std_err = stats.linregress(np.arange(len(xin)), xin)
 
     # we need to return a dataarray or else xarray's groupby won't be happy
-
-    if nb_missing is not None:
-        if np.nansum(x.values==0)>=nb_missing:
-            p = np.nan
-            slope = np.nan
 
     ds = xr.Dataset()
     ds['slope'] = xr.DataArray(slope,)
     ds['pval'] = xr.DataArray(p, )
     ds['r'] = xr.DataArray(r,)
 
+    # try:
+    #     ds['allpoints']
+    # except KeyError:
+    #     ipdb.set_trace()
+
     return ds
+
+
+
+def linear_trend_polyfit(x, nb_valid=None):
+
+    xin = x.where(np.isfinite(x), drop=True).squeeze()
+
+    min_val = 3
+    if nb_valid is not None:
+        min_val = nb_valid
+
+    if np.sum(np.isfinite(xin)) < min_val:
+        ds = xr.Dataset()
+        ds['slope'] = xr.DataArray(np.nan, )
+        ds['pval'] = xr.DataArray(np.nan, )
+        ds['r'] = xr.DataArray(np.nan, )
+
+        # try:
+        #     ds['allpoints']
+        # except KeyError:
+        #     ipdb.set_trace()
+
+        return ds
+
+    slope, inter = np.polyfit(np.arange(len(xin)), xin,1)
+
+    # we need to return a dataarray or else xarray's groupby won't be happy
+
+    ds = xr.Dataset()
+    ds['slope'] = xr.DataArray(slope,)
+
+    # try:
+    #     ds['allpoints']
+    # except KeyError:
+    #     ipdb.set_trace()
+
+    return ds
+
+
 
 
 def flip_lat(ds):
@@ -109,7 +184,13 @@ def flip_lat(ds):
         try:
             ds = ds.sel(lat=slice(None, None, -1))
         except ValueError:
-            ds = ds.sel(Latitude=slice(None, None, -1))
+            try:
+                ds = ds.sel(Latitude=slice(None, None, -1))
+            except ValueError:
+                try:
+                    ds = ds.sel(allpoints_level_0=slice(None, None, -1))
+                except ValueError:
+                    print('Cant flip lat, coord name not found')
     return ds
 
 

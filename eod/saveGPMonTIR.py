@@ -104,6 +104,7 @@ def saveMCS_WA15(year):
                 try:
                     dummy = np.min(np.abs(dm)) > 15
                 except ValueError:
+                    print('Date missing')
                     continue
                 if dummy:
                     print('Date missing')
@@ -167,7 +168,7 @@ def saveMCS_WA15(year):
 
             try:
                 ds = xr.concat([ds, df ], dim='time')
-            except TypeError:
+            except:
                 ds = df.copy()
 
 
@@ -181,4 +182,5 @@ def saveMCS_WA15(year):
         ds.to_netcdf(path=savefile, mode='w')
         print('Saved ' + savefile)
         ds.close()
+        del ds
 
