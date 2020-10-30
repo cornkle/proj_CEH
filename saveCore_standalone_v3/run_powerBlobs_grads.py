@@ -17,7 +17,7 @@ from eod import msg_bigDomain as msg
 
 filepath = {
 
-    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2010,2010)]  # 2004, 2018
+    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2004,2019)]  # 2004, 2018
 
 }
 
@@ -38,7 +38,7 @@ def run(dataset, CLOBBER=False):
 
             tag = dataset[0:3].upper()
 
-            path =  cnst.network_data + 'MCSfiles/MSG_cores/'  #'/prj/vera/cores/' #
+            path =  cnst.network_data + '/prj/vera/cores_bigDomain/' #
             savefile = path + 'coresPower_'+tag.upper()+'_-40_9-130km_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             if not CLOBBER:
@@ -46,7 +46,7 @@ def run(dataset, CLOBBER=False):
                     print('File exists, continue!')
                     continue
 
-            pool = multiprocessing.Pool(processes=6)
+            pool = multiprocessing.Pool(processes=5)
             print('Reading '+filepath[dataset][0])
             meteosat_folder = (filepath[dataset])[0]
 
@@ -86,14 +86,14 @@ def run(dataset, CLOBBER=False):
                 passit.append((gridd,gridd5k, m, f,tag))
 
 
-            #res = pool.map(_loop, passit)
+            res = pool.map(_loop, passit)
 
-            res=[]
-            for l in passit:
+            #res=[]
+            #for l in passit:
 
-                res.append(_loop(l))
+            #    res.append(_loop(l))
 
-            #pool.close()
+            pool.close()
 
             res = [x for x in res if x is not None]
 
