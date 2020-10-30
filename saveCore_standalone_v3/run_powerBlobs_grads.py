@@ -38,7 +38,7 @@ def run(dataset, CLOBBER=False):
 
             tag = dataset[0:3].upper()
 
-            path =  cnst.network_data + '/prj/vera/cores_bigDomain/' #
+            path =  '/prj/vera/cores_bigDomain/' #
             savefile = path + 'coresPower_'+tag.upper()+'_-40_9-130km_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             if not CLOBBER:
@@ -46,7 +46,7 @@ def run(dataset, CLOBBER=False):
                     print('File exists, continue!')
                     continue
 
-            pool = multiprocessing.Pool(processes=5)
+            pool = multiprocessing.Pool(processes=6)
             print('Reading '+filepath[dataset][0])
             meteosat_folder = (filepath[dataset])[0]
 
@@ -176,22 +176,22 @@ def _loop(passit):
 
     newds = xr.merge([ss,dom])
 
-    # comp = dict(zlib=True, complevel=5)
-    # enc = {var: comp for var in newds.data_vars}
+    #comp = dict(zlib=True, complevel=5)
+    #enc = {var: comp for var in newds.data_vars}
     #
-    # outfile = filepath.replace('108', 'wavelet')
+    #outfile = filepath.replace('108', 'wavelet')
     # # outfile = outfile.replace('real_time_data', 'real_time_wavelet')
     # #
-    # path = os.path.dirname(outfile)
-    # if not os.path.exists(path):
-    #     os.makedirs(path)
+    #path = os.path.dirname(outfile)
+    #if not os.path.exists(path):
+    #    os.makedirs(path)
     #
-    # if os.path.isfile(outfile):
-    #     print('File exists, continue')
-    #     return
+    #if os.path.isfile(outfile):
+    #   print('File exists, continue')
+    #   return
     # #
-    # newds.to_netcdf(path=outfile, mode='w', encoding=enc, format='NETCDF4')
-    # print('Saved ' + outfile)
+    #newds.to_netcdf(path=outfile, mode='w', encoding=enc, format='NETCDF4')
+    #print('Saved ' + outfile)
 
     return newds
 
