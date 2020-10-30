@@ -3,7 +3,7 @@
 @author: C. Klein
 """
 import numpy as np
-from saveCore_standalone_v2 import twod as w2d
+from CCores import twod as w2d
 
 class wavelet(object):
 
@@ -44,8 +44,8 @@ class wavelet(object):
         """
         Calculate pos/neg wavelet coefficients and scale-normalised (always positive) wavelet powers
         :param data: 2d array to decompose into scales
-        :param lt_thresh: less or equal threshold for wavelet coefficients to be filled with fill value
-        :param gt_thresh: greater or equal threshold for wavelet coefficients to be filled with fill value
+        :param le_thresh: less or equal threshold for wavelet coefficients to be filled with fill value
+        :param ge_thresh: greater or equal threshold for wavelet coefficients to be filled with fill value
         :param fill:  fill value
         :return: wav_coeffs: positive and negative wavelet coefficients
                  norm_power: normalised wavelet power spectrum
@@ -66,5 +66,10 @@ class wavelet(object):
         norm_power = norm_power / (scale_dummy * scale_dummy) # Normalized wavelet power spectrum
         # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - we emphasize small scales more.
         # Normalise scales: norm_power / stddev
+        #
+        # for ids in range(norm_power.shape[0]):
+        #     arr = norm_power[ids,:,:]
+        #     out = arr / np.std(arr)
+        #     norm_power[ids,:,:] = out
 
         return wav_coeffs_pure, norm_power

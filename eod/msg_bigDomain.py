@@ -8,7 +8,8 @@ from utils import u_lists as ul
 import datetime
 # import glob
 import itertools
-import pdb
+import ipdb
+import datetime
 
 
 
@@ -36,10 +37,17 @@ class ReadMsg(object):
                 mrange = range(months[0],months[0]+1)
 
         try:
-            lpath = uarr.locate('lon.npz', msg_folder, exclude = None)
+            lpath = uarr.locate('MSGbigDomain_1804_580_lat_lon.npz', msg_folder, exclude = None)
         except:
             print('Not a directory or no msg lat/lon found')
             return
+
+        try:
+            spath = uarr.locate('MSGstrip_164_580_lat_lon.npz', msg_folder, exclude = None)
+        except:
+            print('Not a directory or no msg lat/lon found')
+            return
+
 
         mpath = os.path.join(msg_folder, 'msg_raw_binary')
 
@@ -66,11 +74,15 @@ class ReadMsg(object):
         mlon = msg_latlon['lon']
         mlat = msg_latlon['lat']
 
+        strip_shape = np.load(spath[0])['lon'].shape
+
         self.lat = mlat
         self.lon = mlon
-        self.nx = mlon.shape[1]
-        self.ny = mlon.shape[0]
-
+        self.nx = mlon.shape[1]-strip_shape[1] # mlon.shape[1]
+        self.ny = mlon.shape[0] #mlon.shape[0]
+        self.s_shape = strip_shape
+        self.l_shape = (mlon.shape[0]-strip_shape[0], mlon.shape[1])
+        #ipdb.set_trace()
         self.years = os.listdir(mpath)
         self.root = msg_folder
         self.fpath = rfiles
@@ -85,26 +97,20 @@ class ReadMsg(object):
             self.dpath = False              # self.dpath = False can be caught as non existant file
             return
 
-        root = os.path.join(self.root, 'cell_blob_files')
+
+        root = os.path.join(self.root, 'msg_raw_strip')
         file = os.path.join(root, str(yr), str(mon).zfill(2),
                             str(yr) + str(mon).zfill(2) + str(day).zfill(2) + str(hr).zfill(2) + str(
                                 mins).zfill(2) + '.gra')
         if os.path.isfile(file):
             self.bpath = file
         else:
-            print('No blob file dir found!')
+            print('No strip file dir found!')
             self.bpath = False
+            #return # only run through if strip exists
 
-        root = os.path.join(self.root, 'bigcell_area_table')
-        file = os.path.join(root, 'rewrite',
-                                'cell_40c_' + str(hr).zfill(2) + str(mins).zfill(2) + '_JJAS.txt')
-        if os.path.isfile(file):
-            self.tpath = file
-        else:
-            print('No table file dir found!')
-            self.tpath = False
+        self.date = [datetime.datetime(yr, mon, day, hr, mins)]
 
-        self.date = [pd.datetime(yr, mon, day, hr, mins)]
 
     def get_data(self, llbox=None, netcdf_path=None):
 
@@ -119,20 +125,34 @@ class ReadMsg(object):
 
         rr = rr.astype(np.int32) - 173
 
+        if (self.nx < self.lon.shape[0]) & ~self.bpath:
+            print('Stitch file missing for big domain. Returning.', self.date)
+            return
+
+
+        ssShape = self.s_shape  # msg shape
+        ssMDI = np.uint8(255)
+        ss = np.fromfile(self.dpath, dtype=ssMDI.dtype)
+        ss.shape = ssShape
+
+        ss = ss.astype(np.int32) - 173
+
+        stitched = np.flip(np.concatenate((ss,rr), axis=1), axis=0) #np.flip
+
+
         if llbox:
             i, j = np.where(
                 (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
-            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+            stitched = stitched[i.min():i.max() + 1, j.min():j.max() + 1]
         else:
             blat = self.lat
             blon = self.lon
-            rr = rr
 
         date = self.date  # or np.atleast_1d(dt.datetime())
 
-        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
+        da = xr.DataArray(stitched[None, ...], coords={'time': (('time'), date),
                                                    'lat': (('y', 'x'), blat),
                                                    'lon': (('y', 'x'), blon)},
                           dims=['time', 'y', 'x']).isel(time=0)
@@ -156,37 +176,61 @@ class ReadMsg(object):
 
         return ds
 
+
     def read_data(self, file, llbox=None, netcdf_path=None):
 
         if not self.fpath:
             print('I found no msg files in my fpath')
             return False
 
+        str = file.split(os.sep)[-1]
+        curr_date = [
+            datetime.datetime(np.int(str[0:4]), np.int(str[4:6]), np.int(str[6:8]), np.int(str[8:10]), np.int(str[10:12]))]
+        date = curr_date  # or np.atleast_1d(dt.datetime())
+
+        self.set_date(date[0].year, date[0].month, date[0].day, date[0].hour, date[0].minute)
+
         rrShape = (self.ny, self.nx)  # msg shape
         rrMDI = np.uint8(255)
 
         rr = np.fromfile(file, dtype=rrMDI.dtype)
+
         rr.shape = rrShape
-        rr = rr.astype(np.int32) - 173
+
+        #rr.shape = self.l_shape
+        rr = rr.astype(np.int32) - 173  #self.s_shape
+
+        if (self.nx < self.lon.shape[0]) & (self.bpath is None):
+            print('Stitch file missing for big domain. Returning.', self.date)
+            return
+
+
+        ssShape = self.s_shape  # msg shape
+        ssMDI = np.uint8(255)
+        ss = np.fromfile(self.bpath, dtype=ssMDI.dtype)
+
+        ss.shape = ssShape
+
+        ss = ss.astype(np.int32) - 173
+
+        stitched = np.flip(np.concatenate((ss,rr), axis=1), axis=0)
+
+
 
         if llbox:
             i, j = np.where(
                 (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
-            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
+            stitched = stitched[i.min():i.max() + 1, j.min():j.max() + 1]
         else:
             blat = self.lat
             blon = self.lon
-        rr = rr
 
-        str = file.split(os.sep)[-1]
-        curr_date = [
-            pd.datetime(np.int(str[0:4]), np.int(str[4:6]), np.int(str[6:8]), np.int(str[8:10]), np.int(str[10:12]))]
-        date = curr_date  # or np.atleast_1d(dt.datetime())
 
-        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
-                                                   'lat': (('y', 'x'), blat),
+
+        da = xr.DataArray(stitched[None, ...], coords={'time': (('time'), date),
+                                                   'lat': (('y', 'x'),  blat),
                                                    'lon': (('y', 'x'), blon)},
                           dims=['time', 'y', 'x']).isel(time=0)
 
@@ -211,45 +255,3 @@ class ReadMsg(object):
             print('Saved ' + savefile)
 
         return ds
-
-
-    def get_blob(self, llbox=None):
-
-        if not self.bpath:
-            print('No blob file dir found!')
-            return False
-
-        rrShape = (self.ny, self.nx)  # msg shape
-        rrMDI = np.uint16()
-        rr = np.fromfile(self.bpath, dtype=rrMDI.dtype)
-        rr.shape = rrShape
-        if llbox:
-            i, j = np.where(
-                (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
-            blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
-            blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
-            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
-        else:
-            blat = self.lat
-            blon = self.lon
-            rr = rr
-
-        date = self.date
-
-        da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
-                                                 'lat': (('y', 'x'), blat),
-                                                 'lon': (('y', 'x'), blon)},
-                          dims=['time', 'y', 'x']).isel(time=0)
-
-        return da
-
-
-    def get_table(self):
-
-        if not self.tpath:
-            print('No table file dir found!')
-            return False
-
-        tab = pd.read_csv(self.tpath)
-
-        return tab

@@ -13,9 +13,9 @@ import os
 import pandas as pd
 
 
-def run(dataset='METEOSAT3K_veraLS', detection='sum'):
+def run(dataset='METEOSAT5K_vera', detection='sum'):
 
-    met_folder = '/media/ck/Elements/Africa/WestAfrica/NFLICS/MCS_TIR/real_time_data/2020/09/*/'
+    met_folder = '/media/ck/Elements/Africa/WestAfrica/NFLICS/MCS_TIR/real_time_data/2020/09/06/'
 
     files = glob.glob(met_folder + 'IR_108_BT_*.nc')
 
@@ -35,7 +35,7 @@ def run(dataset='METEOSAT3K_veraLS', detection='sum'):
         print('Doing ', f)
 
         outfile = f.replace('108', 'wavelet')
-        outfile = outfile.replace('real_time_data', 'real_time_wavelet')
+        outfile = outfile.replace('real_time_data', 'real_time_wavelet_old')
 
         if os.path.isfile(outfile):
             print('File exists, continue')

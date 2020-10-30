@@ -104,6 +104,7 @@ def saveMCS_WA15(year):
                 try:
                     dummy = np.min(np.abs(dm)) > 15
                 except ValueError:
+                    print('Date missing')
                     continue
                 if dummy:
                     print('Date missing')
@@ -168,21 +169,21 @@ def saveMCS_WA15(year):
             # tir = xr.DataArray(new_savet[np.newaxis, :], coords={'time': date, 'lat': latitudes, 'lon': longitudes},
             #                    dims=['time', 'lat', 'lon'])
 
-            #try:
-            #    ipdb.set_trace()
-            #    ds = xr.concat([ds, df ], dim='time')
-            #except:
-            #    ds = df.copy()
-                
-
-            savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/GPM_MCS_'+str(_y)+str(_m).zfill(2)+str(_d).zfill(2)+'_'+str(_h).zfill(2)+str(_mi).zfill(2)+'.nc'
             try:
-                os.remove(savefile)
-            except OSError:
-                print('OSError, no dir?')
-                pass
+                ds = xr.concat([ds, df ], dim='time')
+            except:
+                ds = df.copy()
 
-            ds.to_netcdf(path=savefile, mode='w')
-            print('Saved ' + savefile)
-            ds.close()
+
+        savefile = cnst.network_data + 'MCSfiles/TIR_on_GPM/GPM_MCS_'+str(_y)+'-'+str(_m).zfill(2)+'.nc'
+        try:
+            os.remove(savefile)
+        except OSError:
+            print('OSError, no dir?')
+            pass
+
+        ds.to_netcdf(path=savefile, mode='w')
+        print('Saved ' + savefile)
+        ds.close()
+        del ds
 

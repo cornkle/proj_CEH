@@ -39,6 +39,39 @@ def rewriteMsgLonLat_WA():
     llsavefile = cnst.network_data + 'data/OBS/MSG_WA30/MSG_1640_580_lat_lon'
     np.savez(llsavefile,lon=lon,lat=lat)
 
+#========================================================================================
+# Rewrites 580x1640 msg lat lon Dakar strip to general latlon format
+#========================================================================================
+def rewriteMsgLonLatStrip_WA():
+    llFile = cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_coords/SEVIRILST_WA_geoloc.nc'
+
+    fulldisc = 3711  # lat and lon extent
+    start_y = fulldisc - 2579 +1
+    start_x = fulldisc - 2627 +1
+    width = 1804 #+1
+    height = 580 #+1
+
+    swidth = 164
+
+    da = xr.open_dataset(llFile)
+
+   # lon = da['full_grid_lon'].values[fulldisc-2579:fulldisc-2000,fulldisc-2627:fulldisc-2464] strip
+
+    # lon = da['full_grid_lon'].values[fulldisc - 2579:fulldisc - 2000, fulldisc - 2627:fulldisc - 824]
+    # lat = da['full_grid_lat'].values[fulldisc - 2579:fulldisc - 2000, fulldisc - 2627:fulldisc - 824]
+
+    lon = da['full_grid_lon'].values[start_y : start_y+height, start_x : start_x + width]
+    lat = da['full_grid_lat'].values[start_y : start_y+height, start_x : start_x + width]
+
+    slon = da['full_grid_lon'].values[start_y : start_y+height, start_x : start_x + swidth]
+    slat = da['full_grid_lat'].values[start_y : start_y+height, start_x : start_x + swidth]
+
+    llsavefile = cnst.network_data + 'data/OBS/MSG_WA30/MSGbigDomain_1804_580_lat_lon'
+    np.savez(llsavefile,lon=lon,lat=lat)
+
+    llsavefile = cnst.network_data + 'data/OBS/MSG_WA30/MSGstrip_164_580_lat_lon'
+    np.savez(llsavefile,lon=slon,lat=slat)
+
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)

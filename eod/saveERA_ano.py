@@ -32,7 +32,7 @@ def saveAnomaly():
 
     grouped='ymonth'
 
-    valid_days = mf.groupby(grouped).count(dim='time') # number of valid days per month
+    valid_days = mf.groupby(grouped).count(dm='time') # number of valid days per month
 
     minus =  mf.groupby(grouped).mean(dim='time')
     # arr = minus.values

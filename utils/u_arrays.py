@@ -41,7 +41,17 @@ def locate(pattern, root_path, exclude=None):
                 if exclude in filepath:
                     continue
             except TypeError:
-                pass
+                cnt = 0
+                try:
+                    for ex in exclude:
+                        if ex in filepath:
+                            cnt =1
+                except:
+                    pass
+
+                if cnt == 1:
+                    continue
+
             strg.append(os.path.join(root_path, file))
     return strg
 
