@@ -20,6 +20,8 @@ from scipy.ndimage.measurements import label
 import matplotlib.pyplot as plt
 from utils import u_grid, u_interpolate as u_int
 import glob
+from wavelet import util
+
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
@@ -678,11 +680,11 @@ def rewrite_topo():
 
 
 def rewrite_CP4_TCWV():
-    tags = ['CP4fut', 'CP25hist']  #'CP4hist',  , 'CP25fut'
+    tags = ['CP25hist']  #'CP4hist',  , 'CP25fut'
     for t in tags:
         path = '/media/ck/Elements/Africa/WestAfrica/CP4/'+t+'/'
 
-        dcol = glob.glob(path+'colDryMass/*')
+        dcol = glob.glob(path+'colDryMass_daily/*')
         #wcol = glob.glob(path+'colWetMass/*')
 
         for dry in dcol:
@@ -714,6 +716,99 @@ def rewrite_CP4_TCWV():
             encoding = {var: comp for var in diff.data_vars}
             name = dry.replace('colDryMass', 'tcwv')
             diff.to_netcdf(path=name, mode='w', encoding=encoding, format='NETCDF4')
+
+
+
+def rewrite_NFLICS_LSTA():
+
+    coords = xr.open_dataset('/home/ck/DIR/cornkle/data/NFLICS/LSTA_coords/SEVIRILST_WA_geoloc.nc')
+
+    fake_lon = np.linspace(-20, 20, 1436)
+    fake_lat = np.linspace(0, 20, 714)
+    lon = coords.WA_lon
+    lat = coords.WA_lat
+    lat.values = lat.values[::-1, :]
+    lon.values = lon.values[::-1, :]
+
+    hfiles = glob.glob('/home/ck/DIR/cornkle/data/NFLICS/LSTA/netcdf_raw/*')
+    for f in hfiles:
+        # ipdb.set_trace()
+        dat = xr.open_dataset(f)
+        dat = dat.rename({'phony_dim_0': 'lat', 'phony_dim_1': 'lon', 'lsta_av': 'lsta', 'lsta_av_count': 'NbSlot'})
+        dat0 = dat.assign_coords(lat=fake_lat, lon=fake_lon)
+        dat1 = u_darrays.flip_lat(dat0)
+        dat2 = dat1.assign_coords({'lat': lat, 'lon': lon})
+        dat2['lsta'].values = np.array(dat2['lsta'].values).astype(float)
+        dat2['lsta'].values[dat2['lsta'].values == -9999] = np.nan
+        dat2['lsta'].values = dat2['lsta'].values / 100.
+        comp = dict(zlib=True, complevel=5)
+        enc = {var: comp for var in dat2.data_vars}
+        savefile = f.replace('_raw', '') + '.nc'
+        dat2.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
+
+
+def rewrite_NFLICS_LSTA_onCores():
+
+    dummy = xr.open_dataset(cnst.network_data +'/MCSfiles/MSG_cores/coresPower_MSG_-40_9-130km_-50points_dominant_2010_0806.nc')
+    grid = dummy.salem.grid
+    lpath = cnst.elements_drive + '/Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf/'
+    lfiles = glob.glob(lpath + '*.nc')
+    #ipdb.set_trace()
+    dlst = xr.open_dataset(lfiles[0])
+    inds, weights, shape = u_int.interpolation_weights_grid(dlst['lon'].values, dlst['lat'].values, grid)
+
+    for f in lfiles:
+
+        ds = xr.Dataset()
+        dat = xr.open_dataset(f)
+
+        try:
+            lsta = u_int.interpolate_data(dat['lsta'].values, inds, weights, shape)
+        except IndexError:
+            print('Interpolation problem, continue')
+            return
+        lon, lat = grid.ll_coordinates
+
+        nbslot = u_int.interpolate_data(dat['NbSlot'].values, inds, weights, shape)
+
+        lsta[np.isnan(lsta)] = 0
+        dlsta = xr.DataArray((np.round(lsta, 2)*100).astype(np.int16), coords={
+            'lat': lat[:, 0],
+            'lon': lon[0, :]}, dims=['lat', 'lon'])
+
+        dslot = xr.DataArray(np.round(nbslot,0).astype(np.int8), coords={
+            'lat': lat[:, 0],
+            'lon': lon[0, :]}, dims=['lat', 'lon'])
+
+        ds['lsta'] = dlsta
+        ds['NbSlot'] = dslot
+
+        lsw = lsta.copy()
+
+        lsw[lsw > 1000] = 0
+        dic = util.applyHat_pure(lsw, dataset='NOWCAST')
+
+        wav = xr.DataArray(np.array(np.round(dic['coeffs'], 1) * 10).astype(np.int16),
+                          coords={'scales': dic['scales'], 'lat': lat[:,0],
+                                             'lon': lon[0,:]},
+                          dims=['scales', 'lat', 'lon'])
+        ds['wavelet'] = wav
+
+        # for sliced in ds['wavelet'].values:
+        #     sliced[np.isnan(lsta)] = np.nan
+        pos = np.where(lsta==0)
+        pos = np.where(lsta==0)
+        ds['wavelet'].values[:, pos[0], pos[1]] = 0
+
+        ds = ds.isel(lon=slice(0,1410), lat=slice(0,594))
+        comp = dict(zlib=True, complevel=5)
+        enc = {var: comp for var in ds.data_vars}
+        savefile = f.replace('netcdf', 'netcdf_onCores')
+        ds.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
+
+        del lsw
+
+
 
 
 

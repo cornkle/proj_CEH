@@ -10,6 +10,7 @@ import xarray as xr
 from utils import constants as cnst
 import numpy as np
 import pandas as pd
+import datetime
 from scipy.interpolate import griddata
 import ipdb
 
@@ -40,9 +41,11 @@ def saveMonthly():
     monthly.to_netcdf(cnst.network_data + 'data/OBS/AMSRE/aqua/amsre_day_monthly.nc')
 
 def saveAnomaly():
-    mf = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_night/AMSR*.nc', concat_dim='time')
+    mf = xr.open_mfdataset(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_day/AMSR*.nc', concat_dim='time')
     #mf = mf.sel(lon=slice(-11,11), lat=slice(9,21))
-    mf = mf['SM'][(mf['time.month'] >= 3) & (mf['time.month'] <= 11)]
+    mf = mf['SM'][(mf['time.month'] >= 6) & (mf['time.month'] <= 9)].load()
+
+    mf.values[mf.values<1] = np.nan
 
     mf['ymonth'] = ('time', [str(y)+'-'+str(m) for (y,m) in zip(mf['time.year'].values,mf['time.month'].values)])
     # minus =  mf.groupby('ymonth').mean(dim='time')
@@ -73,7 +76,7 @@ def saveAnomaly():
         month = arr['time.month'].values
         year = arr['time.year'].values
 
-        date = [pd.datetime(year, month, day, 0, 0)]
+        date = [datetime.datetime(year, month, day, 0, 0)]
         da = xr.DataArray(arr.values[None, ...],
                           coords={'time': date, 'lat': arr.lat, 'lon': arr.lon},
                           dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
@@ -83,7 +86,7 @@ def saveAnomaly():
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds.data_vars}
-        ds.to_netcdf(path=cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_night/sma_'+date+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        ds.to_netcdf(path=cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_day_corr/sma_'+date+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
 
 def saveAnomalyDay():

@@ -8,14 +8,9 @@ from __future__ import division
 
 import numpy as np
 import numpy.fft as fft
-from numpy.random import randn
 from numpy.lib.polynomial import polyval
-from pylab import find
-from scipy.stats import chi2
 from scipy.special import gamma
-from scipy.signal import convolve2d, lfilter
 from scipy.special.orthogonal import hermitenorm
-from kpywavelet import wavelet as wvt
 
 
 class DOG:
