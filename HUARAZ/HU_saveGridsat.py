@@ -213,7 +213,7 @@ def rewrite_hourly():
         for m in np.unique(datout['time.month']):
 
             monthly = datout['irwin_cdr'].sel(time=((datout['time.month']==m) & (((datout['time.hour'] >= 12) & (datout['time.hour'] <= 21)) | (datout['time.hour'] == 0)))).load()-273.15
-            mask = (monthly.values>-20) | (monthly.values<-110)
+            mask = (monthly.values<-23) & (monthly.values>-100)
             #ipdb.set_trace()
             monthly.values = mask
 

@@ -103,45 +103,45 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False):
 
 
 
-# def get_previous_hours_msg(date, ehour, refhour):
-#
-#     date = date.replace(hour=refhour)
-#
-#     if ehour > 0:
-#         edate = date + pd.Timedelta(str(ehour) + ' hours')
-#     else:
-#         edate = date - pd.Timedelta(str(np.abs(ehour)) + ' hours')
-#         #edate = edate.replace(hour=ehour)
-#
-#     t1 = edate - pd.Timedelta('1 hours')
-#     t2 = edate + pd.Timedelta('1 hours')
-#
-#     file = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/coresPower_MSG_-40_9-130km_-50points_dominant_'+str(date.year)+'*.nc')
-#     msg = xr.open_mfdataset(file).load()
-#     try:
-#         msg = msg['tir'].sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
-#     except OverflowError:
-#         return None
-#
-#     #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
-#     pos = np.where((msg.values <= -40) ) #(msg.values >= 5) & (msg.values < 65)) # #
-#
-#     out = np.zeros_like(msg)
-#     out[pos] = 1
-#     out = np.sum(out, axis=0)
-#     out[out>0]=1
-#     # if np.sum(out>1) != 0:
-#     #     'Stop!!!'
-#     #     pdb.set_trace()
-#
-#     msg = msg.sum(axis=0)*0
-#
-#     xout = msg.copy()
-#     del msg
-#     xout.name = 'probs'
-#     xout.values = out
-#
-#     return xout
+def get_previous_hours_msg(date, ehour, refhour):
+
+    date = date.replace(hour=refhour)
+
+    if ehour > 0:
+        edate = date + pd.Timedelta(str(ehour) + ' hours')
+    else:
+        edate = date - pd.Timedelta(str(np.abs(ehour)) + ' hours')
+        #edate = edate.replace(hour=ehour)
+
+    t1 = edate - pd.Timedelta('1 hours')
+    t2 = edate + pd.Timedelta('1 hours')
+
+    file = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/coresPower_MSG_-40_9-130km_-50points_dominant_'+str(date.year)+'*.nc')
+    msg = xr.open_mfdataset(file).load()
+    try:
+        msg = msg['tir'].sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
+    except OverflowError:
+        return None
+
+    #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
+    pos = np.where((msg.values <= -40) ) #(msg.values >= 5) & (msg.values < 65)) # #
+
+    out = np.zeros_like(msg)
+    out[pos] = 1
+    out = np.sum(out, axis=0)
+    out[out>0]=1
+    # if np.sum(out>1) != 0:
+    #     'Stop!!!'
+    #     pdb.set_trace()
+
+    msg = msg.sum(axis=0)*0
+
+    xout = msg.copy()
+    del msg
+    xout.name = 'probs'
+    xout.values = out
+
+    return xout
 
 
 def file_loop(fi):
@@ -189,7 +189,7 @@ def file_loop(fi):
         print('No blobs found')
         return
 
-    #probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
+    probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
 
     dist = 100
 

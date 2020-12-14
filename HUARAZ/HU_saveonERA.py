@@ -37,6 +37,44 @@ def saveCHIRPS():
     ch_on_e_all.to_netcdf('/media/ck/Elements/SouthAmerica/CHIRPS/CHIRPS_peru_onERA5.nc', mode='w', encoding=encoding, format='NETCDF4')
 
 
+def saveCHIRPS_SA():
+    chirpsbox = [-81,-65,-25,0]  # peru daily
+    closer = [-90, -46, -35, 10]
+
+
+    #chirpsm = xr.open_dataset(cnst.elements_drive + 'SouthAmerica/CHIRPS/chirps-v2.0.monthly.nc')
+    path = cnst.elements_drive + 'SouthAmerica/CHIRPS/Global_Daily/'
+
+    date = '2016-01-13'
+    dt = pd.to_datetime(date)
+    era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/v850_15UTC_1981-2019_peru_big.nc')
+
+    u200 = era5['v'].isel(time=0).squeeze().load()
+    u200 = uda.flip_lat(u200)
+
+    chirpsall = xr.open_dataset(
+        glob.glob(cnst.elements_drive + 'SouthAmerica/CHIRPS/Global_Daily/chirps-*.nc')[0])
+    chirpsall = chirpsall['precip'].sel(longitude=slice(closer[0], closer[1]), latitude=slice(closer[2], closer[3])).isel(time=0).squeeze()
+    ch_on_e_all, lut = u200.salem.lookup_transform(chirpsall, return_lut=True)
+
+    del chirpsall
+    del ch_on_e_all
+
+    for ids, y in enumerate(range(1981, 2020)):
+        chirpsall = xr.open_dataset(glob.glob(cnst.elements_drive + 'SouthAmerica/CHIRPS/Global_Daily/chirps-*'+str(y)+'*.nc')[0]).chunk({'time':5})
+        chirpsall = chirpsall['precip'].sel(longitude=slice(closer[0], closer[1]), latitude=slice(closer[2], closer[3]))
+        #ipdb.set_trace()
+        print('Doing year', y)
+
+        ch_on_e_all = u200.salem.lookup_transform(chirpsall, lut=lut)
+
+        comp = dict(zlib=True, complevel=5)
+        encoding = {'precip': comp}
+        ch_on_e_all.to_netcdf('/media/ck/Elements/SouthAmerica/CHIRPS/SA_daily_onERA/CHIRPS_daily_onERA_'+str(y)+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+
+        del ch_on_e_all
+
+
 def saveGRIDSAT():
     chirpsbox = [-81,-68,-18.5,0]  # peru daily
 
@@ -113,11 +151,11 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/q*.nc')
-    u200orig = u200orig['q'].sel(level=250).load()
+    u200orig = u200orig['q'].sel(level=850).load()
     u200orig.name = 'q'
     comp = dict(zlib=True, complevel=5)
     encoding = {'q': comp}
-    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/q_15UTC_1981-2019_peru_big.nc', mode='w',
+    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/q850_15UTC_1981-2019_peru_big.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 

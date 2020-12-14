@@ -15,7 +15,7 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
-    y1 = 2000
+    y1 = 1983
     y2 = 2019
 
     if method is None:
@@ -86,17 +86,17 @@ def trend_all():
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_-40_allClouds_monthly.nc'
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc'
 
-    mcs = '/media/ck/Elements/SouthAmerica/CHIRPS/chirps-v2.0.monthly.nc'
+    mcs = '/media/ck/Elements/SouthAmerica/CHIRPS/SA_daily_onERA/CHIRPS_daily_onERA*.nc' #'/media/ck/Elements/SouthAmerica/CHIRPS/chirps-v2.0.monthly.nc'
 
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    box =  [-78, -77, -10.2, -8.63]#[-80, -65, -20, -1] #[-79, -76, -11, -8] # [-79, -74, -12, -8]  # small
+    box =  [-81,-65,-25,0] #[-78, -77, -10.2, -8.63]#[-80, -65, -20, -1] #[-79, -76, -11, -8] # [-79, -74, -12, -8]  # small
     #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
     #box = [-80, -53, -30, -1]
     #box = [-79,-69,-17,-7] #[-79, -75, -10.5, -8]
 
-    da3 = xr.open_dataarray(mcs)#/100
-    da3 = da3.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))#.sel(latitude=slice(-10.2,-8.63), longitude=slice(-78, -77))#.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
+    da3 = xr.open_mfdataset(mcs)#/100
+    da3 = da3['precip'].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3])).load()#.sel(latitude=slice(-10.2,-8.63), longitude=slice(-78, -77))#.sel(longitude=slice(box[0], box[1]), latitude=slice(box[2],box[3]))
 
     #grid = da3.salem.grid.regrid(factor=1)
 
@@ -152,7 +152,7 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_SIG_inPerc_since2000_mediumDomain_flip_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'CHIRPS_only_trendmap_Allmonths_SIG_inPerc_mediumDomain_onERA_1983-2018_'+str(m[0]).zfill(2)+'.png'
         else:
             fp = fpath + 'CHIRPS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
