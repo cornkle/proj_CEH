@@ -28,8 +28,8 @@ def shift_lons(ds, lon_dim='lon', save=False):
     new_lons = np.sort(new_lons)
     #ds[lon_dim].values = new_lons
     #ipdb.set_trace()
-
-    ds = ds.assign_coords({'lon':new_lons})
+    #ipdb.set_trace()
+    ds = ds.assign_coords({lon_dim:new_lons})
 
     if save:
         ds.to_netcdf(save)
@@ -43,7 +43,8 @@ def shift_lons_data(ds, lon_dim='lon', save=False):
     new_data = np.empty_like(ds.values)
     mask = np.where(lons >= 180)
     mask2 = np.where(lons < 180)
-    new_lons = lons - 180#179.0625
+    argpos = np.argmin(np.abs(ds.longitude.values-180))
+    new_lons = lons - ds.longitude.values[argpos]#179.0625
     #ipdb.set_trace()
     new_data[:,mask2[0]] = ds.values[:,mask[0]]
     new_data[:,mask[0]] = ds.values[:,mask2[0]]
