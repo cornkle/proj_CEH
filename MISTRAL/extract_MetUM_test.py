@@ -16,8 +16,6 @@ from scipy.interpolate import griddata
 VARS = {  'rlut' : 'toa_outgoing_longwave_flux'
 
 
-
-
 }
 
 

@@ -196,6 +196,89 @@ def basic_1d_binning(xvar, xbins):
 
     return outdic
 
+
+def basic_1d_binning_mean(xvar, xbins):
+    """
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+    outdic['nb'] = []
+
+
+    for issh, shl in enumerate(xbins[0:-1]):
+
+        mask = (xvar > shl) & (xvar <= xbins[issh + 1])
+
+        outdic['nb'].append(np.nanmean(xvar[mask]))
+
+
+
+    outdic['xbins'] = (np.round(xbins[0:-1]+((xbins[1::]-xbins[0:-1])/2),2))
+
+
+    return outdic
+
+
+def var2_binning_mean(xvar, yvar, xbins):
+    """
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+    outdic['y'] = []
+
+
+    for issh, shl in enumerate(xbins[0:-1]):
+
+        mask = (xvar > shl) & (xvar <= xbins[issh + 1])
+
+        outdic['y'].append(np.nanmean(yvar[mask]))
+
+    outdic['xbins'] = (np.round(xbins[0:-1]+((xbins[1::]-xbins[0:-1])/2),2))
+
+
+    return outdic
+
+
+def var2_binning_percentile(xvar, yvar, xbins, p):
+    """
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+    outdic['y'] = []
+
+
+    for issh, shl in enumerate(xbins[0:-1]):
+
+        mask = (xvar > shl) & (xvar <= xbins[issh + 1]) & np.isfinite(yvar)
+
+        outdic['y'].append(np.percentile(yvar[mask], p))
+
+    outdic['xbins'] = (np.round(xbins[0:-1]+((xbins[1::]-xbins[0:-1])/2),2))
+
+
+    return outdic
+
+
+
+
 def perc_1d_binning(data, xvar, xbins, perc):
     """
     :param xvar: xvar of the 2dhist

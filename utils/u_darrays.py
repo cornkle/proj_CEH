@@ -43,8 +43,8 @@ def shift_lons_data(ds, lon_dim='lon', save=False):
     new_data = np.empty_like(ds.values)
     mask = np.where(lons >= 180)
     mask2 = np.where(lons < 180)
-    argpos = np.argmin(np.abs(ds.longitude.values-180))
-    new_lons = lons - ds.longitude.values[argpos]#179.0625
+    argpos = np.argmin(np.abs(ds.lon.values-180))
+    new_lons = lons - ds.lon.values[argpos]#179.0625
     #ipdb.set_trace()
     new_data[:,mask2[0]] = ds.values[:,mask[0]]
     new_data[:,mask[0]] = ds.values[:,mask2[0]]
