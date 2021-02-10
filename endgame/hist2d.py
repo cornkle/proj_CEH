@@ -125,6 +125,16 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
 
             for issh, shl in enumerate(xbins[0:-1]):
 
+                # if issh == 0:
+                #     poss_ds =  (xvar < xbins[issh + 1]) & (yvar >= qql) & (yvar < ybins[isq + 1])
+                #
+                # elif issh == len(xbins[0:-1])-1:
+                #     poss_ds =  (xvar >= shl) & (yvar >= qql) & (yvar < ybins[isq + 1])
+                # elif isq == 0:
+                #     poss_ds = (xvar >= shl) & (xvar < xbins[issh + 1]) & (yvar < ybins[isq + 1])
+                # elif isq == len(ybins[0:-1])-1:
+                #     poss_ds = (xvar >= shl) & (xvar < xbins[issh + 1]) & (yvar >= qql)
+                # else:
                 poss_ds = (xvar >= shl) & (xvar < xbins[issh + 1]) & (yvar >= qql) & (yvar < ybins[isq + 1])
 
                 try:
@@ -132,7 +142,7 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
                     if varstr == 'pall':
                         try:
                             isdata = np.concatenate(np.array(isdata), axis=0)
-                            isdata = isdata[isdata>8]
+                            isdata = isdata[isdata>1]
                         except:
                             pass
 
@@ -152,6 +162,7 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
                             ds_mean = np.nan
                         else:
                             ds_mean = ds_mmean #/ ds_val
+                        #print(np.sum(poss_ds), ds_val)
                 except IndexError:
                     ds_mean = np.nan
 

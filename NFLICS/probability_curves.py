@@ -5,35 +5,9 @@ from utils import constants as cnst, u_arrays as ua
 import pandas as pd
 import multiprocessing
 import pickle as pkl
+import glob
 
 
-def create_tab():
-    coref = cnst.network_data + '/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
-    dat = xr.open_dataarray(coref)
-
-    dic = {'date' : [], 'lon' : [], 'lat': [], 'hour': [], 'month': [], 'year': []}
-    for t in (dat.time):
-        day = dat.sel(time=t)
-
-        pos = np.where(np.isfinite(day.values))
-
-        for y, x in zip(pos[0], pos[1]):
-
-            point = day.isel(lon=x, lat=y)
-
-            hour = point.values
-
-            date =  str(point['time.year'].values) +'-'+ str(point['time.month'].values).zfill(2) +'-'+ str(point['time.day'].values).zfill(2)+' ' + str(int(hour)).zfill(2) + ':00:00'
-            dic['date'].append(date)
-            dic['month'].append(int(day['time.month'].values))
-            dic['hour'].append(int(hour))
-            dic['year'].append(int(day['time.year'].values))
-            dic['lon'].append(float(point.lon.values))
-            dic['lat'].append(float(point.lat.values))
-    pdic = pd.DataFrame.from_dict(dic)
-
-    pdic.to_csv(cnst.network_data + 'data/NFLICS/tables/blob_map_allscales_-50_JJAS_points_dominant_daily.csv',
-                na_rep=-999, index_label='id')
 
 
 def read_SahelStorm(h):
@@ -137,6 +111,9 @@ def read_lsta(h):
     amskern = None
     ramskern = None
 
+    amskernc = None
+    ramskernc = None
+
     lonl = []
     latl = []
     tlon = []
@@ -162,7 +139,7 @@ def read_lsta(h):
 
         lsta_da = lsta['lsta']  # .values.squeeze()
 
-        print('Doing ' + 'AMSR_' + str(dt.year) + str(dt.month).zfill(2) + str(
+        print('Doing ' + 'LASAF' + str(dt.year) + str(dt.month).zfill(2) + str(
             dt.day).zfill(2) + '.nc')
 
         # ax.pcolormesh(lsta_da)
@@ -288,7 +265,7 @@ def read_lsta(h):
             #ipdb.set_trace()
 
             print('Core lonlat', xpos, ypos)
-            print('Random lonlat', rx, ry)
+           # print('Random lonlat', rx, ry)
 
         # ipdb.set_trace()
         del lsta
