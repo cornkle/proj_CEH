@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
 import os
-from utils import constants as cnst
-
-pfile_path = cnst.elements_drive + '/Africa/WestAfrica/NFLICS/tables/prob_dictionary/'
 
 def fit_curve_poly(x, y, h):
     # lower order polyfit for nighttime/morning curves to reduce noise
@@ -21,7 +18,7 @@ def run(h, LSTA_array, table_path):
     """
 
     :param h: Hour to calculate probability for
-    :param LSTA_array: Any LSTA array (in degC!), numpy array or data array (2D)
+    :param LSTA_array: Any LSTA array, numpy array or data array (2D)
     :param table_path: directory path to pre-calculated hourly LSTA probability tables
     :return: Array with probability factors of LSTA-array shape
     """
