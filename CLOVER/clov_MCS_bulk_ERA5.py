@@ -42,6 +42,7 @@ def perSys():
     pool = multiprocessing.Pool(processes=3)
     tthresh = '-50'
     files = glob.glob(cnst.network_data + 'MCSfiles/WA5000_5-25N_17W-15E_-50_afternoon_GPM/*.nc')
+
     #ipdb.set_trace()
 
     print('Nb files', len(files))

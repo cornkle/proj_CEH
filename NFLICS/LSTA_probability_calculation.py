@@ -9,20 +9,17 @@ def fit_curve_poly(x, y, h):
     else:
         order = 6
     z = np.polyfit(x, y, order)
-    f = np.poly1d(z)
 
-    return f
+    return np.poly1d(z)
 
 
 def run(h, LSTA_array, table_path):
     """
-
     :param h: Hour to calculate probability for
     :param LSTA_array: Any LSTA array, numpy array or data array (2D)
     :param table_path: directory path to pre-calculated hourly LSTA probability tables
     :return: Array with probability factors of LSTA-array shape
     """
-
     tab = pd.read_table(table_path + os.sep + 'BigDomain_LSTAprobability_17-0W_9-20N_' + str(h).zfill(2) + '.csv', delimiter=',')
 
     f = fit_curve_poly(tab['bins'], tab['factor'], h)

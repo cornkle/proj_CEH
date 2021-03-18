@@ -104,7 +104,7 @@ def read_lsta(h):
         single = tab[tab.date == date]
 
         dt = pd.to_datetime(date)
-        if h < 10:
+        if h <= 10:
             shift=-1
         else:
             shift=0

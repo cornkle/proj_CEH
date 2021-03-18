@@ -15,21 +15,22 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
+    y1 = 1987
     if method is None:
         'Please provide trend calc method: polyfit or mk (mann kendall)'
     if hour is not None:
 
         if len(month)>1:
 
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1])) & (data['time.hour'] == hour) & (data['time.year'] >= y1) & (data['time.year'] <= 2018)]
         else:
 
-            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
+            data = data[(data['time.month'] == month[0]) & (data['time.hour'] == hour) & (data['time.year'] >= y1) & (data['time.year'] <= 2018)]
     else:
         if len(month)>1:
-            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
+            data = data[((data['time.month'] >= month[0]) & (data['time.month'] <= month[1]))& (data['time.year'] >= y1) & (data['time.year'] <= 2018)]
         else:
-            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= 1991) & (data['time.year'] <= 2018)]
+            data = data[(data['time.month'] == month[0]) & (data['time.year'] >= y1) & (data['time.year'] <= 2018)]
 
     if len(data.time)==0:
         print('Data does not seem to have picked month or hour. Please check input data')
@@ -46,7 +47,7 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
     alpha = 0.05
     # NaNs means there is not enough data, slope = 0 means there is no significant trend.
     if method=='mk':
-        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_missing=10)
+        dtrend = datastacked.groupby('allpoints').apply(u_darrays.linear_trend_mk, alpha=alpha, eps=0.01,nb_valid=10)
         dtrend = dtrend.unstack('allpoints')
         if sig:
             (dtrend['slope'].values)[dtrend['ind'].values==0] = 0
@@ -144,7 +145,7 @@ def trend_all():
 
     shear = t2d.copy(deep=True)
     shear.name = 'shear'
-    shear.values = ws_shear[0]
+    shear.values = v800 #ws_shear[0]
 
     u6 = shear_u#u800
     v6 = shear_v#v800
@@ -158,7 +159,7 @@ def trend_all():
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [4, (3,5), (6,8), (9,11)]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [3,4,5,6,9,10,11]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -169,7 +170,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = True
+        sig = False
 
         t2trend, t2mean = calc_trend(t2, m,  method=method, sig=sig,hour=12, wilks=False) #hour=12,
         t2_mean = t2mean.mean(axis=0)
@@ -220,9 +221,9 @@ def trend_all():
         # theta_da  = thetatrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_skt_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_vwind_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_skt_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'use/ERA5_trend_synop_WA_sig_poly_tcwv_1991_vwind_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = shear.salem.get_map()
         ti_da = t2d.salem.transform(ti_da)
 
@@ -259,9 +260,9 @@ def trend_all():
 
         }
 
-        pkl.dump(dicm,
-                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
-                      'wb'))
+        # pkl.dump(dicm,
+        #          open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
+        #               'wb'))
 
         ax1 = f.add_subplot(221)
         map.set_data(t_da.values, interp='linear')  # interp='linear'
@@ -316,10 +317,10 @@ def trend_all():
         plt.savefig(fp)
         plt.close('all')
 
-    pkl.dump(dicm,
-             open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
-                  'wb'))
-
-    pkl.dump(dicmean,
-                 open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_WA.p',
-                      'wb'))
+    # pkl.dump(dicm,
+    #          open(cnst.network_data + 'data/CLOVER/saves/storm_frac_synop12UTC_WA.p',
+    #               'wb'))
+    #
+    # pkl.dump(dicmean,
+    #              open(cnst.network_data + 'data/CLOVER/saves/storm_frac_mean_synop12UTC_WA.p',
+    #                   'wb'))

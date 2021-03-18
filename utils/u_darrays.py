@@ -46,8 +46,12 @@ def shift_lons_data(ds, lon_dim='lon', save=False):
     argpos = np.argmin(np.abs(ds.lon.values-180))
     new_lons = lons - ds.lon.values[argpos]#179.0625
     #ipdb.set_trace()
-    new_data[:,mask2[0]] = ds.values[:,mask[0]]
-    new_data[:,mask[0]] = ds.values[:,mask2[0]]
+    try:
+        new_data[:,mask2[0]] = ds.values[:,mask[0]]
+        new_data[:,mask[0]] = ds.values[:,mask2[0]]
+    except:
+        new_data[:,:,mask2[0]] = ds.values[:,:,mask[0]]
+        new_data[:,:,mask[0]] = ds.values[:,:,mask2[0]]
     ds = ds.assign_coords({'lon': new_lons})
     ds.values = new_data
     #ipdb.set_trace()
