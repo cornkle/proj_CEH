@@ -214,7 +214,7 @@ class ReadMsg(object):
             print('Stitch file missing for big domain or something else wrong with dimensions. Returning.', self.date)
             return
 
-        if (self.bpath) & (rrShape[1] != self.lon.shape[0]):
+        if (self.bpath!=None) & (rrShape[1] != self.lon.shape[0]):
             ssShape = self.s_shape  # msg shape
             ssMDI = np.uint8(255)
             try:
