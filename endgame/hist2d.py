@@ -142,7 +142,7 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
                     if varstr == 'pall':
                         try:
                             isdata = np.concatenate(np.array(isdata), axis=0)
-                            isdata = isdata[isdata>1]
+                            #isdata = isdata[isdata>1]
                         except:
                             pass
 
@@ -172,6 +172,70 @@ def create_2dhist_centile(xvar, yvar, xbins, ybins, vardic, varpick, percentile=
 
                 # (outdic[varstr + '_xbin'])[isq, issh] = shl
                 # (outdic[varstr + '_ybin'])[isq, issh] = qql
+
+    outdic['xbins'] = xbins
+    outdic['ybins'] = ybins
+
+    return outdic
+
+
+def create_2dhist_maxYear(xvar, yvar, xbins, ybins, vardic, varpick, valmin=2):
+    """
+
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+
+    for varstr in varpick:
+
+        varstrr = varstr
+
+        outdic[varstrr] = np.zeros((len(ybins)-1, len(xbins)-1))
+        outdic[varstrr+'_val'] = np.zeros((len(ybins)-1, len(xbins)-1))
+        outdic[varstrr + '_std'] = np.zeros((len(ybins) - 1, len(xbins) - 1))
+
+        calcvar = vardic#[varstr]
+
+
+        for isq, qql in enumerate(ybins[0:-1]):
+
+            for issh, shl in enumerate(xbins[0:-1]):
+
+
+                poss_ds = (xvar >= shl) & (xvar < xbins[issh + 1]) & (yvar >= qql) & (yvar < ybins[isq + 1])
+
+                try:
+                    isdata = (calcvar[poss_ds].groupby('year').max())
+                    valdata = (calcvar[poss_ds].groupby('year').count())
+                    ds_mmean = isdata[varstr]
+                    ds_mval = valdata[varstr]
+
+                    nb_mcs = 2 # number mcs per year minimum to calc year max from, other years are excluded
+                    ds_val = np.sum(ds_mval>=nb_mcs)  # number of years where enough MCSs exist
+
+                    if ds_val < valmin:
+                        ds_mean = np.nan
+                        ds_std = np.nan
+                    else:
+                        #ipdb.set_trace()
+                        ds_mean = np.nanmean(ds_mmean[ds_mval>=nb_mcs])
+                        ds_std = np.nanstd(ds_mmean[ds_mval >= nb_mcs])
+
+                except IndexError:
+                    ds_mean = np.nan
+                    ds_val = np.nan
+                    ds_std = np.nan
+
+
+                (outdic[varstrr])[isq, issh] = ds_mean
+                (outdic[varstrr+'_val'])[isq, issh] = ds_val
+                (outdic[varstrr + '_std'])[isq, issh] = ds_std
 
     outdic['xbins'] = xbins
     outdic['ybins'] = ybins

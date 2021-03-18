@@ -79,6 +79,7 @@ class ReadMsg(object):
         self.lat = mlat
         self.lon = mlon
         self.nx = mlon.shape[1]-strip_shape[1] # mlon.shape[1]
+        self.nx_big = mlon.shape[1]
         self.ny = mlon.shape[0] #mlon.shape[0]
         self.s_shape = strip_shape
         self.l_shape = (mlon.shape[0]-strip_shape[0], mlon.shape[1])
@@ -106,7 +107,7 @@ class ReadMsg(object):
             self.bpath = file
         else:
             print('No strip file dir found!')
-            self.bpath = False
+            self.bpath = None
             #return # only run through if strip exists
 
         self.date = [datetime.datetime(yr, mon, day, hr, mins)]
@@ -198,29 +199,38 @@ class ReadMsg(object):
 
         rr = np.fromfile(file, dtype=rrMDI.dtype)
 
-        rr.shape = rrShape
+        try:
+            rr.shape = rrShape
+        except ValueError:
+            print('Got big domain, no slice needed')
+            rrShape = (self.ny, self.nx_big)
+            rr.shape = rrShape
+
 
         #rr.shape = self.l_shape
         rr = rr.astype(np.int32) - 173  #self.s_shape
 
         if (self.nx < self.lon.shape[0]) & (self.bpath is None):
-            print('Stitch file missing for big domain. Returning.', self.date)
+            print('Stitch file missing for big domain or something else wrong with dimensions. Returning.', self.date)
             return
 
+        if (self.bpath) & (rrShape[1] != self.lon.shape[0]):
+            ssShape = self.s_shape  # msg shape
+            ssMDI = np.uint8(255)
+            try:
+                ss = np.fromfile(self.bpath, dtype=ssMDI.dtype)
+            except:
+                print('Something wrong with strip file')
+                return
 
-        ssShape = self.s_shape  # msg shape
-        ssMDI = np.uint8(255)
-        try:
-            ss = np.fromfile(self.bpath, dtype=ssMDI.dtype)
-        except:
-            print('Something wrong with strip file')
-            return
+            ss.shape = ssShape
 
-        ss.shape = ssShape
+            ss = ss.astype(np.int32) - 173
 
-        ss = ss.astype(np.int32) - 173
+            stitched = np.flip(np.concatenate((ss,rr), axis=1), axis=0)
 
-        stitched = np.flip(np.concatenate((ss,rr), axis=1), axis=0)
+        else:
+            stitched = rr
 
 
 
