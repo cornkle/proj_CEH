@@ -17,7 +17,7 @@ from eod import msg_bigDomain as msg
 
 filepath = {
 
-    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2004,2019)]  # 2004, 2018
+    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2010,2010)]  # 2004, 2018
 
 }
 
