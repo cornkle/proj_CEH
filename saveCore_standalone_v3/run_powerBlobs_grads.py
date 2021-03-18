@@ -17,7 +17,7 @@ from eod import msg_bigDomain as msg
 
 filepath = {
 
-    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2010,2010)]  # 2004, 2018
+    'MSG_JJAS' : [cnst.network_data +'/data/OBS/MSG_WA30/', [6,7,8,9], (2019,2021)]  # 2004, 2018
 
 }
 
@@ -38,7 +38,7 @@ def run(dataset, CLOBBER=False):
 
             tag = dataset[0:3].upper()
 
-            path =  cnst.network_data + '/MCSfiles/MSG_cores/' #'/prj/vera/cores_bigDomain/' #
+            path =  '/prj/vera/cores_bigDomain/' #cnst.network_data + '/MCSfiles/MSG_cores/' #'/prj/vera/cores_bigDomain/' #
             savefile = path + 'coresPower_'+tag.upper()+'_-40_9-130km_-50points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'#'blobMap_-40-700km2_-50-points_dominant_'+str(yy) + '_'+str(mm).zfill(2)+'.nc'
 
             if not CLOBBER:
