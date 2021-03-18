@@ -37,9 +37,9 @@ def composite(h):
     msg = msg[(msg['time.hour'] == h)  & (msg['time.minute'] == 0) & (
         msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
 
-    msg = msg.sel( lat=slice(12,25), lon=slice(-11,11))
+    msg = msg.sel( lat=slice(6,8), lon=slice(-12,15))
 
-    dic = u_parallelise.run_arrays(7,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
     # res = []
     # #ipdb.set_trace()
@@ -186,7 +186,7 @@ def file_loop(fi):
 
     lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(8, 23))
+    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(4, 23))
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 

@@ -87,6 +87,7 @@ AMSRE_NIGHT = AMSRE_DIR + 'nc_night/'
 AMSRE_DAY = AMSRE_DIR + 'nc_day/'
 AMSRE_ANO_NIGHT = AMSRE_DIR + 'sma_nc_night_new/'
 AMSRE_ANO_DAY = AMSRE_DIR + 'sma_nc_day_new/'
+AMSRE_ANO_DAY_CORR = AMSRE_DIR + 'sma_nc_day_corr/'
 AMSRE_NIGHT_TESTFILE = AMSRE_NIGHT + 'AMSR_L3_LPRMv05_A_20060116.nc'
 
 

@@ -4,9 +4,7 @@
 """
 import numpy as np
 from wavelet import oned as w1d
-import ipdb
-import matplotlib.pyplot as plt
-from kpywavelet import wavelet as wvt
+
 
 class wavelet(object):
 

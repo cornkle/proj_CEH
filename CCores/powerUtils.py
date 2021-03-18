@@ -357,7 +357,7 @@ def find_power_nflicsv2(coreObj):
 
     else:
         power_img = np.sum(coreObj.power, axis=0)
-        thresh_all = np.sum((coreObj.scales) ** .5)
+        thresh_all = np.sum((coreObj.scales) ** .5) * len(mpos[0])
         mask = power_img > thresh_all
 
 

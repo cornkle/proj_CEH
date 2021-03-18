@@ -137,9 +137,10 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, stride=3):
 
 
 
-def readERA():
+def readERA(var):
 
-    u200orig = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/u_15UTC_1981-2019_peru_big.nc')
+    u200orig = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/'+var+'_15UTC_1981-2019_peru_big.nc')
+    #u200orig = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/v850_15UTC_1981-2019_peru_big.nc')
     u200orig = uda.flip_lat(u200orig)
     datetimes = pd.to_datetime(u200orig.time.values)
     newtimes = []
@@ -149,17 +150,53 @@ def readERA():
     return u200orig
 
 
+def saveCHIRPS_BIG(y1,y2):
+
+    u200orig = readERA('u200')
+    u200 = u200orig#.sel(longitude=slice(chirpsbox[0], chirpsbox[1]), latitude=slice(chirpsbox[2], chirpsbox[3]))
+    u200 = u200.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
+
+    chirps_all = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/CHIRPS/SA_daily_onERA/*.nc')
+    pos = np.intersect1d(chirps_all.time, u200.time)
+
+    chirps = chirps_all.sel(time=pos).load()
+    u200 = u200.sel(time=pos)
+
+    cdoy = chirps['precip'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
+    udoy = u200['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
+
+    dslist = []
+
+    for doy in np.arange(1,366): #366
+        dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
+
+    pool = multiprocessing.Pool(processes=4)
+
+    # res = pool.map(run_doy_correlation, dslist)
+    # pool.close()
+
+    res = []
+    for d in dslist:
+        out = run_doy_correlation(d)
+        res.append(out)
+
+    chirps_ds = xr.concat(res, dim='dayofyear')
+    chirps_ds.attrs['years'] = np.unique(chirps['time.year'])
+
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_u200_correlation_peruBIG_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
+
+
 
 def runCHIRPS():
     ylist = [(1985,2005), (1998,2019), (1985,2019), (1985,1995), (1985,2002), (2002,2019), (1995,2005), (2005,2019)]
     for y in ylist:
-        saveCHIRPS(y[0], y[1])
+        saveCHIRPS_BIG(y[0], y[1])
 
 def saveCHIRPS(y1,y2):
 
     chirpsbox = [-81, -68, -17, 0]
 
-    u200orig = readERA()
+    u200orig = readERA('u200')
     u200 = u200orig.sel(longitude=slice(chirpsbox[0], chirpsbox[1]), latitude=slice(chirpsbox[2], chirpsbox[3]))
     u200 = u200.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
 
@@ -200,7 +237,7 @@ def runGridsat():
 
 def saveGRIDSAT(y1,y2):
 
-    u200orig = readERA()
+    u200orig = readERA('u200')
     u200orig = u200orig.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
 
     gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_-15ALLkm2_UTC_DAY_onBIGERA/*.nc',
@@ -231,6 +268,42 @@ def saveGRIDSAT(y1,y2):
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
     chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT-15_u_correlation_SouthAmerica_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
+
+
+def saveGRIDSAT_tropicalJet(y1,y2):
+
+    u200orig = readERA('v850')
+    isjet = [-75.5, -74.5, -8.5, -6.5]
+    u200orig = u200orig.sel(time=((u200orig['time.year'] >= y1) & (u200orig['time.year'] < y2)))
+
+    gridsat = xr.open_mfdataset('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/daily_-40ALLkm2_UTC_DAY_onBIGERA/*.nc',
+                                combine='nested', concat_dim='time')
+    posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
+
+    u200orig = u200orig.sel(time=posgrid)
+    gridsat = gridsat.sel(time=posgrid).load()
+
+    udoy = u200orig['v'].rolling(time=3, min_periods=1, center=True).mean(dim='time') # time=3
+    cdoy = gridsat['tir'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
+
+    dslist = []
+    print('Did rolling aggregation')
+
+    for doy in np.arange(1,366): #366
+        dslist.append((doy, udoy.sel(time=(udoy['time.dayofyear'] == doy)), cdoy.sel(time=(cdoy['time.dayofyear'] == doy))))
+    #ipdb.set_trace()
+    # pool = multiprocessing.Pool(processes=4)
+    #
+    # res = pool.map(run_doy_correlation, dslist)
+    # pool.close()
+    res = []
+    for d in dslist:
+        out = run_doy(d, c_box=isjet)
+        res.append(out)
+
+    chirps_ds = xr.concat(res, dim='dayofyear')
+    chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT_v850_correlation_SouthAmerica_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
 
 
 def saveGPM():
@@ -337,7 +410,7 @@ def saveGPM_GRIDSAT():
 
 
 
-def run_doy(x):
+def run_doy(x, c_box=None):
 
     d = x[0]
     print('Doing dayofyear', d)
@@ -357,7 +430,7 @@ def run_doy(x):
                          coords=[uudoy.time[1::], uudoy.latitude, uudoy.longitude],
                          dims=['time', 'latitude', 'longitude'])
 
-    outarr = corr(diff1, diff2)
+    outarr = corr(diff1, diff2, c_box=c_box)
 
     del diff1
     del diff2
@@ -372,15 +445,15 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     era5 = xr.open_mfdataset(cnst.ERA5_HOURLY_PL_HU + '/ERA5_*_pl.nc', concat_dim='time', combine='nested')
-    u200 = era5['u'].sel(level=850, time=(era5[
-                                              'time.hour'] == 9))  # .load()   #longitude=slice(bigbox[0], bigbox[1]), latitude=slice(bigbox[3], bigbox[2]),
+    u200 = era5['w'].sel(level=500, time=(era5[
+                                              'time.hour'] == 15))  # .load()   #longitude=slice(bigbox[0], bigbox[1]), latitude=slice(bigbox[3], bigbox[2]),
     u200 = uda.flip_lat(u200)
 
     u200 = u200.sel(time=((u200['time.year'] > 1980) & (u200['time.year'] < 2019)))
-    u200.name = 'u'
+    u200.name = 'w'
     comp = dict(zlib=True, complevel=5)
-    encoding = {'u': comp}
-    u200.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/u850_09UTC_1981-2018_peru.nc', mode='w',
+    encoding = {'w': comp}
+    u200.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/w500_15UTC_1981-2018_peru.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 
