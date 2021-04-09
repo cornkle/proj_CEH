@@ -123,12 +123,14 @@ def parallax_corr_msg(slon, slat, plon, plat, height):
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
 
 
+
 def call_parallax_era(month, t_cloud, lon_cloud, lat_cloud, lon_sat, lat_sat):
 
     height = u_met.era_Tlapse_height(month, t_cloud, lon_cloud, lat_cloud)  # height in meters
     km, coords = u_gis.parallax_corr_msg(lon_sat, lat_sat, lon_cloud, lat_cloud, height / 1000)
 
     return km, coords
+
 
 
 def parallax_correction(slon, slat, plon, plat, height, sheight):

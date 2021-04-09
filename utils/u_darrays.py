@@ -175,6 +175,17 @@ def linear_trend_polyfit(x, nb_valid=None):
     return ds
 
 
+def flip_lat_write(filepath):
+
+    ds = xr.open_dataset(filepath)
+    for var in ds.data_vars:
+        ds[var].values = ds[var].values[:,::-1,:]
+    comp = dict(zlib=True, complevel=5)
+    enc = {var: comp for var in ds.data_vars}
+    savefile = filepath.replace('.nc', '_yflip.nc')
+    ds.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
+    print('Saved ' + savefile)
+
 
 
 def flip_lat(ds):
@@ -196,6 +207,7 @@ def flip_lat(ds):
                     ds = ds.sel(allpoints_level_0=slice(None, None, -1))
                 except ValueError:
                     print('Cant flip lat, coord name not found')
+
     return ds
 
 

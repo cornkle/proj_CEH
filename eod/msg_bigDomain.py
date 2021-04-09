@@ -76,6 +76,8 @@ class ReadMsg(object):
 
         strip_shape = np.load(spath[0])['lon'].shape
 
+        #ipdb.set_trace()
+
         self.lat = mlat
         self.lon = mlon
         self.nx = mlon.shape[1]-strip_shape[1] # mlon.shape[1]
@@ -205,6 +207,7 @@ class ReadMsg(object):
             print('Got big domain, no slice needed')
             rrShape = (self.ny, self.nx_big)
             rr.shape = rrShape
+            rr = rr[::-1,:]
 
 
         #rr.shape = self.l_shape

@@ -45,6 +45,8 @@ class dataset(object):
         if not np.allclose(londiff, np.zeros_like(londiff)+londiff[0]):
             print('Please provide regular grid coordinates.')
 
+        self.original = t.copy()
+
         t[t >= self.Tcut] = 0
         t[np.isnan(t)] = 0
         outt = t.copy()
@@ -105,7 +107,7 @@ class dataset(object):
 
 
         self.image = outt
-        self.original = t
+
         self.minPixel = pix_nb
         self.area = area_img
         self.invalid = invalid
