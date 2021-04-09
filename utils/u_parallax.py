@@ -25,7 +25,6 @@ def haversine(lon1, lat1, lon2, lat2):
     return c * r, math.degrees(c)
 
 
-
 def parallax_correction(slon, slat, plon, plat, height, sheight):
     """(
     :param slon: Satellite longitude
@@ -65,18 +64,19 @@ def parallax_correction(slon, slat, plon, plat, height, sheight):
     else:
         lax_lon = lax_lon_single
 
-    if plat < slat:
-        lax_lat = lax_lat - 1
 
     ### deg to km
     lax_y = r_local * lax_lat
     lax_x = r_local * lax_lon * math.cos(math.radians(lat_diff))
 
+    if plat < slat:
+        lax_lat = lax_lat * - 1
+        lax_y = lax_y * -1
+
     if plon < slon:
         lax_x = lax_x * -1
         lax_lon = lax_lon * -1
-    if plat < slat:
-        lax_y = lax_y * -1
+
 
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
 
