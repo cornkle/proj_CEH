@@ -42,11 +42,11 @@ mdic = {1: range(1, 32), 2: range(1, 30), 3: range(1, 32),
        10: range(1, 32), 11: range(1, 31), 12: range(1, 32)
        }
 
-for y in range(2007,2018): # (1979,2020)
+for y in range(2020,2022): # (1979,2020)
     for m in range(1, 13):
         for d in mdic[m]:
 
-            out_dir = '/prj/nflics/ERA5_scratch/hourly/surface/'
+            out_dir = '/media/ck/Elements/SouthAmerica/ERA5/hourly/surface/'
             path_file =  out_dir + 'ERA5_' + str(y) + '_' + str(m).zfill(2) + '_' + str(d).zfill(2) + '_srfc.nc'
             print('Doing ' + path_file)
 

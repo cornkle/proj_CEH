@@ -16,10 +16,10 @@ from scipy.ndimage.measurements import label
 
 def month():
 
-    years = list(range(1985,2018)) #+ list(range(2004,2014))
+    years = list(range(1985,2019)) #+ list(range(2004,2014))
 
     msg_folder = cnst.GRIDSAT_PERU
-    fname='aggs/gridsat_WA_-40_allClouds_monthly.nc'
+    fname='aggs/gridsat_WA_-15_allClouds_monthly.nc'
 
 
     da = None
@@ -163,10 +163,10 @@ def month_mean_climatology():
 
 def month_count():
 
-    years = list(range(1985, 2018))
+    years = list(range(1984, 2019))
 
     msg_folder = cnst.GRIDSAT_PERU
-    fname = 'aggs/gridsat_WA_count_-40_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
+    fname = 'aggs/gridsat_WA_count_-65_allClouds_monthly.nc' #65_monthly_count_-40base_15-21UTC_1000km2.nc'
 
     if not os.path.isfile(msg_folder + fname):
         da = None
@@ -177,7 +177,7 @@ def month_count():
             # _-40_1000km2_15-21UTC
             print('Doing ' + y)
             da1['tir'].values = da1['tir'].values/100  #ONLY FOR NEWER FILES
-            da1['tir'] = da1['tir'].where((da1['tir'] <= -40) & (da1['tir'] >= -109), other=0) #-65
+            da1['tir'] = da1['tir'].where((da1['tir'] <= -65) & (da1['tir'] >= -115), other=0) #-65
             da1['tir'].values[da1['tir'].values < 0] = 1
             #ipdb.set_trace()
             da1 = da1.resample(time='m').mean('time')

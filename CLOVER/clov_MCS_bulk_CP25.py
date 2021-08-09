@@ -60,7 +60,7 @@ def perSys():
         for f in yfiles:
             res.append(file_loop(f))
 
-        ipdb.set_trace()
+       # ipdb.set_trace()
         keys = mdic.keys()
         for v in res:
             for k in keys:

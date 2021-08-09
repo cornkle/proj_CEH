@@ -16,8 +16,8 @@ def download(year, month, day, file):
                 'u_component_of_wind', 'v_component_of_wind', 'vertical_velocity'
             ],
             'pressure_level': [
-                '250',
-                '350', '450',
+                '200',
+                '300', '400',
                 '500', '550', '600',
                 '650', '700', '750', '800',
                 '825', '850', '875',
@@ -38,11 +38,11 @@ def download(year, month, day, file):
         },  file)
 
 #dates = []
-for y in range(2007,2018): # (1979,2020)
+for y in range(2019,2022): # (1979,2020)
     for m in range(1, 13):
         for d in range(1,32):
 
-            out_dir = '/prj/nflics/ERA5_scratch/hourly/pressure_levels/'
+            out_dir = '/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/'
             path_file =  out_dir + 'ERA5_' + str(y) + '_' + str(m).zfill(2) + '_' + str(d).zfill(2) + '_pl.nc'
             print('Doing ' + path_file)
 

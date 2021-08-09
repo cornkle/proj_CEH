@@ -26,6 +26,7 @@ def grid_tiff(file, grid):
 
     return ls_on_grid
 
+
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance between two points
@@ -44,30 +45,6 @@ def haversine(lon1, lat1, lon2, lat2):
     ## gives back distance in km, degrees
     return c * r, math.degrees(c)
 
-
-def parallax_corr_msg_old(slon, slat, plon, plat, height):
-
-    er = 6378.137 # earth radius km
-    mh = 35786 #msg satellite height
-    tot = er + mh
-    lat_diff = np.abs(slat-plat)
-    lon_diff = np.abs(slon-plon)
-    lax_lat = (height * tot * math.sin(math.radians(lat_diff))) / (er*(tot*math.cos(math.radians(lat_diff))-(er+height)))
-    lax_lon = (height * tot * math.sin(math.radians(lon_diff))) / (er * (tot * math.cos(math.radians(lon_diff)) - (er + height)))
-
-    lax_y = er * lax_lat
-    lax_x = er * lax_lon
-
-    #print('Degree_lat_lon' , lax_lat, lax_lon)
-    #print('Km_y_x', lax_y, lax_x)
-
-    if plon < slon:
-        lax_x = lax_x * -1
-
-    if plat < slat:
-        lax_y = lax_y * -1
-
-    return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
 
 def parallax_corr_msg(slon, slat, plon, plat, height):
     """(
@@ -107,18 +84,18 @@ def parallax_corr_msg(slon, slat, plon, plat, height):
     else:
         lax_lon = lax_lon_single
 
-    if plat < slat:
-        lax_lat = lax_lat - 1
 
     ### deg to km
     lax_y = r_local * lax_lat
     lax_x = r_local * lax_lon * math.cos(math.radians(lat_diff))
 
+    if plat < slat:
+        lax_lat = lax_lat * - 1
+        lax_y = lax_y * -1
+
     if plon < slon:
         lax_x = lax_x * -1
         lax_lon = lax_lon * -1
-    if plat < slat:
-        lax_y = lax_y * -1
 
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
 
@@ -128,9 +105,7 @@ def call_parallax_era(month, t_cloud, lon_cloud, lat_cloud, lon_sat, lat_sat):
 
     height = u_met.era_Tlapse_height(month, t_cloud, lon_cloud, lat_cloud)  # height in meters
     km, coords = u_gis.parallax_corr_msg(lon_sat, lat_sat, lon_cloud, lat_cloud, height / 1000)
-
     return km, coords
-
 
 
 def parallax_correction(slon, slat, plon, plat, height, sheight):
@@ -172,22 +147,18 @@ def parallax_correction(slon, slat, plon, plat, height, sheight):
     else:
         lax_lon = lax_lon_single
 
-    if plat < slat:
-        lax_lat = lax_lat - 1
 
     ### deg to km
     lax_y = r_local * lax_lat
     lax_x = r_local * lax_lon * math.cos(math.radians(lat_diff))
 
+    if plat < slat:
+        lax_lat = lax_lat * - 1
+        lax_y = lax_y * -1
+
     if plon < slon:
         lax_x = lax_x * -1
         lax_lon = lax_lon * -1
-    if plat < slat:
-        lax_y = lax_y * -1
+
 
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
-
-
-
-
-

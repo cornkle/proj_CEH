@@ -196,9 +196,9 @@ def create_2dhist_maxYear(xvar, yvar, xbins, ybins, vardic, varpick, valmin=2):
 
         varstrr = varstr
 
-        outdic[varstrr] = np.zeros((len(ybins)-1, len(xbins)-1))
-        outdic[varstrr+'_val'] = np.zeros((len(ybins)-1, len(xbins)-1))
-        outdic[varstrr + '_std'] = np.zeros((len(ybins) - 1, len(xbins) - 1))
+        outdic[varstrr] = np.zeros((len(ybins)-1, len(xbins)-1))*np.nan
+        outdic[varstrr+'_val'] = np.zeros((len(ybins)-1, len(xbins)-1))*np.nan
+        outdic[varstrr + '_std'] = np.zeros((len(ybins) - 1, len(xbins) - 1))*np.nan
 
         calcvar = vardic#[varstr]
 

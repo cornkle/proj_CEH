@@ -15,8 +15,8 @@ def download(year):
                 'vertical_velocity'
             ],
             'pressure_level': [
-                '250',
-                '350', '450',
+                '200',
+                '300', '400',
                 '500', '550', '600',
                 '650', '700', '750', '800',
                 '825', '850', '875',
@@ -40,8 +40,8 @@ def download(year):
                 '18:00',
                 '21:00'
             ]
-        },   '/prj/AMMA2050/ERA5/monthly/SA/synoptic/pressure_levels/ERA5_monthly_pl_'+str(y)+'_synop.nc')
+        },   '/media/ck/Elements/SouthAmerica/ERA5/monthly/pressure_levels/synop/ERA5_monthly_pl_'+str(y)+'_synop.nc')
 
-for y in range(1979,2020):
+for y in range(2020,2022):
     print('Doing year', y)
     download(y)
