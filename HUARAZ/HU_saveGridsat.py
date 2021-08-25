@@ -12,45 +12,6 @@ from utils import u_arrays as ua
 from utils import constants as cnst
 import pandas as pd
 
-def saveYearly():
-
-    out = cnst.GRIDSAT_PERU #cnst.local_data + 'GRIDSAT/MCS18_peru/'
-    infolder = '/media/ck/Elements/SouthAmerica/GRIDSAT/3hourly/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
-
-    years = np.arange(1984,2018)  # list(next(os.walk(msg_folder))[1])
-
-    for y in years:
-        filename = 'gridsat_WA_-40_1000km2' + str(y) + '.nc'
-        da = None
-        if os.path.isfile(out + filename):
-            continue
-
-        files = glob.glob(infolder + str(y) + '/GRIDSAT-AFRICA_CP*.nc')
-        files.sort()
-        for f in files:
-            print('Doing ' + f)
-
-            df = xr.open_dataset(f)
-            if (df['time.hour']<15) | (df['time.hour']>21):
-                continue
-
-            df.rename({'irwin_cdr':'tir'}, inplace=True)
-            df['tir'].values = df['tir'].values-273.15
-            labels, goodinds = ua.blob_define(df['tir'].values, -40, minmax_area=[16, 25000],
-                                              max_area=None)  # 7.7x7.7km = 64km2 per pix in gridsat?
-            df['tir'].values[labels == 0] = 0
-            df['tir'].values[df['tir'].values < -110] = 0
-            df['tir'].values = (np.round(df['tir'].values, decimals=2)*100).astype(np.int16)
-            try:
-                da = xr.concat([da, df ], dim='time')
-            except TypeError:
-                da = df.copy()
-
-        enc = {'tir': {'complevel': 5, 'shuffle': True, 'zlib': True}}
-        da.to_netcdf(out + filename, encoding=enc)
-        da.close()
-
-
 
 def saveYearly_parallel():
 
@@ -67,7 +28,7 @@ def loop(y):
 
     out = cnst.GRIDSAT_PERU
     infolder = cnst.elements_drive + 'SouthAmerica/GRIDSAT/3hourly/www.ncei.noaa.gov/data/geostationary-ir-channel-brightness-temperature-gridsat-b1/access/'
-    filename = 'gridsat_WA_-40_5000km2_13-19UTC' + str(y) + '.nc'
+    filename = 'gridsat_WA_-40_5000km2_13-19LT' + str(y) + '.nc'
     da = None
     #ipdb.set_trace()
     if os.path.isfile(out + filename):
@@ -118,7 +79,7 @@ def rewrite_day():
 
     for y in np.arange(1994,1995):#(1985,2017):
 
-        path = cnst.GRIDSAT_PERU +'daily_LT/gridsat_WA_-40Min_5000km2_13-19UTCperDay_'
+        path = cnst.GRIDSAT_PERU +'daily_LT/gridsat_WA_-40Min_5000km2_13-19LTperDay_'
         try:
             dataset = xr.open_mfdataset(cnst.GRIDSAT_PERU+'*'+str(y)+'*.nc')
         except:
@@ -131,7 +92,7 @@ def rewrite_day():
 
             date_today = pd.to_datetime(date.values)
             print('Doing', date_today)
-            date_today = date_today.replace(hour=18)
+            date_today = date_today.replace(hour=18) # 18 = 13LT + 6 hours = 13-19LT
 
             date_end = date_today + pd.Timedelta('6 hours')
 

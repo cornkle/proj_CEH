@@ -162,10 +162,10 @@ def saveCHIRPS_BIG(y1,y2):
     chirps = chirps_all.sel(time=pos).load()
     u200 = u200.sel(time=pos)
 
-    cdoy = chirps['precip'].where((chirps['precip']>1) | np.isnan(chirps['precip']), other=0)
+    cdoy = chirps['precip'].where((chirps['precip']>=0) | np.isnan(chirps['precip']), other=0)
     #ipdb.set_trace()
-    cdoy = cdoy.rolling(time=5, min_periods=3, center=True).mean(dim='time')
-    udoy = u200['u'].rolling(time=5, min_periods=3, center=True).mean(dim='time')
+    cdoy = cdoy.rolling(time=3, min_periods=1, center=True).mean(dim='time')
+    udoy = u200['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time')
 
     dslist = []
 
@@ -185,12 +185,12 @@ def saveCHIRPS_BIG(y1,y2):
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(chirps['time.year'])
 
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_u200_correlation_5dRolling_1mm_peruBIG_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/CHIRPS/peru/CHIRPS_u200_correlation_3dRolling_peruBIG_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
 
 
 
 def runCHIRPS():
-    ylist = [(1985,2004), (2000,2019)]#[(1985,2003), (2002,2019), (1985,2019)] #[(1985,2005), (1998,2019), (1985,2019), (1985,1995), (1985,2002), (2002,2019), (1995,2005), (2005,2019)]
+    ylist = [(1985,2004), (2000,2019), (1985,2019)]#[(1985,2003), (2002,2019), (1985,2019)] #[(1985,2005), (1998,2019), (1985,2019), (1985,1995), (1985,2002), (2002,2019), (1995,2005), (2005,2019)]
     for y in ylist:
         saveCHIRPS_BIG(y[0], y[1])
 
@@ -233,7 +233,7 @@ def saveCHIRPS(y1,y2):
 
 
 def runGridsat():
-    ylist = [(1985,2004), (2000,2019)]#[(1985,2003), (2002,2019), (1985,2019)]
+    ylist = [(1985,2004), (2000,2019), (1985,2019)]#[(1985,2003), (2002,2019), (1985,2019)]
     for y in ylist:
         saveGRIDSAT(y[0], y[1])
 
@@ -250,7 +250,7 @@ def saveGRIDSAT(y1,y2):
     gridsat = gridsat.sel(time=posgrid).load()
 
     udoy = u200orig['u'].rolling(time=3, min_periods=1, center=True).mean(dim='time') # time=3, min_periods=1
-    cdoy = gridsat['tir'].where(gridsat['tir']<=-3000, other=0).rolling(time=5, min_periods=3, center=True).mean(dim='time')
+    cdoy = gridsat['tir'].where(gridsat['tir']<=-1500, other=0).rolling(time=3, min_periods=1, center=True).mean(dim='time')
 
     dslist = []
     print('Did rolling aggregation')
@@ -269,7 +269,7 @@ def saveGRIDSAT(y1,y2):
 
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT-30_u_correlation_3dRolling_SouthAmerica_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GRIDSAT/MCS18_peru/correlations/GRIDSAT-15_u_correlation_3dRolling_SouthAmerica_'+str(y1)+'-'+str(y2-1)+'_diffs.nc')
 
 
 def saveGRIDSAT_DJF(y1,y2):
@@ -416,10 +416,10 @@ def saveGRIDSAT_tropicalJet(y1,y2):
 
 def saveGPM():
 
-    u200orig = readERA()
-    u200orig = u200orig.sel(time=((u200orig['time.year'] >= 2000) & (u200orig['time.year'] <= 2018)))
+    u200orig = readERA('u200')
+    u200orig = u200orig.sel(time=((u200orig['time.year'] >= 2000) & (u200orig['time.year'] <= 2021)))
 
-    gridsat = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/GPM/daily_onERA/*.nc',
+    gridsat = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/GPM/daily_precipCal_onERA/*.nc',
                                 combine='nested', concat_dim='time')
     posgrid = np.intersect1d(u200orig.time.values, gridsat.time.values)
 
@@ -457,7 +457,7 @@ def saveGPM():
 
     chirps_ds = xr.concat(res, dim='dayofyear')
     chirps_ds.attrs['years'] = np.unique(gridsat['time.year'])
-    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GPM/GPM_u_correlation_SouthAmerica_2000-2018.nc')
+    chirps_ds.to_netcdf('/home/ck/DIR/mymachine/GPM/GPM_precipCal_u_correlation_SouthAmerica_2000-2021.nc')
 
 
 def saveGPM_GRIDSAT():

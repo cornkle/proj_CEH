@@ -117,7 +117,7 @@ def saveGRIDSAT():
 def saveGPM():
     chirpsbox = [-81,-68,-18.5,0]  # peru daily
 
-    chirpsall_list = glob.glob('/media/ck/Elements/SouthAmerica/GPM/daily/*.nc4')
+    chirpsall_list = glob.glob('/media/ck/Elements/SouthAmerica/GPM/daily_precipCal/*.nc4')
     for ids, ch in enumerate(chirpsall_list):
 
         chirpsall = xr.open_dataset(ch)
@@ -131,19 +131,19 @@ def saveGPM():
             u200 = era5['u'].isel(time=0).sel(level=250).squeeze().load()
             u200 = uda.flip_lat(u200)
 
-            chirps = chirpsall['HQprecipitation'].T.squeeze()
+            chirps = chirpsall['precipitationCal'].T.squeeze()
             #ipdb.set_trace()
             ch_on_e, lut = u200.salem.lookup_transform(chirps, return_lut=True)
 
         else:
-            ch_on_e = u200.salem.lookup_transform(chirpsall['HQprecipitation'].T.squeeze(), lut=lut)
+            ch_on_e = u200.salem.lookup_transform(chirpsall['precipitationCal'].T.squeeze(), lut=lut)
         ch_on_e.name = 'precip'
         comp = dict(zlib=True, complevel=5)
         encoding = {'precip': comp}
         fname = os.path.basename(ch)
         fname = fname.replace('.V06.nc4.SUB.nc4', '_onERA.nc')
         #ipdb.set_trace()
-        ch_on_e.to_netcdf('/media/ck/Elements/SouthAmerica/GPM/daily_onERA/'+fname+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        ch_on_e.to_netcdf('/media/ck/Elements/SouthAmerica/GPM/daily_precipCal_onERA/'+fname+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
 
 def saveNDVI():
@@ -217,29 +217,29 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     #u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/q*.nc')
-    var = 'u'
+    var = 'w'
     u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/*.nc')
-    u200orig = u200orig[var].sel(level=200).isel(time=u200orig['time.hour']==15)#.load()
+    u200orig = u200orig[var].sel(level=650).isel(time=u200orig['time.hour']==15)#.load()
     u200orig.name = var
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/u200_15UTC_1981-2021_peru_big.nc', mode='w',
+    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/w650_15UTC_1981-2021_peru_big.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 
 def saveERA5_multi():
 
     def get_ERA5(file):
-        var = 'u'
+        var = 'w'
         u200orig = xr.open_dataset(file)
-        u200orig = u200orig[var].sel(level=200).isel(time=u200orig['time.hour']==15).load()
+        u200orig = u200orig[var].sel(level=650).isel(time=u200orig['time.hour']==15).load()
         u200orig.name = var
 
         return u200orig
 
        # ipdb.set_trace()
 
-    var = 'u'
+    var = 'w'
     inputs = glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/pressure_levels/*.nc')
    #  pool = multiprocessing.Pool(processes=5)
    # # ipdb.set_trace()
@@ -258,7 +258,7 @@ def saveERA5_multi():
 
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/u200_15UTC_1981-2021_peru_big.nc', mode='w',
+    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/w650_15UTC_1981-2021_peru_big.nc', mode='w',
                        encoding=encoding, format='NETCDF4')
 
 
