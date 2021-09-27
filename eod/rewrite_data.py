@@ -17,6 +17,7 @@ from utils import u_grid
 import xarray as xr
 import ipdb
 from scipy.ndimage.measurements import label
+from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from utils import u_grid, u_interpolate as u_int
 import glob
@@ -804,6 +805,95 @@ def rewrite_NFLICS_LSTA_onCores():
         comp = dict(zlib=True, complevel=5)
         enc = {var: comp for var in ds.data_vars}
         savefile = f.replace('netcdf', 'netcdf_onCores')
+        ds.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
+
+        del lsw
+
+
+
+def rewrite_NFLICS_LSTA_onCores_interpolate():
+
+    dummy = xr.open_dataset('/media/ck/Elements/Africa/WestAfrica/cores_bigDomain/coresPower_MSG_-40_9-130km_-50points_dominant_2019_08.nc')
+    grid = dummy.salem.grid
+    lpath = cnst.elements_drive + '/Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf/'
+    lfiles = glob.glob(lpath + '*.nc')
+    #ipdb.set_trace()
+    dlst = xr.open_dataset(lfiles[0])
+    inds, weights, shape = u_int.interpolation_weights_grid(dlst['lon'].values, dlst['lat'].values, grid)
+
+    for f in lfiles:
+
+        ds = xr.Dataset()
+        dat = xr.open_dataset(f)
+
+        try:
+            lsta = u_int.interpolate_data(dat['lsta'].values, inds, weights, shape)
+        except IndexError:
+            print('Interpolation problem, continue')
+            return
+        lon, lat = grid.ll_coordinates
+
+        nbslot = u_int.interpolate_data(dat['NbSlot'].values, inds, weights, shape)
+
+        lsw = lsta.copy()
+        lsta[np.isnan(lsta)] = -99
+
+        grad = np.gradient(lsta)
+        nok = np.where(abs(grad[0]) + abs(grad[1]) > 50)
+        nbslot[nok] = -99
+
+        d = 5
+        i = nok[0]
+        j = nok[1]
+        # edge smoothing for wavelet application
+        for ii, jj in zip(i, j):
+            kern = nbslot[ii - d:ii + d + 1, jj - d:jj + d + 1]
+            nbslot[ii - d:ii + d + 1, jj - d:jj + d + 1] = -99
+
+        inter1 = np.where(np.isnan(lsw))
+        points = np.where(np.isfinite(lsw))
+        # interpolate over sea from land points
+        # wav_input[inter1] = 0  #halfway between minus and plus rather than interpolate
+
+        try:
+            lsw[inter1] = griddata(points, np.ravel(lsw[points]), inter1, method='nearest')  # linear
+        except ValueError:
+            print('Value Error')
+            pass
+
+        lsw[np.isnan(lsw)] = -99
+
+        lsta[np.isnan(lsta)] = 0
+        dlsta = xr.DataArray((np.round(lsta, 2)*100).astype(np.int16), coords={
+            'lat': lat[:, 0],
+            'lon': lon[0, :]}, dims=['lat', 'lon'])
+
+        dslot = xr.DataArray(np.round(nbslot,0).astype(np.int8), coords={
+            'lat': lat[:, 0],
+            'lon': lon[0, :]}, dims=['lat', 'lon'])
+
+        ds['lsta'] = dlsta
+        ds['NbSlot'] = dslot
+
+        dic = util.applyHat_pure(lsw, dataset='NOWCAST')
+
+        wav = xr.DataArray(np.array(np.round(dic['coeffs'], 1) * 10).astype(np.int16),
+                          coords={'scales': dic['scales'], 'lat': lat[:,0],
+                                             'lon': lon[0,:]},
+                          dims=['scales', 'lat', 'lon'])
+        ds['wavelet'] = wav
+
+        # for sliced in ds['wavelet'].values:
+        #     sliced[np.isnan(lsta)] = np.nan
+
+        pos = np.where(lsta==-99)
+        ds['wavelet'].values[:, pos[0], pos[1]] = 0
+        ds['wavelet'].values[:, inter1[0], inter1[1]] = 0
+
+        ds = ds.isel(lon=slice(0,1410), lat=slice(0,594))
+        comp = dict(zlib=True, complevel=5)
+        enc = {var: comp for var in ds.data_vars}
+        savefile = f.replace('netcdf', 'netcdf_onCores_interpolate')
         ds.to_netcdf(path=savefile, mode='w', encoding=enc, format='NETCDF4')
 
         del lsw

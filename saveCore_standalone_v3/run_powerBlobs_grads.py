@@ -65,6 +65,11 @@ def run(dataset, CLOBBER=False):
 
             # make salem grid
             grid = u_grid.make(np.arange(-18,29.9), np.arange(4,21), 3000)
+
+            ####
+            gridds = grid.to_dataset()
+            grid = gridds.salem.grid
+
             glon, glat = grid.ll_coordinates
             inds, weights, shape = u_int.interpolation_weights_grid(mdic['lon'].values, mdic['lat'].values, grid)
             gridd = (inds,weights,shape, grid)
