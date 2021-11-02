@@ -424,12 +424,40 @@ def var2_binning_threshold(xvar, yvar, xbins, gt=None, lt=None):
 
         mask = (xvar > shl) & (xvar <= xbins[issh + 1]) & np.isfinite(yvar)
 
-        if lt != None:
-            outdic['y'].append(np.sum(yvar[mask]<lt)/float(yvar[mask].size))
+        if (lt!=None) & (gt!=None):
+            outdic['y'].append(np.sum((yvar[mask] < lt) | (yvar[mask] > gt)) / float(np.sum(np.isfinite(yvar[mask]))))
+        elif lt != None:
+            outdic['y'].append(np.sum(yvar[mask]<lt)/float(np.sum(np.isfinite(yvar[mask]))))
         else:
-            outdic['y'].append(np.sum(yvar[mask]>gt)/float(yvar[mask].size))
+            outdic['y'].append(np.sum(yvar[mask]>gt)/float(np.sum(np.isfinite(yvar[mask]))))
 
     outdic['xbins'] = (np.round(xbins[0:-1]+((xbins[1::]-xbins[0:-1])/2),2))
+
+
+    return outdic
+
+
+def var2_binning_threshold_CDF(xvar, yvar, xbins, gt=None):
+    """
+    :param xvar: xvar of the 2dhist
+    :param yvar: yvar of the 2d hist
+    :param xbins: bins to use for the xvar
+    :param ybins: bins to use for the yvar
+    :param varlist: dictionary of variables to put into histogram
+    :param varpick: list of variables in dic to calculate
+    :return:
+    """
+    outdic = {}
+    outdic['y'] = []
+
+
+    for issh, shl in enumerate(xbins):
+
+        mask = (xvar <= shl)
+        outdic['y'].append(np.sum(yvar[mask]>=gt)/float(np.sum(yvar>=gt)))
+
+
+    outdic['xbins'] = xbins
 
 
     return outdic

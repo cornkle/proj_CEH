@@ -117,7 +117,7 @@ def saveMCS_WA15(year):
             lat1 = da['lat'].values
 
             if ids == 0:
-
+                ipdb.set_trace()
                 inds, weights, shape = u_int.interpolation_weights_grid(lon1, lat1, mmsg.salem.grid)
 
             orig = da['HQprecipitation'].values

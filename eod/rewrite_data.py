@@ -12,7 +12,7 @@ import os
 from utils import u_arrays as uarr
 import pandas as pd
 from utils import u_time as ut, u_interpolate as uint, constants as cnst, u_darrays
-import datetime as dt
+#import datetime as dt
 from utils import u_grid
 import xarray as xr
 import ipdb
@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from utils import u_grid, u_interpolate as u_int
 import glob
 from wavelet import util
+import datetime
 
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
@@ -141,7 +142,7 @@ def rewriteMFG_MAMON_LonLat_WA():
 #========================================================================================
 def parseCellTab(tab):
 
-    dt.datetime.strptime('2004_0601_1315', '%Y_%m%d_%H%M')
+    datetime.datetime.strptime('2004_0601_1315', '%Y_%m%d_%H%M')
   #  parser = lambda date: pd.datetime.strptime(date, '%Y_%m%d_%h%M')
 
     df = pd.read_csv(tab, sep='\s+', header=None, converters={'Mday': lambda x: str(x)}, names=["Year", "Mday", "Slot", "Pixel", "Area", "Lat", "Lon", "Mincol", "a", "b", "c", "Temp", "Tresh"])
@@ -556,7 +557,7 @@ def rewrite_AMSR2(file):
     time = (pieces[5])[0:8]
     out = path + os.sep + pieces[0] + '_' +  pieces[1] +'_LPRMv05_' +  pieces[2] + '_'  + time + '.nc'
 
-    #ipdb.set_trace()
+    ipdb.set_trace()
     if os.path.isfile(out):
         return
 
@@ -591,6 +592,72 @@ def rewrite_AMSR2(file):
         print('Out directory not found')
     print('Wrote ' + out)
     return ds
+
+def rewrite_AMSR2_10km(file):
+
+    out = file.replace('raw', 'nc')
+    #out = out.replace('.nc4', '.nc')
+    out = out.replace('LPRM-AMSR2', 'AMSR2')
+
+    if '_A_' in file:
+        day=True
+    else:
+        day = False
+
+    if day:
+        hour = 13
+    else:
+        hour = 1
+
+    cut = os.path.basename(out)
+    path = os.path.dirname(out)
+    #path = path.replace(path[-6::], '')
+    pieces = cut.split('_')
+    time = (pieces[6])[0:8]
+    out = path + os.sep + pieces[0] + '_' +  pieces[1] +'_SOILM3_V001_' +  pieces[3] + '_'  + time + '.nc'
+
+    if os.path.isfile(out):
+        return
+
+    yr = int(time[0:4])
+    mon = int(time[4:6])
+    day = int(time[6:8])
+    date = [datetime.datetime(yr, mon, day, hour, 0)]
+
+    ds = xr.open_dataset(file)
+    ds = u_darrays.flip_lat(ds)
+
+    ds_new = xr.Dataset()
+    for var in ds.data_vars:
+
+        if var == 'soil_moisture_x_error':
+            continue
+
+        da = xr.DataArray((ds[var]).values.T[None, ...], coords={'time': date,
+                                                 'lat': ds.Latitude.values,
+                                                 'lon': ds.Longitude.values},
+                          dims=['time', 'lat', 'lon'])  # .isel(time=0)
+        #ipdb.set_trace()
+        if var != 'scantime':
+
+            (da.values[0,:,:])[ds['soil_moisture_x'].values.T < -1] = np.nan
+            (da.values[0,:,:])[ds['ts'].values.T > 350] = np.nan
+            if np.sum(da.values) == np.nan:
+                return
+
+        ds_new[var] = da
+    #ipdb.set_trace()
+    ds_new['soil_moisture_x'] = ds_new['soil_moisture_x'].where(np.isfinite(ds_new['ts']))
+    try:
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds_new.data_vars}
+        ds_new.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    #return ds
 
 
 def rewrite_CMORPH(file):
@@ -812,6 +879,7 @@ def rewrite_NFLICS_LSTA_onCores():
 
 
 def rewrite_NFLICS_LSTA_onCores_interpolate():
+
 
     dummy = xr.open_dataset('/media/ck/Elements/Africa/WestAfrica/cores_bigDomain/coresPower_MSG_-40_9-130km_-50points_dominant_2019_08.nc')
     grid = dummy.salem.grid

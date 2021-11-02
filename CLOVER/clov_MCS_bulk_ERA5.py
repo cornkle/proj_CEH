@@ -16,9 +16,9 @@ import pandas as pd
 def dictionary():
 
     dic = {}
-    vars = ['hour', 'month', 'year', 'area',
-            'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean', 'tcwv', 'tgrad', 'tbox',
+    vars = ['hour', 'month', 'year', 'day', 'date', 'area',
+            'lon', 'lat', 'clon', 'clat', 'minlon', 'minlat',
+            'tmin', 'tmean', 'tcwv', #'tgrad', 'tbox',
             'pmax', 'pmean',
             'q925', 'q650',
             'u925', 'u650',
@@ -31,7 +31,8 @@ def dictionary():
             'shear',
             'pgt30', 'pgt01'
             'isvalid',
-             't', 'p' ]
+             't', 'p' ,
+            'cape', 't2m']
 
     for v in vars:
         dic[v] = []
@@ -46,7 +47,7 @@ def perSys():
     #ipdb.set_trace()
 
     print('Nb files', len(files))
-    for y in range(2015,2016):
+    for y in range(2004,2019):
 
         yfiles = []
         for f in files:
@@ -76,7 +77,7 @@ def perSys():
                     continue
 
 
-        pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_5-26N_16W17E_p15_ERA0.7_TCWV_hourly_'+str(y)+'.p',
+        pkl.dump(mdic, open(cnst.network_data + 'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_GPM_5-26N_16W17E_p15_ERA0.7_TCWV_hourly_wDate_'+str(y)+'.p',
                                'wb'))
 
 
@@ -96,6 +97,7 @@ def file_loop(f):
     out['hour'] = dic['time.hour'].item()
     out['month'] = dic['time.month'].item()
     out['year'] = dic['time.year'].item()
+    out['day'] = dic['time.day'].item()
     out['date'] = dic['time'].values
 
     if np.nanmin(dic['tc_lag0'].values) > -53:
@@ -104,7 +106,7 @@ def file_loop(f):
     out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
     out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
-    if (out['clat']<9) | (out['clon']<-15) | (out['clon']>15):
+    if (out['clat']<4) | (out['clon']<-18) | (out['clon']>25):
         print('MCS out of box')
         return
 
@@ -127,8 +129,8 @@ def file_loop(f):
 
     edate = edate.replace(hour=12, minute=0)
 
-    era_pl_day = era_pl.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
-    era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-16,17), latitude=slice(4,26))
+    era_pl_day = era_pl.sel(time=edate, longitude=slice(-17,20), latitude=slice(3,28))
+    era_srfc_day = era_srfc.sel(time=edate, longitude=slice(-17,20), latitude=slice(3,28))
 
 
     tminpos = np.where(dic['tc_lag0'].values == np.nanmin(dic['tc_lag0'].values)) # era position close to min temp
@@ -142,6 +144,9 @@ def file_loop(f):
 
     elon = dic['lon'].values[tminpos]
     elat = dic['lat'].values[tminpos]
+
+    out['minlon'] = elon
+    out['minlat'] = elat
 
     era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest') # take point of minimum T
     era_day_srfc = era_srfc_day.sel(latitude=elat, longitude=elon , method='nearest') # take point of minimum T
@@ -218,18 +223,20 @@ def file_loop(f):
     out['pv650'] = float(e650['pv'])
     out['div925'] = float(e925['d'])
     out['div650'] = float(e650['d'])
-    out['q_low'] = float(elow['q'])
-    out['q_mid'] = float(emid['q'])
+    out['q925'] = float(e925['q'])
+    out['q650'] = float(e650['q'])
     out['tcwv'] = float(srfc['tcwv'])
+    out['cape'] = float(srfc['cape'])
+    out['t2m'] = float(srfc['t2m'])
 
     out['shear'] = float(e650['u']-e925['u'])
 
-    theta_down = u_met.theta_e(925,e925['t']-273.15, e925['q'])
-    theta_up = u_met.theta_e(650,e650['t']-273.15, e650['q'])
-
-    out['dtheta'] =  (theta_down-theta_up).values
-    out['thetaup'] = theta_up.values
-    out['thetadown'] = theta_down.values
+    # theta_down = u_met.theta_e(925,e925['t']-273.15, e925['q'])
+    # theta_up = u_met.theta_e(650,e650['t']-273.15, e650['q'])
+    #
+    # out['dtheta'] =  (theta_down-theta_up).values
+    # out['thetaup'] = theta_up.values
+    # out['thetadown'] = theta_down.values
 
     out['pgt30'] = np.sum(outp[mask]>=30)
     out['isvalid'] = np.sum(mask)
