@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import ipdb
+import glob
 import pandas as pd
 from scipy import ndimage
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
@@ -29,17 +30,35 @@ def loop():
         composite(l)
 
 def composite(h):
-    file = cnst.MCS_POINTS_DOM
-
+    file = cnst.MCS_POINTS_DOM  # '/home/ck/DIR/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    #and /home/ck/DIR/cornkle/data/OBS/AMSRE/aqua/sma_nc_day_new/'
     hour = h
 
-    msg = xr.open_dataarray(file)
-    msg = msg[(msg['time.hour'] == h)  & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
+    # msg = xr.open_dataarray(file)
+    # msg = msg[(msg['time.hour'] == h)  & (msg['time.minute'] == 0) & (
+    #     msg['time.year'] >= 2006) & (msg['time.year'] <= 2010) & (msg['time.month'] >= 6)]
+    #
+    # msg = msg.sel( lat=slice(10,20), lon=slice(-12,15))
 
-    msg = msg.sel( lat=slice(6,8), lon=slice(-12,15))
+    files = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/*.nc')
+    msg = xr.open_mfdataset(files)
+    hour = h
 
-    dic = u_parallelise.run_arrays(6,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
+    # file = cnst.MCS_POINTS_DOM
+    # msg = xr.open_dataarray(file)
+    # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
+    #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
+
+    msg = msg.sel(lat=slice(10, 20), lon=slice(-12, 15))
+
+    msg = (msg['dom'])[
+        (msg['time.hour'] == hour) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) &
+        (msg['time.month'] <= 9) & (msg['time.year'] >= 2006) & (msg['time.year'] <= 2010)]
+
+    msg = msg.load()
+
+    #ipdb.set_trace()
+    dic = u_parallelise.run_arrays(4,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
     # res = []
     # #ipdb.set_trace()
@@ -183,10 +202,12 @@ def file_loop(fi):
         daybefore = date
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
-
-    lsta = xr.open_dataset(cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc')
+    #alt_path = cnst.AMSRE_ANO_DAY
+    alt_path = cnst.AMSRE_ANO_DAY_CORR
+    lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
     lsta = lsta.sel(lon=slice(-14, 14), lat=slice(4, 23))
+    #ipdb.set_trace()
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
@@ -213,7 +234,7 @@ def file_loop(fi):
 
     # lsta_da.values[ttopo.values >= 450] = np.nan
     # lsta_da.values[gradsum > 30] = np.nan
-    pos = np.where((fi.values >= 5) & (fi.values < 65))
+    pos = np.where(fi.values<=-5)#np.where((fi.values >= 5) & (fi.values < 65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')

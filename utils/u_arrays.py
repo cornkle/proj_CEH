@@ -11,6 +11,7 @@ from scipy.ndimage.measurements import label
 from utils import u_mann_kendall as mk
 import itertools
 import ipdb
+import scipy.ndimage.interpolation as inter
 
 
 def merge_dicts(list_of_dicts, merge_lists=False):
@@ -395,3 +396,27 @@ def linear_trend(x, eps=0.001, alpha=0.01):
         issig = np.nan
 
     return issig
+
+
+
+
+def rotate(array, direction, ref_angle=None):
+    """
+
+    :param array: 2d array
+    :param lat: latitude
+    :param lon: longitude
+    :param level:  ERA pressure level in hPa, note: level 0 means surface. Available: 0, 925, 850, 700, 600
+    :param ref_angle: the reference angle to rotate to (direction where all wind should come from)
+    :return: rotated array
+    """
+
+    if array.ndim != 2:
+        raise IndexError('Cut kernel only allows 2D arrays.')
+
+    if ref_angle==None:
+        ref_angle=0
+
+    rot_array = inter.rotate(array, ref_angle - direction, reshape=False, cval=np.nan, prefilter=False)
+
+    return rot_array

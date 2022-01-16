@@ -16,7 +16,7 @@ import salem
 
 def run():
 
-    in_path = '/media/ck/Elements/SouthAmerica/WRF/RAW_WRF/d02/*.nc'
+    in_path = '/media/ck/TOURO/WRF/RAW_WRF/d02/*run1990.nc'   #RAW_WRF/d02/
 
 
     pool = multiprocessing.Pool(processes=2)

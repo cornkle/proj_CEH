@@ -7,8 +7,8 @@ def download(y):
         {
             'product_type': 'reanalysis',
             'format': 'netcdf',
-            'variable': ['q', 'r' ],
-            'pressure_level': ['250', '550', '850'],
+            'variable': ['w', 'v', 'u' ],
+            'pressure_level': ['550', '850'],
             'year': [
                 str(y)
             ],
@@ -41,9 +41,9 @@ def download(y):
                 -58,
             ],
         },
-        '/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/qr_15UTC_'+str(y)+'_peru.nc')
+        '/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/wvu_15UTC_'+str(y)+'_peru.nc')
 
 
 
-for y in [2019,1989]:#range(1989,2019):  # 89 missing
+for y in range(1985,2019):  # 89 missing
     download(y)

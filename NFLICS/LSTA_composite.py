@@ -45,21 +45,21 @@ def composite(h, eh):
 
         msg = xr.open_mfdataset(files)
 
-        msg = (msg['small_scale'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
+        msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
-        msg = msg.sel(lat=slice(6.5,8.5), lon=slice(-11,18)).load()
+        msg = msg.sel(lat=slice(10,20), lon=slice(-14,14)).load()
 
         msg.attrs['refhour'] = h
         msg.attrs['eh'] = eh
         #
-        dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt'])
+        #dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt'])
         #
-        # res = []
-        # for m in msg[0:20]:
-        #     out = file_loop(m)
-        #     res.append(out)
-        # ipdb.set_trace()
-        # return
+        res = []
+        for m in msg[0:20]:
+            out = file_loop(m)
+            res.append(out)
+        ipdb.set_trace()
+        return
 
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
@@ -78,9 +78,9 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False):
         return
 
     kernel3 = kernel - np.nanmean(kernel)
-
+    ipdb.set_trace()
     cnt = np.zeros_like(kernel)
-    cnt[kernel!=0] = 1 #kslots[np.isfinite(kernel)]   #1
+    cnt[kernel>=-90] = 1 #kslots[np.isfinite(kernel)]   #1
 
     # slot_kernel[np.isnan(kernel)] = 0
 
@@ -91,7 +91,7 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False):
     if np.nansum(probs) > 0:
         prob = u_arrays.cut_kernel(probs,xpos, ypos,dist)
         cnt3 = np.zeros_like(kernel)
-        cnt3[prob!=0] = 1
+        cnt3[prob>=-90] = 1
 
     else:
         prob = np.zeros_like(kernel)
@@ -124,7 +124,7 @@ def get_previous_hours_msg(date, ehour, refhour):
         return None
 
     #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
-    pos = np.where((msg.values <= -40) ) #(msg.values >= 5) & (msg.values < 65)) # #
+    pos = np.where((msg.values <= -5) ) #(msg.values >= 5) & (msg.values < 65)) # #
 
     out = np.zeros_like(msg)
     out[pos] = 1
@@ -164,13 +164,13 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
     try:
-        lsta = xr.open_dataset(cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf_onCores/HDF5_LSASAF_ANOM_MSG_LST_MSG-Disk_' + fdate + '1700.nc') #_NEW
+        lsta = xr.open_dataset(cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf_onCores_interpolate_1700_oldSeonaid/HDF5_LSASAF_ANOM_MSG_LST_MSG-Disk_' + fdate + '1700.nc') #_NEW
     except OSError:
         print('LSTA file missing')
         return
     print('Doing '+ 'HDF5_LSASAF_' + fdate + '.nc')
 
-    lsta_da = lsta['lsta'].sel(lat=slice(4,20), lon=slice(-16.5,20)).squeeze()  # should be LSTA
+    lsta_da = lsta['lsta'].sel(lat=slice(4,20), lon=slice(-16.5,15)).squeeze()/100  # should be LSTA
 
 
     #### remove mean from LSTA_NEW
@@ -191,7 +191,7 @@ def file_loop(fi):
 
     probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
 
-    dist = 100
+    dist = 60
 
     kernel2_list = np.zeros((dist*2+1, dist*2+1))
     kernel3_list = np.zeros((dist*2+1, dist*2+1))

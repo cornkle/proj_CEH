@@ -613,7 +613,11 @@ def rewrite_AMSR2_10km(file):
     path = os.path.dirname(out)
     #path = path.replace(path[-6::], '')
     pieces = cut.split('_')
-    time = (pieces[6])[0:8]
+
+    try:
+        time = (pieces[6])[0:8]
+    except IndexError:
+        time = (pieces[5])[0:8]
     out = path + os.sep + pieces[0] + '_' +  pieces[1] +'_SOILM3_V001_' +  pieces[3] + '_'  + time + '.nc'
 
     if os.path.isfile(out):
@@ -628,9 +632,10 @@ def rewrite_AMSR2_10km(file):
     ds = u_darrays.flip_lat(ds)
 
     ds_new = xr.Dataset()
+    varlist = ['ts', 'soil_moisture_c1', 'soil_moisture_c2']
     for var in ds.data_vars:
 
-        if var == 'soil_moisture_x_error':
+        if var not in varlist:
             continue
 
         da = xr.DataArray((ds[var]).values.T[None, ...], coords={'time': date,
@@ -640,14 +645,15 @@ def rewrite_AMSR2_10km(file):
         #ipdb.set_trace()
         if var != 'scantime':
 
-            (da.values[0,:,:])[ds['soil_moisture_x'].values.T < -1] = np.nan
+            (da.values[0,:,:])[ds['soil_moisture_c1'].values.T < -1] = np.nan
             (da.values[0,:,:])[ds['ts'].values.T > 350] = np.nan
             if np.sum(da.values) == np.nan:
                 return
 
         ds_new[var] = da
     #ipdb.set_trace()
-    ds_new['soil_moisture_x'] = ds_new['soil_moisture_x'].where(np.isfinite(ds_new['ts']))
+    for var in varlist:
+        ds_new[var] = ds_new[var].where(np.isfinite(ds_new['ts']))
     try:
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds_new.data_vars}

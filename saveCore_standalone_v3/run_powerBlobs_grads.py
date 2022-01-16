@@ -7,7 +7,7 @@ import ipdb
 import os
 from utils import u_grid, u_interpolate as u_int
 import glob
-import CCores.cores as cores
+import ccores.cores as cores
 import datetime
 import multiprocessing
 import pickle as pkl

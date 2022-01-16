@@ -89,119 +89,192 @@ def saveAnomaly():
         encoding = {var: comp for var in ds.data_vars}
         ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/10km/day/sma_10km_'+date+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
-
+from utils import u_arrays
 def saveAnomalyDay():
 
-    mf = xr.open_mfdataset(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc', concat_dim='time') #, combine='by_coords'
-    #mf = mf.sel(lon=slice(-11,11), lat=slice(9,21))
-    #mf = mf.sel(time=((mf['time.month'] >= 1) & (mf['time.month'] <= 12)))
+    #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
+    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/')
+    #ipdb.set_trace()
+    mstruc = {}
+    for m in range(1,13):
+        mstruc[m]=[]
 
-    mf['monthDay'] = (
-    'time', [ str(m).zfill(2) + '-' + str(d).zfill(2) for (m,d) in zip(mf['time.month'].values,  mf['time.day'].values)])
-    ipdb.set_trace()
-    clim = mf['soil_moisture_x'].groupby('monthDay').sum(dim='time')
-    ts = mf['ts'].groupby('monthDay').sum(dim='time')
-    valid_days = mf['soil_moisture_x'].groupby('monthDay').count(dim='time')  # number of valid days per month
+    only_months=list()
+    for af in allfiles:
+        ismonth = af[-7:-5]
+        only_months.append(int(ismonth))
 
-    times=[]
-    for tt in clim['monthDay']:
-        hh = str(tt.values)
+    for m in range(1,13):
 
-        mmonth = int(hh[0:2])
-        dday = int(hh[3:5])
-        date = pd.datetime(2008, mmonth, dday, 0, 0)
-        times.append(date)
-    tseries = pd.to_datetime(times)
+        goodpos = []
+        pos = np.where(np.array(only_months) == m)
+        for pp in pos[0]:
+            #ipdb.set_trace()
+            gpos = np.arange(pp-5,pp+6)
+            gpos[gpos<0]=0
+            gpos[gpos>len(only_months)-1]=len(only_months)-1
+            goodpos.extend(gpos)
+        goodpos = np.unique(goodpos)
+       # ipdb.set_trace()
+        goodfiles = list(np.array(allfiles)[goodpos])
 
-
-    climda = xr.DataArray(clim.values,
-                      coords={'time': tseries, 'lat': clim.lat.values,
-                              'lon': clim.lon.values},
-                      dims=['time', 'lat', 'lon'])
-
-    temp = xr.DataArray(ts.values,
-                      coords={'time': tseries, 'lat': clim.lat.values,
-                              'lon': clim.lon.values},
-                      dims=['time', 'lat', 'lon'])
-
-    countda = xr.DataArray(valid_days.values,
-                      coords={'time': tseries, 'lat': clim.lat.values,
-                              'lon': clim.lon.values},
-                      dims=['time', 'lat', 'lon'])
+        mstruc[m]=goodfiles
 
 
-    for tstep in climda.time:
+    for m in range(1,13):
 
-        print('Doing', tstep)
+        mf = xr.open_mfdataset(mstruc[m], concat_dim='time') #, combine='by_coords'
 
-        dt = pd.to_datetime([tstep.values])
-
-
-        window1 = dt - pd.Timedelta('5days')
-        window2 = dt + pd.Timedelta('5days')
-
-        climsliced = climda.sel(time=slice(window1[0],window2[0]))
-        tsliced = temp.sel(time=slice(window1[0],window2[0]))
-        countsliced = countda.sel(time=slice(window1[0], window2[0]))
-
-        outclim = climsliced.sum('time')
-        outtemp = tsliced.sum('time')
-        outcount = countsliced.sum('time')
-
-        allclim = outclim / outcount
-        alltclim = outtemp / outcount
-        allclim.values[outcount.values < 10] = np.nan
-        alltclim.values[outcount.values < 10] = np.nan
+        # mf['monthDay'] = (
+        # 'time', [ str(m).zfill(2) + '-' + str(d).zfill(2) for (m,d) in zip(mf['time.month'].values,  mf['time.day'].values)])
 
 
-        date = [pd.datetime(2008, dt.month[0], dt.day[0], 0, 0)]
+        clim = mf['soil_moisture_c1'].groupby('time.dayofyear').sum(dim='time')
+        clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').sum(dim='time')
+        ts = mf['ts'].groupby('time.dayofyear').sum(dim='time')
 
-        da = xr.DataArray(allclim.values[None, ...],
-                              coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
-                              dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
+        valid_days = mf['soil_moisture_c1'].groupby('time.dayofyear').count(dim='time')  # number of valid days per month
 
-        dtt = xr.DataArray(alltclim.values[None, ...],
-                              coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
-                              dims=['time', 'lat', 'lon'])
+        times=[]
+        #ipdb.set_trace()
+        for tt in clim['dayofyear']:
+            hh = tt.values-1
 
-        da.attrs = climda.attrs
-        dtt.attrs = temp.attrs
+            # mmonth = int(hh[0:2])
+            # dday = int(hh[3:5])
+            #ipdb.set_trace()
+            if (m == 1) & (hh >=360):
+                    date = datetime.datetime(2007, 1, 1, 0, 0) + pd.Timedelta(str(hh)+' days')
+            elif (m == 12) & (hh <=7):
+                    date = datetime.datetime(2009, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
+            else:
+                date = datetime.datetime(2008, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
 
-        ds = xr.Dataset({'SM': da})
-        ds['LST'] = dtt
-        odate = date[0]
-
-        outdate = str(odate.year)+str(odate.month).zfill(2)+str(odate.day).zfill(2)
-
-        comp = dict(zlib=True, complevel=5)
-        encoding = {var: comp for var in ds.data_vars}
-        ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/10km/day_clim/amsr2_10km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            times.append(date)
+        tseries = pd.to_datetime(times)
 
 
+        climda = xr.DataArray(clim.values,
+                          coords={'time': tseries, 'lat': clim.lat.values,
+                                  'lon': clim.lon.values},
+                          dims=['time', 'lat', 'lon'])
+
+        climda = climda.sortby(climda.time)
+
+        climda2 = xr.DataArray(clim2.values,
+                          coords={'time': tseries, 'lat': clim.lat.values,
+                                  'lon': clim.lon.values},
+                          dims=['time', 'lat', 'lon'])
+
+        climda2 = climda2.sortby(climda2.time)
+
+        temp = xr.DataArray(ts.values,
+                          coords={'time': tseries, 'lat': clim.lat.values,
+                                  'lon': clim.lon.values},
+                          dims=['time', 'lat', 'lon'])
+        temp = temp.sortby(temp.time)
+
+        countda = xr.DataArray(valid_days.values,
+                          coords={'time': tseries, 'lat': clim.lat.values,
+                                  'lon': clim.lon.values},
+                          dims=['time', 'lat', 'lon'])
+        countda = countda.sortby(countda.time)
+
+
+        for tstep in climda.time[5:-5]:
+
+            print('Doing', tstep)
+
+            dt = pd.to_datetime([tstep.values])
+
+            try:
+                window1 = dt - pd.Timedelta('5days')
+            except:
+                window1= dt
+            try:
+                window2 = dt + pd.Timedelta('5days')
+            except:
+                window2 = dt
+
+            #ipdb.set_trace()
+            climsliced = climda.sel(time=slice(window1[0],window2[0]))
+            climsliced2 = climda2.sel(time=slice(window1[0], window2[0]))
+            tsliced = temp.sel(time=slice(window1[0],window2[0]))
+            countsliced = countda.sel(time=slice(window1[0], window2[0]))
+
+            outclim = climsliced.sum('time')
+            outclim2 = climsliced2.sum('time')
+            outtemp = tsliced.sum('time')
+            outcount = countsliced.sum('time')
+
+            allclim = outclim / outcount
+            alltclim = outtemp / outcount
+            allclim2 = outclim2/outcount
+            allclim.values[outcount.values < 10] = np.nan
+            alltclim.values[outcount.values < 10] = np.nan
+            allclim2.values[outcount.values < 10] = np.nan
+
+
+            date = [pd.datetime(2008, dt.month[0], dt.day[0], 0, 0)]
+
+            da = xr.DataArray(allclim.values[None, ...],
+                                  coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
+                                  dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
+
+            da2 = xr.DataArray(allclim.values[None, ...],
+                                  coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
+                                  dims=['time', 'lat', 'lon'])
+
+            dtt = xr.DataArray(alltclim.values[None, ...],
+                                  coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
+                                  dims=['time', 'lat', 'lon'])
+
+            da.attrs = climda.attrs
+            dtt.attrs = temp.attrs
+            da2.attrs = climda2.attrs
+
+            ds = xr.Dataset({'SM': da})
+            ds['LST'] = dtt
+            ds['SM2'] = da2
+            odate = date[0]
+
+            outdate = str(odate.year)+str(odate.month).zfill(2)+str(odate.day).zfill(2)
+
+            comp = dict(zlib=True, complevel=5)
+            encoding = {var: comp for var in ds.data_vars}
+            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/10km/day_clim/amsr2_10km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+
+            del ds, da, da2, dtt
+        del climda, climda2, temp, countda
 
 def writeAnomaly():
 
-    tag = 'night'
+    tag = 'day'
 
-    files = glob.glob(cnst.network_data + 'data/OBS/AMSRE/aqua/nc_'+tag+'/AMSR_*.nc')
+    files = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/'+tag+'/nc/*.nc')
 
     for f in files:
 
         basename = os.path.basename(f)
 
         day = xr.open_dataset(f)
-        climpath = cnst.network_data + 'data/OBS/AMSRE/aqua/sma_clim_'+tag+'/'
+        climpath = cnst.elements_drive + 'global/AMSR2/daily/10km/'+tag+'_clim/'
 
         try:
-            clim = xr.open_dataset(climpath + 'sma_2008'+basename[-7:-3]+'.nc')
+            clim = xr.open_dataset(climpath + 'amsr2_10km_clim_2008'+basename[-7:-3]+'.nc')
         except FileNotFoundError:
             continue
 
         out = day.copy()
 
-        out['SM'].values = day['SM'].values - clim['SM'].values
+        var_orig = ['ts', 'soil_moisture_c1', 'soil_moisture_c2']
+        var_new = ['LST', 'SM', 'SM2']
+        for vo, vn in zip(var_orig,var_new):
+
+            out[vo].values = day[vo].values - clim[vn].values
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
-        out.to_netcdf(path=cnst.network_data + 'data/OBS/AMSRE/aqua/sma_nc_'+tag+'_new/'+ 'sma_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        #outf = basename.replace(".nc", "_anom.nc")
+        out.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/10km/day_anom/amsr2_10km_anom_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 

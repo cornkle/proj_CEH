@@ -82,9 +82,9 @@ def trend_all():
     pl = cnst.ERA_MONTHLY_PL_SYNOP
     storm_mean = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
     storm_extreme = 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'
-    mcs = cnst.GRIDSAT + storm_extreme
+    mcs = cnst.GRIDSAT + storm_mean
 
-    fpath = cnst.network_data + 'figs/CLOVER/months/'
+    fpath = cnst.network_data + 'figs/CLOVER/months/SA/'
 
     box=[5,55,-36,0]#  [-18,40,0,25] #
 
@@ -151,7 +151,7 @@ def trend_all():
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [(11,1),1,2,3,4,5,6,7,8,9,10,11,12]#, 2,3,10]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [(9,10)]#,1,2,3,4,5,6,7,8,9,10,11,12]#, 2,3,10]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
     dicmean = {}
@@ -202,9 +202,9 @@ def trend_all():
         ti_da = tirtrend_unstacked
 
         if len(m) == 1:
-            fp = fpath + 'trend_synop_-70C5000_trend_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'trend_synop_-40C1000_trend_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'trend_synop_-70C5000_trend_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'trend_synop_-40C1000_trend_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         map = t2d.salem.get_map()
 
         f = plt.figure(figsize=(15,8), dpi=300)

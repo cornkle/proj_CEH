@@ -38,24 +38,29 @@ def composite(h, eh):
 
     path = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/'
 
-    for y in range(2004,2016):
+    for y in range(2012,2020):
         files = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/*_'+str(y)+'_*.nc')
-
+        msg = xr.open_mfdataset(files)
         hour = h
 
-        msg = xr.open_mfdataset(files)
+        # file = cnst.MCS_POINTS_DOM
+        # msg = xr.open_dataarray(file)
+        # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
+        #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = (msg['small_scale'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
+        msg = msg.sel(lat=slice(10, 20), lon=slice(-12, 15))
 
-        msg = msg.sel(lat=slice(10.5,18.5), lon=slice(-11,18)).load()
+        msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
+
+        msg = msg.load()
 
         msg.attrs['refhour'] = h
         msg.attrs['eh'] = eh
         #
-        dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt'])
+        dic = u_parallelise.run_arrays(4,file_loop,msg,['ano', 'regional', 'cnt'])
         #
         # res = []
-        # for m in msg[0:20]:
+        # for m in msg[0:50]:
         #     out = file_loop(m)
         #     res.append(out)
         # ipdb.set_trace()
@@ -64,91 +69,47 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_new_AMSR10km_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_new_AMSR2_10km_2012-2020_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
-def cut_kernel(xpos, ypos, arr, dist, probs=False):
+def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False):
 
+    if parallax:
+        km, coords = u_gis.call_parallax_era(date.month, t, lon, lat, 0, 0)
+        lx, ly = km
+
+        lx = int(np.round(lx / 27.5))
+        ly = int(np.round(ly / 27.5))  # km into pixels
+        xpos = xpos - lx
+        ypos = ypos - ly
+
+    dist = 29
+    #dist=100
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
-    if (np.sum(kernel!=0) < 0.001 * kernel.size):
-        print('Not enough values, return!')
-        return
+    if rotate:
+        kernel = u_met.era_wind_rotate(kernel,date.month,lat,lon,level=700, ref_angle=90)
+
+    # if (np.sum(np.isfinite(kernel)) < 0.10 * kernel.size):
+    #     return
 
     kernel3 = kernel - np.nanmean(kernel)
 
     cnt = np.zeros_like(kernel)
-    cnt[kernel!=0] = 1 #kslots[np.isfinite(kernel)]   #1
+    cnt[np.isfinite(kernel)] = 1
 
-    # slot_kernel[np.isnan(kernel)] = 0
-
-    if kernel.shape != (2*dist+1, 2*dist+1):
-        print('Kernel shape does not fit! Return')
-        return
-
-    if np.nansum(probs) > 0:
-        prob = u_arrays.cut_kernel(probs,xpos, ypos,dist)
-        cnt3 = np.zeros_like(kernel)
-        cnt3[prob!=0] = 1
-
-    else:
-        prob = np.zeros_like(kernel)
-        cnt3 = np.zeros_like(kernel)
-
-
-    return kernel, kernel3, cnt, prob, cnt3
-
-
-
-
-def get_previous_hours_msg(date, ehour, refhour):
-
-    date = date.replace(hour=refhour)
-
-    if ehour > 0:
-        edate = date + pd.Timedelta(str(ehour) + ' hours')
-    else:
-        edate = date - pd.Timedelta(str(np.abs(ehour)) + ' hours')
-        #edate = edate.replace(hour=ehour)
-
-    t1 = edate - pd.Timedelta('1 hours')
-    t2 = edate + pd.Timedelta('1 hours')
-
-    file = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/coresPower_MSG_-40_9-130km_-50points_dominant_'+str(date.year)+'*.nc')
-    msg = xr.open_mfdataset(file).load()
-    try:
-        msg = msg['tir'].sel(time=slice(t1.strftime("%Y-%m-%dT%H"), t2.strftime("%Y-%m-%dT%H")))
-    except OverflowError:
+    if kernel.shape != (dist*2+1, dist*2+1):
         return None
 
-    #print(prev_time.strftime("%Y-%m-%dT%H"), date.strftime("%Y-%m-%dT%H"))
-    pos = np.where((msg.values <= -40) ) #(msg.values >= 5) & (msg.values < 65)) # #
-
-    out = np.zeros_like(msg)
-    out[pos] = 1
-    out = np.sum(out, axis=0)
-    out[out>0]=1
-    # if np.sum(out>1) != 0:
-    #     'Stop!!!'
-    #     pdb.set_trace()
-
-    msg = msg.sum(axis=0)*0
-
-    xout = msg.copy()
-    del msg
-    xout.name = 'probs'
-    xout.values = out
-
-    return xout
+    return kernel, kernel3, cnt
 
 
 def file_loop(fi):
 
-    timestr = str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2)
-    print('Doing day: ', timestr+'_'+str(fi['time.hour'].values))
-    date = pd.to_datetime(timestr)
+    date = pd.to_datetime(
+        str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
 
     dayd = pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
@@ -156,55 +117,85 @@ def file_loop(fi):
 
     if (fi['time.hour'].values) <= 16:
         print('Nighttime')
-        daybefore = date - dayd
+        daybefore = date #- dayd
     else:
         print('Daytime')
         daybefore = date
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
-    doy = daybefore.dayofyear
-    print(doy)
+    #alt_path = cnst.AMSRE_ANO_DAY
+    # alt_path = cnst.AMSRE_ANO_DAY_CORR
+    # lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
 
+    alt_path = '/media/ck/Elements/global/AMSR2/daily/10km/day_anom/'
     try:
-        lsta = xr.open_dataset(glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/LPRM-AMSR2_L3_DS_A_*_'+str(daybefore.year)+str(doy).zfill(3)+'.nc')) #_NEW
-    except OSError:
-        print('AMSR file missing')
-        return
-    print('Doing '+ 'LPRM-AMSR2_L3_DS_A_*_'+str(daybefore.year)+str(doy).zfill(3)+'.nc')
+        lsta = xr.open_dataset(alt_path + 'amsr2_10km_anom_' + fdate + '.nc')
+    except:
+        print('Surface file not found, return')
+        return None
 
-    lsta_da = lsta['soil_moisture_x'].sel(lat=slice(4,20), lon=slice(-16.5,20)).squeeze()  # should be LSTA
+    lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
+    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(4, 23))
+    #ipdb.set_trace()
+    print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+        daybefore.day).zfill(2) + '.nc')
 
+    #lsta_da = lsta['SM'].squeeze()
+    lsta_da = lsta['soil_moisture_c1'].squeeze()  # soil_moisture_c1
 
-    #### remove mean from LSTA_NEW
+    # topo = xr.open_dataset(cnst.LSTA_TOPO)
+    # ttopo = topo['h']
+    #ttopo = lsta_da.salem.lookup_transform(ttopo)
 
-    #slot_da = lsta['NbSlot'].squeeze()
+    # try:
+    #     lsta_da = topo.salem.transform(lsta_da)
+    # except RuntimeError:
+    #     print('lsta_da on LSTA interpolation problem')
+    #     return None
 
-    # lsta_da.values[slot_da.values>15] = np.nan # just to test cases with clouds
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0]) + abs(grad[1])
 
-    if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
-        print('Not enough valid')
-        return
+    # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
+    #     print('Not enough valid')
+    #     return None
 
-    pos = np.where((fi.values <= -5)) # (fi.values >= -110) &    #(fi.values >= 5) & (fi.values < 65), fi.values<-40
+    # lsta_da.values[np.isnan(lsta_da.values)] = 0
 
-    if (np.sum(pos) == 0):  #| (len(pos[0]) < 3)
+    # lsta_da.values[ttopo.values >= 450] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
+    pos = np.where(fi.values<=-5) #np.where((fi.values >= 5) & (fi.values < 65))
+
+    if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
-        return
+        return None
 
-    probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
+    kernel2_list = []
+    kernel3_list = []
+    cnt_list = []
 
-    dist = 100
+    xfi = fi.shape[1]
 
-    kernel2_list = np.zeros((dist*2+1, dist*2+1))
-    kernel3_list = np.zeros((dist*2+1, dist*2+1))
-    cnt_list = np.zeros((dist*2+1, dist*2+1))
+    randx = np.random.randint(0, xfi, 100)
+    try:
+        randy = np.random.randint(np.min(pos[0]), np.max(pos[0]), 100)
+    except ValueError:
+        return None
+    posr = (randy, randx)
 
-    for y, x in zip(pos[0], pos[1]):
+    rkernel2_list = []
+    rkernel3_list = []
+    rcnt_list = []
+
+    for y, x in zip(posr[0], posr[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
-
-        point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
+        except KeyError:
+            print('point index error')
+            continue
         plat = point['lat'].values
         plon = point['lon'].values
 
@@ -212,69 +203,125 @@ def file_loop(fi):
         xpos = int(xpos[0])
         ypos = np.where(lsta_da['lat'].values == plat)
         ypos = int(ypos[0])
-        #
-        #ipdb.set_trace()
 
         try:
-            kernel2, kernel3, cnt, msg_kernel, mcnt = cut_kernel(xpos, ypos, lsta_da.values, dist)
+            rkernel2, rkernel3, rcnt = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False,
+                                                  rotate=False)
         except TypeError:
-            print('Type error for kernel, continue')
             continue
 
-        # if np.nansum(msg_kernel[:,dist::])>=2:   # filter out cases with MCSs at 12
-        #     print('Meteosat MCS continue')
+        rkernel2_list.append(rkernel2)
+        rkernel3_list.append(rkernel3)
+        rcnt_list.append(rcnt)
+
+    # mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
+    # mcsimage = xr.open_dataarray(cnst.MCS_15K)
+    # mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19), lon=slice(-9.9,9.9))
+    # counter = 0
+    #
+    # labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600, 50000], max_area=None)
+    #ipdb.set_trace()
+
+    for y, x in zip(pos[0], pos[1]):
+
+        lat = fi['lat'][y]
+        lon = fi['lon'][x]
+
+        # if (labels[y,x] not in goodinds) | (labels[y,x] == 0):
+        #     print('MCS too small!!')
+        #     continue
+        #
+        # if (mcsimage.values[y,x] > -60):
+        #     print('Core too warm!!')
+        #     continue
+        #
+        # mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 14), lon=lon,
+        #                      lat=lat).values
+        # if mhour <= 13:
+        #     mhour += 24
+        #
+        # chour = fi['time.hour'].values
+        #
+        # if (chour >= 0) & (chour <= 13):
+        #     chour += 24
+        # if (mhour+2 < chour) | (np.isnan(mhour)):
+        #     print('Core overlaps: earliest:', mhour, ' core: ', chour)
         #     continue
 
-        # kernel2_list.append(kernel2)
-        # kernel3_list.append(kernel3)
-        # cnt_list.append(cnt)
+        t = fi.sel(lat=lat, lon=lon)
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
+        except KeyError:
+            print('point index error')
+            continue
+        plat = point['lat'].values
+        plon = point['lon'].values
 
-        kernel2_list += kernel2
-        kernel3_list += kernel3
-        cnt_list += cnt
+        xpos = np.where(lsta_da['lon'].values == plon)
+        xpos = int(xpos[0])
+        ypos = np.where(lsta_da['lat'].values == plat)
+        ypos = int(ypos[0])
 
-    if np.nansum(kernel2_list) == 0:
-        print('Kernel list is empty, return')
-        #ipdb.set_trace()
-        return
+        try:
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, daybefore, plon, plat, -40, parallax=False,
+                                               rotate=False)
+        except TypeError:
+            continue
 
-    # if kernel2_list == []:
-    #     return None
-    #
-    # if len(kernel2_list) == 1:
-    #   return None
-    # else:
 
-        # kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
-        # kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
-        # cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
+        kernel2_list.append(kernel2)
+        kernel3_list.append(kernel3)
+        cnt_list.append(cnt)
 
-    print('Returning with kernel')
+    if kernel2_list == []:
+        return None
 
-    del lsta
-    del fi
-    #ipdb.set_trace()
-    return (kernel2_list, kernel3_list, cnt_list) #(kernel2_sum, kernel3_sum, cnt_sum)
+    if len(kernel2_list) == 1:
+        return None
+    else:
+
+        kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
+        kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
+        cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
+
+        rkernel2_sum = np.nansum((np.stack(rkernel2_list, axis=0)), axis=0)
+        rkernel3_sum = np.nansum((np.stack(rkernel3_list, axis=0)), axis=0)
+        rcnt_sum = np.nansum((np.stack(rcnt_list, axis=0)), axis=0)
+
+        # plt.figure()
+        # plt.pcolormesh(kernel2_sum, vmin=-10,vmax=10, cmap='RdBu')
+        #
+        # plt.figure()
+        # plt.pcolormesh(cnt_sum, cmap='viridis')
+
+    print('Returning')
+
+    return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
+
 
 
 
 def plot(h):
     hour=h
+    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR10km_"
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR2_10km_2012-2020_"
+    y1 = 2012
+    y2 = 2020
 
     dic = pkl.load(open(
-            cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_SC110km2_"+str(2004)+'_h'+str(h).zfill(2)+".p", "rb"))
+            pin+str(y1)+'_h'+str(h).zfill(2)+".p", "rb"))
 
     def coll(dic, h, year):
         print(h)
         core = pkl.load(open(
-            cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_SC110km2_"+str(year)+'_h'+str(h).zfill(2)+".p", "rb"))
+            pin+str(year)+'_h'+str(h).zfill(2)+".p", "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
             except KeyError:
                 dic[k] = core[k]
 
-    for y in range(2005, 2016):
+    for y in range(y1+1, y2):
         coll(dic, h, y)
 
     extent = dic['ano'].shape[1]/2-1
@@ -282,7 +329,7 @@ def plot(h):
     f = plt.figure(figsize=(14, 7))
     ax = f.add_subplot(231)
 
-    plt.contourf(dic['regional']/100 / dic['cnt'], cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both')
+    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu',  levels=[-0.75,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5, 0.75], extend='both')
     plt.plot(extent, extent, 'bo')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
@@ -295,7 +342,7 @@ def plot(h):
 
     ax = f.add_subplot(232)
 
-    plt.contourf((dic['regional']/100 / dic['cnt'])  , cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both')
+    plt.contourf((dic['regional'] / dic['cnt'])  , cmap='RdBu',  levels=[-0.75,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5, 0.75], extend='both')
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -306,7 +353,7 @@ def plot(h):
 
     ax = f.add_subplot(233)
 
-    plt.contourf((dic['ano']/100 / dic['cnt']), cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu',  levels=[-0.75,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5, 0.75], extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
@@ -318,7 +365,7 @@ def plot(h):
 
     ax = f.add_subplot(234)
 
-    plt.contourf((dic['ano'] / 100 / dic['cnt']) , cmap='RdBu_r',  levels=[-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5], extend='both')
+    plt.contourf((dic['ano'] / dic['cnt']) , cmap='RdBu',  levels=[-0.75,-0.5,-0.4,-0.2,-0.1,0.1,0.2,0.3,0.4,0.5, 0.75], extend='both')
     plt.plot(extent,extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))

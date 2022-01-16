@@ -5,6 +5,15 @@ from JASMIN.constants import VARDIC
 import numpy as np
 
 
+# c - hourly
+# i or m - monthly
+
+#swin
+# low level cloud
+# slp
+# t, q, u,v on pl
+#
+
 class UM_vars(object):
     VARDIC = {
         'sw_net': ('01', '201', 'a', 'W m-2'),
@@ -29,14 +38,16 @@ class UM_vars(object):
         'lowCloudFrac': ('09', '203', 'a', '1'),
         'mediumCloudFrac': ('09', '204', 'a', '1'),
         'highCloudFrac': ('09', '205', 'a', '1'),
-        'cloudIceFrac': ('00', '012', 'j', 'kg kg-1'),
+        'cloudIceFrac_ml': ('00', '012', 'j', 'kg kg-1'), # 3 hourly on model level
+        'cloudLiquidFrac_ml' : ('00', '254', 'j', 'kg kg-1'), # 3hourly on model level
+        'p_ml' : ('00', '408', 'j', 'Pa'), # pressure on model level for j stream
         'lst': ('00', '024', 'c', 'K'),
         'q2': ('03', '237', 'c', 'kg kg-1'),
         't2': ('03', '236', 'c', 'K'),
-        't2_daily': ('03', '236', 'd', 'K'),
+        't2_daily': ('03', '236', 'd', 'K'),  # mean min and max
         'SM': ('08', '223', 'e', 'kg m-2'),
-        'p_srfc': ('00', '409', 'c', 'Pa'),
-        'slp': ('16', '222', 'c', 'Pa'),
+        'p_srfc': ('00', '409', 'c', 'Pa'), # surface pressure hourly
+        'slp': ('16', '222', 'c', 'Pa'), # sea level pressure hourly
         'v10': ('03', '226', 'c', 'm s-1'),
         'u10': ('03', '225', 'c', 'm s-1'),
         'w_pl': ('30', '203', 'f', 'm s-1'),

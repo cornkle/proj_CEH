@@ -388,7 +388,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 # def run_hours(hh):
 data_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP4hist' #cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path ='/media/ck/Elements/Africa/WestAfrica/CP4/CP4_16-19UTC_historical_5000km2_-50C_TCWV' #cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-50C_TCWV'  # out directory to save MCS files
+out_path ='/media/ck/Elements/Africa/WestAfrica/CP4/CP4_hist_5000km2_-50C_TCWV_Senegal' #CP4_16-19UTC_historical_5000km2_-50C_TCWV' #cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-50C_TCWV'  # out directory to save MCS files
 box = [-12, 15, 5, 25]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
