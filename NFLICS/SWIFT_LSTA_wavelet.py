@@ -13,9 +13,12 @@ for ff in filepath:
 
     if os.path.isfile(outpath):
         continue
-
-    dat = xr.open_dataarray(ff)
-
+    try:
+    	dat = xr.open_dataarray(ff)
+    except:
+        print('Could not read ',ff,' continue!')
+        continue
+    print('Doing ',ff)
     dat.values[np.isnan(dat.values)] = 0
     dat.values[dat.values > 1000] = 0
     dic = util.applyHat_pure(dat, dataset='NOWCAST')

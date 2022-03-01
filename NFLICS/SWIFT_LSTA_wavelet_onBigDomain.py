@@ -7,13 +7,13 @@ from utils import u_grid, u_interpolate as u_int, constants as cnst
 
 
 
-dummy = xr.open_dataset(glob.glob('/prj/vera/cores/bigDomain/*.nc')[0])
-grid = dummy.salem.grid
+#dummy = xr.open_dataset(glob.glob('/prj/vera/cores_bigDomain/*.nc')[0])
+#grid = dummy.salem.grid
 
 filepath = glob.glob('/prj/swift/SEVIRI_LST/data_anom_wrt_historic_clim_withmask/*/*.nc')
 
-dlst = xr.open_dataset(filepath[0])
-inds, weights, shape = u_int.interpolation_weights_grid(dlst['lon'].values, dlst['lat'].values, grid)
+#dlst = xr.open_dataset(filepath[0])
+#inds, weights, shape = u_int.interpolation_weights_grid(dlst['lon'].values, dlst['lat'].values, grid)
 
 for f in filepath:
 
@@ -27,25 +27,29 @@ for f in filepath:
     ds = xr.Dataset()
     dat = xr.open_dataset(f)
 
-    try:
-        lsta = u_int.interpolate_data(dat['lsta'].values, inds, weights, shape)
-    except IndexError:
-        print('Interpolation problem, continue')
-        continue
+ #   try:
+ #       lsta = u_int.interpolate_data(dat['lsta'].values, inds, weights, shape)
+ #   except IndexError:
+ #       print('Interpolation problem, continue')
+ #       continue
 
-    lon, lat = grid.ll_coordinates
+ #   lon, lat = grid.ll_coordinates
 
-    nbslot = u_int.interpolate_data(dat['NbSlot'].values, inds, weights, shape)
-
+ #   nbslot = u_int.interpolate_data(dat['NbSlot'].values, inds, weights, shape)
+    lsta = dat['lsta'].values
     lsta[np.isnan(lsta)] = 0
+    nbslot = dat['NbSlot'].values
+    #dlsta = xr.DataArray((np.round(lsta, 2)*100).astype(np.int16), coords={
+    #    'lat': lat[:, 0],
+    #    'lon': lon[0, :]}, dims=['lat', 'lon'])
+
+    #dslot = xr.DataArray(np.round(nbslot,0).astype(np.int8), coords={
+    #    'lat': lat[:, 0],
+    #    'lon': lon[0, :]}, dims=['lat', 'lon'])
     dlsta = xr.DataArray((np.round(lsta, 2)*100).astype(np.int16), coords={
-        'lat': lat[:, 0],
-        'lon': lon[0, :]}, dims=['lat', 'lon'])
-
-    dslot = xr.DataArray(np.round(nbslot,0).astype(np.int8), coords={
-        'lat': lat[:, 0],
-        'lon': lon[0, :]}, dims=['lat', 'lon'])
-
+'phony_dim_0' : dat.phony_dim_0, 'phony_dim_1' : dat.phony_dim_1}, dims=['phony_dim_0','phony_dim_1'])
+    dslot = xr.DataArray((np.round(lsta, 2)*100).astype(np.int16), coords={
+'phony_dim_0':dat.phony_dim_0,'phony_dim_1':dat.phony_dim_1},dims=['phony_dim_0','phony_dim_1'])
     ds['lsta'] = dlsta
     ds['NbSlot'] = dslot
 
@@ -55,9 +59,9 @@ for f in filepath:
     dic = util.applyHat_pure(lsw, dataset='NOWCAST')
 
     wav = xr.DataArray(np.array(np.round(dic['coeffs'], 1) * 10).astype(np.int16),
-                      coords={'scales': dic['scales'], 'lat': lat[:,0],
-                                         'lon': lon[0,:]},
-                      dims=['scales', 'lat', 'lon'])
+                      coords={'scales': dic['scales'], 'phony_dim_0':dat.phony_dim_0,
+                                         'phony_dim_1':dat.phony_dim_1},
+                      dims=['scales','phony_dim_0','phony_dim_1'])
     ds['wavelet'] = wav
 
     # for sliced in ds['wavelet'].values:
@@ -66,7 +70,6 @@ for f in filepath:
     pos = np.where(lsta==0)
     ds['wavelet'].values[:, pos[0], pos[1]] = 0
 
-    ds = ds.isel(lon=slice(0,1410), lat=slice(0,594))
     comp = dict(zlib=True, complevel=5)
     enc = {var: comp for var in ds.data_vars}
     savefile = f.replace('netcdf', 'netcdf_onCores')
