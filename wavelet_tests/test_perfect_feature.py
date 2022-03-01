@@ -331,10 +331,10 @@ def circle():
     plt.show()
 
     plt.figure()
-    plt.plot(wll[amax[0],50,:])
-    plt.plot(ellipse[50, :])
-    plt.plot(wav['coeffs'][amax[0],50,:])
-
+    plt.plot(wll[amax[0],50,:], label='scale')
+    plt.plot(ellipse[50, :], label='ellipse')
+    plt.plot(wav['coeffs'][amax[0],50,:], label='coeffs')
+    plt.legend()
     print(np.sum(wll[amax[0],50,:]>0))
     print(amax[0])
 

@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import cartopy
+import matplotlib.pylab as pylab
 import glob
 import os
 from collections import OrderedDict
@@ -30,23 +34,29 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-18,25,8,25], 'spac', 0 ],   # BOX-ANNUAL
- 'SAf' : [[20,35, -35,-15], 'spac' ],
- 'india' : [[72,84, 12,28], 'asia', 5],  #[70,90, 5,30]
- 'china' : [[105,115,25,40], 'asia', 7],
- 'australia' : [[120,140,-23, -11], 'asia', 9],
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] ,
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5],
-# 'GreatPlains' : [[]]
+MREGIONS = {'WAf' : [[-15,15,10,25], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+ 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
+ 'india' : [[70,90, 5,30], 'asia', 5], # 7
+ 'china' : [[105,115,25,40], 'asia', 8 ], # 4
+ 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
+ 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
 
 }
 
-REGION = 'china'
+REGION = 'WAf'
 
 def composite(h):
     #pool = multiprocessing.Pool(processes=8)
 
     h = h - (MREGIONS[REGION])[2]
+
+    # if h >= 24:
+    #     shift = (12 + h) * (-1)
+    # else:
+    #     shift = 12 - h
+
     print('Hour: ', h)
 
     print(REGION)
@@ -62,8 +72,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        # m1 = 6
-        # m2 = 9
+        m1 = 6
+        m2 = 9
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -72,17 +82,26 @@ def composite(h):
             msg[k] = np.array(msg[k])
 
         # inmask = (msg[lontag]>=domain[0])&(msg[lontag]<=domain[1])&(msg[lattag]>=domain[2])\
-        #        &(msg[lattag]<=domain[3]) & (msg['hour'] == h) & (msg['mcs_status'] >= 0) & (msg['pf_landfrac'] > 0.8)   #& (msg['month']>=m1) & (msg['month']<=m2)
+        #        &(msg[lattag]<=domain[3]) & (msg['hour'] == h) & (msg['mcs_status'] >= 0) & (msg['pf_landfrac'] > 0.8)  & (msg['month']>=m1) & (msg['month']<=m2)
+        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+        #     inmask = (msg[lontag]>=domain[0])&(msg[lontag]<=domain[1])&(msg[lattag]>=domain[2])\
+        #        &(msg[lattag]<=domain[3]) & (msg['hour'] == h) & (msg['mcs_status'] >= 0)
+
 
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
                  & (msg[lattag] <= domain[3]) & (msg['hour'] >= h-1) & (msg['hour'] <= h+1) & (msg['pf_mcsstatus'] > 0) & (
-                             msg['pf_landfrac'] > 0.9)  # & (msg['month']>=m1) & (msg['month']<=m2)
+                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2)
+
+        if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+            inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
+                     & (msg[lattag] <= domain[3]) & (msg['hour'] >= h - 1) & (msg['hour'] <= h + 1) & (
+                                 msg['pf_mcsstatus'] > 0) & (msg['month']>=m1) & (msg['month']<=m2)
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
 
         mask = np.where(inmask)
-
+        #ipdb.set_trace()
         for k in msg.keys():
             msg[k] = (msg[k])[mask]
 
@@ -114,11 +133,11 @@ def composite(h):
         dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt'])
 
         # res = []
-        #
-        # for m in chunks[0:50]:
+        # #ipdb.set_trace()
+        # for m in chunks:
         #     out = file_loop(m)
         #     res.append(out)
-        # ipdb.set_trace()
+        # #ipdb.set_trace()
         # return
 
         for k in dic.keys():
@@ -168,10 +187,10 @@ def file_loop(fi):
 
     if (date.hour) <= 16:
         print('Nighttime')
-        daybefore = date  # - dayd
+        daybefore = date #- dayd
     else:
         print('Daytime')
-        daybefore = date
+        daybefore = date #- dayd
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
     # alt_path = cnst.AMSRE_ANO_DAY
@@ -190,7 +209,7 @@ def file_loop(fi):
         return None
 
     lsta = lsta.sel(time=str(daybefore.year) + '-' + str(daybefore.month) + '-' + str(daybefore.day))
-    lsta = lsta.sel(lon=slice(box[0]-1, box[1]+1), lat=slice(box[2]-1, box[3]+1)) # define SM region box to consider
+    lsta = lsta.sel(lon=slice(box[0]-3, box[1]+3), lat=slice(box[2]-3, box[3]+3)) # define SM region box to consider
 
     print('Doing ' + 'AMSR2_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
@@ -211,47 +230,68 @@ def file_loop(fi):
         direction = fi['direction'][id]
         if np.isnan(direction):
             continue
-       # ipdb.set_trace()
-        permcs = 0
-        for lat, lon in zip(fi['pf_lat'][id].squeeze().flatten(), fi['pf_lon'][id].squeeze().flatten()):  #zip(fi['meanlat'], fi['meanlon'])
-            cid += 1
-            if ((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs] < 5) | np.isnan((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs]):
-                print('Pf rainrate below 8mm, continue')
-                permcs +=1
-                continue
-            permcs += 1
-    ############################
-        # for lat, lon in zip(fi['meanlat'], fi['meanlon']):
+
+
+        ##################
+        # permcs = 0
+        # for lat, lon in zip(fi['pf_lat'][id].squeeze().flatten(), fi['pf_lon'][id].squeeze().flatten()):  #zip(fi['meanlat'], fi['meanlon'])
         #     cid += 1
-        #     direction = (fi[direction])[cid-1]
+        #     if ((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs] < 1) | np.isnan((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs]):
+        #         print('Pf rainrate below 5mm, continue')
+        #         permcs +=1
+        #         continue
+        #     permcs += 1
+        #####################
+        maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
+        maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
+        cid += 1
+        if (maxrr < 1) | np.isnan(maxrr):
+            continue
+        lat = fi['pf_lat'][id].squeeze().flatten()[maxrrpos]
+        lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
+       # ipdb.set_trace()
+    ############################
+    # for lat, lon in zip(fi['meanlat'], fi['meanlon']):
+    #     cid += 1
+    #     #direction = (fi[direction])[cid-1]
     ####################
-            try:
-                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
-            except KeyError:
-                print('point index error')
-                continue
-
-            plat = point['lat'].values
-            plon = point['lon'].values
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
+        except KeyError:
+            print('point index error')
             #ipdb.set_trace()
-            xpos = np.where(lsta_da['lon'].values == plon)
-            try:
-                xpos = int(xpos[0])
-            except:
-                continue
-            ypos = np.where(lsta_da['lat'].values == plat)
-            ypos = int(ypos[0])
+            continue
 
-            try:
-                kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, wd=direction)
-            except TypeError:
-                continue
+        plat = point['lat'].values
+        plon = point['lon'].values
+        #ipdb.set_trace()
+        xpos = np.where(lsta_da['lon'].values == plon)
+        try:
+            xpos = int(xpos[0])
+        except:
+            continue
+        ypos = np.where(lsta_da['lat'].values == plat)
+        ypos = int(ypos[0])
 
-            cnt_all = np.zeros_like(cnt)+1
-            kernel2_list.append(kernel2)
-            kernel3_list.append(kernel3)
-            cnt_list.append(cnt)
-            all_cnt_list.append(cnt_all)
+        try:
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, wd=direction)
+        except TypeError:
+            continue
+
+        # f = plt.figure()
+        # ax = f.add_subplot(121)
+        # cb = ax.contourf(kernel2, cmap='RdBu')
+        # plt.colorbar(cb)
+        # ax = f.add_subplot(122)
+        # cb = ax.contourf(cnt, cmap='viridis')
+        # plt.colorbar(cb)
+        # f.show()
+
+        cnt_all = np.zeros_like(cnt)+1
+        kernel2_list.append(kernel2)
+        kernel3_list.append(kernel3)
+        cnt_list.append(cnt)
+        all_cnt_list.append(cnt_all)
 
     if kernel2_list == []:
         return None

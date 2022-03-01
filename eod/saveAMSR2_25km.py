@@ -43,8 +43,10 @@ def saveNetcdf(day=True):
 from utils import u_arrays
 def saveAnomalyDay():
 
+    dtag = 'day'
+
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/day/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+dtag+'/nc/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -81,7 +83,7 @@ def saveAnomalyDay():
 
 
         clim = mf['soil_moisture_c1'].groupby('time.dayofyear').sum(dim='time')
-        clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').sum(dim='time')
+        #clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').sum(dim='time')
         ts = mf['ts'].groupby('time.dayofyear').sum(dim='time')
 
         valid_days = mf['soil_moisture_c1'].groupby('time.dayofyear').count(dim='time')  # number of valid days per month
@@ -112,12 +114,12 @@ def saveAnomalyDay():
 
         climda = climda.sortby(climda.time)
 
-        climda2 = xr.DataArray(clim2.values,
-                          coords={'time': tseries, 'lat': clim.lat.values,
-                                  'lon': clim.lon.values},
-                          dims=['time', 'lat', 'lon'])
+        # climda2 = xr.DataArray(clim2.values,
+        #                   coords={'time': tseries, 'lat': clim.lat.values,
+        #                           'lon': clim.lon.values},
+        #                   dims=['time', 'lat', 'lon'])
 
-        climda2 = climda2.sortby(climda2.time)
+        # climda2 = climda2.sortby(climda2.time)
 
         temp = xr.DataArray(ts.values,
                           coords={'time': tseries, 'lat': clim.lat.values,
@@ -149,21 +151,21 @@ def saveAnomalyDay():
 
             #ipdb.set_trace()
             climsliced = climda.sel(time=slice(window1[0],window2[0]))
-            climsliced2 = climda2.sel(time=slice(window1[0], window2[0]))
+            # climsliced2 = climda2.sel(time=slice(window1[0], window2[0]))
             tsliced = temp.sel(time=slice(window1[0],window2[0]))
             countsliced = countda.sel(time=slice(window1[0], window2[0]))
 
             outclim = climsliced.sum('time')
-            outclim2 = climsliced2.sum('time')
+            # outclim2 = climsliced2.sum('time')
             outtemp = tsliced.sum('time')
             outcount = countsliced.sum('time')
 
             allclim = outclim / outcount
             alltclim = outtemp / outcount
-            allclim2 = outclim2/outcount
+            # allclim2 = outclim2/outcount
             allclim.values[outcount.values < 10] = np.nan
             alltclim.values[outcount.values < 10] = np.nan
-            allclim2.values[outcount.values < 10] = np.nan
+            # allclim2.values[outcount.values < 10] = np.nan
 
 
             date = [pd.datetime(2008, dt.month[0], dt.day[0], 0, 0)]
@@ -172,9 +174,9 @@ def saveAnomalyDay():
                                   coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
                                   dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
 
-            da2 = xr.DataArray(allclim.values[None, ...],
-                                  coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
-                                  dims=['time', 'lat', 'lon'])
+            # da2 = xr.DataArray(allclim2.values[None, ...],
+            #                       coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
+            #                       dims=['time', 'lat', 'lon'])
 
             dtt = xr.DataArray(alltclim.values[None, ...],
                                   coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
@@ -182,29 +184,29 @@ def saveAnomalyDay():
 
             da.attrs = climda.attrs
             dtt.attrs = temp.attrs
-            da2.attrs = climda2.attrs
+            # da2.attrs = climda2.attrs
 
             ds = xr.Dataset({'SM': da})
             ds['LST'] = dtt
-            ds['SM2'] = da2
+            #ds['SM2'] = da2
             odate = date[0]
 
             outdate = str(odate.year)+str(odate.month).zfill(2)+str(odate.day).zfill(2)
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/day_clim/amsr2_25km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
-
-            del ds, da, da2, dtt
-        del climda, climda2, temp, countda
+            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+dtag+'_clim/amsr2_25km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            print('Written')
+            del ds, da,  dtt #da2,
+        del climda,  temp, countda #climda2,
 
 
 
 
 def saveStddevDay():
-
+    tag = 'night'
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/day/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'/nc/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -241,11 +243,11 @@ def saveStddevDay():
 
 
         clim = mf['soil_moisture_c1'].groupby('time.dayofyear').mean(dim='time')
-        clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').mean(dim='time')
+        #clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').mean(dim='time')
         ts = mf['ts'].groupby('time.dayofyear').mean(dim='time')
 
         climstd = mf['soil_moisture_c1'].groupby('time.dayofyear').std(dim='time')
-        clim2std = mf['soil_moisture_c2'].groupby('time.dayofyear').std(dim='time')
+        #clim2std = mf['soil_moisture_c2'].groupby('time.dayofyear').std(dim='time')
         tsstd = mf['ts'].groupby('time.dayofyear').std(dim='time')
 
         times=[]
@@ -274,12 +276,12 @@ def saveStddevDay():
 
         climda = climda.sortby(climda.time)
 
-        climda2 = xr.DataArray(clim2.values,
-                          coords={'time': tseries, 'lat': clim.lat.values,
-                                  'lon': clim.lon.values},
-                          dims=['time', 'lat', 'lon'])
+        # climda2 = xr.DataArray(clim2.values,
+        #                   coords={'time': tseries, 'lat': clim.lat.values,
+        #                           'lon': clim.lon.values},
+        #                   dims=['time', 'lat', 'lon'])
 
-        climda2 = climda2.sortby(climda2.time)
+        # climda2 = climda2.sortby(climda2.time)
 
         temp = xr.DataArray(ts.values,
                           coords={'time': tseries, 'lat': clim.lat.values,
@@ -295,12 +297,12 @@ def saveStddevDay():
 
         climda_std = climda_std.sortby(climda_std.time)
 
-        climda2_std = xr.DataArray(clim2std.values,
-                          coords={'time': tseries, 'lat': clim.lat.values,
-                                  'lon': clim.lon.values},
-                          dims=['time', 'lat', 'lon'])
+        # climda2_std = xr.DataArray(clim2std.values,
+        #                   coords={'time': tseries, 'lat': clim.lat.values,
+        #                           'lon': clim.lon.values},
+        #                   dims=['time', 'lat', 'lon'])
 
-        climda2_std = climda2_std.sortby(climda2_std.time)
+        # climda2_std = climda2_std.sortby(climda2_std.time)
 
         temp_std = xr.DataArray(tsstd.values,
                           coords={'time': tseries, 'lat': clim.lat.values,
@@ -328,16 +330,16 @@ def saveStddevDay():
 
             #ipdb.set_trace()
             climsliced = climda.sel(time=slice(window1[0],window2[0]))
-            climsliced2 = climda2.sel(time=slice(window1[0], window2[0]))
+            # climsliced2 = climda2.sel(time=slice(window1[0], window2[0]))
             tsliced = temp.sel(time=slice(window1[0],window2[0]))
 
             outclim = climsliced.std('time')
-            outclim2 = climsliced2.std('time')
+            # outclim2 = climsliced2.std('time')
             outtemp = tsliced.std('time')
 
             allclim = (outclim + climda_std) /2
             alltclim = (outtemp + temp_std) / 2
-            allclim2 = (outclim2 + climda2_std)/ 2
+            # allclim2 = (outclim2 + climda2_std)/ 2
 
 
             date = [pd.datetime(2008, dt.month[0], dt.day[0], 0, 0)]
@@ -346,9 +348,9 @@ def saveStddevDay():
                                   coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
                                   dims=['time', 'lat', 'lon'])  # [np.newaxis, :]
 
-            da2 = xr.DataArray(allclim2.values[None, ...],
-                                  coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
-                                  dims=['time', 'lat', 'lon'])
+            # da2 = xr.DataArray(allclim2.values[None, ...],
+            #                       coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
+            #                       dims=['time', 'lat', 'lon'])
 
             dtt = xr.DataArray(alltclim.values[None, ...],
                                   coords={'time': date, 'lat': allclim.lat.values, 'lon': allclim.lon.values},
@@ -356,21 +358,21 @@ def saveStddevDay():
 
             da.attrs = climda.attrs
             dtt.attrs = temp.attrs
-            da2.attrs = climda2.attrs
+            # da2.attrs = climda2.attrs
 
             ds = xr.Dataset({'SM': da})
             ds['LST'] = dtt
-            ds['SM2'] = da2
+            # ds['SM2'] = da2
             odate = date[0]
 
             outdate = str(odate.year)+str(odate.month).zfill(2)+str(odate.day).zfill(2)
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/day_clim/amsr2_25km_stddev_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'_clim/amsr2_25km_stddev_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
-            del ds, da, da2, dtt
-        del climda, climda2, temp
+            del ds, da, dtt #da2,
+        del climda, temp #climda2,
 
 
 def writeAnomaly():
@@ -394,8 +396,8 @@ def writeAnomaly():
 
         out = day.copy()
 
-        var_orig = ['ts', 'soil_moisture_c1', 'soil_moisture_c2']
-        var_new = ['LST', 'SM', 'SM2']
+        var_orig = ['ts', 'soil_moisture_c1'] # 'soil_moisture_c2'
+        var_new = ['LST', 'SM'] #'SM2'
         for vo, vn in zip(var_orig,var_new):
 
             out[vo].values = day[vo].values - clim[vn].values
@@ -403,5 +405,5 @@ def writeAnomaly():
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
         #outf = basename.replace(".nc", "_anom.nc")
-        out.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/day_anom/amsr2_25km_anom_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        out.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'_anom/amsr2_25km_anom_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 

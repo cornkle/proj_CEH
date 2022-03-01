@@ -120,7 +120,7 @@ def trend_all():
     pl = cnst.ERA5_MONTHLY_PL_SYNOP_HU #cnst.ERA_MONTHLY_PL_SYNOP
     #mcs = cnst.GRIDSAT + 'aggs/gridsat_WA_-70_monthly_mean_5000km2.nc'
 
-    fpath = cnst.network_data + 'figs/HUARAZ/monthly/new_trend/'
+    fpath = cnst.network_data + 'figs/HUARAZ/monthly/paper/'
 
     box=[-82,-40,-28,4]#  [-18,40,0,25] #
 
@@ -208,7 +208,7 @@ def trend_all():
     #grid = grid.to_dataset()
     #tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
 
-    months= [11,12,1,2,3, (1,3)]#,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
+    months= [10,11,12,1,2,3,4,5, (1,3)]#,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     #ipdb.set_trace()
     for m in months:
@@ -222,12 +222,12 @@ def trend_all():
 
         for v, dat in zip(vars,data):
             print('Doing ', v)
-            dic[v] = get_trend(dat, m, hour=15, sig=True, wilks=False, method='polyfit')
+            dic[v] = get_trend(dat, m, hour=15, sig=True, wilks=False, method='mk')
 
         if len(m) == 1:
-            fp = fpath + 'low_ERA5_trend_synop_HU_poly_sig_'+str(m[0]).zfill(2)+'_2000-2017_DJF_allHours.png'
+            fp = fpath + 'low_ERA5_trend_synop_HU_poly_sig_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'low_ERA5_trend_synop_HU_poly_sig_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '_2000-2017_DJF_allHours.png'
+            fp = fpath + 'low_ERA5_trend_synop_HU_poly_sig_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
         #ipdb.set_trace()
 
         map = shear.salem.get_map()
@@ -301,11 +301,11 @@ def trend_all():
                            labelpos='E', coordinates='figure')
 
         ax4 = f.add_subplot(234)
-        map.set_data((dic['v800'][0]).values, interp='linear')  # interp='linear'
+        map.set_data((dic['u800'][0]).values, interp='linear')  # interp='linear'
         #map.set_contour(u8_mean.values, interp='linear', colors='k')
 
         map.set_plot_params(levels=[-0.8,-0.6,-0.4,-0.2,0.2,0.4, 0.6,0.8], cmap='RdBu_r', extend='both')  # levels=np.arange(-0.5,0.51,0.1)
-        map.visualize(ax=ax4, title='850hPa meridional wind trend, mean 850hPa wind vectors', cbar_title='m s-1 decade-1')
+        map.visualize(ax=ax4, title='850hPa zonal wind trend, mean 850hPa wind vectors', cbar_title='m s-1 decade-1')
         qu = ax4.quiver(xx, yy, uu500, vv500, scale=70, width=0.002)
 
         qk = plt.quiverkey(qu, 0.4, 0.03, 1, '1 m s$^{-1}$',

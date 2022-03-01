@@ -27,12 +27,12 @@ def composite(h, eh):
     path = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/'
 
     for y in range(2002,2006):
-        msg = pkl.load(
-            open('/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/WAf_mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
+        # msg = pkl.load(
+        #     open('/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/WAf_mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
         hour = h
 
-        # file = cnst.MCS_POINTS_DOM
-        # msg = xr.open_dataarray(file)
+        file = cnst.MCS_POINTS_DOM
+        msg = xr.open_dataarray(file)
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = [-12,15,10,20]
@@ -42,9 +42,9 @@ def composite(h, eh):
                &(msg.lat<=domain[3])& (msg.month>=m1) & (msg.month<=m2) & (msg.hour == h)
         msg = msg[mask]
 
-        #msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
+        msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
-        #msg = msg.load()
+        msg = msg.load()
 
         msg.attrs['refhour'] = h
         msg.attrs['eh'] = eh
@@ -61,7 +61,7 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_new_AMSRE_25km_2002-2006_SM_MCSTRACK_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_new_AMSRE_25km_2002-2006_SM_CORES_NIGHT_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -116,7 +116,7 @@ def file_loop(fi):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
     #alt_path = cnst.AMSRE_ANO_DAY
-    alt_path = cnst.AMSRE_ANO_DAY_CORR
+    alt_path = cnst.AMSRE_ANO_NIGHT
     try:
         lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
     except:

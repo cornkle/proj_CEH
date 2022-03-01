@@ -632,7 +632,7 @@ def rewrite_AMSR2_10km(file):
     ds = u_darrays.flip_lat(ds)
 
     ds_new = xr.Dataset()
-    varlist = ['ts', 'soil_moisture_c1', 'soil_moisture_c2']
+    varlist = ['ts', 'soil_moisture_c1']#, 'soil_moisture_c2']
     for var in ds.data_vars:
 
         if var not in varlist:
@@ -647,11 +647,15 @@ def rewrite_AMSR2_10km(file):
 
             (da.values[0,:,:])[ds['soil_moisture_c1'].values.T < -1] = np.nan
             (da.values[0,:,:])[ds['ts'].values.T > 350] = np.nan
+            (da.values[0, :, :])[(ds['soil_moisture_c1_error'].values.T > 0.4) | np.isnan(ds['soil_moisture_c1_error'].values.T)] = np.nan
+            (da.values[0, :, :])[(ds['soil_moisture_c2_error'].values.T > 0.4) | np.isnan(ds['soil_moisture_c2_error'].values.T)] = np.nan
+            (da.values[0, :, :])[(ds['soil_moisture_x_error'].values.T > 0.4) | np.isnan(ds['soil_moisture_x_error'].values.T)] = np.nan
             if np.sum(da.values) == np.nan:
                 return
 
         ds_new[var] = da
     #ipdb.set_trace()
+    masks = np.isfinite(ds_new['ts']) & np.isfinite(ds_new['ts'])
     for var in varlist:
         ds_new[var] = ds_new[var].where(np.isfinite(ds_new['ts']))
     try:

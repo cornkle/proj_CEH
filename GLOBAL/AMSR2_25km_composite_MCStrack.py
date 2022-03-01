@@ -48,7 +48,7 @@ def composite(h, eh):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = msg.sel(lat=slice(10, 20), lon=slice(-12, 15))
+        msg = msg.sel(lat=slice(10, 20), lon=slice(-15, 25))
 
         msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
@@ -69,7 +69,7 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_new_AMSR2_25km_2012-2020_TS_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_cores_AMSR2_25km_2012-2020_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -127,7 +127,7 @@ def file_loop(fi):
     # alt_path = cnst.AMSRE_ANO_DAY_CORR
     # lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
 
-    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/day_anom/'
+    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/night_anom/'
     try:
         lsta = xr.open_dataset(alt_path + 'amsr2_25km_anom_' + fdate + '.nc')
     except:
@@ -135,13 +135,13 @@ def file_loop(fi):
         return None
 
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-14, 14), lat=slice(4, 23))
+    lsta = lsta.sel(lon=slice(-18,20), lat=slice(4, 30))
     #ipdb.set_trace()
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
     #lsta_da = lsta['SM'].squeeze()
-    lsta_da = lsta['ts'].squeeze()  # soil_moisture_c1
+    lsta_da = lsta['soil_moisture_c1'].squeeze()  # soil_moisture_c1
 
     # topo = xr.open_dataset(cnst.LSTA_TOPO)
     # ttopo = topo['h']
@@ -296,6 +296,7 @@ def file_loop(fi):
 
     print('Returning')
     del lsta
+    del fi
     return (kernel2_sum, kernel3_sum, cnt_sum,  rkernel2_sum, rkernel3_sum, rcnt_sum)
 
 
@@ -304,7 +305,7 @@ def file_loop(fi):
 def plot(h):
     hour=h
     #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR10km_"
-    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR2_25km_2012-2020_"
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_cores_AMSR2_25km_2012-2020_DAY_"
     y1 = 2012
     y2 = 2018
 

@@ -269,31 +269,31 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     #u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/q*.nc')
-    var = 't2m'
-    u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/surface/*.nc')
+    var = 'r'
+    u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/qr*.nc')
     print('Dataset loaded')
-    u200orig = u200orig[var].isel(time=u200orig['time.hour']==15)#.load() .sel(level=650)
+    u200orig = u200orig[var].isel(time=u200orig['time.hour']==15).sel(level=850)#.load() .sel(level=650)
     u200orig.name = var
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/t2m_15UTC_1981-2021_peru_big.nc', mode='w',
+    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/r850_15UTC_1981-2021_peru_big.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 
 def saveERA5_multi():
 
     def get_ERA5(file):
-        var = 'v'
+        var = 'd'
         u200orig = xr.open_dataset(file)
-        u200orig = u200orig[var].sel(level=250).isel(time=u200orig['time.hour']==15).load()
+        u200orig = u200orig[var].sel(level=200).isel(time=u200orig['time.hour']==15).load()
         u200orig.name = var
 
         return u200orig
 
        # ipdb.set_trace()
 
-    var = 'v'
-    inputs = glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv*.nc')
+    var = 'd'
+    inputs = glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/peru/pressure_levels/ERA5*.nc')
    #  pool = multiprocessing.Pool(processes=5)
    # # ipdb.set_trace()
    #  res = pool.map(get_ERA5, inputs[0:5])
@@ -311,7 +311,7 @@ def saveERA5_multi():
 
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/v250_15UTC_1981-2018_peru_big.nc', mode='w',
+    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/d200_15UTC_1981-2018_peru.nc', mode='w',
                        encoding=encoding, format='NETCDF4')
 
 

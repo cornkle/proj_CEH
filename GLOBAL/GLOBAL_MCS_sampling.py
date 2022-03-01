@@ -16,19 +16,18 @@ import pandas as pd
 import pickle as pkl
 import salem
 import os
+### SIMILAR VERSION IN NOTEBOOK
 
-
-mregions = {'WAf' : [[-18,25,4,25], 'spac' ],
- 'SAf' : [[20,35, -35,-15], 'spac' ],
- 'india' : [[70,90, 5,30], 'asia' ],
- 'china' : [[105,115,25,40], 'asia' ],
- 'australia' : [[120,140,-23, -11], 'asia'],
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac'] ,
- 'trop_SA' : [[-75, -50, -20, -5], 'spac'],
-# 'GreatPlains' : [[]]
+mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
+ 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
+ 'india' : [[70,90, 5,30], 'asia', 5], # 7
+ 'china' : [[105,115,25,40], 'asia', 8 ], # 4
+ 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
+ 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
 
 }
-
 
 def run_loop(region):
 

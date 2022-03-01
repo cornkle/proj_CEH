@@ -6,12 +6,14 @@ if os.path.isdir('/home/ck/DIR/'):
     local_data = ext_drive + 'mymachine/'
     network_data = ext_drive + 'cornkle/'
     elements_drive = '/media/ck/Elements/'
+    lmcs_drive = '/media/ck/LSstorage/'
 
 else:
-    if os.path.isdir('/localscratch/wllf030/cornkle/'):
+    if os.path.isdir('/prj/global_water/'):
         local_data = '/localscratch/wllf030/cornkle/'
         network_data = '/users/global/cornkle/shared/'
         elements_drive = '/media/ck/Elements/Obs_Data/'
+        lmcs_drive = '/prj/global_water/'
     else:
         ext_drive = '/media/ck/Seagate/DIR/'
         local_data = ext_drive + 'mymachine/'
@@ -21,12 +23,12 @@ else:
 ANCILS = network_data + 'data/ancils_python/'
 
 
-ERA_MONTHLY_PL = local_data + 'ERA-I/monthly/monthly_1979-2017_pl_full.nc'
-ERA_MONTHLY_SRFC = local_data + 'ERA-I/monthly/monthly_1979-2017_srfc_full.nc'
-ERA_MONTHLY_PL_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc'
-ERA_MONTHLY_SRFC_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc'
-ERA_DAILY_SURFACE =   local_data + 'ERA-I/daily_2006-2010_12UTCsrfc.nc'
-ERA_MONTHLY_TUVWZ_AFRICA = local_data + 'ERA-I/climatology/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
+# ERA_MONTHLY_PL = local_data + 'ERA-I/monthly/monthly_1979-2017_pl_full.nc'
+# ERA_MONTHLY_SRFC = local_data + 'ERA-I/monthly/monthly_1979-2017_srfc_full.nc'
+# ERA_MONTHLY_PL_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_pl_full.nc'
+# ERA_MONTHLY_SRFC_SYNOP = local_data + 'ERA-I/monthly/monthly_synop_1979-2017_srfc_full.nc'
+# ERA_DAILY_SURFACE =   local_data + 'ERA-I/daily_2006-2010_12UTCsrfc.nc'
+# ERA_MONTHLY_TUVWZ_AFRICA = local_data + 'ERA-I/climatology/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
 
 ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_1983-2014_pl.nc'
 # ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
