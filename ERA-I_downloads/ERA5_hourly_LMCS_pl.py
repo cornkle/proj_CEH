@@ -1,6 +1,6 @@
 import cdsapi
 import os
-
+from utils import constants as cnst
 def download(year, month, day, box,file):
     c = cdsapi.Client()
 
@@ -42,7 +42,7 @@ def download(year, month, day, box,file):
 
 
 
-mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
+mregions = { #'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -65,7 +65,7 @@ for mm in mregions.keys():
 
                 filename = "ERA5_" + str(y) + "_" + str(m).zfill(2) +"_" + str(d).zfill(2) + "_"+ mreg + "_pl.nc"
 
-                path = "/media/ck/LStorage/LMCS_domains/ERA5/hourly/pressure_levels/"+mreg+"/"
+                path = cnst.lmcs_drive+"ERA5/hourly/pressure_levels/"+mreg+"/"
 
                 if not os.path.isdir(path):
                     os.mkdir(path)

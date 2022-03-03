@@ -22,7 +22,7 @@ def saveAnomalyDay():
     dtag = 'aqua'
 
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', '/media/ck/LStorage/MODIS_LST/'+dtag+'/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.lmcs_drive+'MODIS_LST/'+dtag+'/nc/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -33,7 +33,7 @@ def saveAnomalyDay():
         isdoy = af[-24:-21]
         year = af[-28:-24]
         #ipdb.set_trace()
-        ismonth = datetime.datetime(int(year), 1, 1) + datetime.timedelta(days=int(isdoy))
+        ismonth = datetime.datetime(int(year), 1, 1) + datetime.timedelta(days=int(isdoy)-1)
         only_months.append(int(ismonth.month))
 
     for m in range(1,13):
@@ -142,7 +142,7 @@ def saveAnomalyDay():
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path='/media/ck/LStorage/MODIS_LST/'+dtag+'/clim/'+dtag+'_05deg_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            ds.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+dtag+'/clim/'+dtag+'_05deg_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
             print('Written')
             del ds, da#, da2, dtt
         del climda, countda #climda2, temp,
