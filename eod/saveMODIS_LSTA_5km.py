@@ -57,9 +57,9 @@ def saveAnomalyDay():
 
         mf = xr.open_mfdataset(mstruc[m], concat_dim='time') #, combine='by_coords'
         print('Read mf data')
-        clim = mf['LST_Day_CMG'].groupby('time.dayofyear').sum(dim='time')
-        valid_days = mf['LST_Day_CMG'].groupby('time.dayofyear').count(dim='time')  # number of valid days per month
-
+        clim = mf['LST_Day_CMG'].where(mf['LST_Day_CMG']>0).groupby('time.dayofyear').sum(dim='time')
+        valid_days = mf['LST_Day_CMG'].where(mf['LST_Day_CMG']>0).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
+        del mf
         times=[]
 
         print('Calculated day of year sum and count over full time.')
@@ -91,7 +91,6 @@ def saveAnomalyDay():
                           dims=['time', 'lat', 'lon'])
         countda = countda.sortby(countda.time)
 
-        del mf
         del clim
         del valid_days
 
@@ -326,7 +325,7 @@ def writeAnomaly():
 
     tag = 'aqua'
 
-    files = glob.glob('/media/ck/LStorage/MODIS_LST/'+tag+'/nc/*.nc')
+    files = glob.glob(cnst.lmcs_drive+'MODIS_LST/'+tag+'/nc/*.nc')
 
     for f in files:
         print('Doing', f)
@@ -334,17 +333,18 @@ def writeAnomaly():
         basename = os.path.basename(f)
 
         day = xr.open_dataset(f)
-        climpath = '/media/ck/LStorage/MODIS_LST/'+tag+'/clim/'
+        climpath = cnst.lmcs_drive+'MODIS_LST/'+tag+'/clim/'
 
         isdoy = f[-24:-21]
         year = f[-28:-24]
 
-        odate = datetime.datetime(int(year), 1, 1) + datetime.timedelta(days=int(isdoy))
+        odate = datetime.datetime(int(year), 1, 1) + datetime.timedelta(days=int(isdoy)-1)
         outdate = str(odate.year) + str(odate.month).zfill(2) + str(odate.day).zfill(2)
-
+        print('Outdate', outdate)
         try:
-            clim = xr.open_dataset(climpath + 'aqua_05deg_clim_'+outdate+'.nc')
+            clim = xr.open_dataset(climpath + 'aqua_05deg_clim_2008'+outdate[4::]+'.nc')
         except FileNotFoundError:
+            print('File not found, continue')
             continue
 
         out = day.copy()
@@ -353,10 +353,10 @@ def writeAnomaly():
         var_new = ['LST']
         for vo, vn in zip(var_orig,var_new):
 
-            out[vo].values = day[vo].values - clim[vn].values
+            out[vo].values = day[vo].where(day[vo]>0).values - clim[vn].values
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
         #outf = basename.replace(".nc", "_anom.nc")
-        out.to_netcdf(path='/media/ck/LStorage/MODIS_LST/'+tag+'/anom/aqua_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        out.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+tag+'/anom/aqua_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
