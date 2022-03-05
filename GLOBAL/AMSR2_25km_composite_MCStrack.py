@@ -48,7 +48,7 @@ def composite(h, eh):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = msg.sel(lat=slice(10, 20), lon=slice(-15, 25))
+        msg = msg.sel(lat=slice(9, 20), lon=slice(-15, 15))
 
         msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
@@ -60,7 +60,7 @@ def composite(h, eh):
         dic = u_parallelise.run_arrays(4,file_loop,msg,['ano', 'regional', 'cnt'])
         #
         # res = []
-        # for m in msg[0:50]:
+        # for m in msg:
         #     out = file_loop(m)
         #     res.append(out)
         # ipdb.set_trace()
@@ -69,7 +69,7 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_cores_AMSR2_25km_2012-2020_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_cores_AMSR2_25km_2012-2020_NIGHT_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -305,7 +305,7 @@ def file_loop(fi):
 def plot(h):
     hour=h
     #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR10km_"
-    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_cores_AMSR2_25km_2012-2020_DAY_"
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_cores_AMSR2_25km_2012-2020_NIGHT_"
     y1 = 2012
     y2 = 2018
 

@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-15,15,10,25], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-15,25,8,12], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -72,8 +72,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 6
-        m2 = 9
+        m1 = 3
+        m2 = 11
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -144,7 +144,7 @@ def composite(h):
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
         #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-        pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PF_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PF_NIGHT_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -201,7 +201,7 @@ def file_loop(fi):
     #     print('Surface file not found, return')
     #     return None
 
-    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/day_anom/'
+    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/night_anom/'
     try:
         lsta = xr.open_dataset(alt_path + 'amsr2_25km_anom_' + fdate + '.nc')
     except:
@@ -242,6 +242,7 @@ def file_loop(fi):
         #         continue
         #     permcs += 1
         #####################
+        #takes just strongest rain feature per MCS
         maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
         maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
         cid += 1
@@ -274,7 +275,7 @@ def file_loop(fi):
         ypos = int(ypos[0])
 
         try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da, wd=direction)
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direction)
         except TypeError:
             continue
 
@@ -313,7 +314,7 @@ def file_loop(fi):
 def plot(h):
     h = h - (MREGIONS[REGION])[2]
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PF_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PF_NIGHT_"
     #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
     y1 = 2012
     y2 = 2020

@@ -352,6 +352,7 @@ def writeAnomaly():
         var_orig = ['LST_Day_CMG']
         var_new = ['LST']
         for vo, vn in zip(var_orig,var_new):
+            ipdb.set_trace()
 
             out[vo].values = day[vo].where(day[vo]>0).values - clim[vn].values
 

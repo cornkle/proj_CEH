@@ -6,7 +6,7 @@ if os.path.isdir('/home/ck/DIR/'):
     local_data = ext_drive + 'mymachine/'
     network_data = ext_drive + 'cornkle/'
     elements_drive = '/media/ck/Elements/'
-    lmcs_drive = '/media/ck/LSstorage/'
+    lmcs_drive = '/media/ck/LStorage/'
 
 else:
     if os.path.isdir('/prj/global_water/'):
