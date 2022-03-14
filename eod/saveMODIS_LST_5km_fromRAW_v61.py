@@ -21,16 +21,14 @@ from utils import constants as cnst
 
 
 def run():
-    files = glob.glob(cnst.lmcs_drive+ 'MODIS_LST/aqua/raw/*.hdf')
+    files = glob.glob(cnst.lmcs_drive+ 'MODIS_LST/aqua/raw_v61/*.hdf')
     multi_list = []
     #ipdb.set_trace()
     for ff in files:
-        multi_list.append((ff,['LST_Day_CMG','Day_view_angl','QC_Day'], True))
+        multi_list.append((ff,['LST_Day','Day_view_angle','QC_Day'], True))
     pool = multiprocessing.Pool(processes=1)
     #ipdb.set_trace()
     res = pool.starmap(read_modis_monthly, multi_list)
-
-
 
 
 def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
@@ -50,12 +48,12 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
                 emierr = bb[4:6]
                 lsterr = bb[6:8]
 
-                if (mandat in ['00', '01']) & (lsterr in ['00']):
+                if (mandat in ['00']) & (lsterr in ['10', '11', '01']): #, '01']) & (emierr in ['10', '11']) & (lsterr in ['10', '11', '01']):     #, '01']
                     take = 1
             # print(bb)
             mask.append(take)
         mask = np.reshape(np.array(mask), bla.shape)
-
+        # print(np.sum(mask))
         return mask
 
     # Identify the data field.
@@ -65,7 +63,7 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
     print('Doing ', FILE_NAME)
 
     out = FILE_NAME.replace('.hdf', '.nc')
-    out = out.replace('raw', 'nc_new')
+    out = out.replace('raw', 'nc')
     if (save) & os.path.isfile(out):
         print('File exists, return')
         return
@@ -109,34 +107,37 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
         vra = attrs["valid_range"]
         valid_range = vra[0]
         try:
-            aoa = attrs["add_offset"]
+            aoa = attrs["_Offset"]
             add_offset = aoa[0]
         except:
             add_offset = 0
-            pass
         fva = attrs["_FillValue"]
         _FillValue = fva[0]
         try:
-            sfa = attrs["scale_factor"]
+            sfa = attrs["_Scale"]
             scale_factor = sfa[0]
         except:
-            pass
+            scale_factor = 1
         # ua=attrs["units"]
         # units = ua[0]
 
         # Handle fill value.
-        invalid = data == _FillValue
-        invalid = np.logical_or(invalid, data < valid_range[0])
-        invalid = np.logical_or(invalid, data > valid_range[1])
-        data[invalid] = np.nan
+        if type(_FillValue) != str:
+            invalid = (data == _FillValue)
+            invalid = np.logical_or(invalid, data < valid_range[0])
+            invalid = np.logical_or(invalid, data > valid_range[1])
+            data[invalid] = np.nan
 
         # Apply scale factor and offset.
+        data = data * scale_factor + add_offset
         if 'LST' in DATAFIELD_NAME:
-            data = data * scale_factor
-            data = (data * 100).astype(int)
-        if ('angl' in DATAFIELD_NAME) | ('Emis' in DATAFIELD_NAME):
-            data = data * scale_factor + add_offset
+            # ipdb.set_trace()
+            data = ((data-273.15) * 100).astype(int)
+
+        if ('angle' in DATAFIELD_NAME):
+            # ipdb.set_trace()
             data = ((data <= 40) & (data >= -40)).astype(int)
+
         # ipdb.set_trace()
         # data = np.ma.masked_array(data, np.isnan(data))
 
@@ -149,8 +150,8 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
 
     ql_mask = getMODISflag(ds['QC_Day'])
 
-    ds['LST_Day_CMG'].values[(ds['Day_view_angl'].values != 1) | (ql_mask != 1)] = -999
-    ds = ds.drop(['Day_view_angl'])
+    ds['LST_Day'].values[(ds['Day_view_angle'].values != 1) | (ql_mask != 1)] = -9999
+    ds = ds.drop(['Day_view_angle'])
     ds = ds.drop(['QC_Day'])
     if save:
         comp = dict(zlib=True, complevel=5)
