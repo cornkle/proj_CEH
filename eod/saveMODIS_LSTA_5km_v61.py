@@ -42,7 +42,7 @@ def saveAnomalyDay():
         pos = np.where(np.array(only_months) == m)
         for pp in pos[0]:
             #ipdb.set_trace()
-            gpos = np.arange(pp-5,pp+6)
+            gpos = np.arange(pp-15,pp+16)
             gpos[gpos<0]=0
             gpos[gpos>len(only_months)-1]=len(only_months)-1
             goodpos.extend(gpos)
@@ -57,8 +57,8 @@ def saveAnomalyDay():
 
         mf = xr.open_mfdataset(mstruc[m], concat_dim='time') #, combine='by_coords'
         print('Read mf data')
-        clim = mf['LST_Day'].where(mf['LST_Day']>0).groupby('time.dayofyear').sum(dim='time')
-        valid_days = mf['LST_Day'].where(mf['LST_Day']>0).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
+        clim = mf['LST_Day'].where(mf['LST_Day']>-500).groupby('time.dayofyear').sum(dim='time')
+        valid_days = mf['LST_Day'].where(mf['LST_Day']>-500).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
         del mf
         times=[]
 
@@ -67,9 +67,9 @@ def saveAnomalyDay():
         for tt in clim['dayofyear']:
             hh = tt.values-1
 
-            if (m == 1) & (hh >=360):
+            if (m == 1) & (hh >=350):
                     date = datetime.datetime(2007, 1, 1, 0, 0) + pd.Timedelta(str(hh)+' days')
-            elif (m == 12) & (hh <=7):
+            elif (m == 12) & (hh <=17):
                     date = datetime.datetime(2009, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
             else:
                 date = datetime.datetime(2008, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
@@ -96,18 +96,18 @@ def saveAnomalyDay():
 
         print('Calc date and produce data arrays with doy sum/count')
 
-        for tstep in climda.time[5:-5]:
+        for tstep in climda.time[15:-15]:
 
             print('Doing', tstep)
 
             dt = pd.to_datetime([tstep.values])
 
             try:
-                window1 = dt - pd.Timedelta('5days')
+                window1 = dt - pd.Timedelta('15days')
             except:
                 window1= dt
             try:
-                window2 = dt + pd.Timedelta('5days')
+                window2 = dt + pd.Timedelta('15days')
             except:
                 window2 = dt
 
