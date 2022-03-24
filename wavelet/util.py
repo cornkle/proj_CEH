@@ -43,6 +43,7 @@ DATASETS = {
     'METSRFC24': _create_dic(3, 0.25, 50, 10), # nb =14 also tested
     'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10),  # nb =14 also tested
     'NOWCAST': _create_dic(4, 0.4, 20, 10),  # nb =14 also tested
+    'LSTATREND5K_GLOBAL': _create_dic(5.55, 0.4, 15, 14),  # nb =14 also tested
 }
 
 
@@ -400,7 +401,7 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
     return dic
 #
 
-def waveletT1D(t, dx=None, dist=None,start=None, nb=None, dataset=None, mask=None):
+def waveletT1D(t, dx=None, dist=None,start=None, nb=None, dataset=None, mask=None, sign='positive'):
 
 
     dic = {}
@@ -415,6 +416,8 @@ def waveletT1D(t, dx=None, dist=None,start=None, nb=None, dataset=None, mask=Non
     #1D continuous wavelet analysis:
     #TIR
     tir=t.copy()
+    if sign!='positive':
+        tir = tir*-1
     tir[tir<0] = 0
     tir = (tir - np.mean(tir)) / np.std(tir)
 

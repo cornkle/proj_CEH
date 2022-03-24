@@ -136,7 +136,7 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
 
         if ('angle' in DATAFIELD_NAME):
             # ipdb.set_trace()
-            data = ((data <= 40) & (data >= -40)).astype(int)
+            data = data #(data <= 40) & (data >= -40)).astype(int)
 
         # ipdb.set_trace()
         # data = np.ma.masked_array(data, np.isnan(data))
@@ -150,9 +150,9 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
 
     ql_mask = getMODISflag(ds['QC_Day'])
 
-    ds['LST_Day'].values[(ds['Day_view_angle'].values != 1) | (ql_mask != 1)] = -9999
-    ds = ds.drop(['Day_view_angle'])
-    ds = ds.drop(['QC_Day'])
+    #ds['LST_Day'].values[(ds['Day_view_angle'].values != 1) | (ql_mask != 1)] = -9999
+    #ds = ds.drop(['Day_view_angle'])
+    #ds = ds.drop(['QC_Day'])
     if save:
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds.data_vars}
