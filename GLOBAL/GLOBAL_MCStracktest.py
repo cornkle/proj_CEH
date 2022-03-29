@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-15,25,8,12], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-15,20,6,12], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -72,8 +72,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 3
-        m2 = 11
+        m1 = 6
+        m2 = 9
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -89,8 +89,8 @@ def composite(h):
 
 
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) & (msg['hour'] >= h-1) & (msg['hour'] <= h+1) & (msg['pf_mcsstatus'] > 0) & (
-                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2)
+                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 2) & (msg['tracktime'] <= 5) &  (msg['hour'] == h)  & (
+                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2)    #& (msg['pf_mcsstatus'] > 0)  (msg['hour'] >= h-1) & (msg['hour'] <= h+1)
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
@@ -201,7 +201,7 @@ def file_loop(fi):
     #     print('Surface file not found, return')
     #     return None
 
-    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/night_anom/'
+    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/day_anom/'
     try:
         lsta = xr.open_dataset(alt_path + 'amsr2_25km_anom_' + fdate + '.nc')
     except:
@@ -243,19 +243,20 @@ def file_loop(fi):
         #     permcs += 1
         #####################
         #takes just strongest rain feature per MCS
-        maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
-        maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
-        cid += 1
-        if (maxrr < 1) | np.isnan(maxrr):
-            continue
-        lat = fi['pf_lat'][id].squeeze().flatten()[maxrrpos]
-        lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
+        # maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
+        # maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
+        # cid += 1
+        # if (maxrr < 1) | np.isnan(maxrr):
+        #     continue
+        # lat = fi['pf_lat'][id].squeeze().flatten()[maxrrpos]
+        # lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
        # ipdb.set_trace()
-    ############################
-    # for lat, lon in zip(fi['meanlat'], fi['meanlon']):
-    #     cid += 1
-    #     #direction = (fi[direction])[cid-1]
-    ####################
+    #######
+    if len(fi['pf_lat']) == 0:
+        return None
+    # for id in range(len(fi['pf_lat'])):
+    for lat, lon in zip(fi['pf_lat'][0], fi['pf_lon'][0]):   #zip(fi['meanlat'], fi['meanlon']):
+
         try:
             point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
         except KeyError:
@@ -395,4 +396,4 @@ def plot(h):
 
 
     plt.tight_layout()
-    f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
+    #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')

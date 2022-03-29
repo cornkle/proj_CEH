@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-12,18,9,20], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-15,20,6,12], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -45,7 +45,7 @@ MREGIONS = {'WAf' : [[-12,18,9,20], 'spac', 0], # last is hourly offset to UCT #
 
 }
 
-REGION = 'SAf'
+REGION = 'WAf'
 
 def composite(h):
     #pool = multiprocessing.Pool(processes=8)
@@ -72,8 +72,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 1
-        m2 = 12
+        m1 = 6
+        m2 = 9
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -89,8 +89,8 @@ def composite(h):
 
 
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) & (msg['hour'] >= h-1) & (msg['hour'] <= h+1) & (msg['pf_mcsstatus'] > 0) & (
-                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2)
+                 & (msg[lattag] <= domain[3]) & (msg['hour'] == h)  &  (msg['tracktime'] >= 2) & (msg['tracktime'] <= 5) & (
+                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) # & (msg['pf_mcsstatus'] > 0) (msg['hour'] >= h-1) & (msg['hour'] <= h+1)
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
@@ -144,7 +144,7 @@ def composite(h):
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
         #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_aqua_global_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -216,24 +216,25 @@ def file_loop(fi):
         daybefore.day).zfill(2) + '.nc')
 
 
-    lsta_da = lsta['LST_Day_CMG']/100  # soil_moisture_c1
+    lsta_da = lsta['LST_Day_CMG'].squeeze()  # soil_moisture_c1
+    lsta_da = lsta_da.where((np.isfinite(lsta_da)) & (lsta_da > -8000)) / 100
 
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
     all_cnt_list = []
 
-    cid = -1
+    cid = 0
 
 ############################
-    for id in range(len(fi['direction'])):
+    #for id in range(len(fi['direction'])):
 
-        direction = fi['direction'][id]
-        if np.isnan(direction):
-            continue
+        # direction = fi['direction'][id]
+        # if np.isnan(direction):
+        #     continue
 
 
-        ##################
+            ##################
         # permcs = 0
         # for lat, lon in zip(fi['pf_lat'][id].squeeze().flatten(), fi['pf_lon'][id].squeeze().flatten()):  #zip(fi['meanlat'], fi['meanlon'])
         #     cid += 1
@@ -242,59 +243,64 @@ def file_loop(fi):
         #         permcs +=1
         #         continue
         #     permcs += 1
-        #####################
-        #takes just strongest rain feature per MCS
-        maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
-        maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
-        cid += 1
-        if (maxrr < 1) | np.isnan(maxrr):
-            continue
-        lat = fi['pf_lat'][id].squeeze().flatten()[maxrrpos]
-        lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
+            #####################
+            #takes just strongest rain feature per MCS
+        # maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
+        # maxrr = np.max(fi['pf_maxrainrate'][id].squeeze().flatten())
+        # cid += 1
+        # if (maxrr < 1) | np.isnan(maxrr):
+        #     continue
+        # lat = fi['pf_lat'][id].squeeze().flatten()[maxrrpos]
+        # lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
        # ipdb.set_trace()
     ############################
-    # for lat, lon in zip(fi['meanlat'], fi['meanlon']):
-    #     cid += 1
-    #     #direction = (fi[direction])[cid-1]
-    ####################
-        try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.05)
-        except KeyError:
-            print('point index error')
+    if len(fi['pf_lat']) == 0:
+        return None
+    # for id in range(len(fi['pf_lat'])):
+    for lat, lon in zip(fi['pf_lat'][0], fi['pf_lon'][0]):   #zip(fi['meanlat'], fi['meanlon']):
+
+    #for lat, lon in zip(fi['meanlat'], fi['meanlon']):
+            #direction = (fi[direction])[cid-1]
+        ####################
+            try:
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
+            except KeyError:
+                print('point index error')
+                #ipdb.set_trace()
+                continue
+
+            plat = point['lat'].values
+            plon = point['lon'].values
             #ipdb.set_trace()
-            continue
+            xpos = np.where(lsta_da['lon'].values == plon)
+            try:
+                xpos = int(xpos[0])
+            except:
+                continue
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
 
-        plat = point['lat'].values
-        plon = point['lon'].values
-        #ipdb.set_trace()
-        xpos = np.where(lsta_da['lon'].values == plon)
-        try:
-            xpos = int(xpos[0])
-        except:
-            continue
-        ypos = np.where(lsta_da['lat'].values == plat)
-        ypos = int(ypos[0])
+            try:
+                kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direction)
+            except TypeError:
+                continue
 
-        try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direction)
-        except TypeError:
-            continue
+            # f = plt.figure()
+            # ax = f.add_subplot(121)
+            # cb = ax.contourf(kernel2, cmap='RdBu')
+            # plt.colorbar(cb)
+            # ax = f.add_subplot(122)
+            # cb = ax.contourf(cnt, cmap='viridis')
+            # plt.colorbar(cb)
+            # f.show()
 
-        # f = plt.figure()
-        # ax = f.add_subplot(121)
-        # cb = ax.contourf(kernel2, cmap='RdBu')
-        # plt.colorbar(cb)
-        # ax = f.add_subplot(122)
-        # cb = ax.contourf(cnt, cmap='viridis')
-        # plt.colorbar(cb)
-        # f.show()
-
-        cnt_all = np.zeros_like(cnt)+1
-        kernel2_list.append(kernel2)
-        kernel3_list.append(kernel3)
-        cnt_list.append(cnt)
-        all_cnt_list.append(cnt_all)
-
+            cnt_all = np.zeros_like(cnt)+1
+            kernel2_list.append(kernel2)
+            kernel3_list.append(kernel3)
+            cnt_list.append(cnt)
+            all_cnt_list.append(cnt_all)
+            cid += 1
+    #####################################
     if kernel2_list == []:
         return None
 
@@ -307,6 +313,7 @@ def file_loop(fi):
         cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
         allcnt_sum = np.nansum(np.stack(all_cnt_list, axis=0), axis=0)
 
+
     print('Returning')
     del lsta
     return (kernel2_sum, kernel3_sum, cnt_sum, allcnt_sum)
@@ -315,7 +322,7 @@ def file_loop(fi):
 def plot(h):
     h = h - (MREGIONS[REGION])[2]
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_global_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
     #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
     y1 = 2012
     y2 = 2020
@@ -350,10 +357,10 @@ def plot(h):
     ax.axhline(extent, linestyle='dashed', color='k')
     print('Extent', extent)
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
     #ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 30).astype(int))
     ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     plt.colorbar(label='%')
@@ -366,9 +373,9 @@ def plot(h):
     plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
     ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     ax.axvline(extent, linestyle='dashed', color='k')
@@ -396,4 +403,5 @@ def plot(h):
 
 
     plt.tight_layout()
-    f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
+    #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
+    plt.savefig(cnst.elements_drive + '/MODIS_LSTA_2012-2019_SWA_largestPF.jpg')

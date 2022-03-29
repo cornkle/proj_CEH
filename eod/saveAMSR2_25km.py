@@ -63,7 +63,7 @@ def saveAnomalyDay():
         pos = np.where(np.array(only_months) == m)
         for pp in pos[0]:
             #ipdb.set_trace()
-            gpos = np.arange(pp-5,pp+6)
+            gpos = np.arange(pp-15,pp+16)
             gpos[gpos<0]=0
             gpos[gpos>len(only_months)-1]=len(only_months)-1
             goodpos.extend(gpos)
@@ -82,11 +82,11 @@ def saveAnomalyDay():
         # 'time', [ str(m).zfill(2) + '-' + str(d).zfill(2) for (m,d) in zip(mf['time.month'].values,  mf['time.day'].values)])
 
 
-        clim = mf['soil_moisture_c1'].groupby('time.dayofyear').sum(dim='time')
+        clim = mf['soil_moisture_c1'].where(mf['soil_moisture_c1']>=10).groupby('time.dayofyear').sum(dim='time')
         #clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').sum(dim='time')
-        ts = mf['ts'].groupby('time.dayofyear').sum(dim='time')
+        ts = mf['ts'].groupby('time.dayofyear').where(mf['soil_moisture_c1']>=10).sum(dim='time')
 
-        valid_days = mf['soil_moisture_c1'].groupby('time.dayofyear').count(dim='time')  # number of valid days per month
+        valid_days = mf['soil_moisture_c1'].where(mf['soil_moisture_c1']>=10).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
 
         times=[]
         #ipdb.set_trace()
@@ -134,18 +134,18 @@ def saveAnomalyDay():
         countda = countda.sortby(countda.time)
 
 
-        for tstep in climda.time[5:-5]:
+        for tstep in climda.time[15:-15]:
 
             print('Doing', tstep)
 
             dt = pd.to_datetime([tstep.values])
 
             try:
-                window1 = dt - pd.Timedelta('5days')
+                window1 = dt - pd.Timedelta('15days')
             except:
                 window1= dt
             try:
-                window2 = dt + pd.Timedelta('5days')
+                window2 = dt + pd.Timedelta('15days')
             except:
                 window2 = dt
 
@@ -400,7 +400,7 @@ def writeAnomaly():
         var_new = ['LST', 'SM'] #'SM2'
         for vo, vn in zip(var_orig,var_new):
 
-            out[vo].values = day[vo].values - clim[vn].values
+            out[vo].values = day[vo].where(day['soil_moisture_c1']>=10).values - clim[vn].values
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
