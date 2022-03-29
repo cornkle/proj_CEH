@@ -48,7 +48,7 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
                 emierr = bb[4:6]
                 lsterr = bb[6:8]
 
-                if (mandat in ['00']) | ((mandat in ['01']) & (lsterr in ['10', '11', '01']) & (quali in ['00','10'])): #, '01']) & (emierr in ['10', '11']) & (lsterr in ['10', '11', '01']):     #, '01']
+            if (mandat in ['00']) | ((mandat in ['01']) & (lsterr in ['10', '11', '01']) & (quali in ['00','10'])): #, '01']) & (emierr in ['10', '11']) & (lsterr in ['10', '11', '01']):     #, '01']
                     take = 1
             # print(bb)
             mask.append(take)

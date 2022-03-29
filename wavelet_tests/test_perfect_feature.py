@@ -74,11 +74,11 @@ def ellipse():
     ellipse[yycirc, xxcirc] = -50
 
 
-    wav = util.waveletLSTA_power(ellipse, 1)
+    wav = util.applyHat_pure(ellipse, dataset='LSTATREND5K')
     lab = 'power'
     wll = wav[lab]
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     arr = np.round(wav['scales'])
     maxs = np.zeros_like(wll)

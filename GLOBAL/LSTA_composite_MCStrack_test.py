@@ -26,7 +26,7 @@ def composite(h, eh):
 
     path = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/'
 
-    for y in range(2004,2010):
+    for y in range(2012,2020):
 
         files = glob.glob(cnst.elements_drive + '/Africa/WestAfrica/cores_bigDomain/*_'+str(y)+'_*.nc')
         msg = xr.open_mfdataset(files)
@@ -37,7 +37,7 @@ def composite(h, eh):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = msg.sel(lat=slice(9, 20), lon=slice(-15, 15))
+        msg = msg.sel(lat=slice(6, 12), lon=slice(-15,20))
 
         msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
@@ -58,7 +58,7 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_new_LSTA_5km_2002-2006_aqua_CORES_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_new_LSTA_5km_2012-2019_MSG_CORES_DAY_6-12N_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -73,8 +73,8 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         xpos = xpos - lx
         ypos = ypos - ly
 
-    dist = 60
-    #dist=100
+    #dist = 60 #MODIS
+    dist=100 # MSG
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -114,9 +114,13 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
     #alt_path = cnst.AMSRE_ANO_DAY
 
-    alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_v6/'
+    # alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/' # MODIS
+    # full_path = alt_path + 'aqua_05deg_anom_' + fdate + '.nc' # MODIS
+
+    full_path = cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf_onCores_interpolate_1700_oldSeonaid/HDF5_LSASAF_ANOM_MSG_LST_MSG-Disk_' + fdate + '1700.nc'
+
     try:
-        lsta = xr.open_dataset(alt_path + 'aqua_05deg_anom_' + fdate + '.nc')
+        lsta = xr.open_dataset(full_path)
     except:
        print('Surface file not found, return')
        return None
@@ -128,15 +132,17 @@ def file_loop(fi):
     #     print('Surface file not found, return')
     #     return None
 
-    lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = u_darrays.flip_lat(lsta)
+    # lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day)) # MODIS
+    # lsta = u_darrays.flip_lat(lsta) # MODIS
     lsta = lsta.sel(lon=slice(-19, 20), lat=slice(4, 25))
 
     print('Doing '+ 'LSTA_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
     #lsta_da = lsta['SM'].squeeze()
-    lsta_da = lsta['LST_Day_CMG'].squeeze()/100  # soil_moisture_c1
+    # lsta_da = lsta['LST_Day_CMG'].squeeze()#/100  # MODIS
+    lsta_da = lsta['lsta'].squeeze() #MSG
+    lsta_da = lsta_da.where((np.isfinite(lsta_da)) & (lsta_da > -8000)) / 100
 
     # topo = xr.open_dataset(cnst.LSTA_TOPO)
     # ttopo = topo['h']
@@ -239,13 +245,98 @@ def file_loop(fi):
 
 
 
+def plot2(h):
+    hour = h
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_"  # MODIS 5KM plot
+    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MSG_CORES_DAY_6-12N_" # MSG 3km
+    y1 = 2012
+    y2 = 2016
+
+    dic = pkl.load(open(
+        pin + str(y1) + '_h' + str(h).zfill(2) + ".p", "rb"))
+
+    def coll(dic, h, year):
+        print(h)
+        core = pkl.load(open(
+            pin + str(year) + '_h' + str(h).zfill(2) + ".p", "rb"))
+        for id, k in enumerate(core.keys()):
+            try:
+                dic[k] = dic[k] + core[k]
+            except KeyError:
+                dic[k] = core[k]
+
+    for y in range(y1 + 1, y2):
+        coll(dic, h, y)
+
+    extent = 60
+
+    f = plt.figure(figsize=(15, 4))
+    ax = f.add_subplot(131)
+
+    thresh = 0.9
+
+    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both')
+    plt.plot(extent, extent, 'bo')
+    ax.axvline(extent, linestyle='dashed', color='k')
+    ax.axhline(extent, linestyle='dashed', color='k')
+    print('Extent', extent)
+    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    #ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 30).astype(int))
+    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    plt.colorbar(label='%')
+    plt.title('SWA '+str(y1)+'-'+str(y2)+' box anom., Nb: ' + str(np.max(dic['cnt'])) + '| ' + str(h).zfill(2) + '00UTC',
+              fontsize=10)
+
+
+    ax = f.add_subplot(132)
+
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    ax.axvline(extent, linestyle='dashed', color='k')
+    ax.axhline(extent, linestyle='dashed', color='k')
+    plt.colorbar(label='%')
+    plt.title('Seasonal anomaly',
+              fontsize=10)
+
+
+    ax = f.add_subplot(133)
+
+    plt.contourf(dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_xlabel('Degrees')
+    ax.set_ylabel('Degrees')
+    ax.axvline(extent, linestyle='dashed', color='k')
+    ax.axhline(extent, linestyle='dashed', color='k')
+    plt.colorbar(label='n')
+    plt.title('Valid count',
+              fontsize=10)
+
+
+    plt.tight_layout()
+    #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
+    plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_SWA_cores.jpg')
+
 
 def plot(h):
     hour=h
-    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_AMSR10km_"
-    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2002-2006_aqua_CORES_DAY_"
-    y1 = 2004
-    y2 = 2010
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_" #  MODIS 5KM plot
+    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MSG_CORES_DAY_6-12N_" # MSG 3km
+    y1 = 2012
+    y2 = 2019
 
     dic = pkl.load(open(
             pin+str(y1)+'_h'+str(h).zfill(2)+".p", "rb"))
@@ -268,28 +359,28 @@ def plot(h):
     f = plt.figure(figsize=(14, 4))
     ax = f.add_subplot(131)
 
-    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r',  levels=np.linspace(-1,1,10), extend='both')
+    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r',  levels=np.linspace(-1,1,12), extend='both')
     plt.plot(extent, extent, 'bo')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.colorbar(label='%')
-    plt.title('Regional anomaly, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
+    plt.colorbar(label='K')
+    plt.title('Regional, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep 2004-2010',
               fontsize=10)
 
 
     ax = f.add_subplot(132)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(-1,1,10), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(-1,1,12), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.colorbar(label='%')
-    plt.title('Seasonal anomaly',
+    plt.colorbar(label='K')
+    plt.title('Seasonal',
               fontsize=10)
 
 
@@ -307,7 +398,7 @@ def plot(h):
 
 
     plt.tight_layout()
-    # plt.savefig(cnst.network_data + "/figs/LSTA-bullshit/AGU/" + +str(hour).zfill(2)+'_allplots.png')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
+    plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_SWA.jpg')#str(hour).zfill(2)+'00UTC_lsta_fulldomain_dominant<60.png')
     # plt.close()
 
 
@@ -347,7 +438,7 @@ def plot_ts(h):
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     plt.colorbar(label='K')
-    plt.title('Regional anomaly, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
+    plt.title('Regional, Nb cores: ' + str(np.max(dic['cnt'])) + '| ' + str(hour).zfill(2) + '00UTC, Jun-Sep',
               fontsize=10)
 
 
@@ -360,7 +451,7 @@ def plot_ts(h):
     ax.set_xlabel('km')
     ax.set_ylabel('km')
     plt.colorbar(label='K')
-    plt.title('Seasonal anomaly',
+    plt.title('Seasonal',
               fontsize=10)
 
 

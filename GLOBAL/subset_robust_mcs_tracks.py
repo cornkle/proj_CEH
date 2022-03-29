@@ -56,14 +56,14 @@ def subset_file(infile, outdir, lon_box, lat_box):
     return status
 
 
-def main():
+def main(reg, inds,lon1, lon2, lat1, lat2):
     # Read from input
-    lon_min = 10. #float(sys.argv[1])
-    lon_max = 55. #float(sys.argv[2])
-    lat_min = -37. #float(sys.argv[3])
-    lat_max = -8. #float(sys.argv[4])
-    inpath =  '/media/ck/Elements/global/MCS_Feng/tracks/spac/'#sys.argv[5]
-    outdir = '/media/ck/Elements/global/MCS_Feng/tracks/custom/south_africa/' #sys.argv[6]
+    lon_min = lon1 #float(sys.argv[1])
+    lon_max = lon2 #float(sys.argv[2])
+    lat_min = lat1 #float(sys.argv[3])
+    lat_max = lat2 #float(sys.argv[4])
+    inpath =  '/media/ck/Elements/global/MCS_Feng/tracks/'+inds[1]+'/'#sys.argv[5]
+    outdir = '/media/ck/Elements/global/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
 
     # Subset region boundary
     lon_box = [lon_min, lon_max]
@@ -81,6 +81,18 @@ def main():
     for infile in glob.glob(inpath+'*.nc'):
         status = subset_file(infile, outdir, lon_box, lat_box)
 
+mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
+ 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
+ 'india' : [[70,90, 5,30], 'asia', 5], # 7
+ 'china' : [[105,115,25,40], 'asia', 8 ], # 4
+ 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
+ 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
 
-if __name__ == "__main__":
-    main()
+}
+
+for reg in ['WAf', 'SAf', 'india', 'china', 'australia', 'sub_SA', 'trop_SA', 'GPlains']:
+    inds = mregions[reg]
+    lon1, lon2, lat1, lat2 = inds[0]
+    main(reg, inds, lon1, lon2, lat1, lat2)
