@@ -11,7 +11,7 @@ from utils import constants as cnst
 import numpy as np
 import pandas as pd
 import datetime
-from scipy.interpolate import griddata
+#from scipy.interpolate import griddata
 import ipdb
 
 def saveNetcdf(day=True):
@@ -24,7 +24,7 @@ def saveNetcdf(day=True):
         dstring = 'night'
 
 
-    sm_folder = cnst.elements_drive + 'global/AMSR2/daily/25km/'+dstring+'/raw'
+    sm_folder = cnst.lmcs_drive + '/AMSR2/daily/25km/'+dstring+'/raw'
     pool = multiprocessing.Pool(processes=3)
     files = glob.glob(sm_folder+'/LPRM*.nc4')
 
@@ -43,10 +43,10 @@ def saveNetcdf(day=True):
 from utils import u_arrays
 def saveAnomalyDay():
 
-    dtag = 'day'
+    dtag = 'night'
 
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+dtag+'/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.lmcs_drive + '/AMSR2/daily/25km/'+dtag+'/nc/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -84,7 +84,7 @@ def saveAnomalyDay():
 
         clim = mf['soil_moisture_c1'].where(mf['soil_moisture_c1']>=10).groupby('time.dayofyear').sum(dim='time')
         #clim2 = mf['soil_moisture_c2'].groupby('time.dayofyear').sum(dim='time')
-        ts = mf['ts'].groupby('time.dayofyear').where(mf['soil_moisture_c1']>=10).sum(dim='time')
+        ts = mf['ts'].where(mf['soil_moisture_c1']>=10).groupby('time.dayofyear').sum(dim='time')
 
         valid_days = mf['soil_moisture_c1'].where(mf['soil_moisture_c1']>=10).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
 
@@ -96,9 +96,9 @@ def saveAnomalyDay():
             # mmonth = int(hh[0:2])
             # dday = int(hh[3:5])
             #ipdb.set_trace()
-            if (m == 1) & (hh >=360):
+            if (m == 1) & (hh >=350):
                     date = datetime.datetime(2007, 1, 1, 0, 0) + pd.Timedelta(str(hh)+' days')
-            elif (m == 12) & (hh <=7):
+            elif (m == 12) & (hh <=17):
                     date = datetime.datetime(2009, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
             else:
                 date = datetime.datetime(2008, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
@@ -195,7 +195,7 @@ def saveAnomalyDay():
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+dtag+'_clim/amsr2_25km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            ds.to_netcdf(path=cnst.lmcs_drive + 'AMSR2/daily/25km/'+dtag+'_clim_v2/amsr2_25km_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
             print('Written')
             del ds, da,  dtt #da2,
         del climda,  temp, countda #climda2,
@@ -206,7 +206,7 @@ def saveAnomalyDay():
 def saveStddevDay():
     tag = 'night'
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.lmcs_drive + '/AMSR2/daily/25km/'+tag+'/nc/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -258,9 +258,9 @@ def saveStddevDay():
             # mmonth = int(hh[0:2])
             # dday = int(hh[3:5])
             #ipdb.set_trace()
-            if (m == 1) & (hh >=360):
+            if (m == 1) & (hh >=350):
                     date = datetime.datetime(2007, 1, 1, 0, 0) + pd.Timedelta(str(hh)+' days')
-            elif (m == 12) & (hh <=7):
+            elif (m == 12) & (hh <=17):
                     date = datetime.datetime(2009, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
             else:
                 date = datetime.datetime(2008, 1, 1, 0, 0) + pd.Timedelta(str(hh) + ' days')
@@ -369,7 +369,7 @@ def saveStddevDay():
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'_clim/amsr2_25km_stddev_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            ds.to_netcdf(path=cnst.lmcs_drive + 'AMSR2/daily/25km/'+tag+'_clim/amsr2_25km_stddev_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
             del ds, da, dtt #da2,
         del climda, temp #climda2,
@@ -379,7 +379,7 @@ def writeAnomaly():
 
     tag = 'day'
 
-    files = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'/nc/*.nc')
+    files = glob.glob(cnst.lmcs_drive + 'AMSR2/daily/25km/'+tag+'/nc/*.nc')
 
     for f in files:
         print('Doing', f)
@@ -387,7 +387,7 @@ def writeAnomaly():
         basename = os.path.basename(f)
 
         day = xr.open_dataset(f)
-        climpath = cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'_clim/'
+        climpath = cnst.lmcs_drive + 'AMSR2/daily/25km/'+tag+'_clim_v2/'
 
         try:
             clim = xr.open_dataset(climpath + 'amsr2_25km_clim_2008'+basename[-7:-3]+'.nc')
@@ -405,5 +405,5 @@ def writeAnomaly():
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
         #outf = basename.replace(".nc", "_anom.nc")
-        out.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'_anom/amsr2_25km_anom_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        out.to_netcdf(path=cnst.lmcs_drive + 'AMSR2/daily/25km/'+tag+'_anom_v2/amsr2_25km_anom_'+basename[-11:-3]+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 

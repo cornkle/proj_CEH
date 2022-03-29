@@ -7,8 +7,9 @@ input = '/prj/global_water/LST_trend_global/'
 
 #all_data = xr.open_dataset(input+'lst_monthly_trends.nc')
 all_data = xr.open_dataset(input+'lst_monthly_trends.nc')
-#box = [-18,20,3,12]
-all_data = all_data#.where((all_data.Longitude>box[0])&(all_data.Longitude<box[1])&(all_data.Latitude>box[2])&(all_data.Latitude<box[3]), drop=True)
+box = [-18,20,3,12]
+box = [-360, 360, -360, 360]
+all_data = all_data.where((all_data.Longitude>box[0])&(all_data.Longitude<box[1])&(all_data.Latitude>box[2])&(all_data.Latitude<box[3]), drop=True)
 months = all_data['LST_trend']
 
 ylist = []
@@ -19,7 +20,7 @@ for ts in months:
     print(cnt)
     mask = np.isfinite(ts.values)
     ts.values[np.isnan(ts.values)] = 0.01
-    dic = util.waveletT1D(ts.values, dataset='LSTATREND5K_GLOBAL', mask=mask, sign='positive')
+    dic = util.waveletT1D(ts.values, dataset='LSTATREND5K_GLOBAL', mask=mask, sign='negative')
     # del ts
 
     powery = dic['powery']
@@ -50,6 +51,6 @@ for ts in months:
     enc = {var: comp for var in ds.data_vars}
 
     ds.to_netcdf(
-        path=input+'LSTtrend_scales_perMonth_POSITIVE_' + str(
+        path=input+'LSTtrend_scales_perMonth_NEGATIVE_' + str(
             cnt).zfill(2) + '.nc', mode='w', encoding=enc, format='NETCDF4')
     del ds

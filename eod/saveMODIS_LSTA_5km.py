@@ -22,7 +22,7 @@ def saveAnomalyDay():
     dtag = 'aqua'
 
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.lmcs_drive+'MODIS_LST/'+dtag+'/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.lmcs_drive+'MODIS_LST/'+dtag+'/nc_v61/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -57,8 +57,8 @@ def saveAnomalyDay():
 
         mf = xr.open_mfdataset(mstruc[m], concat_dim='time') #, combine='by_coords'
         print('Read mf data')
-        clim = mf['LST_Day_CMG'].where(mf['LST_Day_CMG']>0).groupby('time.dayofyear').sum(dim='time')
-        valid_days = mf['LST_Day_CMG'].where(mf['LST_Day_CMG']>0).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
+        clim = mf['LST_Day'].where(mf['LST_Day']>0).groupby('time.dayofyear').sum(dim='time')
+        valid_days = mf['LST_Day'].where(mf['LST_Day']>0).groupby('time.dayofyear').count(dim='time')  # number of valid days per month
         del mf
         times=[]
 
@@ -141,7 +141,7 @@ def saveAnomalyDay():
 
             comp = dict(zlib=True, complevel=5)
             encoding = {var: comp for var in ds.data_vars}
-            ds.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+dtag+'/clim/'+dtag+'_05deg_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+            ds.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+dtag+'/clim_v61/'+dtag+'_05deg_clim_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
             print('Written')
             del ds, da#, da2, dtt
         del climda, countda #climda2, temp,
@@ -152,7 +152,7 @@ def saveAnomalyDay():
 def saveStddevDay():
     tag = 'night'
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
-    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'/nc/')
+    allfiles = u_arrays.locate('.nc', cnst.elements_drive + 'global/AMSR2/daily/25km/'+tag+'/nc_v61/')
     #ipdb.set_trace()
     mstruc = {}
     for m in range(1,13):
@@ -325,7 +325,7 @@ def writeAnomaly():
 
     tag = 'aqua'
 
-    files = glob.glob(cnst.lmcs_drive+'MODIS_LST/'+tag+'/nc/*.nc')
+    files = glob.glob(cnst.lmcs_drive+'MODIS_LST/'+tag+'/nc_v61/*.nc')
 
     for f in files:
         print('Doing', f)
@@ -333,7 +333,7 @@ def writeAnomaly():
         basename = os.path.basename(f)
 
         day = xr.open_dataset(f)
-        climpath = cnst.lmcs_drive+'MODIS_LST/'+tag+'/clim/'
+        climpath = cnst.lmcs_drive+'MODIS_LST/'+tag+'/clim_v61/'
 
         isdoy = f[-24:-21]
         year = f[-28:-24]
@@ -349,7 +349,7 @@ def writeAnomaly():
 
         out = day.copy()
 
-        var_orig = ['LST_Day_CMG']
+        var_orig = ['LST_Day']
         var_new = ['LST']
         for vo, vn in zip(var_orig,var_new):
             ipdb.set_trace()
@@ -359,5 +359,5 @@ def writeAnomaly():
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
         #outf = basename.replace(".nc", "_anom.nc")
-        out.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+tag+'/anom/aqua_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        out.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+tag+'/anom_v61/aqua_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
