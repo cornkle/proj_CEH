@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-15,20,6,12], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-15,25,9,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -72,8 +72,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 6
-        m2 = 9
+        m1 = 5
+        m2 = 10
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -81,21 +81,16 @@ def composite(h):
 
             msg[k] = np.array(msg[k])
 
-        # inmask = (msg[lontag]>=domain[0])&(msg[lontag]<=domain[1])&(msg[lattag]>=domain[2])\
-        #        &(msg[lattag]<=domain[3]) & (msg['hour'] == h) & (msg['mcs_status'] >= 0) & (msg['pf_landfrac'] > 0.8)  & (msg['month']>=m1) & (msg['month']<=m2)
-        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-        #     inmask = (msg[lontag]>=domain[0])&(msg[lontag]<=domain[1])&(msg[lattag]>=domain[2])\
-        #        &(msg[lattag]<=domain[3]) & (msg['hour'] == h) & (msg['mcs_status'] >= 0)
-
-
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) & (msg['hour'] == h)  &  (msg['tracktime'] >= 2) & (msg['tracktime'] <= 5) & (
-                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) # & (msg['pf_mcsstatus'] > 0) (msg['hour'] >= h-1) & (msg['hour'] <= h+1)
+                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 5) & (msg['ccs_area'] >= 1000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
+                             msg['pf_landfrac'] > 0.9)  & ((msg['month']>=10) | (msg['month']<=5))
+
+
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                     & (msg[lattag] <= domain[3]) & (msg['hour'] >= h - 1) & (msg['hour'] <= h + 1) & (
-                                 msg['pf_mcsstatus'] > 0) & (msg['month']>=m1) & (msg['month']<=m2)
+                     & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 2) & (msg['tracktime'] <= 6) & (msg['ccs_area'] >= 1000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)\
+                     & (msg['month']>=m1) & (msg['month']<=m2)
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
@@ -112,6 +107,7 @@ def composite(h):
 
             msg['date'].append(bbt.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
+
         msg['date'] = np.array(msg['date'])
         msg['day'] = np.array(msg['day'])
         #ipdb.set_trace()
@@ -153,7 +149,6 @@ def cut_kernel(xpos, ypos, arr, wd = None):
 
     dist = 60
     #dist=100
-
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
 
@@ -227,22 +222,22 @@ def file_loop(fi):
     cid = 0
 
 ############################
-    #for id in range(len(fi['direction'])):
-
-        # direction = fi['direction'][id]
-        # if np.isnan(direction):
-        #     continue
-
-
-            ##################
-        # permcs = 0
-        # for lat, lon in zip(fi['pf_lat'][id].squeeze().flatten(), fi['pf_lon'][id].squeeze().flatten()):  #zip(fi['meanlat'], fi['meanlon'])
-        #     cid += 1
-        #     if ((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs] < 1) | np.isnan((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs]):
-        #         print('Pf rainrate below 5mm, continue')
-        #         permcs +=1
-        #         continue
-        #     permcs += 1
+    # for id in range(len(fi['direction'])):
+    #
+    #     direct = fi['direction'][id]
+    #     if np.isnan(direct):
+    #         continue
+    #
+    #
+    #         #################
+    #     permcs = 0
+    #     for lat, lon in zip(fi['pf_lat'][id].squeeze().flatten(), fi['pf_lon'][id].squeeze().flatten()):  #zip(fi['meanlat'], fi['meanlon'])
+    #         cid += 1
+    #         # if ((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs] < 1) | np.isnan((fi['pf_maxrainrate'][id]).squeeze().flatten()[permcs]):
+    #         #     print('Pf rainrate below 5mm, continue')
+    #         #     permcs +=1
+    #         #     continue
+    #         permcs += 1
             #####################
             #takes just strongest rain feature per MCS
         # maxrrpos = np.argmax(fi['pf_maxrainrate'][id].squeeze().flatten())
@@ -254,52 +249,52 @@ def file_loop(fi):
         # lon = fi['pf_lon'][id].squeeze().flatten()[maxrrpos]
        # ipdb.set_trace()
     ############################
-    if len(fi['pf_lat']) == 0:
-        return None
-    # for id in range(len(fi['pf_lat'])):
-    for lat, lon in zip(fi['pf_lat'][0], fi['pf_lon'][0]):   #zip(fi['meanlat'], fi['meanlon']):
+    # if len(fi['pf_lat']) == 0:
+    #     return None
+    # # for id in range(len(fi['pf_lat'])):
+    for lat, lon, direct in zip(fi['pf_lat'][0], fi['pf_lon'][0], fi['direction']):   #zip(fi['meanlat'], fi['meanlon']):
 
-    #for lat, lon in zip(fi['meanlat'], fi['meanlon']):
+    #for lat, lon, direct in zip(fi['meanlat'], fi['meanlon'], fi['direction']):
             #direction = (fi[direction])[cid-1]
         ####################
-            try:
-                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.03)
-            except KeyError:
-                print('point index error')
-                #ipdb.set_trace()
-                continue
-
-            plat = point['lat'].values
-            plon = point['lon'].values
+        try:
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
+        except KeyError:
+            print('point index error')
             #ipdb.set_trace()
-            xpos = np.where(lsta_da['lon'].values == plon)
-            try:
-                xpos = int(xpos[0])
-            except:
-                continue
-            ypos = np.where(lsta_da['lat'].values == plat)
-            ypos = int(ypos[0])
+            continue
 
-            try:
-                kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direction)
-            except TypeError:
-                continue
+        plat = point['lat'].values
+        plon = point['lon'].values
+        #ipdb.set_trace()
+        xpos = np.where(lsta_da['lon'].values == plon)
+        try:
+            xpos = int(xpos[0])
+        except:
+            continue
+        ypos = np.where(lsta_da['lat'].values == plat)
+        ypos = int(ypos[0])
 
-            # f = plt.figure()
-            # ax = f.add_subplot(121)
-            # cb = ax.contourf(kernel2, cmap='RdBu')
-            # plt.colorbar(cb)
-            # ax = f.add_subplot(122)
-            # cb = ax.contourf(cnt, cmap='viridis')
-            # plt.colorbar(cb)
-            # f.show()
+        try:
+            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direct)
+        except TypeError:
+            continue
 
-            cnt_all = np.zeros_like(cnt)+1
-            kernel2_list.append(kernel2)
-            kernel3_list.append(kernel3)
-            cnt_list.append(cnt)
-            all_cnt_list.append(cnt_all)
-            cid += 1
+        # f = plt.figure()
+        # ax = f.add_subplot(121)
+        # cb = ax.contourf(kernel2, cmap='RdBu')
+        # plt.colorbar(cb)
+        # ax = f.add_subplot(122)
+        # cb = ax.contourf(cnt, cmap='viridis')
+        # plt.colorbar(cb)
+        # f.show()
+
+        cnt_all = np.zeros_like(cnt)+1
+        kernel2_list.append(kernel2)
+        kernel3_list.append(kernel3)
+        cnt_list.append(cnt)
+        all_cnt_list.append(cnt_all)
+        cid += 1
     #####################################
     if kernel2_list == []:
         return None
@@ -317,6 +312,7 @@ def file_loop(fi):
     print('Returning')
     del lsta
     return (kernel2_sum, kernel3_sum, cnt_sum, allcnt_sum)
+
 
 
 def plot(h):
@@ -349,7 +345,7 @@ def plot(h):
     f = plt.figure(figsize=(15, 4))
     ax = f.add_subplot(131)
 
-    thresh = 0.9
+    thresh = np.percentile(dic['regional'] / dic['cnt'], 99)
 
     plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both')
     plt.plot(extent, extent, 'bo')
@@ -363,7 +359,7 @@ def plot(h):
     ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
     ax.set_xlabel('km')
     ax.set_ylabel('km')
-    plt.colorbar(label='%')
+    plt.colorbar(label='K')
     plt.title(REGION+' '+str(y1)+'-'+str(y2)+' box anom., Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
@@ -380,7 +376,7 @@ def plot(h):
     ax.set_ylabel('km')
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
-    plt.colorbar(label='%')
+    plt.colorbar(label='K')
     plt.title('Seasonal anomaly',
               fontsize=10)
 
@@ -405,3 +401,74 @@ def plot(h):
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
     plt.savefig(cnst.elements_drive + '/MODIS_LSTA_2012-2019_SWA_largestPF.jpg')
+
+
+
+def plot2(h):
+    h = h - (MREGIONS[REGION])[2]
+    print('Hour: ', h)
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
+    # pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
+    y1 = 2012
+    y2 = 2020
+
+    dic = pkl.load(open(
+        pin + str(y1) + '_h' + str(h).zfill(2) + ".p", "rb"))
+
+    def coll(dic, h, year):
+        print(h)
+        core = pkl.load(open(
+            pin + str(year) + '_h' + str(h).zfill(2) + ".p", "rb"))
+        for id, k in enumerate(core.keys()):
+            try:
+                dic[k] = dic[k] + core[k]
+            except KeyError:
+                dic[k] = core[k]
+
+    for y in range(y1 + 1, y2):
+        print('Coll', y)
+        coll(dic, h, y)
+
+    extent = 60
+
+    f = plt.figure(figsize=(10, 4))
+
+    thresh= np.percentile((dic['regional'] / dic['cnt'])[np.isfinite((dic['regional'] / dic['cnt']))], 99)#0.9
+
+
+    ax = f.add_subplot(121)
+
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r', levels=np.linspace(thresh * -1, thresh, 10),
+                 extend='both')  # -(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
+    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_yticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
+    ax.set_xlabel('km')
+    ax.set_ylabel('km')
+    ax.axvline(extent, linestyle='dashed', color='k')
+    ax.axhline(extent, linestyle='dashed', color='k')
+    plt.colorbar(label='K')
+    plt.title('Seasonal anomaly',
+              fontsize=10)
+
+    ax = f.add_subplot(122)
+
+    plt.contourf(dic['cnt'], cmap='viridis')  # -(rkernel2_sum / rcnt_sum)
+    plt.plot(extent, extent, 'bo')
+    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
+    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    ax.set_yticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
+    ax.set_xlabel('Degrees')
+    ax.set_ylabel('Degrees')
+    ax.axvline(extent, linestyle='dashed', color='k')
+    ax.axhline(extent, linestyle='dashed', color='k')
+    plt.colorbar(label='n')
+    plt.title('Valid count',
+              fontsize=10)
+
+    plt.tight_layout()
+    # f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
+    plt.savefig(cnst.elements_drive + '/'+REGION+'_MODIS_LSTA_2012-2019_SWA_allPF.jpg')

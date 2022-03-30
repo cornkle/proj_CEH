@@ -48,7 +48,7 @@ def composite(h, eh):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = msg.sel(lat=slice(9, 20), lon=slice(-15, 15))
+        msg = msg.sel(lat=slice(9, 19), lon=slice(-15, 25))
 
         msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
 
@@ -117,17 +117,17 @@ def file_loop(fi):
 
     if (fi['time.hour'].values) <= 16:
         print('Nighttime')
-        daybefore = date #- dayd
+        daybefore = date - dayd
     else:
         print('Daytime')
-        daybefore = date
+        daybefore = date - dayd
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
     #alt_path = cnst.AMSRE_ANO_DAY
     # alt_path = cnst.AMSRE_ANO_DAY_CORR
     # lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
 
-    alt_path = '/media/ck/Elements/global/AMSR2/daily/25km/night_anom/'
+    alt_path = cnst.lmcs_drive + 'AMSR2/daily/25km/day_anom_v2/'
     try:
         lsta = xr.open_dataset(alt_path + 'amsr2_25km_anom_' + fdate + '.nc')
     except:
@@ -135,35 +135,17 @@ def file_loop(fi):
         return None
 
     lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day))
-    lsta = lsta.sel(lon=slice(-18,20), lat=slice(4, 30))
+    lsta = lsta.sel(lon=slice(-18,30), lat=slice(4, 30))
     #ipdb.set_trace()
     print('Doing '+ 'AMSR_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
-    #lsta_da = lsta['SM'].squeeze()
     lsta_da = lsta['soil_moisture_c1'].squeeze()  # soil_moisture_c1
+    ts_da = lsta['ts'].squeeze()
 
-    # topo = xr.open_dataset(cnst.LSTA_TOPO)
-    # ttopo = topo['h']
-    #ttopo = lsta_da.salem.lookup_transform(ttopo)
+    mask = (lsta_da<-2) & (ts_da<-2)
+    lsta_da.values[mask] = np.nan
 
-    # try:
-    #     lsta_da = topo.salem.transform(lsta_da)
-    # except RuntimeError:
-    #     print('lsta_da on LSTA interpolation problem')
-    #     return None
-
-    # grad = np.gradient(ttopo.values)
-    # gradsum = abs(grad[0]) + abs(grad[1])
-
-    # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
-    #     print('Not enough valid')
-    #     return None
-
-    # lsta_da.values[np.isnan(lsta_da.values)] = 0
-
-    # lsta_da.values[ttopo.values >= 450] = np.nan
-    # lsta_da.values[gradsum > 30] = np.nan
     pos = np.where(fi.values<=-5) #np.where((fi.values >= 5) & (fi.values < 65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
@@ -173,6 +155,7 @@ def file_loop(fi):
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
+
 
     xfi = fi.shape[1]
 
@@ -330,7 +313,9 @@ def plot(h):
     f = plt.figure(figsize=(14, 4))
     ax = f.add_subplot(131)
 
-    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu',  levels=np.linspace(-1.2,1.2,10), extend='both')
+    thresh = 1
+
+    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu',  levels=np.linspace(thresh * -1, thresh, 10), extend='both')
     plt.plot(extent, extent, 'bo')
 
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
@@ -344,7 +329,7 @@ def plot(h):
 
     ax = f.add_subplot(132)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu',  levels=np.linspace(-2.2,2.2,10), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu',  levels=np.linspace(thresh * -1, thresh, 10), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticklabels(np.array((np.linspace(0, extent*2, 5) - extent) * 3, dtype=int))
     ax.set_yticklabels(np.array((np.linspace(0, extent*2, 9) - extent) * 3, dtype=int))

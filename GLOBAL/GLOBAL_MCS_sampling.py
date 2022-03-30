@@ -29,11 +29,22 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 
 }
 
-def run_loop(region):
+def multi():
+    pool = multiprocessing.Pool(processes=3)
+    yy = range(2010,2020)
+    res = pool.map(run, yy)
+    pool.close()
 
-    dtag = mregions[region][1]
-    box = mregions[region][0]
-    files = glob.glob('/media/ck/Elements/global/MCS_Feng/tracks/' + dtag + '/*_201*.nc')
+
+def run(year):
+    for rr in ['WAf']:  # 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
+        extract_box(rr, year)
+
+
+def extract_box(region, year):
+    dtag = region  # mregions[region][1]
+    #  box = mregions[region][0]
+    files = glob.glob('/media/ck/Elements/global/MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
 
     out = '/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/'
 
@@ -44,38 +55,43 @@ def run_loop(region):
 
     for ff in files:
 
+        ds = xr.open_dataset(ff)
+        # ds = ds.sel(tracks=slice(0,5))
+
         fname = os.path.basename(ff)
 
-        outname = fname[0:-3].replace('robust', region + '_noinit_')
+        outname = fname[0:-3].replace('robust', region + '_winit_distance_')
 
         outfilename = out + outname + '.p'
 
         if os.path.isfile(outfilename):
             print('File exists, continue')
-            #del ds
             continue
-
-        ds = xr.open_dataset(ff).load()
-        # ds = ds.sel(tracks=slice(0,5))
 
         # ipdb.set_trace()
         pfdic = {}
 
-        for dv in ds.sel(times=0, tracks=0).data_vars:
+        for dv in ds.isel(times=0, tracks=0).data_vars:
             if dv in dumpkeys:
                 continue
             pfdic[dv] = []
+
         pfdic['year'] = []
         pfdic['month'] = []
         pfdic['hour'] = []
         pfdic['minute'] = []
         pfdic['tracktime'] = []
+        pfdic['trackid'] = []
+        pfdic['londiff_loc-init'] = []
+        pfdic['latdiff_loc-init'] = []
+        pfdic['init_lon'] = []
+        pfdic['init_lat'] = []
 
         for ids, ai in enumerate(ds.tracks):
             track = ds.sel(tracks=ai)
 
-            init_lat = track.sel(times=0)['meanlat']
             init_lon = track.sel(times=0)['meanlon']
+            init_lat = track.sel(times=0)['meanlat']
 
             for tids in track.times:
                 tt = track.sel(times=tids)
@@ -84,19 +100,20 @@ def run_loop(region):
 
                 if np.isnan(tt['meanlat']):
                     continue
-                #print('Doing', tt['base_time'].values)
-                if (tt['meanlat'] < box[2]) | (tt['meanlat'] > box[3]) | (tt['meanlon'] < box[0]) | (
-                        tt['meanlon'] > box[1]):
-                    continue
-
-                if (np.abs(tt['meanlat'].values-init_lat.values) < 1.5) & (np.abs(tt['meanlon'].values-init_lon.values) < 1.5):
-                    print('Init too close, time number ', tids.values)
+                print('Doing', tt['base_time'].values)
+                #                 if (tt['meanlat']<box[2]) | (tt['meanlat']>box[3]) | (tt['meanlon']<box[0]) | (tt['meanlon']>box[1]):
+                #                     continue
 
                 print('Location ', tt['meanlat'].values, tt['meanlon'].values)
 
                 print('Writing ', tt['base_time'].values)
 
-                pfdic['tracktime'].append(tids.values)
+                pfdic['tracktime'].append(tids)
+                pfdic['trackid'].append(int(track.tracks))
+                pfdic['londiff_loc-init'].append(tt['meanlon'].values - init_lon.values)
+                pfdic['latdiff_loc-init'].append(tt['meanlat'].values - init_lat.values)
+                pfdic['init_lon'].append(init_lon.values)
+                pfdic['init_lat'].append(init_lat.values)
 
                 for dv in tt.data_vars:
                     if dv in dumpkeys:

@@ -37,9 +37,9 @@ def composite(h, eh):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
 
-        msg = msg.sel(lat=slice(6, 12), lon=slice(-15,20))
+        msg = msg.sel(lat=slice(6, 19), lon=slice(-15,25))
 
-        msg = (msg['dom'])[(msg['time.hour'] == hour ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 6) & (msg['time.month'] <= 9)  ]
+        msg = (msg['small_scale'])[(msg['time.hour'] >= hour ) & (msg['time.hour'] <= hour+1 ) & (msg['time.minute'] == 0) & (msg['time.month'] >= 5) & (msg['time.month'] <= 10)  ]
 
         msg = msg.load()
 
@@ -58,7 +58,7 @@ def composite(h, eh):
         for k in dic.keys():
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
-        pkl.dump(dic, open(path + "/composite_new_LSTA_5km_2012-2019_MSG_CORES_DAY_6-12N_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -73,8 +73,8 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False)
         xpos = xpos - lx
         ypos = ypos - ly
 
-    #dist = 60 #MODIS
-    dist=100 # MSG
+    dist = 60 #MODIS
+    #dist=100 # MSG
 
     kernel = u_arrays.cut_kernel(arr,xpos, ypos,dist)
 
@@ -114,10 +114,10 @@ def file_loop(fi):
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
     #alt_path = cnst.AMSRE_ANO_DAY
 
-    # alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/' # MODIS
-    # full_path = alt_path + 'aqua_05deg_anom_' + fdate + '.nc' # MODIS
+    alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/' # MODIS
+    full_path = alt_path + 'aqua_05deg_anom_' + fdate + '.nc' # MODIS
 
-    full_path = cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf_onCores_interpolate_1700_oldSeonaid/HDF5_LSASAF_ANOM_MSG_LST_MSG-Disk_' + fdate + '1700.nc'
+    # full_path = cnst.elements_drive + 'Africa/WestAfrica/NFLICS/LSTA_2004-2015/netcdf_onCores_interpolate_1700_oldSeonaid/HDF5_LSASAF_ANOM_MSG_LST_MSG-Disk_' + fdate + '1700.nc'
 
     try:
         lsta = xr.open_dataset(full_path)
@@ -132,16 +132,15 @@ def file_loop(fi):
     #     print('Surface file not found, return')
     #     return None
 
-    # lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day)) # MODIS
-    # lsta = u_darrays.flip_lat(lsta) # MODIS
+    lsta = lsta.sel(time=str(daybefore.year)+'-'+str(daybefore.month)+'-'+str(daybefore.day)) # MODIS
+    lsta = u_darrays.flip_lat(lsta) # MODIS
     lsta = lsta.sel(lon=slice(-19, 20), lat=slice(4, 25))
 
     print('Doing '+ 'LSTA_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc')
 
-    #lsta_da = lsta['SM'].squeeze()
-    # lsta_da = lsta['LST_Day_CMG'].squeeze()#/100  # MODIS
-    lsta_da = lsta['lsta'].squeeze() #MSG
+    lsta_da = lsta['LST_Day_CMG'].squeeze()#/100  # MODIS
+    # lsta_da = lsta['lsta'].squeeze() #MSG
     lsta_da = lsta_da.where((np.isfinite(lsta_da)) & (lsta_da > -8000)) / 100
 
     # topo = xr.open_dataset(cnst.LSTA_TOPO)
@@ -165,7 +164,7 @@ def file_loop(fi):
 
     # lsta_da.values[ttopo.values >= 450] = np.nan
     # lsta_da.values[gradsum > 30] = np.nan
-    pos = np.where(fi.values<=-5) #np.where((fi.values >= 5) & (fi.values < 65))
+    pos = np.where((fi.values<=-560) | (fi.values>=10000))#np.where((fi.values<=-5)) #np.where((fi.values >= 5) & (fi.values < 65))
 
     if (np.sum(pos) == 0) | (len(pos[0]) < 3):
         print('No blobs found')
@@ -204,7 +203,7 @@ def file_loop(fi):
 
         t = fi.sel(lat=lat, lon=lon)
         try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.05)
+            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
         except KeyError:
             print('point index error')
             continue
@@ -247,8 +246,8 @@ def file_loop(fi):
 
 def plot2(h):
     hour = h
-    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_"  # MODIS 5KM plot
-    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MSG_CORES_DAY_6-12N_" # MSG 3km
+    #pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_"  # MODIS 5KM plot
+    pin = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/' + "/composite_new_LSTA_5km_2012-2019_MODIS_CORES_DAY_6-12N_" # MSG 3km
     y1 = 2012
     y2 = 2016
 
@@ -328,7 +327,7 @@ def plot2(h):
 
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_SWA_cores.jpg')
+   # plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_SWA_cores.jpg')
 
 
 def plot(h):
