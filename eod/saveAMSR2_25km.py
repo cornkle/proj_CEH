@@ -377,7 +377,7 @@ def saveStddevDay():
 
 def writeAnomaly():
 
-    tag = 'day'
+    tag = 'night'
 
     files = glob.glob(cnst.lmcs_drive + 'AMSR2/daily/25km/'+tag+'/nc/*.nc')
 
