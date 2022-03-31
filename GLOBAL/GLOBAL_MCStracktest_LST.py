@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-15,25,9,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-15,25,7,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -62,9 +62,10 @@ def composite(h):
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2012, 2020):
+    for y in np.arange(2003, 2020):
+        ipdb.set_trace()
         msg = pkl.load(
-            open('/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/'+REGION+'_noinit__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
+            open(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
         hour = h
 
         # file = cnst.MCS_POINTS_DOM
@@ -72,8 +73,8 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 5
-        m2 = 10
+        m1 = 4
+        m2 = 11
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -82,14 +83,14 @@ def composite(h):
             msg[k] = np.array(msg[k])
 
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 5) & (msg['ccs_area'] >= 1000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
-                             msg['pf_landfrac'] > 0.9)  & ((msg['month']>=10) | (msg['month']<=5))
+                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
+                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.5)|(np.abs(msg['latdiff_loc-init'])>=1.5))
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                     & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 2) & (msg['tracktime'] <= 6) & (msg['ccs_area'] >= 1000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)\
+                     & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)\
                      & (msg['month']>=m1) & (msg['month']<=m2)
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
@@ -126,7 +127,7 @@ def composite(h):
                  daydir[k] = (msg[k])[pos]
             chunks.append(daydir)
 
-        dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt'])
+        dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'init'])
 
         # res = []
         # #ipdb.set_trace()
@@ -145,12 +146,17 @@ def composite(h):
 
 
 
-def cut_kernel(xpos, ypos, arr, wd = None):
+def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
-    dist = 60
+    dist = 70
     #dist=100
 
+    res = 0.05
+
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
+
+    ilon = np.round(inits[0] / res).astype(int)
+    ilat = np.round(inits[1] / res).astype(int)
 
     if wd != None:
         kernel = ua.rotate(kernel, wd, ref_angle=90)
@@ -159,12 +165,17 @@ def cut_kernel(xpos, ypos, arr, wd = None):
     kernel3 = kernel - np.nanmean(kernel)
 
     cnt = np.zeros_like(kernel)
+    init = np.zeros_like(kernel)
     cnt[np.isfinite(kernel)] = 1
+    try:
+        init[dist+1-ilat, dist+1-ilon] = 1
+    except:
+        pass
 
     if kernel.shape != (dist*2+1, dist*2+1):
         return None
 
-    return kernel, kernel3, cnt
+    return kernel, kernel3, cnt, init
 
 
 def file_loop(fi):
@@ -174,6 +185,9 @@ def file_loop(fi):
 
     hour = fi['hour']
     print('Doing day: ', date)
+
+    init_lon = fi['londiff_loc-init']
+    init_lat = fi['latdiff_loc-init']
 
 
     box = (MREGIONS[REGION])[0]
@@ -188,6 +202,7 @@ def file_loop(fi):
         daybefore = date #- dayd
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
+    fdoy = str(daybefore.dayofyear)
     # alt_path = cnst.AMSRE_ANO_DAY
     # alt_path = cnst.AMSRE_ANO_DAY_CORR
     # try:
@@ -199,6 +214,9 @@ def file_loop(fi):
     alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/'
     try:
         lsta = xr.open_dataset(alt_path + 'aqua_05deg_anom_' + fdate + '.nc')
+    # alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/nc_v6/'
+    # try:
+    #     lsta = xr.open_dataset(glob.glob(alt_path + '*11C1.A' + str(daybefore.year)+ fdoy + '*.nc')[0])
     except:
         print('Surface file not found, return')
         return None
@@ -217,6 +235,7 @@ def file_loop(fi):
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
+    init_list = []
     all_cnt_list = []
 
     cid = 0
@@ -251,50 +270,52 @@ def file_loop(fi):
     ############################
     # if len(fi['pf_lat']) == 0:
     #     return None
-    # # for id in range(len(fi['pf_lat'])):
-    for lat, lon, direct in zip(fi['pf_lat'][0], fi['pf_lon'][0], fi['direction']):   #zip(fi['meanlat'], fi['meanlon']):
+    for id in range(len(fi['pf_lat'])):
+        for lat, lon in zip(fi['pf_lat'][id], fi['pf_lon'][id]):
+    #for lat, lon, direct in zip(fi['pf_lat'][0], fi['pf_lon'][0], fi['direction']):   #zip(fi['meanlat'], fi['meanlon']):
 
     #for lat, lon, direct in zip(fi['meanlat'], fi['meanlon'], fi['direction']):
             #direction = (fi[direction])[cid-1]
-        ####################
-        try:
-            point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
-        except KeyError:
-            print('point index error')
+            ####################
+            try:
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
+            except KeyError:
+                print('point index error')
+                #ipdb.set_trace()
+                continue
+
+            plat = point['lat'].values
+            plon = point['lon'].values
             #ipdb.set_trace()
-            continue
+            xpos = np.where(lsta_da['lon'].values == plon)
+            try:
+                xpos = int(xpos[0])
+            except:
+                continue
+            ypos = np.where(lsta_da['lat'].values == plat)
+            ypos = int(ypos[0])
 
-        plat = point['lat'].values
-        plon = point['lon'].values
-        #ipdb.set_trace()
-        xpos = np.where(lsta_da['lon'].values == plon)
-        try:
-            xpos = int(xpos[0])
-        except:
-            continue
-        ypos = np.where(lsta_da['lat'].values == plat)
-        ypos = int(ypos[0])
+            try:
+                kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat])#, wd=direct)
+            except TypeError:
+                continue
 
-        try:
-            kernel2, kernel3, cnt = cut_kernel(xpos, ypos, lsta_da)#, wd=direct)
-        except TypeError:
-            continue
+            # f = plt.figure()
+            # ax = f.add_subplot(121)
+            # cb = ax.contourf(kernel2, cmap='RdBu')
+            # plt.colorbar(cb)
+            # ax = f.add_subplot(122)
+            # cb = ax.contourf(cnt, cmap='viridis')
+            # plt.colorbar(cb)
+            # f.show()
 
-        # f = plt.figure()
-        # ax = f.add_subplot(121)
-        # cb = ax.contourf(kernel2, cmap='RdBu')
-        # plt.colorbar(cb)
-        # ax = f.add_subplot(122)
-        # cb = ax.contourf(cnt, cmap='viridis')
-        # plt.colorbar(cb)
-        # f.show()
-
-        cnt_all = np.zeros_like(cnt)+1
-        kernel2_list.append(kernel2)
-        kernel3_list.append(kernel3)
-        cnt_list.append(cnt)
-        all_cnt_list.append(cnt_all)
-        cid += 1
+            cnt_all = np.zeros_like(cnt)+1
+            kernel2_list.append(kernel2)
+            kernel3_list.append(kernel3)
+            cnt_list.append(cnt)
+            init_list.append(init)
+            all_cnt_list.append(cnt_all)
+            cid += 1
     #####################################
     if kernel2_list == []:
         return None
@@ -306,12 +327,13 @@ def file_loop(fi):
         kernel2_sum = np.nansum(np.stack(kernel2_list, axis=0), axis=0)
         kernel3_sum = np.nansum(np.stack(kernel3_list, axis=0), axis=0)
         cnt_sum = np.nansum(np.stack(cnt_list, axis=0), axis=0)
+        init_sum = np.nansum(np.stack(init_list, axis=0), axis=0)
         allcnt_sum = np.nansum(np.stack(all_cnt_list, axis=0), axis=0)
 
 
     print('Returning')
     del lsta
-    return (kernel2_sum, kernel3_sum, cnt_sum, allcnt_sum)
+    return (kernel2_sum, kernel3_sum, cnt_sum, allcnt_sum, init_sum)
 
 
 
@@ -340,40 +362,41 @@ def plot(h):
         print('Coll', y)
         coll(dic, h, y)
 
-    extent = 60
+    extent = 70
 
     f = plt.figure(figsize=(15, 4))
     ax = f.add_subplot(131)
 
-    thresh = np.percentile(dic['regional'] / dic['cnt'], 99)
+    thresh = np.percentile(dic['init'], 99)
 
-    plt.contourf(dic['regional'] / dic['cnt'], cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both')
+
+    plt.contourf(dic['init'], cmap='RdBu_r',  levels=np.arange(0,11), extend='both')
     plt.plot(extent, extent, 'bo')
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     print('Extent', extent)
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     #ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 30).astype(int))
     ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    plt.colorbar(label='K')
-    plt.title(REGION+' '+str(y1)+'-'+str(y2)+' box anom., Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    plt.colorbar(label='Count')
+    plt.title(REGION+' '+str(y1)+'-'+str(y2)+'| Initiations, Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
-
+    thresh = np.percentile((dic['regional'] / dic['cnt'])[np.isfinite((dic['regional'] / dic['cnt']))], 95)#0.9
     ax = f.add_subplot(132)
 
     plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*10/2).astype(int))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     plt.colorbar(label='K')
@@ -386,11 +409,11 @@ def plot(h):
     plt.contourf(dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
+    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)*30).astype(int))
-    ax.set_xlabel('Degrees')
-    ax.set_ylabel('Degrees')
+    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     plt.colorbar(label='n')
@@ -400,7 +423,7 @@ def plot(h):
 
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/MODIS_LSTA_2012-2019_SWA_largestPF.jpg')
+    plt.savefig(cnst.elements_drive + '/' + REGION + '_MODIS_LSTA_2012-2019_6-19N_allPF.jpg')
 
 
 
@@ -450,7 +473,7 @@ def plot2(h):
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     plt.colorbar(label='K')
-    plt.title('Seasonal anomaly',
+    plt.title('Seasonal anomaly , Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
     ax = f.add_subplot(122)
@@ -471,4 +494,4 @@ def plot2(h):
 
     plt.tight_layout()
     # f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/'+REGION+'_MODIS_LSTA_2012-2019_SWA_allPF.jpg')
+    plt.savefig(cnst.elements_drive + '/'+REGION+'_MODIS_LSTA_2012-2019_6-19N_allPF.jpg')

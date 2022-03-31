@@ -327,7 +327,7 @@ def plot2(h):
 
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-   # plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_SWA_cores.jpg')
+    plt.savefig(cnst.elements_drive+'/MODIS_LSTA_2012-2019_6-19N_cores.jpg')
 
 
 def plot(h):

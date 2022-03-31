@@ -16,6 +16,7 @@ import pandas as pd
 import pickle as pkl
 import salem
 import os
+from utils import constants as cnst
 ### SIMILAR VERSION IN NOTEBOOK
 
 mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
@@ -44,9 +45,9 @@ def run(year):
 def extract_box(region, year):
     dtag = region  # mregions[region][1]
     #  box = mregions[region][0]
-    files = glob.glob('/media/ck/Elements/global/MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
+    files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
 
-    out = '/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/'
+    out = cnst.lmcs_drive + '/save_files/'
 
     dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
@@ -131,5 +132,5 @@ def extract_box(region, year):
 
                     pfdic[dv].append(tt[dv].values)
 
-        pkl.dump(pfdic, open('/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_files/' + outname + '.p', "wb"))
+        pkl.dump(pfdic, open(cnst.lmcs_drive + '/save_files/' + outname + '.p', "wb"))
         del ds
