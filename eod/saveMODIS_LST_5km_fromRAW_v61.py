@@ -148,9 +148,9 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
 
         ds[DATAFIELD_NAME] = da
 
-    ql_mask = getMODISflag(ds['QC_Day'])
+    #ql_mask = getMODISflag(ds['QC_Day'])
 
-    ds['LST_Day'].values[(ds['Day_view_angle'].values != 1) | (ql_mask != 1)] = -9999
+    ds['LST_Day'].values[(ds['Day_view_angle'].values != 1) ] = -9999   #| (ql_mask != 1)
     ds = ds.drop(['Day_view_angle'])
     ds = ds.drop(['QC_Day'])
     if save:
