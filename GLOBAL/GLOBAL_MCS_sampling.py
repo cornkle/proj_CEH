@@ -31,14 +31,14 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 }
 
 def multi():
-    pool = multiprocessing.Pool(processes=3)
-    yy = range(2010,2020)
+    pool = multiprocessing.Pool(processes=5)
+    yy = range(2000,2020)
     res = pool.map(run, yy)
     pool.close()
 
 
 def run(year):
-    for rr in ['WAf']:  # 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
+    for rr in ['WAf', 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
         extract_box(rr, year)
 
 
@@ -47,7 +47,7 @@ def extract_box(region, year):
     #  box = mregions[region][0]
     files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
 
-    out = cnst.lmcs_drive + '/save_files/'
+    out = cnst.lmcs_drive + 'save_files/'
 
     dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
@@ -132,5 +132,4 @@ def extract_box(region, year):
 
                     pfdic[dv].append(tt[dv].values)
 
-        pkl.dump(pfdic, open(cnst.lmcs_drive + '/save_files/' + outname + '.p', "wb"))
-        del ds
+        pkl.dump(pfdic, open(cnst.lmcs_drive +'save_files/' + outname + '.p', "wb"))
