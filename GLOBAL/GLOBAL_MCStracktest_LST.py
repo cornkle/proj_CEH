@@ -63,9 +63,11 @@ def composite(h):
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
     for y in np.arange(2003, 2020):
-        ipdb.set_trace()
-        msg = pkl.load(
-            open(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
+        # msg = pkl.load(
+        #     open(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
+        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
+        msg = msg.to_dict(orient='list')
+
         hour = h
 
         # file = cnst.MCS_POINTS_DOM
@@ -73,15 +75,15 @@ def composite(h):
         # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
         #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
-        m1 = 4
-        m2 = 11
+        m1 = 1
+        m2 = 12
         lontag = 'meanlon'
         lattag = 'meanlat'
 
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
-
+        #ipdb.set_trace()
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
                  & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
                              msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.5)|(np.abs(msg['latdiff_loc-init'])>=1.5))
@@ -141,7 +143,7 @@ def composite(h):
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
         #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 
@@ -270,13 +272,16 @@ def file_loop(fi):
     ############################
     # if len(fi['pf_lat']) == 0:
     #     return None
-    for id in range(len(fi['pf_lat'])):
-        for lat, lon in zip(fi['pf_lat'][id], fi['pf_lon'][id]):
+    for id in range(3): # 3 precip entries
+        idss = 0
+        for lat, lon in zip(fi['pf_lat'+str(id+1)], fi['pf_lon'+str(id+1)]):
     #for lat, lon, direct in zip(fi['pf_lat'][0], fi['pf_lon'][0], fi['direction']):   #zip(fi['meanlat'], fi['meanlon']):
 
     #for lat, lon, direct in zip(fi['meanlat'], fi['meanlon'], fi['direction']):
             #direction = (fi[direction])[cid-1]
             ####################
+            direct = fi['direction'][idss]
+
             try:
                 point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
             except KeyError:
@@ -296,7 +301,7 @@ def file_loop(fi):
             ypos = int(ypos[0])
 
             try:
-                kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat])#, wd=direct)
+                kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat], wd=direct)
             except TypeError:
                 continue
 
@@ -340,9 +345,9 @@ def file_loop(fi):
 def plot(h):
     h = h - (MREGIONS[REGION])[2]
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
     #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
-    y1 = 2012
+    y1 = 2003
     y2 = 2020
 
     dic = pkl.load(open(
@@ -386,7 +391,7 @@ def plot(h):
     plt.title(REGION+' '+str(y1)+'-'+str(y2)+'| Initiations, Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
-    thresh = np.percentile((dic['regional'] / dic['cnt'])[np.isfinite((dic['regional'] / dic['cnt']))], 95)#0.9
+    thresh = np.abs(np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 95))
     ax = f.add_subplot(132)
 
     plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both') #-(rkernel2_sum / rcnt_sum)

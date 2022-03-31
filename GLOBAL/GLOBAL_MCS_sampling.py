@@ -39,7 +39,7 @@ def multi():
 
 
 def run(year):
-    for rr in ['WAf', 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
+    for rr in ['WAf']:#, 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
         extract_box(rr, year)
 
 
@@ -60,7 +60,7 @@ def extract_box(region, year):
         ds = xr.open_dataset(ff)
         fname = os.path.basename(ff)
 
-        outname = fname[0:-3].replace('robust', region + '_winit_distance_')
+        outname = fname[0:-3].replace('robust', region + '_winit_distance_direct_')
 
         outfilename = out + outname + '.csv'
 
@@ -76,6 +76,9 @@ def extract_box(region, year):
 
             if "nmaxpf" in ds[dv].dims:
 
+                for pftag in ['1','2','3']:
+                    pfdic[str(dv)+str(pftag)] = []
+            elif dv=="direction":
                 for pftag in ['1','2','3']:
                     pfdic[str(dv)+str(pftag)] = []
             else:
@@ -100,6 +103,8 @@ def extract_box(region, year):
 
             for tids in track.times:
                 tt = track.sel(times=tids)
+                tm1 = tids-1
+                tm2 = tids-2
 
                 if np.isnan(tt['meanlat']):
                     continue
@@ -128,7 +133,19 @@ def extract_box(region, year):
                         pfdic['hour'].append(dtime.hour)
                         pfdic['minute'].append(dtime.minute)
 
-                    if (tt[dv].size==3) & ("pf" in dv):
+
+                    elif dv == 'direction':
+                        pfdic['direction1'] = tt[dv].values
+                        if tm1>=0:
+                            pfdic['direction2'] = track.sel(times=tm1)['direction'].values
+                        else:
+                            pfdic['direction2'] = np.nan
+                        if tm2>=0:
+                            pfdic['direction3'] = track.sel(times=tm2)['direction'].values
+                        else:
+                            pfdic['direction3'] = np.nan
+
+                    elif (tt[dv].size==3) & ("pf" in dv):
                         for pfids, pftag in enumerate(['1', '2', '3']):
                             pfdic[str(dv) + str(pftag)].append(tt[dv].values[pfids])
                     else:
