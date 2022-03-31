@@ -17,6 +17,7 @@ import pickle as pkl
 import salem
 import os
 from utils import constants as cnst
+import json
 ### SIMILAR VERSION IN NOTEBOOK
 
 mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
@@ -51,31 +52,34 @@ def extract_box(region, year):
 
     dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
-                'pixel_duration',
-                'pixel_pcp', 'pf_skewness']
+                'pixel_duration', 'julian_day',
+                'pixel_pcp', 'pf_skewness', 'mergecloudnumber', 'splitcloudnumber']
 
     for ff in files:
 
         ds = xr.open_dataset(ff)
-        # ds = ds.sel(tracks=slice(0,5))
-
         fname = os.path.basename(ff)
 
         outname = fname[0:-3].replace('robust', region + '_winit_distance_')
 
-        outfilename = out + outname + '.p'
+        outfilename = out + outname + '.csv'
 
         if os.path.isfile(outfilename):
             print('File exists, continue')
             continue
 
-        # ipdb.set_trace()
         pfdic = {}
 
         for dv in ds.isel(times=0, tracks=0).data_vars:
             if dv in dumpkeys:
                 continue
-            pfdic[dv] = []
+
+            if "nmaxpf" in ds[dv].dims:
+
+                for pftag in ['1','2','3']:
+                    pfdic[str(dv)+str(pftag)] = []
+            else:
+                pfdic[dv] = []
 
         pfdic['year'] = []
         pfdic['month'] = []
@@ -91,30 +95,26 @@ def extract_box(region, year):
         for ids, ai in enumerate(ds.tracks):
             track = ds.sel(tracks=ai)
 
-            init_lon = track.sel(times=0)['meanlon']
-            init_lat = track.sel(times=0)['meanlat']
+            init_lon = track.sel(times=0)['meanlon'].values
+            init_lat = track.sel(times=0)['meanlat'].values
 
             for tids in track.times:
                 tt = track.sel(times=tids)
 
-                # ipdb.set_trace()
-
                 if np.isnan(tt['meanlat']):
                     continue
                 print('Doing', tt['base_time'].values)
-                #                 if (tt['meanlat']<box[2]) | (tt['meanlat']>box[3]) | (tt['meanlon']<box[0]) | (tt['meanlon']>box[1]):
-                #                     continue
 
                 print('Location ', tt['meanlat'].values, tt['meanlon'].values)
 
                 print('Writing ', tt['base_time'].values)
 
-                pfdic['tracktime'].append(tids)
-                pfdic['trackid'].append(int(track.tracks))
-                pfdic['londiff_loc-init'].append(tt['meanlon'].values - init_lon.values)
-                pfdic['latdiff_loc-init'].append(tt['meanlat'].values - init_lat.values)
-                pfdic['init_lon'].append(init_lon.values)
-                pfdic['init_lat'].append(init_lat.values)
+                pfdic['tracktime'].append(int(tids.values))
+                pfdic['trackid'].append(int(track.tracks.values))
+                pfdic['londiff_loc-init'].append(float(tt['meanlon'].values - init_lon))
+                pfdic['latdiff_loc-init'].append(float(tt['meanlat'].values - init_lat))
+                pfdic['init_lon'].append(float(init_lon))
+                pfdic['init_lat'].append(float(init_lat))
 
                 for dv in tt.data_vars:
                     if dv in dumpkeys:
@@ -128,8 +128,12 @@ def extract_box(region, year):
                         pfdic['hour'].append(dtime.hour)
                         pfdic['minute'].append(dtime.minute)
 
-                        # ipdb.set_trace()
+                    if (tt[dv].size==3) & ("pf" in dv):
+                        for pfids, pftag in enumerate(['1', '2', '3']):
+                            pfdic[str(dv) + str(pftag)].append(tt[dv].values[pfids])
+                    else:
+                        pfdic[dv].append(tt[dv].values)
 
-                    pfdic[dv].append(tt[dv].values)
-
-        pkl.dump(pfdic, open(cnst.lmcs_drive +'save_files/' + outname + '.p', "wb"))
+        df = pd.DataFrame.from_dict(pfdic)
+        ipdb.set_trace()
+        df.to_csv(outfilename, index=False)
