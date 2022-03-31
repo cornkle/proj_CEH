@@ -33,7 +33,7 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 
 def multi():
     pool = multiprocessing.Pool(processes=5)
-    yy = range(2000,2020)
+    yy = range(2015,2020)
     res = pool.map(run, yy)
     pool.close()
 
@@ -135,5 +135,4 @@ def extract_box(region, year):
                         pfdic[dv].append(tt[dv].values)
 
         df = pd.DataFrame.from_dict(pfdic)
-        ipdb.set_trace()
         df.to_csv(outfilename, index=False)

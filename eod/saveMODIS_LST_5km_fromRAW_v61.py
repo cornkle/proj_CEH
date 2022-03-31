@@ -21,12 +21,12 @@ from utils import constants as cnst
 
 
 def run():
-    files = glob.glob(cnst.lmcs_drive+ 'MODIS_LST/aqua/raw_v61/*.hdf')
+    files = glob.glob(cnst.lmcs_drive+ 'MODIS_LST/terra/raw_v61/*.hdf')
     multi_list = []
     #ipdb.set_trace()
     for ff in files:
         multi_list.append((ff,['LST_Day','Day_view_angle','QC_Day'], True))
-    pool = multiprocessing.Pool(processes=1)
+    pool = multiprocessing.Pool(processes=5)
     #ipdb.set_trace()
     res = pool.starmap(read_modis_monthly, multi_list)
 
