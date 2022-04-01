@@ -60,7 +60,7 @@ def extract_box(region, year):
         ds = xr.open_dataset(ff)
         fname = os.path.basename(ff)
 
-        outname = fname[0:-3].replace('robust', region + '_winit_distance_direct_')
+        outname = fname[0:-3].replace('robust', region + '_winit_distance_direction_')
 
         outfilename = out + outname + '.csv'
 
@@ -134,22 +134,22 @@ def extract_box(region, year):
                         pfdic['month'].append(dtime.month)
                         pfdic['hour'].append(dtime.hour)
                         pfdic['minute'].append(dtime.minute)
-
+                        pfdic[dv].append(tt[dv].values)
 
                     elif dv == 'direction':
-                        pfdic['direction0'] = tt[dv].values
+                        pfdic['direction0'].append(tt[dv].values)
                         if tm1>=0:
-                            pfdic['direction-1'] = track.sel(times=tm1)['direction'].values
+                            pfdic['direction-1'].append(track.sel(times=tm1)['direction'].values)
                         else:
-                            pfdic['direction-1'] = np.nan
+                            pfdic['direction-1'].append(np.nan)
                         if tm2>=0:
-                            pfdic['direction-2'] = track.sel(times=tm2)['direction'].values
+                            pfdic['direction-2'].append(track.sel(times=tm2)['direction'].values)
                         else:
-                            pfdic['direction-2'] = np.nan
+                            pfdic['direction-2'].append(np.nan)
                         try:
-                            pfdic['direction1'] = track.sel(times=tm0)['direction'].values
+                            pfdic['direction1'].append(track.sel(times=tm0)['direction'].values)
                         except:
-                            pfdic['direction1'] = np.nan
+                            pfdic['direction1'].append(np.nan)
 
                     elif (tt[dv].size==3) & ("pf" in dv):
                         for pfids, pftag in enumerate(['1', '2', '3']):
@@ -157,5 +157,11 @@ def extract_box(region, year):
                     else:
                         pfdic[dv].append(tt[dv].values)
 
+
+        # for kk in pfdic.keys():
+        #     try:
+        #         print(kk, len(pfdic[kk]))
+        #     except:
+        #         print(kk, pfdic[kk])
         df = pd.DataFrame.from_dict(pfdic)
         df.to_csv(outfilename, index=False)

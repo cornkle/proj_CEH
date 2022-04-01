@@ -48,7 +48,6 @@ MREGIONS = {'WAf' : [[-15,25,7,19], 'spac', 0], # last is hourly offset to UCT #
 REGION = 'WAf'
 
 def composite(h):
-    #pool = multiprocessing.Pool(processes=8)
 
     h = h - (MREGIONS[REGION])[2]
 
@@ -62,18 +61,13 @@ def composite(h):
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2003, 2020):
-        # msg = pkl.load(
-        #     open(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.p', "rb"))
+    for y in np.arange(2012, 2020):
+
         msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
         msg = msg.to_dict(orient='list')
 
         hour = h
 
-        # file = cnst.MCS_POINTS_DOM
-        # msg = xr.open_dataarray(file)
-        # msg = msg[(msg['time.hour'] == h) & (msg['time.minute'] == 0) & (
-        #         msg['time.year'] == y) & (msg['time.month'] >= 6)]
         domain = (MREGIONS[REGION])[0]
         m1 = 1
         m2 = 12
@@ -83,7 +77,7 @@ def composite(h):
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
-        #ipdb.set_trace()
+
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
                  & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
                              msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.5)|(np.abs(msg['latdiff_loc-init'])>=1.5))
@@ -160,8 +154,7 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     ilon = np.round(inits[0] / res).astype(int)
     ilat = np.round(inits[1] / res).astype(int)
 
-    if wd != None:
-        kernel = ua.rotate(kernel, wd, ref_angle=90)
+
     #ipdb.set_trace()
 
     kernel3 = kernel - np.nanmean(kernel)
@@ -177,6 +170,12 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     if kernel.shape != (dist*2+1, dist*2+1):
         return None
 
+    if wd != None:
+        kernel = ua.rotate(kernel, wd, ref_angle=90)
+        kernel3 = ua.rotate(kernel3, wd, ref_angle=90)
+        init = ua.rotate(init, wd, ref_angle=90)
+        cnt = ua.rotate(cnt, wd, ref_angle=90)
+
     return kernel, kernel3, cnt, init
 
 
@@ -191,6 +190,21 @@ def file_loop(fi):
     init_lon = fi['londiff_loc-init']
     init_lat = fi['latdiff_loc-init']
 
+    ulist = []
+    vlist = []
+    for direc in fi['direction']:
+        ulist.append(np.sin(np.deg2rad(direc)))
+        vlist.append(np.cos(np.deg2rad(direc)))
+
+    umean = np.sum(ulist)
+    vmean = np.sum(vlist)
+
+    avg_wd = np.rad2deg(np.arctan2(umean,vmean))
+    if avg_wd<0:
+        avg_wd = avg_wd+360
+    #print('mean WD', avg_wd, fi['direction'])
+    direct = avg_wd
+
 
     box = (MREGIONS[REGION])[0]
 
@@ -204,21 +218,11 @@ def file_loop(fi):
         daybefore = date #- dayd
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
-    fdoy = str(daybefore.dayofyear)
-    # alt_path = cnst.AMSRE_ANO_DAY
-    # alt_path = cnst.AMSRE_ANO_DAY_CORR
-    # try:
-    #     lsta = xr.open_dataset(alt_path + 'sma_' + fdate + '.nc')
-    # except:
-    #     print('Surface file not found, return')
-    #     return None
 
     alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/'
     try:
         lsta = xr.open_dataset(alt_path + 'aqua_05deg_anom_' + fdate + '.nc')
-    # alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/nc_v6/'
-    # try:
-    #     lsta = xr.open_dataset(glob.glob(alt_path + '*11C1.A' + str(daybefore.year)+ fdoy + '*.nc')[0])
+
     except:
         print('Surface file not found, return')
         return None
@@ -231,7 +235,7 @@ def file_loop(fi):
         daybefore.day).zfill(2) + '.nc')
 
 
-    lsta_da = lsta['LST_Day_CMG'].squeeze()  # soil_moisture_c1
+    lsta_da = lsta['LST_Day_CMG'].squeeze()
     lsta_da = lsta_da.where((np.isfinite(lsta_da)) & (lsta_da > -8000)) / 100
 
     kernel2_list = []
@@ -280,7 +284,7 @@ def file_loop(fi):
     #for lat, lon, direct in zip(fi['meanlat'], fi['meanlon'], fi['direction']):
             #direction = (fi[direction])[cid-1]
             ####################
-            direct = fi['direction'][idss]
+            #direct = fi['direction'][idss]
 
             try:
                 point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
@@ -347,7 +351,7 @@ def plot(h):
     print('Hour: ', h)
     pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
     #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
-    y1 = 2003
+    y1 = 2012
     y2 = 2020
 
     dic = pkl.load(open(
