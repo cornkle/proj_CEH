@@ -33,13 +33,13 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 
 def multi():
     pool = multiprocessing.Pool(processes=5)
-    yy = range(2015,2020)
+    yy = range(2010,2020)
     res = pool.map(run, yy)
     pool.close()
 
 
 def run(year):
-    for rr in ['WAf']:#, 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
+    for rr in ['WAf', 'india', 'sub_SA', 'australia', 'china', 'SAf', 'GPlains']:
         extract_box(rr, year)
 
 
@@ -79,7 +79,7 @@ def extract_box(region, year):
                 for pftag in ['1','2','3']:
                     pfdic[str(dv)+str(pftag)] = []
             elif dv=="direction":
-                for pftag in ['1','2','3']:
+                for pftag in ['1','-1','-2','0']:
                     pfdic[str(dv)+str(pftag)] = []
             else:
                 pfdic[dv] = []
@@ -105,6 +105,8 @@ def extract_box(region, year):
                 tt = track.sel(times=tids)
                 tm1 = tids-1
                 tm2 = tids-2
+               
+                tm0 = tids+1
 
                 if np.isnan(tt['meanlat']):
                     continue
@@ -135,15 +137,19 @@ def extract_box(region, year):
 
 
                     elif dv == 'direction':
-                        pfdic['direction1'] = tt[dv].values
+                        pfdic['direction0'] = tt[dv].values
                         if tm1>=0:
-                            pfdic['direction2'] = track.sel(times=tm1)['direction'].values
+                            pfdic['direction-1'] = track.sel(times=tm1)['direction'].values
                         else:
-                            pfdic['direction2'] = np.nan
+                            pfdic['direction-1'] = np.nan
                         if tm2>=0:
-                            pfdic['direction3'] = track.sel(times=tm2)['direction'].values
+                            pfdic['direction-2'] = track.sel(times=tm2)['direction'].values
                         else:
-                            pfdic['direction3'] = np.nan
+                            pfdic['direction-2'] = np.nan
+                        try:
+                            pfdic['direction1'] = track.sel(times=tm0)['direction'].values
+                        except:
+                            pfdic['direction1'] = np.nan
 
                     elif (tt[dv].size==3) & ("pf" in dv):
                         for pfids, pftag in enumerate(['1', '2', '3']):

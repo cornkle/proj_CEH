@@ -19,7 +19,7 @@ import ipdb
 from utils import u_arrays
 def saveAnomalyDay():
 
-    dtag = 'terra'
+    dtag = 'aqua'
 
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')
     allfiles = u_arrays.locate('.nc', cnst.lmcs_drive+'MODIS_LST/'+dtag+'/nc_v61/')
