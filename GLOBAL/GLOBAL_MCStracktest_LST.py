@@ -34,7 +34,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-15,25,7,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+MREGIONS = {'WAf' : [[-10,20,7,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
  'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
  'india' : [[70,90, 5,30], 'asia', 5], # 7
  'china' : [[105,115,25,40], 'asia', 8 ], # 4
@@ -45,7 +45,8 @@ MREGIONS = {'WAf' : [[-15,25,7,19], 'spac', 0], # last is hourly offset to UCT #
 
 }
 
-REGION = 'WAf'
+REGION = 'sub_SA'
+SENSOR = 'aqua'
 
 def composite(h):
 
@@ -61,16 +62,16 @@ def composite(h):
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2012, 2020):
+    for y in np.arange(2003, 2020):
 
-        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
+        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance_direction__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
         msg = msg.to_dict(orient='list')
 
         hour = h
 
         domain = (MREGIONS[REGION])[0]
         m1 = 1
-        m2 = 12
+        m2 = 3
         lontag = 'meanlon'
         lattag = 'meanlat'
 
@@ -79,15 +80,16 @@ def composite(h):
             msg[k] = np.array(msg[k])
 
         inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)  & (
-                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.5)|(np.abs(msg['latdiff_loc-init'])>=1.5))
+                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h-1) & (msg['hour'] <= h+1)  & (
+                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.3)|(np.abs(msg['latdiff_loc-init'])>=1.3))
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                     & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h) & (msg['hour'] <= h+1)\
-                     & (msg['month']>=m1) & (msg['month']<=m2)
+                     & (msg[lattag] <= domain[3]) & (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (
+                                 msg['ccs_area'] >= 5000) & (msg['hour'] >= h-2) & (msg['hour'] <= h + 1) & (msg['month'] >= m1) & (msg['month'] <= m2) & (
+                                 (np.abs(msg['londiff_loc-init']) >= 1.) | (np.abs(msg['latdiff_loc-init']) >= 1.))
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
@@ -137,31 +139,32 @@ def composite(h):
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
         #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-
-
+        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
-    dist = 70
+    dist = 85
     #dist=100
 
     res = 0.05
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
+    if np.sum(np.isfinite(kernel)) < 0.1 * kernel.size:
+        print('Not enough data')
+        return None
 
     ilon = np.round(inits[0] / res).astype(int)
     ilat = np.round(inits[1] / res).astype(int)
 
+    if (np.abs(ilon)<29) & (np.abs(ilat)<29):
+        return None
 
-    #ipdb.set_trace()
-
-    kernel3 = kernel - np.nanmean(kernel)
+    #print('lonlat', ilon, ilat)
 
     cnt = np.zeros_like(kernel)
     init = np.zeros_like(kernel)
-    cnt[np.isfinite(kernel)] = 1
+
     try:
         init[dist+1-ilat, dist+1-ilon] = 1
     except:
@@ -172,11 +175,14 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
     if wd != None:
         kernel = ua.rotate(kernel, wd, ref_angle=90)
-        kernel3 = ua.rotate(kernel3, wd, ref_angle=90)
         init = ua.rotate(init, wd, ref_angle=90)
-        cnt = ua.rotate(cnt, wd, ref_angle=90)
 
-    return kernel, kernel3, cnt, init
+    cnt[np.isfinite(kernel)] = 1
+    kernel3 = kernel - np.nanmean(kernel)
+
+    cut = 25
+    print('shape', kernel[cut:-cut, cut:-cut].shape)
+    return kernel[cut:-cut, cut:-cut], kernel3[cut:-cut,cut:-cut], cnt[cut:-cut,cut:-cut], init[cut:-cut,cut:-cut]
 
 
 def file_loop(fi):
@@ -187,23 +193,22 @@ def file_loop(fi):
     hour = fi['hour']
     print('Doing day: ', date)
 
-    init_lon = fi['londiff_loc-init']
-    init_lat = fi['latdiff_loc-init']
 
-    ulist = []
-    vlist = []
-    for direc in fi['direction']:
-        ulist.append(np.sin(np.deg2rad(direc)))
-        vlist.append(np.cos(np.deg2rad(direc)))
 
-    umean = np.sum(ulist)
-    vmean = np.sum(vlist)
-
-    avg_wd = np.rad2deg(np.arctan2(umean,vmean))
-    if avg_wd<0:
-        avg_wd = avg_wd+360
-    #print('mean WD', avg_wd, fi['direction'])
-    direct = avg_wd
+    # ulist = []
+    # vlist = []
+    # for direc in fi['direction']:
+    #     ulist.append(np.sin(np.deg2rad(direc)))
+    #     vlist.append(np.cos(np.deg2rad(direc)))
+    #
+    # umean = np.sum(ulist)
+    # vmean = np.sum(vlist)
+    #
+    # avg_wd = np.rad2deg(np.arctan2(umean,vmean))
+    # if avg_wd<0:
+    #     avg_wd = avg_wd+360
+    # #print('mean WD', avg_wd, fi['direction'])
+    # direct = avg_wd
 
 
     box = (MREGIONS[REGION])[0]
@@ -219,9 +224,9 @@ def file_loop(fi):
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
-    alt_path = cnst.lmcs_drive+'MODIS_LST/aqua/anom_noQC_v6/'
+    alt_path = cnst.lmcs_drive+'MODIS_LST/'+SENSOR+'/anom_v61/'
     try:
-        lsta = xr.open_dataset(alt_path + 'aqua_05deg_anom_' + fdate + '.nc')
+        lsta = xr.open_dataset(alt_path +SENSOR+'_05deg_anom_' + fdate + '.nc')
 
     except:
         print('Surface file not found, return')
@@ -235,8 +240,10 @@ def file_loop(fi):
         daybefore.day).zfill(2) + '.nc')
 
 
-    lsta_da = lsta['LST_Day_CMG'].squeeze()
+    lsta_da = lsta['LST_Day'].squeeze()
     lsta_da = lsta_da.where((np.isfinite(lsta_da)) & (lsta_da > -8000)) / 100
+
+    #lsta_da = lsta_da - np.nanmean(lsta_da)
 
     kernel2_list = []
     kernel3_list = []
@@ -279,15 +286,30 @@ def file_loop(fi):
     for id in range(3): # 3 precip entries
         idss = 0
         for lat, lon in zip(fi['pf_lat'+str(id+1)], fi['pf_lon'+str(id+1)]):
-    #for lat, lon, direct in zip(fi['pf_lat'][0], fi['pf_lon'][0], fi['direction']):   #zip(fi['meanlat'], fi['meanlon']):
 
-    #for lat, lon, direct in zip(fi['meanlat'], fi['meanlon'], fi['direction']):
-            #direction = (fi[direction])[cid-1]
             ####################
-            #direct = fi['direction'][idss]
+            ulist = []
+            vlist = []
+            for direc in [fi['direction1'][idss], fi['direction0'][idss],fi['direction-1'][idss] , fi['direction-2'][idss]]: #
+                ulist.append(np.sin(np.deg2rad(direc)))
+                vlist.append(np.cos(np.deg2rad(direc)))
+
+            umean = np.sum(ulist)
+            vmean = np.sum(vlist)
+
+            avg_wd = np.rad2deg(np.arctan2(umean, vmean))
+            if avg_wd < 0:
+                avg_wd = avg_wd + 360
+            # print('mean WD', avg_wd, fi['direction'])
+            direct = avg_wd
+
+            init_lon = fi['londiff_loc-init'][idss]
+            init_lat = fi['latdiff_loc-init'][idss]
+
+            idss = idss+1
 
             try:
-                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.02)
+                point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.05)
             except KeyError:
                 print('point index error')
                 #ipdb.set_trace()
@@ -308,15 +330,6 @@ def file_loop(fi):
                 kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat], wd=direct)
             except TypeError:
                 continue
-
-            # f = plt.figure()
-            # ax = f.add_subplot(121)
-            # cb = ax.contourf(kernel2, cmap='RdBu')
-            # plt.colorbar(cb)
-            # ax = f.add_subplot(122)
-            # cb = ax.contourf(cnt, cmap='viridis')
-            # plt.colorbar(cb)
-            # f.show()
 
             cnt_all = np.zeros_like(cnt)+1
             kernel2_list.append(kernel2)
@@ -349,9 +362,9 @@ def file_loop(fi):
 def plot(h):
     h = h - (MREGIONS[REGION])[2]
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
     #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
-    y1 = 2012
+    y1 = 2003
     y2 = 2020
 
     dic = pkl.load(open(
@@ -371,12 +384,12 @@ def plot(h):
         print('Coll', y)
         coll(dic, h, y)
 
-    extent = 70
+    extent = 60
 
     f = plt.figure(figsize=(15, 4))
     ax = f.add_subplot(131)
 
-    thresh = np.percentile(dic['init'], 99)
+    #thresh = np.percentile(dic['init'], 99)
 
 
     plt.contourf(dic['init'], cmap='RdBu_r',  levels=np.arange(0,11), extend='both')
@@ -395,10 +408,11 @@ def plot(h):
     plt.title(REGION+' '+str(y1)+'-'+str(y2)+'| Initiations, Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
-    thresh = np.abs(np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 95))
+    thresh = np.abs(np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 95)) #np.linspace(thresh*-1,thresh,20)
+    div = 1/thresh #np.array([-1,-0.75,-0.5,-0.25,-0.1,0.1,0.25,0.5,0.75,1])/div
     ax = f.add_subplot(132)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,10), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,20), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
     ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
@@ -432,16 +446,16 @@ def plot(h):
 
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/' + REGION + '_MODIS_LSTA_2012-2019_6-19N_allPF.jpg')
+    plt.savefig(cnst.elements_drive + '/' + REGION + '_'+SENSOR+'_LSTA_2012-2019_6-19N_allPF_'+str(h)+'h.jpg')
 
 
 
 def plot2(h):
     h = h - (MREGIONS[REGION])[2]
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_aqua_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
     # pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
-    y1 = 2012
+    y1 = 2003
     y2 = 2020
 
     dic = pkl.load(open(
@@ -465,7 +479,7 @@ def plot2(h):
 
     f = plt.figure(figsize=(10, 4))
 
-    thresh= np.percentile((dic['regional'] / dic['cnt'])[np.isfinite((dic['regional'] / dic['cnt']))], 99)#0.9
+    thresh= np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 99)#0.9
 
 
     ax = f.add_subplot(121)
@@ -503,4 +517,4 @@ def plot2(h):
 
     plt.tight_layout()
     # f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/'+REGION+'_MODIS_LSTA_2012-2019_6-19N_allPF.jpg')
+    plt.savefig(cnst.elements_drive + '/'+REGION+'_'+SENSOR+'_LSTA_2012-2019_6-19N_allPF.jpg')

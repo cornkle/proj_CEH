@@ -402,7 +402,6 @@ def linear_trend(x, eps=0.001, alpha=0.01):
 
 def rotate(array, direction, ref_angle=None):
     """
-
     :param array: 2d array
     :param lat: latitude
     :param lon: longitude
@@ -417,6 +416,6 @@ def rotate(array, direction, ref_angle=None):
     if ref_angle==None:
         ref_angle=0
 
-    rot_array = inter.rotate(array, ref_angle - direction, reshape=False, cval=np.nan, prefilter=False)
+    rot_array = inter.rotate(array, ref_angle - direction, reshape=False, cval=np.nan, prefilter=False, order=0)
 
     return rot_array
