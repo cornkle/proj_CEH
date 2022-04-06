@@ -34,30 +34,41 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 
-MREGIONS = {'WAf' : [[-10,20,7,19], 'spac', 0], # last is hourly offset to UCT # 12    # [-18,25,4,25]
- 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
- 'india' : [[70,90, 5,30], 'asia', 5], # 7
- 'china' : [[105,115,25,40], 'asia', 8 ], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
+MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+ 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,5), (1,12)], # 10
+ 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (8,12), (1,12)], # 7
+ 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (8,12), (1,12)], # 4
+ 'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,5), (1,12)], # 3
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (9,12), (1,5), (1,12)] , # 16
+ 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5, (1,12), (1,12), (1,12)], # 17
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (8,12), (1,12)] # # 18
 
 }
 
-REGION = 'sub_SA'
-SENSOR = 'aqua'
+REGIONS = [ 'GPlains', 'sub_SA','WAf', 'china', 'india', 'australia'] #
+SENSOR = 'terra'
 
-def composite(h):
+extag = '_day-1'
 
-    h = h - (MREGIONS[REGION])[2]
 
-    # if h >= 24:
-    #     shift = (12 + h) * (-1)
-    # else:
-    #     shift = 12 - h
 
-    print('Hour: ', h)
+
+def composite(rawhour):
+
+    h = rawhour - (MREGIONS[REGION])[2]
+    def h_checker(h):
+        if h >= 24:
+            h = h-24
+        if h == 24:
+            h = 0
+        if h < 0:
+            h = h+24
+        return h
+    h = h_checker(h)
+    h2 = h_checker(h+1)
+    h1 = h_checker(h-1)
+
+    print('Hour: ', h, h1, h2)
 
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
@@ -67,32 +78,31 @@ def composite(h):
         msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance_direction__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
         msg = msg.to_dict(orient='list')
 
-        hour = h
-
         domain = (MREGIONS[REGION])[0]
-        m1 = 1
-        m2 = 3
-        lontag = 'meanlon'
-        lattag = 'meanlat'
+
+        m1 = MONTHS[0]
+        m2 = MONTHS[1]
 
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
 
-        inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                 & (msg[lattag] <= domain[3]) &  (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (msg['ccs_area'] >= 5000) & (msg['hour'] >= h-1) & (msg['hour'] <= h+1)  & (
-                             msg['pf_landfrac'] > 0.9)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.3)|(np.abs(msg['latdiff_loc-init'])>=1.3))
+        inmask =   ((msg['tracktime'] >= 1)  & (msg['ccs_area'] >= 1000) & \
+                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                    (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.7)|(np.abs(msg['latdiff_loc-init'])>=1.7)))
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = (msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-                     & (msg[lattag] <= domain[3]) & (msg['tracktime'] >= 1) & (msg['tracktime'] <= 8) & (
-                                 msg['ccs_area'] >= 5000) & (msg['hour'] >= h-2) & (msg['hour'] <= h + 1) & (msg['month'] >= m1) & (msg['month'] <= m2) & (
-                                 (np.abs(msg['londiff_loc-init']) >= 1.) | (np.abs(msg['latdiff_loc-init']) >= 1.))
+            inmask = ((msg['tracktime'] >= 1)  & (msg['ccs_area'] >= 1000) & \
+                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                   (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.7)|(np.abs(msg['latdiff_loc-init'])>=1.7)))
+
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
+        #(msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
+        #         & (msg[lattag] <= domain[3]) &
 
         mask = np.where(inmask)
         #ipdb.set_trace()
@@ -100,33 +110,41 @@ def composite(h):
             msg[k] = (msg[k])[mask]
 
         msg['date'] = []
+        msg['utc_date'] = []
         msg['day'] = []
         for yi, k in enumerate(msg['base_time']):
-            bbt = pd.to_datetime(k)
 
-            msg['date'].append(bbt.replace(hour=0, minute=0))
+            bbt = pd.to_datetime(k) - pd.Timedelta('1 days')
+            hourchange = (MREGIONS[REGION])[2]
+
+            if hourchange < 0:
+                bbl = bbt - pd.Timedelta(str(np.abs(hourchange))+' hours')
+            elif hourchange > 0:
+                    bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
+            else:
+                bbl = bbt
+
+            msg['utc_date'].append(bbt.replace(hour=0, minute=0))
+            msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
 
-        msg['date'] = np.array(msg['date'])
-        msg['day'] = np.array(msg['day'])
-        #ipdb.set_trace()
-        # msg.attrs['refhour'] = h
-        # msg.attrs['eh'] = eh
-        #
         ubt = np.unique(msg['date'])
+        msg['date'] = np.array(msg['date'])
 
         chunks = []
         for ut in ubt:
             daydir = {}
 
-            pos = np.where(msg['date'] == ut)
+            pos = np.where(msg['date'] == ut)[0]
 
             for k in msg.keys():
-                 daydir[k] = (msg[k])[pos]
+                 daydir[k] = np.array(msg[k])[pos]
             chunks.append(daydir)
 
-        dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'init'])
-
+        try:
+            dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'init'])
+        except:
+            continue
         # res = []
         # #ipdb.set_trace()
         # for m in chunks:
@@ -139,7 +157,7 @@ def composite(h):
            dic[k] = np.nansum(dic[k], axis=0)
         print('File written')
         #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
-        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        pkl.dump(dic, open(path + "/"+REGION+"_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(m1).zfill(2)+'-'+str(m2).zfill(2)+'_'+str(y)+'_h'+str(rawhour).zfill(2)+extag+".p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, inits, wd = None):
@@ -215,12 +233,12 @@ def file_loop(fi):
 
     dayd = pd.Timedelta('1 days')
 
-    if (date.hour) <= 16:
-        print('Nighttime')
-        daybefore = date #- dayd
-    else:
-        print('Daytime')
-        daybefore = date #- dayd
+    # if (date.hour) <= 16:
+    #     print('Nighttime')
+    #     daybefore = date #- dayd
+    # else:
+    #     print('Daytime')
+    daybefore = date #- dayd
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
@@ -236,8 +254,8 @@ def file_loop(fi):
     lsta = uda.flip_lat(lsta)
     lsta = lsta.sel(lon=slice(box[0]-3, box[1]+3), lat=slice(box[2]-3, box[3]+3)) # define SM region box to consider
 
-    print('Doing ' + 'aqua_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
-        daybefore.day).zfill(2) + '.nc')
+    print('Doing ' + SENSOR+'_' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
+        daybefore.day).zfill(2) + '.nc', REGION)
 
 
     lsta_da = lsta['LST_Day'].squeeze()
@@ -359,21 +377,28 @@ def file_loop(fi):
 
 
 
-def plot(h):
-    h = h - (MREGIONS[REGION])[2]
+def plot(rawhour):
+    h = rawhour - (MREGIONS[REGION])[2]
+    if h >= 24:
+        h = h-24
+    if h == 24:
+        h = 0
+    if h < 0:
+        h = h+24
     print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"
-    #pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
+    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" +REGION+"_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(MONTHS[0]).zfill(2)+'-'+str(MONTHS[1]).zfill(2)+'_'
+
     y1 = 2003
     y2 = 2020
 
     dic = pkl.load(open(
-            pin+str(y1)+'_h'+str(h).zfill(2)+".p", "rb"))
+            pin+str(y1)+'_h'+str(rawhour).zfill(2)+extag+".p", "rb"))
 
     def coll(dic, h, year):
         print(h)
+
         core = pkl.load(open(
-            pin+str(year)+'_h'+str(h).zfill(2)+".p", "rb"))
+                pin+str(year)+'_h'+str(rawhour).zfill(2)+extag+".p", "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
@@ -382,7 +407,11 @@ def plot(h):
 
     for y in range(y1+1, y2):
         print('Coll', y)
-        coll(dic, h, y)
+        try:
+            coll(dic, h, y)
+        except:
+            print(h, y, 'missing')
+            continue
 
     extent = 60
 
@@ -408,11 +437,12 @@ def plot(h):
     plt.title(REGION+' '+str(y1)+'-'+str(y2)+'| Initiations, Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
-    thresh = np.abs(np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 95)) #np.linspace(thresh*-1,thresh,20)
+    ano = (dic['ano'] / dic['cnt']) - np.nanmean((dic['ano'] / dic['cnt']))  # / dic['cnt']
+    thresh = np.abs(np.percentile(ano, 95)) #np.linspace(thresh*-1,thresh,20)
     div = 1/thresh #np.array([-1,-0.75,-0.5,-0.25,-0.1,0.1,0.25,0.5,0.75,1])/div
     ax = f.add_subplot(132)
 
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,20), extend='both') #-(rkernel2_sum / rcnt_sum)
+    plt.contourf(ano, cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,20), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
     ax.set_xticks((np.linspace(0, 2 * extent, 9)))
     ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
@@ -446,75 +476,13 @@ def plot(h):
 
     plt.tight_layout()
     #f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/' + REGION + '_'+SENSOR+'_LSTA_2012-2019_6-19N_allPF_'+str(h)+'h.jpg')
+    plt.savefig(cnst.elements_drive + '/'+str(rawhour)+'/' + REGION + '_'+SENSOR+'_LSTA_'+str(MONTHS[0]).zfill(2)+'-'+str(MONTHS[1]).zfill(2)+'_2003-2019_allPF_'+str(rawhour).zfill(2)+'h'+extag+'.jpg')
+
+    plt.close('all')
 
 
-
-def plot2(h):
-    h = h - (MREGIONS[REGION])[2]
-    print('Hour: ', h)
-    pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_LSTA_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_largestPF_DAY_"
-    # pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"
-    y1 = 2003
-    y2 = 2020
-
-    dic = pkl.load(open(
-        pin + str(y1) + '_h' + str(h).zfill(2) + ".p", "rb"))
-
-    def coll(dic, h, year):
-        print(h)
-        core = pkl.load(open(
-            pin + str(year) + '_h' + str(h).zfill(2) + ".p", "rb"))
-        for id, k in enumerate(core.keys()):
-            try:
-                dic[k] = dic[k] + core[k]
-            except KeyError:
-                dic[k] = core[k]
-
-    for y in range(y1 + 1, y2):
-        print('Coll', y)
-        coll(dic, h, y)
-
-    extent = 60
-
-    f = plt.figure(figsize=(10, 4))
-
-    thresh= np.percentile((dic['ano'] / dic['cnt'])[np.isfinite((dic['ano'] / dic['cnt']))], 99)#0.9
-
-
-    ax = f.add_subplot(121)
-
-    plt.contourf((dic['ano'] / dic['cnt']), cmap='RdBu_r', levels=np.linspace(thresh * -1, thresh, 10),
-                 extend='both')  # -(rkernel2_sum / rcnt_sum)
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
-    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
-    ax.set_xlabel('km')
-    ax.set_ylabel('km')
-    ax.axvline(extent, linestyle='dashed', color='k')
-    ax.axhline(extent, linestyle='dashed', color='k')
-    plt.colorbar(label='K')
-    plt.title('Seasonal anomaly , Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
-              fontsize=10)
-
-    ax = f.add_subplot(122)
-
-    plt.contourf(dic['cnt'], cmap='viridis')  # -(rkernel2_sum / rcnt_sum)
-    plt.plot(extent, extent, 'bo')
-    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
-    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 10 / 2/100).round(2))
-    ax.set_xlabel('Degrees')
-    ax.set_ylabel('Degrees')
-    ax.axvline(extent, linestyle='dashed', color='k')
-    ax.axhline(extent, linestyle='dashed', color='k')
-    plt.colorbar(label='n')
-    plt.title('Valid count',
-              fontsize=10)
-
-    plt.tight_layout()
-    # f.savefig('/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'+REGION+'_'+str(y1)+'-'+str(y2-1)+'_SM_composite_AMSR2-global_BOX-ANNUAL_PF.jpg')
-    plt.savefig(cnst.elements_drive + '/'+REGION+'_'+SENSOR+'_LSTA_2012-2019_6-19N_allPF.jpg')
+for regs in REGIONS:
+    REGION = regs
+    MONTHS = (MREGIONS[REGION])[5]
+    composite(2)
+    plot(2)

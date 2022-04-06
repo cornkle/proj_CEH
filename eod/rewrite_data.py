@@ -474,6 +474,63 @@ def rewriteLSTTrend_VERA(file):
     return
 
 
+def rewrite_ASCAT(file):
+
+    out = file.replace('raw', 'nc')
+    out = out.replace('.gra', '.nc')
+
+    if os.path.isfile(out):
+        return
+
+    day=True
+    if day:
+        hour = 13
+    else:
+        hour = 1
+
+    print('Doing ' + file)
+    #full_globe, 0.25deg
+    blat = np.arange(-59.875,60, 0.25)
+    blon = np.arange(-179.875,180, 0.25)
+
+    ffile = os.path.split(file)[-1]
+
+    llist = ffile.split('.')
+
+    yr = int(llist[0][-11:-7])
+    mon = int(llist[0][-7:-5])
+    day = int(llist[0][-5:-3])
+
+    date = [datetime.datetime(yr, mon, day, hour, 0)]
+
+    rrShape = (blat.shape[0], blon.shape[0])
+
+    rr = np.array(np.fromfile(file, dtype=np.uint8()), dtype=float)
+    rr.shape = rrShape
+    rr = np.flip(rr,axis=0)
+
+    da = xr.DataArray(rr[None, ...], coords={'time': date,
+                                             'lat': blat,
+                                             'lon': blon},
+                      dims=['time', 'lat', 'lon'])  # .isel(time=0)
+
+    da.values[da.values>200] = np.nan
+    if np.sum(da.values) == np.nan:
+        return
+    da.values = da.values / 2
+    ds = xr.Dataset({'SM': da})
+
+    try:
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+        ds.to_netcdf(path=out, mode='w', encoding=encoding, format='NETCDF4')
+
+    except OSError:
+        print('Did not find ' + out)
+        print('Out directory not found')
+    print('Wrote ' + out)
+    return ds
+
 
 
 def rewrite_AMSRE(file):
