@@ -342,7 +342,7 @@ def writeAnomaly():
         outdate = str(odate.year) + str(odate.month).zfill(2) + str(odate.day).zfill(2)
         print('Outdate', outdate)
         try:
-            clim = xr.open_dataset(climpath + 'aqua_05deg_clim_2008'+outdate[4::]+'.nc')
+            clim = xr.open_dataset(climpath + tag+'_05deg_clim_2008'+outdate[4::]+'.nc')
         except FileNotFoundError:
             print('File not found, continue')
             continue
@@ -352,12 +352,11 @@ def writeAnomaly():
         var_orig = ['LST_Day']
         var_new = ['LST']
         for vo, vn in zip(var_orig,var_new):
-            ipdb.set_trace()
 
             out[vo].values = day[vo].where(day[vo]>0).values - clim[vn].values
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in out.data_vars}
         #outf = basename.replace(".nc", "_anom.nc")
-        out.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+tag+'/anom_v61/aqua_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
+        out.to_netcdf(path=cnst.lmcs_drive+'MODIS_LST/'+tag+'/anom_v61/'+tag+'_05deg_anom_'+outdate+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 

@@ -33,7 +33,7 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 
 def multi():
     pool = multiprocessing.Pool(processes=5)
-    yy = range(2010,2020)
+    yy = range(2000,2010)
     res = pool.map(run, yy)
     pool.close()
 
