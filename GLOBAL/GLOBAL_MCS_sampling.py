@@ -33,7 +33,7 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
 
 def multi():
     pool = multiprocessing.Pool(processes=5)
-    yy = range(2000,2010)
+    yy = range(2000,2020)
     res = pool.map(run, yy)
     pool.close()
 
@@ -60,7 +60,7 @@ def extract_box(region, year):
         ds = xr.open_dataset(ff)
         fname = os.path.basename(ff)
 
-        outname = fname[0:-3].replace('robust', region + '_winit_distance_direction_')
+        outname = fname[0:-3].replace('robust', region + '_initTime_')
 
         outfilename = out + outname + '.csv'
 
@@ -94,12 +94,15 @@ def extract_box(region, year):
         pfdic['latdiff_loc-init'] = []
         pfdic['init_lon'] = []
         pfdic['init_lat'] = []
+        pfdic['init_hour'] = []
 
         for ids, ai in enumerate(ds.tracks):
             track = ds.sel(tracks=ai)
 
             init_lon = track.sel(times=0)['meanlon'].values
             init_lat = track.sel(times=0)['meanlat'].values
+
+            init_hour = pd.Timestamp(track.sel(times=0)['base_time'].values).hour
 
             for tids in track.times:
                 tt = track.sel(times=tids)
@@ -122,6 +125,8 @@ def extract_box(region, year):
                 pfdic['latdiff_loc-init'].append(float(tt['meanlat'].values - init_lat))
                 pfdic['init_lon'].append(float(init_lon))
                 pfdic['init_lat'].append(float(init_lat))
+                pfdic['init_hour'].append(int(init_hour))
+
 
                 for dv in tt.data_vars:
                     if dv in dumpkeys:
@@ -165,3 +170,4 @@ def extract_box(region, year):
         #         print(kk, pfdic[kk])
         df = pd.DataFrame.from_dict(pfdic)
         df.to_csv(outfilename, index=False)
+        print('Saved ', outfilename)

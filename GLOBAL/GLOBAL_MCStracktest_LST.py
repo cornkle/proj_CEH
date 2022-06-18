@@ -45,13 +45,13 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
-REGIONS = [ 'GPlains', 'sub_SA','WAf', 'china', 'india', 'australia'] #
+REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'terra'
-
-extag = '_day-1'
-
-
-
+SENSOP = 10 # (LT overpass)
+extag = '_day0init' #
+INIT_DISTANCE = 0
+AREA = 0 #1000
+TRACKTIME = 1
 
 def composite(rawhour):
 
@@ -73,9 +73,9 @@ def composite(rawhour):
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2003, 2020):
+    for y in np.arange(2003, 2019):
 
-        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_winit_distance_direction__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
+        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_initTime__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
         msg = msg.to_dict(orient='list')
 
         domain = (MREGIONS[REGION])[0]
@@ -83,38 +83,13 @@ def composite(rawhour):
         m1 = MONTHS[0]
         m2 = MONTHS[1]
 
-        for k in msg.keys():
-
-            msg[k] = np.array(msg[k])
-
-        inmask =   ((msg['tracktime'] >= 1)  & (msg['ccs_area'] >= 1000) & \
-                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.7)|(np.abs(msg['latdiff_loc-init'])>=1.7)))
-
-
-
-        if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['tracktime'] >= 1)  & (msg['ccs_area'] >= 1000) & \
-                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                   (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=1.7)|(np.abs(msg['latdiff_loc-init'])>=1.7)))
-
-
-        #msc_status > 0 : MCS  = (-32C over 40000km2)
-        # pf_landfrac > 0.8: 80% of rain fields over land
-        #(msg[lontag] >= domain[0]) & (msg[lontag] <= domain[1]) & (msg[lattag] >= domain[2]) \
-        #         & (msg[lattag] <= domain[3]) &
-
-        mask = np.where(inmask)
-        #ipdb.set_trace()
-        for k in msg.keys():
-            msg[k] = (msg[k])[mask]
-
         msg['date'] = []
         msg['utc_date'] = []
         msg['day'] = []
+        msg['lt_hour'] =[]
         for yi, k in enumerate(msg['base_time']):
 
-            bbt = pd.to_datetime(k) - pd.Timedelta('1 days')
+            bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
             hourchange = (MREGIONS[REGION])[2]
 
             if hourchange < 0:
@@ -125,8 +100,31 @@ def composite(rawhour):
                 bbl = bbt
 
             msg['utc_date'].append(bbt.replace(hour=0, minute=0))
+            msg['lt_hour'].append(bbl.hour)
             msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
+
+        for k in msg.keys():
+
+            msg[k] = np.array(msg[k])
+
+        inmask =   ((msg['lt_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                    (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
+
+
+        if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+            inmask = ((msg['lt_hour'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+                       (msg['month'] >= m1) & (msg['month'] <= m2) & (
+                                  (np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
+
+        #msc_status > 0 : MCS  = (-32C over 40000km2)
+        # pf_landfrac > 0.8: 80% of rain fields over land
+
+        mask = np.where(inmask)
+        for k in msg.keys():
+            msg[k] = (msg[k])[mask]
 
         ubt = np.unique(msg['date'])
         msg['date'] = np.array(msg['date'])
@@ -484,5 +482,5 @@ def plot(rawhour):
 for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
-    composite(2)
-    plot(2)
+    composite(19)
+    plot(19)

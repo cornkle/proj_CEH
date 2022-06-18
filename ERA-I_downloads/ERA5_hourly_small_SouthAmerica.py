@@ -4,12 +4,13 @@ import os
 c = cdsapi.Client()
 def download(y):
     c.retrieve(
-        'reanalysis-era5-pressure-levels',
+        #'reanalysis-era5-pressure-levels',
+        'reanalysis-era5-single-levels',
         {
             'product_type': 'reanalysis',
             'format': 'netcdf',
-            'variable': ['u', 'v'],
-            'pressure_level': ['200'],
+            'variable': ['cape', 'tcwv'],
+           # 'pressure_level': ['200'],
             'year': [
                 str(y)
             ],
@@ -42,13 +43,13 @@ def download(y):
                 -45,   # -58
             ],
         },
-        '/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv_15UTC_'+str(y)+'_peru2.nc')
+        '/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/tcwv_15UTC_'+str(y)+'_peru2.nc')
 
 
 
 for y in range(2000,2021):  # 89 missing
 
-    if os.path.isfile('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv_15UTC_'+str(y)+'_peru2.nc'):
+    if os.path.isfile('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/tcwv_15UTC_'+str(y)+'_peru2.nc'):
         print('File exists, continue!')
         continue
 

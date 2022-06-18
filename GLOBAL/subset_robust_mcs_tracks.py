@@ -9,6 +9,7 @@ import os
 import numpy as np
 import xarray as xr
 import glob
+import ipdb
 
 def subset_file(infile, outdir, lon_box, lat_box):
 
@@ -62,9 +63,9 @@ def main(reg, inds,lon1, lon2, lat1, lat2):
     lon_max = lon2 #float(sys.argv[2])
     lat_min = lat1 #float(sys.argv[3])
     lat_max = lat2 #float(sys.argv[4])
-    inpath =  '/media/ck/Elements/global/MCS_Feng/tracks/'+inds[1]+'/'#sys.argv[5]
-    outdir = '/media/ck/Elements/global/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
-
+    inpath =  '/media/ck/LStorage/MCS_Feng/tracks/'+inds[1]+'/'#sys.argv[5]
+    outdir = '/media/ck/LStorage/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
+    #ipdb.set_trace()
     # Subset region boundary
     lon_box = [lon_min, lon_max]
     lat_box = [lat_min, lat_max]
@@ -79,6 +80,7 @@ def main(reg, inds,lon1, lon2, lat1, lat2):
 
     # Call function
     for infile in glob.glob(inpath+'*.nc'):
+       # ipdb.set_trace()
         status = subset_file(infile, outdir, lon_box, lat_box)
 
 mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
@@ -88,11 +90,28 @@ mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT #
  'australia' : [[120,140,-23, -11], 'asia', 9], # 3
  'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
  'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6], # # 18
+ 'EAf'     : [[33,52,-5,15],'spac', 3 ]
 
 }
 
-for reg in ['WAf', 'SAf', 'india', 'china', 'australia', 'sub_SA', 'trop_SA', 'GPlains']:
-    inds = mregions[reg]
-    lon1, lon2, lat1, lat2 = inds[0]
-    main(reg, inds, lon1, lon2, lat1, lat2)
+# for reg in ['EAf']:#'WAf', 'SAf', 'india', 'china', 'australia', 'sub_SA', 'trop_SA', 'GPlains']:
+#     inds = mregions[reg]
+#     lon1, lon2, lat1, lat2 = inds[0]
+#    # ipdb.set_trace()
+#     main(reg, inds, lon1, lon2, lat1, lat2)
+
+
+def filter(path):
+    for f in glob.glob(path+'/*1.nc'):
+        ds = xr.open_dataset(f)
+        drops = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
+                              'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx', 'pixel_duration',
+                             'pixel_pcp', 'pf_skewness', 'direction', 'eccentricity', 'mcs_status', 'uspeed', 'vspeed']
+        ds = ds.drop(drops)
+
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+
+        fout = f.replace('.nc', '_cut.nc')
+        ds.to_netcdf(path=fout, mode='w', encoding=encoding, format='NETCDF4', unlimited_dims='tracks')

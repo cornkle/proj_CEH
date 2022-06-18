@@ -326,6 +326,7 @@ def var2_binning_mean(xvar, yvar, xbins):
         try:
             #outdic['y'].append(np.percentile(yvar[mask],95))
             #outdic['y'].append(np.median(yvar[mask]))
+            #ipdb.set_trace()
             outdic['y'].append(np.mean(yvar[mask]))
             outdic['ystd'].append(np.std(yvar[mask]))
             outdic['ycount'].append(np.sum(np.isfinite(yvar[mask])))

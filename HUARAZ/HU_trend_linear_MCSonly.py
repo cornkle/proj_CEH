@@ -15,7 +15,7 @@ import seaborn
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 
-    y1 = 2000
+    y1 = 1984
     y2 = 2019
 
     if method is None:
@@ -81,25 +81,27 @@ def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
 def trend_all():
 
     #mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_-40_allClouds_monthly.nc'
-    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-50_allClouds_monthly.nc'
+    mcs = cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-40_allClouds_monthly.nc'
 
     fpath = cnst.network_data + 'figs/HUARAZ/'
 
-    box = [-79, -76, -11, -8] #[-79, -74, -12, -8]  # small latitude=slice(-25,0), longitude=slice(-81,-65) [-81,-65,-25,0]
+    box = [-81, -33, -55, 11] #[-79, -74, -12, -8]  # small latitude=slice(-25,0), longitude=slice(-81,-65) [-81,-65,-25,0]
     #box=[-79,-65,-17,-3]#  [-18,40,0,25] #
     #box = [-80, -53, -30, -1]
     #box = [-79,-69,-17,-7] #[-79, -75, -10.5, -8]
 
     da3 = xr.open_dataarray(mcs)#/100
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
-
-    grid = da3.salem.grid.regrid(factor=1)
+    print('Doing regrid')
+    grid = da3.salem.grid.regrid(factor=0.25)
 
     tir = grid.lookup_transform(da3, method=np.nanmean)  #t2d.salem.lookup_transform(da3['tir']) #
 
     grid = grid.to_dataset()
     tir = xr.DataArray(tir, coords=[da3['time'],  grid['y'], grid['x']], dims=['time',  'latitude','longitude'])
-
+    print('Created array')
+    tir.to_netcdf(cnst.GRIDSAT_PERU + 'aggs/gridsat_WA_count_-40_allClouds_monthly_regrid025.nc')
+    ipdb.set_trace()
     months= [1,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
     dicm = {}
@@ -121,7 +123,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        sig = False
+        sig = True
 
 
         tirtrend, tirmean = calc_trend(tir, m, method=method, sig=sig, wilks=False)
@@ -147,9 +149,9 @@ def trend_all():
 
 
         if len(m) == 1:
-            fp = fpath + 'MCS_only_trendmap_Peru_count-50C_allClouds_noSIG_since2000_'+str(m[0]).zfill(2)+'.png'
+            fp = fpath + 'all_coldCloud_-40_1985-2019_'+str(m[0]).zfill(2)+'.png'
         else:
-            fp = fpath + 'MCS_only_trendmap_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
+            fp = fpath + 'all_coldCloud_-40_1985-2019_' + str(m[0]).zfill(2) +'-'+ str(m[1]).zfill(2) + '.png'
 
         map = ti_da.salem.get_map()
 
@@ -169,7 +171,7 @@ def trend_all():
 
         #map.set_plot_params(cmap='RdBu_r', extend='both', levels=np.arange(-1.5,1.6,0.25)) #)  #, levels=np.arange(-7,7,25)  # levels=np.arange(20,101,20)  #np.arange(20,101,20)
         map.set_plot_params(cmap='RdBu', extend='both', levels=np.arange(-30, 31, 10))
-        dic = map.visualize(ax=ax1, title=str(m)+': -50C frequency change', cbar_title='% decade-1',addcbar=True)
+        dic = map.visualize(ax=ax1, title=str(m)+': -40C frequency change', cbar_title='% decade-1',addcbar=True)
         contours = dic['contour'][0]
         plt.clabel(contours, inline=True, fontsize=7, fmt='%1.1f')
 
