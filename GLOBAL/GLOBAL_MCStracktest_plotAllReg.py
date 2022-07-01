@@ -34,6 +34,8 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'AMSR2'
 
+OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
+
 
 MONTHS=(1,12)
 rawhour=2
@@ -95,7 +97,7 @@ for ids, regs in enumerate(REGIONS):
         ax.add_patch(rect)
 
         plt.colorbar(label='count')
-        plt.title(regs+' day 0 initialisations',  fontsize=10)
+        plt.title(regs+' day 0 initiations',  fontsize=10)
 
         ######################################################
 
@@ -121,7 +123,7 @@ for ids, regs in enumerate(REGIONS):
         ax.add_patch(rect)
 
         cb = plt.colorbar(label='%', format='%.2f')
-        plt.title(regs+' day-1 ano-mean  | n='+str(np.max(dic['allcnt'])),
+        plt.title(regs+' day-1 ano  | n='+str(np.max(dic['allcnt'])),
                   fontsize=10)
 
         ###############################################
@@ -170,12 +172,12 @@ for ids, regs in enumerate(REGIONS):
         ax.add_patch(rect)
 
         plt.colorbar(label='%', format='%.2f')
-        plt.title(regs+' day0 ano-mean  | n='+str(np.max(dic['allcnt'])), fontsize=10)
+        plt.title(regs+' day0 ano  | n='+str(np.max(dic['allcnt'])), fontsize=10)
 
 plt.tight_layout()
 
 plt.savefig(
-    cnst.elements_drive + '/' + str(rawhour) + '/AllRegions_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(
+    OUT + 'all_reg/' + str(rawhour) + '/AllRegions_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(
         2) + '-' + str(
         MONTHS[1]).zfill(2) + '_2012-2019_allPF_' + str(rawhour).zfill(2) + 'h_pureAnom.jpg')
 plt.close('all')

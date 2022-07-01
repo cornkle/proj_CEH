@@ -3,14 +3,28 @@ import numpy as np
 import ipdb
 
 
+def multi_test():
+
+    def f(x):
+        return x + 1
+
+    pool = multiprocessing.get_context('spawn').Pool(processes=1)
+    res = pool.map(f, np.arange(10))
+    pool.close()
+    print(res)
+
+
+
+
 def run_arrays(nb_processors, func, data, dic_names):
 
-    pool = multiprocessing.Pool(processes=nb_processors)
-
+    pool = multiprocessing.get_context('fork').Pool(processes=nb_processors)
+    print('Pooled')
     res = pool.map(func, data)
     pool.close()
 
     res = [x for x in res if x is not None]
+
 
     # res = []
     # for d in data:

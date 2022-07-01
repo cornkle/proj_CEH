@@ -44,13 +44,15 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
-REGIONS = ['sub_SA', 'WAf', 'china', 'india', 'australia'] # 'GPlains'
+REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'ASCAT'
 SENSOP = 6 # (LT overpass)
-extag = '_full' #
-INIT_DISTANCE = 1.5
-AREA = 5000 #1000
-TRACKTIME = 1  #time step within track lifetime
+extag = '_allTracktime1_noCorr' #
+INIT_DISTANCE = 0
+AREA = 0 #1000
+TRACKTIME = 0
+
+TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(longitude=slice(-110,125), latitude=slice(-50,55))
 
 def composite(rawhour):
 
@@ -76,52 +78,74 @@ def composite(rawhour):
 
         m1 = MONTHS[0]
         m2 = MONTHS[1]
-        outfile = path + "/"+REGION+"_SM_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(m1).zfill(2)+'-'+\
-                  str(m2).zfill(2)+'_'+str(y)+'_h'+str(rawhour).zfill(2)+extag+".p"
+        outfile = path + "/" + REGION + "_SM_" + SENSOR + "_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_" + str(m1).zfill(
+            2) + '-' + \
+                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + extag + ".p"
 
-        msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_initTime__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
+        msg = pd.read_csv(
+            cnst.lmcs_drive + '/save_files/' + REGION + '_initTime__mcs_tracks_extc_' + str(y) + '0101_' + str(
+                y) + '1231.csv')
         msg = msg.to_dict(orient='list')
 
         domain = (MREGIONS[REGION])[0]
 
-        m1 = MONTHS[0]
-        m2 = MONTHS[1]
-
         msg['date'] = []
         msg['utc_date'] = []
         msg['day'] = []
-        msg['lt_hour'] =[]
+        msg['lt_hour'] = []
+        msg['lt_init'] = []
         for yi, k in enumerate(msg['base_time']):
 
-            bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
+            bbt = pd.to_datetime(k)  # - pd.Timedelta('1 days')
+            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0)
             hourchange = (MREGIONS[REGION])[2]
 
             if hourchange < 0:
-                bbl = bbt - pd.Timedelta(str(np.abs(hourchange))+' hours')
+                bbl = bbt - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
+                binit = lt_init - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
             elif hourchange > 0:
-                    bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
+                bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
+                binit = lt_init + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
             else:
                 bbl = bbt
+                binit = lt_init
 
             msg['utc_date'].append(bbt.replace(hour=0, minute=0))
             msg['lt_hour'].append(bbl.hour)
+            msg['lt_init'].append(binit.hour)
             msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
 
         for k in msg.keys():
-
             msg[k] = np.array(msg[k])
 
-        inmask = ((msg['lt_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & (msg['pf_landfrac'] > 0.99) & \
-        ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & (msg['ccs_area'] >= AREA) & \
-        ((np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | ( np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
+        # inmask = ((msg['lt_init'] >= SENSOP + 2) & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+        #           ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+        #           (msg['pf_landfrac'] > 0.99) & (msg['month'] >= m1) & (msg['month'] <= m2) & (
+        #                       (np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | (
+        #                           np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
+        #
+        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+        #     inmask = ((msg['lt_init'] >= SENSOP + 2) & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+        #               ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+        #               (msg['month'] >= m1) & (msg['month'] <= m2) & (
+        #                       (np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | (
+        #                           np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
+
+
+        inmask =   ((msg['tracktime'] >= TRACKTIME) & \
+                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                    (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0))
+
+
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['lt_hour'] >= SENSOP + 2) & (msg['tracktime'] == TRACKTIME) & \
-                     ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & (msg['ccs_area'] >= AREA) & \
-                     ((np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
+            inmask = ((msg['tracktime'] >= TRACKTIME) & \
+                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+                      (msg['pf_mcsstatus'] > 0))
 
-        #msc_status > 0 : MCS  = (-32C over 40000km2)
+
+        # msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
 
         mask = np.where(inmask)
@@ -135,10 +159,10 @@ def composite(rawhour):
         for ut in ubt:
             daydir = {}
 
-            pos = np.where(msg['date'] == ut)#[0]).astype(int)
-            #ipdb.set_trace()
+            pos = np.where(msg['date'] == ut)  # [0]).astype(int)
+            # ipdb.set_trace()
             for k in msg.keys():
-                 daydir[k] = np.array(msg[k])[pos]
+                daydir[k] = np.array(msg[k])[pos]
             chunks.append(daydir)
 
         try:
@@ -147,38 +171,27 @@ def composite(rawhour):
         except:
             pass
 
+        print('Doing', y)
 
-        #ipdb.set_trace()
-        # try:
-        #     dic = u_parallelise.run_arrays(1, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'init'])
-        # except:
-        #     print('##########NO DATA WAS SAVED, RETURN#####', y)
-        #     continue
-
-
-
-        res = []
-        for m in chunks:
-            out = file_loop(m)
-            res.append(out)
-
-        dic = {}
-        res = [x for x in res if x is not None]
-        res = np.array(res)
-        dic_names = ['ano', 'regional', 'cnt', 'allcnt', 'init']
-        for id, l in enumerate(dic_names):
-
-                dic[l] = np.squeeze(res[:,id,...])
+        try:
+            dic = u_parallelise.run_arrays(2, file_loop, chunks,
+                                           ['ano', 'regional', 'cnt', 'allcnt', 'init'])
+        except:
+            print('##########NO DATA WAS SAVED, RETURN#####', y)
+            continue
+        # res = []
+        # #
+        # for m in chunks:
+        #     out = file_loop(m)
+        #     res.append(out)
+        # ipdb.set_trace()
         # return
 
         for k in dic.keys():
-           dic[k] = np.nansum(dic[k], axis=0)
+            dic[k] = np.nansum(dic[k], axis=0)
         print('File written', y)
-        #pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
+        # pkl.dump(dic, open(path + "/"+REGION+"_AMSR2-global_2012-2019_SM_MCSTRACK_BOX-ANNUAL_PFbased_"+str(y)+'_h'+str(hour).zfill(2)+".p", "wb"))
         pkl.dump(dic, open(outfile, "wb"))
-
-
-
 
 
 def cut_kernel(xpos, ypos, arr, inits, wd = None):
@@ -241,6 +254,7 @@ def file_loop(fi):
     print(daybefore)
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
+    edate = str(daybefore.year) +'_' + str(daybefore.month).zfill(2) + '_' + str(daybefore.day).zfill(2)
 
     alt_path = cnst.lmcs_drive + 'ASCAT/anom_am/'
     try:
@@ -254,11 +268,25 @@ def file_loop(fi):
 
     print('Doing ' + 'ASCAT' + str(daybefore.year) + str(daybefore.month).zfill(2) + str(
         daybefore.day).zfill(2) + '.nc', date)
-
-
     lsta_da = lsta['SM'].squeeze()
 
 
+
+
+    ttopo = lsta_da.salem.lookup_transform(TOPO)
+    grad = np.gradient(ttopo.values)
+    gradsum = abs(grad[0]) + abs(grad[1])
+    lsta_da.values[ttopo.values >= 800] = np.nan
+    lsta_da.values[gradsum > 30] = np.nan
+
+    # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
+    #     print('Not enough valid')
+    #     return None
+
+    # lsta_da.values[np.isnan(lsta_da.values)] = 0
+
+    # lsta_da.values[ttopo.values >= 450] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
     kernel2_list = []
     kernel3_list = []
     cnt_list = []
@@ -276,7 +304,7 @@ def file_loop(fi):
             ####################
             ulist = []
             vlist = []
-            for direc in [fi['direction1'][idss], fi['direction0'][idss],fi['direction-1'][idss] , fi['direction-2'][idss]]: #
+            for direc in [fi['direction1'][idss], fi['direction0'][idss],fi['direction-1'][idss] ]: # , fi['direction-2'][idss]
                 ulist.append(np.sin(np.deg2rad(direc)))
                 vlist.append(np.cos(np.deg2rad(direc)))
 
@@ -432,9 +460,9 @@ def plot_sm(rawhour):
         plt.tight_layout()
 
 
-        plt.savefig(cnst.elements_drive + '/'+str(rawhour) + '/' + REGION + '_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(2) + '-' + str(
-            MONTHS[1]).zfill(2) + '_2012-2019_allPF_' + str(rawhour).zfill(2) + 'h'+ extag+'.jpg')
-        plt.close('all')
+        # plt.savefig(cnst.elements_drive + '/'+str(rawhour) + '/' + REGION + '_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(2) + '-' + str(
+        #     MONTHS[1]).zfill(2) + '_2012-2019_allPF_' + str(rawhour).zfill(2) + 'h'+ extag+'.jpg')
+        # plt.close('all')
 
 
 
@@ -442,5 +470,5 @@ for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
 
-    composite(17)
-    plot_sm(17)
+    composite(19)
+   # plot_sm(17)

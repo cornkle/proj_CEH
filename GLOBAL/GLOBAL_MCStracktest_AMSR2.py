@@ -44,13 +44,18 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
+OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
+
 REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'AMSR2'
 SENSOP = 13 # (LT overpass)
-extag = '_day0init' #
+extag = 'sm_corr_aftersensor' #
 INIT_DISTANCE = 0
 AREA = 0 #1000
 TRACKTIME = 1
+
+TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(lon=slice(-110,125), lat=slice(-50,55))
+
 
 def composite(rawhour):
 
@@ -72,12 +77,12 @@ def composite(rawhour):
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2012, 2019):
+    for y in np.arange(2012, 2020):
 
         m1 = MONTHS[0]
         m2 = MONTHS[1]
         outfile = path + "/"+REGION+"_SM_"+SENSOR+"_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_"+str(m1).zfill(2)+'-'+\
-                  str(m2).zfill(2)+'_'+str(y)+'_h'+str(rawhour).zfill(2)+extag+".p"
+                  str(m2).zfill(2)+'_'+str(y)+'_h'+str(rawhour).zfill(2)+'_'+extag+".p"
 
         msg = pd.read_csv(cnst.lmcs_drive +'/save_files/'+REGION+'_initTime__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
         msg = msg.to_dict(orient='list')
@@ -88,37 +93,56 @@ def composite(rawhour):
         msg['utc_date'] = []
         msg['day'] = []
         msg['lt_hour'] =[]
+        msg['lt_init'] = []
         for yi, k in enumerate(msg['base_time']):
 
             bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
+            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0)
             hourchange = (MREGIONS[REGION])[2]
 
             if hourchange < 0:
                 bbl = bbt - pd.Timedelta(str(np.abs(hourchange))+' hours')
+                binit = lt_init - pd.Timedelta(str(np.abs(hourchange))+' hours')
             elif hourchange > 0:
                     bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
+                    binit = lt_init + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
             else:
                 bbl = bbt
+                binit = lt_init
 
             msg['utc_date'].append(bbt.replace(hour=0, minute=0))
             msg['lt_hour'].append(bbl.hour)
+            msg['lt_init'].append(binit.hour)
             msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
-
+        #ipdb.set_trace()
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
 
-        inmask =   ((msg['lt_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME)  & (msg['ccs_area'] >= AREA) & \
+        # inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME)  & (msg['ccs_area'] >= AREA) & \
+        #            ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+        #             (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & \
+        #             ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
+        #
+        #
+        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+        #     inmask = ((msg['lt_init'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+        #               ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+        #                (msg['month'] >= m1) & (msg['month'] <= m2) & \
+        #               ((np.abs(msg['londiff_loc-init']) >=INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >=INIT_DISTANCE)))
+
+        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
                    ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
+                    (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
+
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['lt_hour'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
+            inmask = ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
-                       (msg['month'] >= m1) & (msg['month'] <= m2) & (
-                                  (np.abs(msg['londiff_loc-init']) >=INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >=INIT_DISTANCE)))
+                      (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
+
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
         # pf_landfrac > 0.8: 80% of rain fields over land
@@ -141,11 +165,18 @@ def composite(rawhour):
                  daydir[k] = np.array(msg[k])[pos]
             chunks.append(daydir)
 
-        try:
-            os.remove(outfile)
-            print('Removed file')
-        except:
-            pass
+        # try:
+        #     os.remove(outfile)
+        #     print('Removed file')
+        # except:
+        #     pass
+
+        if os.path.isfile(outfile):
+            print('File exists, continue')
+            continue
+
+
+        print('Doing', y)
 
         try:
             dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'ano_ts', 'regional_ts', 'cnt_ts', 'init'])
@@ -153,11 +184,11 @@ def composite(rawhour):
             print('##########NO DATA WAS SAVED, RETURN#####', y)
             continue
         # res = []
-        # #
+        #
         # for m in chunks:
         #     out = file_loop(m)
         #     res.append(out)
-        # #ipdb.set_trace()
+        # ipdb.set_trace()
         # return
 
         for k in dic.keys():
@@ -173,9 +204,11 @@ def composite(rawhour):
 def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
     dist = 16
+    #dist = 35
     #dist=100
 
     res = 0.25
+    #res = 0.1
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
     if np.sum(np.isfinite(kernel)) < 0.05 * kernel.size:
@@ -204,7 +237,10 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
         return None
 
     if wd != None:
-        kernel = ua.rotate(kernel, wd, ref_angle=90)
+        try:
+            kernel = ua.rotate(kernel, wd, ref_angle=90)
+        except:
+            ipdb.set_trace()
         init = ua.rotate(init, wd, ref_angle=90)
 
     cnt[np.isfinite(kernel)] = 1
@@ -217,10 +253,11 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
 def file_loop(fi):
 
-
+    print('Entering func')
     date = fi['date'][0]
 
     hour = fi['hour']
+
     print('Doing day: ', date, hour[0])
 
     box = (MREGIONS[REGION])[0]
@@ -230,8 +267,9 @@ def file_loop(fi):
     print(daybefore)
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
+    edate = str(daybefore.year) +'_' + str(daybefore.month).zfill(2) + '_' + str(daybefore.day).zfill(2)
 
-    alt_path = cnst.lmcs_drive + 'AMSR2/daily/25km/day_anom_v2/'
+    alt_path = cnst.lmcs_drive + 'AMSR2/daily/25km/day_anom/'
     try:
         lsta = xr.open_dataset(alt_path + 'amsr2_25km_anom_' + fdate + '.nc')
     except:
@@ -251,6 +289,18 @@ def file_loop(fi):
     mask = (lsta_da<-2) & (ts_da<-2)
     lsta_da.values[mask] = np.nan
     ts_da.values[mask] = np.nan
+    #ipdb.set_trace()
+    # try:
+    #  era_pl = xr.open_dataset('/media/ck/LStorage/ERA5/hourly/pressure_levels/'+REGION+'/ERA5_'+edate+'_'+REGION+'_'+'pl.nc')
+    # except:
+    #     print('ERA5 file not found, return')
+    #     return None
+    # ttopo = lsta.salem.lookup_transform(TOPO, lut=ILUT)
+    #
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0]) + abs(grad[1])
+    # lsta_da.values[ttopo.values >= 500] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
 
     kernel2_list = []
     kernel3_list = []
@@ -275,26 +325,35 @@ def file_loop(fi):
             for direc in [fi['direction1'][idss], fi['direction0'][idss],fi['direction-1'][idss] , fi['direction-2'][idss]]: #
                 ulist.append(np.sin(np.deg2rad(direc)))
                 vlist.append(np.cos(np.deg2rad(direc)))
+                umean = np.sum(ulist)
+                vmean = np.sum(vlist)
+            #ipdb.set_trace()
 
-            umean = np.sum(ulist)
-            vmean = np.sum(vlist)
-
-            avg_wd = np.rad2deg(np.arctan2(umean, vmean))
-            if avg_wd < 0:
-                avg_wd = avg_wd + 360
-            # print('mean WD', avg_wd, fi['direction'])
-            direct = avg_wd
 
             init_lon = fi['londiff_loc-init'][idss]
             init_lat = fi['latdiff_loc-init'][idss]
-
-            idss = idss+1
 
             try:
                 point = lsta_da.sel(lat=lat, lon=lon, method='nearest', tolerance=0.2)
             except KeyError:
                 print('point index error')
+                idss = idss + 1
                 continue
+
+            # try:
+            #     umean = era_pl['u'].sel(time=(era_pl['time.hour']==hour[idss]), level=650).sel(longitude=lon, latitude=lat, method='nearest', tolerance=0.2).values
+            # except:
+            #     idss = idss + 1
+            #     continue
+            # vmean = era_pl['v'].sel(time=(era_pl['time.hour']==hour[idss]), level=650).sel(longitude=lon, latitude=lat, method='nearest', tolerance=0.2).values
+
+            avg_wd = np.rad2deg(np.arctan2(umean, vmean))
+            if avg_wd < 0:
+                avg_wd = avg_wd + 360
+            # print('mean WD', avg_wd, fi['direction'])
+            direct = avg_wd#[0]
+
+            idss = idss+1
 
             plat = point['lat'].values
             plon = point['lon'].values
@@ -347,6 +406,7 @@ def file_loop(fi):
 
     print('Returning')
     del lsta
+
     return (kernel2_sum, kernel3_sum, cnt_sum, allcnt_sum, ts2_sum, ts3_sum, cntts_sum, init_sum)
 
 
@@ -356,7 +416,7 @@ def plot_sm_ts(rawhour):
         pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_SM_" + SENSOR + "_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_" + str(
         MONTHS[0]).zfill(2) + '-' + str(MONTHS[1]).zfill(2) + '_'
         y1 = 2013
-        y2 = 2019
+        y2 = 2020
 
         dic = pkl.load(open(
             pin + str(y1) + '_h' + str(rawhour).zfill(2) + extag+".p", "rb"))
@@ -499,7 +559,7 @@ def plot_sm_ts(rawhour):
         plt.tight_layout()
 
 
-        plt.savefig(cnst.elements_drive + '/'+str(rawhour) + '/' + REGION + '_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(2) + '-' + str(
+        plt.savefig(OUT+ '/'+str(rawhour) + '/' + REGION + '_' + SENSOR + '_SM_TS_' + str(MONTHS[0]).zfill(2) + '-' + str(
             MONTHS[1]).zfill(2) + '_2012-2019_allPF_' + str(rawhour).zfill(2) + 'h'+ extag+'.jpg')
         plt.close('all')
 
@@ -509,5 +569,27 @@ for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
 
+    alt_path = cnst.lmcs_drive + 'AMSR2/daily/25km/day_anom/'
+    bbox = (MREGIONS[REGION])[0]
+
+    #
+    # lsta = xr.open_dataset(glob.glob(alt_path + 'amsr2_25km_anom_*.nc')[0]).isel(time=0)
+    # lsta = lsta.sel(lon=slice(bbox[0] - 3, bbox[1] + 3), lat=slice(bbox[2] - 3, bbox[3] + 3))
+    #
+    # #ilut_file ='/home/ck/DIR/cornkle/data/GLOBAL_MCS/save_topo/'+REGION+'_topo.p'
+    # # if os.path.isfile(ilut_file):
+    # #     ilut = pkl.load(open(ilut_file, 'rb'))
+    # #     try:
+    # #         ttopo = lsta.salem.lookup_transform(TOPO, lut=ilut)
+    # #     except:
+    # #         print('Topo file fail, writing new file')
+    # #         ttopo, ilut = lsta.salem.lookup_transform(TOPO, return_lut=True)
+    # #         pkl.dump(ilut, open(ilut_file, 'wb'))
+    # # else:
+    # ttopo, ilut = lsta.salem.lookup_transform(TOPO, return_lut=True)
+    # #pkl.dump(ilut, open(ilut_file, 'wb'))
+    #
+    # ILUT = ilut
+
     composite(19)
-    plot_sm_ts(19)
+    #plot_sm_ts(19)

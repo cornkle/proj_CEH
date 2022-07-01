@@ -12,7 +12,7 @@ import pandas as pd
 from utils import u_darrays as uda
 from scipy.interpolate import griddata
 
-
+## UM 5km
 VARS = {  'rlut' : ['toa_outgoing_longwave_flux', 60, '2d'],  # fname, varname, interval (minutes)
           'pr' : ['precipitation_flux', 15, '2d'],
           'prw' : ['atmosphere_water_vapor_content', 15, '2d'],
