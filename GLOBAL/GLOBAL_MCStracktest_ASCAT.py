@@ -44,15 +44,17 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
-REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
+OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
+
+REGIONS = ['SAf', 'GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'ASCAT'
 SENSOP = 6 # (LT overpass)
-extag = '_allTracktime1_noCorr' #
+extag = 'alltimetrack0_init_aftersensor' #
 INIT_DISTANCE = 0
 AREA = 0 #1000
 TRACKTIME = 0
 
-TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(longitude=slice(-110,125), latitude=slice(-50,55))
+#TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(longitude=slice(-110,125), latitude=slice(-50,55))
 
 def composite(rawhour):
 
@@ -80,7 +82,7 @@ def composite(rawhour):
         m2 = MONTHS[1]
         outfile = path + "/" + REGION + "_SM_" + SENSOR + "_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_" + str(m1).zfill(
             2) + '-' + \
-                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + extag + ".p"
+                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + '_' + extag + ".p"
 
         msg = pd.read_csv(
             cnst.lmcs_drive + '/save_files/' + REGION + '_initTime__mcs_tracks_extc_' + str(y) + '0101_' + str(
@@ -133,16 +135,16 @@ def composite(rawhour):
         #                           np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
 
 
-        inmask =   ((msg['tracktime'] >= TRACKTIME) & \
+        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
                    ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0))
+                    (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['tracktime'] >= TRACKTIME) & \
+            inmask = ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
-                      (msg['pf_mcsstatus'] > 0))
+                      (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
         # msc_status > 0 : MCS  = (-32C over 40000km2)
@@ -209,8 +211,8 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     ilon = np.round(inits[0] / res).astype(int)
     ilat = np.round(inits[1] / res).astype(int)
 
-    if (np.abs(ilon)<4) & (np.abs(ilat)<4):
-        return None
+    # if (np.abs(ilon)<4) & (np.abs(ilat)<4):
+    #     return None
 
     #print('lonlat', ilon, ilat)
 
@@ -254,7 +256,7 @@ def file_loop(fi):
     print(daybefore)
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
-    edate = str(daybefore.year) +'_' + str(daybefore.month).zfill(2) + '_' + str(daybefore.day).zfill(2)
+    #edate = str(daybefore.year) +'_' + str(daybefore.month).zfill(2) + '_' + str(daybefore.day).zfill(2)
 
     alt_path = cnst.lmcs_drive + 'ASCAT/anom_am/'
     try:
@@ -272,12 +274,12 @@ def file_loop(fi):
 
 
 
-
-    ttopo = lsta_da.salem.lookup_transform(TOPO)
-    grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0]) + abs(grad[1])
-    lsta_da.values[ttopo.values >= 800] = np.nan
-    lsta_da.values[gradsum > 30] = np.nan
+    #
+    # ttopo = lsta_da.salem.lookup_transform(TOPO)
+    # grad = np.gradient(ttopo.values)
+    # gradsum = abs(grad[0]) + abs(grad[1])
+    # lsta_da.values[ttopo.values >= 800] = np.nan
+    # lsta_da.values[gradsum > 30] = np.nan
 
     # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.50:
     #     print('Not enough valid')
@@ -340,7 +342,7 @@ def file_loop(fi):
             ypos = int(ypos[0])
 
             try:
-                kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat], wd=direct)
+                kernel2, kernel3, cnt, init = cut_kernel(xpos, ypos, lsta_da, [init_lon,init_lat], wd=direct) #
             except TypeError:
                 continue
 

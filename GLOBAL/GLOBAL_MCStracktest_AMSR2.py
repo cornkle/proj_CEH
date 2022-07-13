@@ -46,13 +46,13 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
 
-REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
+REGIONS = ['SAf','GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'AMSR2'
 SENSOP = 13 # (LT overpass)
-extag = 'sm_corr_aftersensor' #
+extag = 'onlytimetrack0_init_nosensorcontrol' #
 INIT_DISTANCE = 0
 AREA = 0 #1000
-TRACKTIME = 1
+TRACKTIME = 2
 
 TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(lon=slice(-110,125), lat=slice(-50,55))
 
@@ -132,16 +132,17 @@ def composite(rawhour):
         #                (msg['month'] >= m1) & (msg['month'] <= m2) & \
         #               ((np.abs(msg['londiff_loc-init']) >=INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >=INIT_DISTANCE)))
 
-        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
+        #(msg['lt_init'] >= SENSOP+2) & & (msg['pf_mcsstatus'] > 0)
+        inmask =   ((msg['tracktime'] < TRACKTIME) & \
                    ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
+                    (msg['pf_landfrac'] > 0.99)  & np.isfinite(msg['pf_lat1']))
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
+            inmask = ( (msg['tracktime'] < TRACKTIME) & \
                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
-                      (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
+                       np.isfinite(msg['pf_lat1']))
 
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
@@ -218,8 +219,8 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     ilon = np.round(inits[0] / res).astype(int)
     ilat = np.round(inits[1] / res).astype(int)
 
-    if (np.abs(ilon)<4) & (np.abs(ilat)<4):
-        return None
+    # if (np.abs(ilon)<4) & (np.abs(ilat)<4):
+    #     return None
 
     #print('lonlat', ilon, ilat)
 

@@ -32,8 +32,8 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 }
 
 
-REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia'] #'GPlains'
-extag = 'sm_corr_aftersensor'
+REGIONS = ['SAf', 'GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia'] #'GPlains'
+extag = 'onlytimetrack0_init_nosensorcontrol'
 
 SENSOR='AMSR2'
 y1 = 2012
@@ -88,11 +88,11 @@ for ids, regs in enumerate(REGIONS):
         #extent = 30
 
 
-        ax = f.add_subplot(3,6,ids+1)
+        ax = f.add_subplot(3,7,ids+1)
 
         ano = dic['init']#(dic['ano'] / dic['cnt']) - np.mean((dic['ano']) / dic['cnt'])  # / dic['cnt']
 
-        thresh = np.max(np.abs(np.percentile(ano, [5,95])))
+        thresh = np.max(np.abs(np.nanpercentile(ano, [5,95])))
 
         plt.contourf(ano, cmap='rainbow', levels=np.arange(1,20), #np.linspace(thresh * -1, thresh, 10),
                      extend='both')  # -(rkernel2_sum / rcnt_sum)
@@ -114,11 +114,11 @@ for ids, regs in enumerate(REGIONS):
 
         ######################################################
 
-        ax = f.add_subplot(3, 6, ids + 1 + 6)
+        ax = f.add_subplot(3, 7, ids + 1 + 7)
 
         ano = (dic['ano'] / dic['cnt']) #- np.mean((dic['ano']) / dic['cnt']) # / dic['cnt']
 
-        thresh = np.max(np.abs(np.percentile(ano, [5, 95])))
+        thresh = np.max(np.abs(np.nanpercentile(ano, [5, 95])))
 
         plt.contourf(ano, cmap='RdBu', levels=np.linspace(thresh * -1, thresh, 10),
                      extend='both')
@@ -163,11 +163,11 @@ for ids, regs in enumerate(REGIONS):
             print('Coll', y)
             coll(dic, h, y)
 
-        ax = f.add_subplot(3, 6, ids + 1 + 12)
+        ax = f.add_subplot(3, 7, ids + 1 + 14)
 
         ano = (dic['regional'] / dic['cnt'])# - np.mean((dic['ano']) / dic['cnt'])  # / dic['cnt']
 
-        thresh = np.max(np.abs(np.percentile(ano, [5, 95])))
+        thresh = np.max(np.abs(np.nanpercentile(ano, [5, 95])))
 
         plt.contourf(ano, cmap='RdBu', levels=np.linspace(thresh * -1, thresh, 10),
                      extend='both')  # -(rkernel2_sum / rcnt_sum)
