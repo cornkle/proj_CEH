@@ -45,17 +45,21 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
-REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
+REGIONS = ['WAf', 'sub_SA', 'china', 'india', 'australia'] # 'GPlains',  ] #
 SENSOR = 'terra'
 SENSOP = 10 # (LT overpass)
-extag = '_initOnly' #
+extag = '_dayInit_trackResult' #
 INIT_DISTANCE = 0
 AREA = 0 #1000
 TRACKTIME = 0
+AREA_MAX = 10000
+TRACKRESULT = 10 # new track
+MCS_STATUS = 0 # not yet MCS
 
 def composite(rawhour):
 
     h = rawhour - (MREGIONS[REGION])[2]
+    hsensor_utc = SENSOP - (MREGIONS[REGION])[2]
     def h_checker(h):
         if h >= 24:
             h = h-24
@@ -66,7 +70,11 @@ def composite(rawhour):
         return h
     h = h_checker(h)
     h2 = h_checker(h+1)
+    h3 = h_checker(h + 2)
+    h4 = h_checker(h + 3)
+    h5 = h_checker(h-2)
     h1 = h_checker(h-1)
+    hsensor_utc = h_checker(hsensor_utc)
 
     print('Hour: ', h, h1, h2)
 
@@ -88,6 +96,7 @@ def composite(rawhour):
         msg['utc_date'] = []
         msg['day'] = []
         msg['lt_hour'] =[]
+        msg['sensor_utc'] = []
         for yi, k in enumerate(msg['base_time']):
 
             bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
@@ -104,17 +113,21 @@ def composite(rawhour):
             msg['lt_hour'].append(bbl.hour)
             msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
+            msg['sensor_utc'].append(hsensor_utc)
+
 
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
 
-        inmask = ( (msg['tracktime'] >= TRACKTIME) & (msg['pf_landfrac'] > 0.99)) & \
-                 ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2))
+        inmask = ( (msg['tracktime'] == TRACKTIME) & (msg['pf_landfrac'] > 0.99) & \
+                   ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2) | (msg['hour'] == h3)| (msg['hour'] == h4) | (msg['hour'] == h5)) & \
+                   (msg['trackresult'] == TRACKRESULT) & (msg['mcs_status'] == MCS_STATUS) & (msg['ccs_area'] <= AREA_MAX))
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ( (msg['tracktime'] >= TRACKTIME)) & \
-                     ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) #(msg['lt_hour'] >= SENSOP+1)
+            inmask = ( (msg['tracktime'] == TRACKTIME) & \
+                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2) | (msg['hour'] == h3)| (msg['hour'] == h4) | (msg['hour'] == h5)) & \
+                       (msg['trackresult'] == TRACKRESULT) & (msg['mcs_status'] == MCS_STATUS) & (msg['ccs_area'] <= AREA_MAX))
 
 
 
@@ -197,7 +210,7 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     kernel3 = kernel - np.nanmean(kernel)
 
     cut = 25
-    print('shape', kernel[cut:-cut, cut:-cut].shape)
+    #print('shape', kernel[cut:-cut, cut:-cut].shape)
     return kernel[cut:-cut, cut:-cut], kernel3[cut:-cut,cut:-cut], cnt[cut:-cut,cut:-cut], init[cut:-cut,cut:-cut]
 
 
@@ -316,27 +329,32 @@ def plot(rawhour):
 
     y1 = 2003
     y2 = 2019
-    dic = pkl.load(open(
-            pin+str(y1)+'_h'+str(rawhour).zfill(2)+extag+".p", "rb"))
+    fnames = glob.glob(pin + '*' + '_h' + str(rawhour).zfill(2) + extag + ".p")
 
-    def coll(dic, h, year):
+    dic = pkl.load(open(fnames[0], "rb"))
+
+    # def coll(dic, h, year):
+    #     print(h)
+    #     core = pkl.load(open(
+    #         pin + str(year) + '_h' + str(rawhour).zfill(2) + extag+ ".p", "rb"))
+    #     for id, k in enumerate(core.keys()):
+    #         try:
+    #             dic[k] = dic[k] + core[k]
+    #         except KeyError:
+    #             dic[k] = core[k]
+
+    def coll(dic, file):
         print(h)
-
-        core = pkl.load(open(
-                pin+str(year)+'_h'+str(rawhour).zfill(2)+extag+".p", "rb"))
+        core = pkl.load(open(file, "rb"))
         for id, k in enumerate(core.keys()):
             try:
                 dic[k] = dic[k] + core[k]
             except KeyError:
                 dic[k] = core[k]
 
-    for y in range(y1+1, y2):
+    for y in fnames[1::]:
         print('Coll', y)
-        try:
-            coll(dic, h, y)
-        except:
-            print(h, y, 'missing')
-            continue
+        coll(dic, y)
 
     extent = 60
 
@@ -359,7 +377,7 @@ def plot(rawhour):
     plt.title(REGION+' '+str(y1)+'-'+str(y2)+'| Initiations, Nb: ' + str(np.max(dic['allcnt'])) + '| ' + str(h).zfill(2) + '00UTC',
               fontsize=10)
 
-    ano = (dic['ano'] / dic['cnt']) - np.nanmean((dic['ano'] / dic['cnt']))  # / dic['cnt']
+    ano = (dic['regional'] / dic['cnt']) - np.nanmean((dic['ano'] / dic['cnt']))  # / dic['cnt']
     thresh = np.abs(np.percentile(ano, 95)) #np.linspace(thresh*-1,thresh,20)
     div = 1/thresh #np.array([-1,-0.75,-0.5,-0.25,-0.1,0.1,0.25,0.5,0.75,1])/div
     ax = f.add_subplot(132)
@@ -375,7 +393,7 @@ def plot(rawhour):
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     plt.colorbar(label='K')
-    plt.title('Seasonal anomaly',
+    plt.title('Regional anomaly',
               fontsize=10)
 
 
@@ -405,5 +423,5 @@ def plot(rawhour):
 for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
-    composite(18)
-    plot(18)
+    composite(14)
+    plot(14)

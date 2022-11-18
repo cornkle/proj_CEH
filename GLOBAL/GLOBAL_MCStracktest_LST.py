@@ -48,9 +48,9 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'terra'
 SENSOP = 10 # (LT overpass)
-extag = '_day0init' #
-INIT_DISTANCE = 0
-AREA = 0 #1000
+extag = '_MODIStest' #
+INIT_DISTANCE = 3 # in degrees
+AREA = 2500 #1000
 TRACKTIME = 1
 
 def composite(rawhour):
@@ -67,6 +67,7 @@ def composite(rawhour):
     h = h_checker(h)
     h2 = h_checker(h+1)
     h1 = h_checker(h-1)
+    h3 = h_checker(h-3)
 
     print('Hour: ', h, h1, h2)
 
@@ -109,13 +110,13 @@ def composite(rawhour):
             msg[k] = np.array(msg[k])
 
         inmask =   ((msg['lt_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
-                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2) | (msg['hour']==h3)) & \
                     (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = ((msg['lt_hour'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
-                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2) | (msg['hour']==h3)) & \
                        (msg['month'] >= m1) & (msg['month'] <= m2) & (
                                   (np.abs(msg['londiff_loc-init']) >= INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
 
@@ -142,13 +143,14 @@ def composite(rawhour):
         try:
             dic = u_parallelise.run_arrays(4, file_loop, chunks, ['ano', 'regional', 'cnt', 'allcnt', 'init'])
         except:
+            print('Parallelisation continue')
             continue
         # res = []
         # #ipdb.set_trace()
         # for m in chunks:
         #     out = file_loop(m)
         #     res.append(out)
-        # #ipdb.set_trace()
+        #     ipdb.set_trace()
         # return
 
         for k in dic.keys():
@@ -160,8 +162,8 @@ def composite(rawhour):
 
 def cut_kernel(xpos, ypos, arr, inits, wd = None):
 
-    dist = 85
-    #dist=100
+    #dist = 85
+    dist=120
 
     res = 0.05
 
@@ -173,8 +175,8 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     ilon = np.round(inits[0] / res).astype(int)
     ilat = np.round(inits[1] / res).astype(int)
 
-    if (np.abs(ilon)<29) & (np.abs(ilat)<29):
-        return None
+    # if (np.abs(ilon)<29) & (np.abs(ilat)<29):
+    #     return None
 
     #print('lonlat', ilon, ilat)
 
@@ -411,7 +413,7 @@ def plot(rawhour):
             print(h, y, 'missing')
             continue
 
-    extent = 60
+    extent = 120
 
     f = plt.figure(figsize=(15, 4))
     ax = f.add_subplot(131)
@@ -424,11 +426,11 @@ def plot(rawhour):
     ax.axvline(extent, linestyle='dashed', color='k')
     ax.axhline(extent, linestyle='dashed', color='k')
     print('Extent', extent)
-    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     #ax.set_xticklabels(((np.linspace(0, (2 * extent), 9) - extent) * 30).astype(int))
-    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     plt.colorbar(label='Count')
@@ -442,10 +444,10 @@ def plot(rawhour):
 
     plt.contourf(ano, cmap='RdBu_r',  levels=np.linspace(thresh*-1,thresh,20), extend='both') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
-    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
-    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     ax.axvline(extent, linestyle='dashed', color='k')
@@ -459,10 +461,10 @@ def plot(rawhour):
 
     plt.contourf(dic['cnt'], cmap='viridis') #-(rkernel2_sum / rcnt_sum)
     plt.plot(extent, extent, 'bo')
-    ax.set_xticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
-    ax.set_yticks((np.linspace(0, 2 * extent, 9)))
-    ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_xticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_xticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
+    #ax.set_yticks((np.linspace(0, 2 * extent, 9)))
+    #ax.set_yticklabels(((np.linspace(0, (2*extent), 9)-extent)/20).round(1).astype(float))
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     ax.axvline(extent, linestyle='dashed', color='k')
@@ -482,5 +484,5 @@ def plot(rawhour):
 for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
-    composite(19)
-    plot(19)
+    composite(18)
+    plot(18)

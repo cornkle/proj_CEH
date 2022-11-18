@@ -48,11 +48,11 @@ OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
 
 REGIONS = ['SAf','GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'AMSR2'
-SENSOP = 13 # (LT overpass)
-extag = 'onlytimetrack0_init_nosensorcontrol' #
-INIT_DISTANCE = 0
-AREA = 0 #1000
-TRACKTIME = 2
+SENSOP = 13 # (LT overpass sensor)
+extag = 'propagate_AMSR_Smfiltercheck'
+INIT_DISTANCE = 2 # degrees
+AREA = 1000 #1000
+TRACKTIME = 1 # tracktime = 0 is initiation
 
 TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(lon=slice(-110,125), lat=slice(-50,55))
 
@@ -97,7 +97,7 @@ def composite(rawhour):
         for yi, k in enumerate(msg['base_time']):
 
             bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
-            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0)
+            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0) # real date for lt_init may well be previous UTC day, lt_init just used for hour calculation to LT init hour
             hourchange = (MREGIONS[REGION])[2]
 
             if hourchange < 0:
@@ -120,29 +120,32 @@ def composite(rawhour):
 
             msg[k] = np.array(msg[k])
 
-        # inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME)  & (msg['ccs_area'] >= AREA) & \
-        #            ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-        #             (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & \
-        #             ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
-        #
-        #
-        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-        #     inmask = ((msg['lt_init'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
-        #               ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
-        #                (msg['month'] >= m1) & (msg['month'] <= m2) & \
-        #               ((np.abs(msg['londiff_loc-init']) >=INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >=INIT_DISTANCE)))
-
-        #(msg['lt_init'] >= SENSOP+2) & & (msg['pf_mcsstatus'] > 0)
-        inmask =   ((msg['tracktime'] < TRACKTIME) & \
+        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME)  & (msg['ccs_area'] >= AREA) & \
                    ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.99)  & np.isfinite(msg['pf_lat1']))
-
+                    (msg['pf_landfrac'] > 0.99)  & (msg['month']>=m1) & (msg['month']<=m2) & \
+                    ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ( (msg['tracktime'] < TRACKTIME) & \
+            inmask = ((msg['lt_init'] >= SENSOP+2)  & (msg['tracktime'] >= TRACKTIME) & (msg['ccs_area'] >= AREA) & \
                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
-                       np.isfinite(msg['pf_lat1']))
+                       (msg['month'] >= m1) & (msg['month'] <= m2) & \
+                      ((np.abs(msg['londiff_loc-init']) >=INIT_DISTANCE) | (np.abs(msg['latdiff_loc-init']) >=INIT_DISTANCE)))
+
+        #(msg['lt_init'] >= SENSOP+2) & & (msg['pf_mcsstatus'] > 0)
+
+        # inmask =   ( (msg['tracktime'] >= TRACKTIME) & \
+        #            ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+        #             (msg['pf_landfrac'] > 0.99)  & np.isfinite(msg['pf_lat1']) & \
+        #             ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
+        #
+        #
+        #
+        # if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
+        #     inmask = ((msg['tracktime'] >= TRACKTIME) & \
+        #               ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+        #                np.isfinite(msg['pf_lat1']) & \
+        #             ((np.abs(msg['londiff_loc-init'])>=INIT_DISTANCE)|(np.abs(msg['latdiff_loc-init'])>=INIT_DISTANCE)))
 
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
@@ -287,7 +290,7 @@ def file_loop(fi):
     lsta_da = lsta['soil_moisture_c1'].squeeze()  # soil_moisture_c1
     ts_da = lsta['ts'].squeeze()
 
-    mask = (lsta_da<-2) & (ts_da<-2)
+    mask = (lsta_da<-1) & (ts_da<-0.5)
     lsta_da.values[mask] = np.nan
     ts_da.values[mask] = np.nan
     #ipdb.set_trace()

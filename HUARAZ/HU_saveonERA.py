@@ -306,18 +306,18 @@ def saveERA5():
     #chirpsbox = [-81, -68, -18.5, 0]  # peru daily
 
     #u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/q*.nc')
-    var = 'v'
-    u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv*peru.nc', combine='nested', concat_dim='time')
+    var = 'tp'
+    u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/rain*peru2.nc', combine='nested', concat_dim='time')
     time.sleep(2)
     #u200orig = xr.open_mfdataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/peru/surface/ERA5*.nc', lock=False, combine='nested', concat_dim='time')
     time.sleep(2)
     print('Dataset loaded')
 
-    u200orig = u200orig[var].isel(time=u200orig['time.hour']==15).sel(level=550).load()#.sel(level=850)#.load() .sel(level=650)
+    u200orig = u200orig[var].isel(time=u200orig['time.hour']==15).load() #.sel(level=550).load()#.sel(level=850)#.load() .sel(level=650)
     u200orig.name = var
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/v550_15UTC_1981-2019_peru_big.nc', mode='w',
+    u200orig.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/rain_15UTC_1981-2019_peru_big.nc', mode='w',
                   encoding=encoding, format='NETCDF4')
 
 
@@ -371,9 +371,9 @@ def saveERA5_multifix():
         var = 'v'
         u200orig = xr.open_dataset(file)
         try:
-            u200orig = u200orig[var].sel(level=550).isel(time=u200orig['time.hour']==15,expver=0).load()#.sel(level=200).isel(time=u200orig['time.hour']==15).load()
+            u200orig = u200orig[var].sel(level=400).isel(time=u200orig['time.hour']==15,expver=0).load()#.sel(level=200).isel(time=u200orig['time.hour']==15).load()
         except:
-            u200orig = u200orig[var].sel(level=550).isel(time=u200orig['time.hour'] == 15).load()
+            u200orig = u200orig[var].sel(level=400).isel(time=u200orig['time.hour'] == 15).load()
         u200orig.name = var
 
         return u200orig
@@ -382,7 +382,7 @@ def saveERA5_multifix():
 
     var = 'v'
     #inputs = glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/peru/pressure_levels/ERA5*.nc')
-    inputs = np.sort(glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv*.nc'))
+    inputs = np.sort(glob.glob('/media/ck/Elements/SouthAmerica/ERA5/hourly/peru/pressure_levels/ERA5*.nc'))
 
    #  pool = multiprocessing.Pool(processes=5)
    # # ipdb.set_trace()
@@ -418,7 +418,7 @@ def saveERA5_multifix():
 
     comp = dict(zlib=True, complevel=5)
     encoding = {var: comp}
-    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/v550_15UTC_1981-2019_peru_big.nc', mode='w',
+    ds.to_netcdf('/media/ck/Elements/SouthAmerica/ERA5/hourly/v400_15UTC_1981-2019_peru.nc', mode='w',
                        encoding=encoding, format='NETCDF4')
 
 

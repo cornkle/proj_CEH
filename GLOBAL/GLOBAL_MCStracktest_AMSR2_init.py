@@ -44,17 +44,21 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 }
 
-REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
+REGIONS = ['GPlains', 'sub_SA', 'WAf',  'india', 'australia', 'SAf', 'china'] #'china',
 SENSOR = 'AMSR2'
 SENSOP = 13 # (LT overpass)
-extag = '_day0init' #
+extag = '_dayInit_trackResult' #
 INIT_DISTANCE = 0
 AREA = 0 #1000
 TRACKTIME = 0
+AREA_MAX = 3000
+TRACKRESULT = 10 # new track
+MCS_STATUS = 0 # not yet MCS
 
 def composite(rawhour):
 
     h = rawhour - (MREGIONS[REGION])[2]
+    hsensor_utc = SENSOP - (MREGIONS[REGION])[2]
     def h_checker(h):
         if h >= 24:
             h = h-24
@@ -65,14 +69,22 @@ def composite(rawhour):
         return h
     h = h_checker(h)
     h2 = h_checker(h+1)
+    h3 = h_checker(h + 2)
+    h4 = h_checker(h + 3)
+    h5 = h_checker(h + 4)
     h1 = h_checker(h-1)
+    hsensor_utc = h_checker(hsensor_utc)
 
-    print('Hour: ', h, h1, h2)
+    hours = []
+    for hhs in range(5):
+        hours.append(h_checker(h+hhs))
+
+    print('Hours: ', hours)
 
     print(REGION)
     path = cnst.network_data + 'data/GLOBAL_MCS/save_composites/'
 
-    for y in np.arange(2012, 2019):
+    for y in np.arange(2012, 2020):
 
         m1 = MONTHS[0]
         m2 = MONTHS[1]
@@ -88,6 +100,7 @@ def composite(rawhour):
         msg['utc_date'] = []
         msg['day'] = []
         msg['lt_hour'] =[]
+        msg['sensor_utc'] = []
         for yi, k in enumerate(msg['base_time']):
 
             bbt = pd.to_datetime(k) #- pd.Timedelta('1 days')
@@ -104,17 +117,20 @@ def composite(rawhour):
             msg['lt_hour'].append(bbl.hour)
             msg['date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
+            msg['sensor_utc'].append(hsensor_utc)
 
         for k in msg.keys():
 
             msg[k] = np.array(msg[k])
 
-        inmask = ( (msg['tracktime'] >= TRACKTIME) & (msg['pf_landfrac'] > 0.99)) & \
-                 ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2))
+        inmask = ( (msg['tracktime'] == TRACKTIME) & (msg['pf_landfrac'] > 0.99) & \
+                   ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2) | (msg['hour'] == h3)| (msg['hour'] == h4)) & \
+                   (msg['trackresult'] == TRACKRESULT) & (msg['mcs_status'] == MCS_STATUS) & (msg['ccs_area'] <= AREA_MAX))
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ( (msg['tracktime'] == TRACKTIME)) & \
-                     ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) #(msg['lt_hour'] >= SENSOP+1)
+            inmask = ( (msg['tracktime'] == TRACKTIME) & \
+                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2) | (msg['hour'] == h3)| (msg['hour'] == h4)) & \
+                       (msg['trackresult'] == TRACKRESULT) & (msg['mcs_status'] == MCS_STATUS) & (msg['ccs_area'] <= AREA_MAX))
 
 
         #msc_status > 0 : MCS  = (-32C over 40000km2)
@@ -181,11 +197,11 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
     cnt = np.zeros_like(kernel)
     init = np.zeros_like(kernel)
 
-    try:
-        init[dist+1-ilat, dist+1-ilon] = 1
-    except:
-        #print('Init index error, pass')
-        pass
+    # try:
+    #     init[dist+1-ilat, dist+1-ilon] = 1
+    # except:
+    #     #print('Init index error, pass')
+    #     pass
 
     if kernel.shape != (dist*2+1, dist*2+1):
         print('Kernel shape error, pass')
@@ -212,10 +228,18 @@ def file_loop(fi):
     print('Doing day: ', date, hour[0])
 
     box = (MREGIONS[REGION])[0]
+    try:
+        trig = hour[0] <= fi['sensor_utc'][0]
+    except:
+        trig = hour <= fi['sensor_utc']
 
-    daybefore = date
+    if trig:
+        daybefore = date - pd.Timedelta('1 day')
+    else:
+        daybefore = date
 
     print(daybefore)
+    print('hour sensor, storm', fi['sensor_utc'], hour)
 
     fdate = str(daybefore.year) + str(daybefore.month).zfill(2) + str(daybefore.day).zfill(2)
 
@@ -236,9 +260,9 @@ def file_loop(fi):
     lsta_da = lsta['soil_moisture_c1'].squeeze()  # soil_moisture_c1
     ts_da = lsta['ts'].squeeze()
 
-    # mask = (lsta_da<-2) & (ts_da<-2)
-    # lsta_da.values[mask] = np.nan
-    # ts_da.values[mask] = np.nan
+    mask = (lsta_da<-2) & (ts_da<-2)
+    lsta_da.values[mask] = np.nan
+    ts_da.values[mask] = np.nan
 
     kernel2_list = []
     kernel3_list = []
@@ -327,25 +351,37 @@ def plot_sm_ts(rawhour):
         print('Hour: ', h)
         pin = cnst.network_data + 'data/GLOBAL_MCS/save_composites/' + "/" + REGION + "_SM_" + SENSOR + "_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_" + str(
         MONTHS[0]).zfill(2) + '-' + str(MONTHS[1]).zfill(2) + '_'
-        y1 = 2013
-        y2 = 2019
+        y1 = 2012
+        y2 = 2020
 
-        dic = pkl.load(open(
-            pin + str(y1) + '_h' + str(rawhour).zfill(2) + extag+".p", "rb"))
+        #fname = pin + str(y1) + '_h' + str(rawhour).zfill(2) + extag+".p"
 
-        def coll(dic, h, year):
+        fnames = glob.glob(pin + '*' + '_h' + str(rawhour).zfill(2) + extag+".p")
+
+        dic = pkl.load(open(fnames[0], "rb"))
+
+        # def coll(dic, h, year):
+        #     print(h)
+        #     core = pkl.load(open(
+        #         pin + str(year) + '_h' + str(rawhour).zfill(2) + extag+ ".p", "rb"))
+        #     for id, k in enumerate(core.keys()):
+        #         try:
+        #             dic[k] = dic[k] + core[k]
+        #         except KeyError:
+        #             dic[k] = core[k]
+
+        def coll(dic, file):
             print(h)
-            core = pkl.load(open(
-                pin + str(year) + '_h' + str(rawhour).zfill(2) + extag+ ".p", "rb"))
+            core = pkl.load(open(file, "rb"))
             for id, k in enumerate(core.keys()):
                 try:
                     dic[k] = dic[k] + core[k]
                 except KeyError:
                     dic[k] = core[k]
 
-        for y in range(y1 + 1, y2):
+        for y in fnames[1::]:
             print('Coll', y)
-            coll(dic, h, y)
+            coll(dic, y)
 
         extent = 11
 
@@ -356,7 +392,7 @@ def plot_sm_ts(rawhour):
 
         thresh = np.max(np.abs(np.percentile(ano, [5, 95])))
 
-        plt.contourf(dic['init'], cmap='RdBu', levels=np.arange(0,30,2),
+        plt.contourf(dic['init'], cmap='RdBu', levels=np.arange(0,4,0.5),
                      extend='both')
         plt.plot(extent, extent, 'bo')
         ax.axvline(extent, linestyle='dashed', color='k')
@@ -417,7 +453,7 @@ def plot_sm_ts(rawhour):
 
 
 
-        plt.contourf(dic['init'], cmap='RdBu',levels=np.arange(0,30,2),
+        plt.contourf(dic['init'], cmap='RdBu',levels=np.arange(0,4,0.5),
                      extend='both')
         plt.plot(extent, extent, 'bo')
         ax.axvline(extent, linestyle='dashed', color='k')
@@ -481,5 +517,5 @@ for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[5]
 
-    #composite(18)
-    plot_sm_ts(18)
+    composite(15)
+    plot_sm_ts(15)

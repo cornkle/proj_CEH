@@ -33,7 +33,7 @@ MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is
 
 
 REGIONS = ['SAf', 'GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia'] #'GPlains'
-extag = 'onlytimetrack0_init_nosensorcontrol'
+extag = 'propagate_AMSR_Smfiltercheck'
 
 SENSOR='AMSR2'
 y1 = 2012
