@@ -227,6 +227,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         try:
             filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
         except IndexError:
+            #ipdb.set_trace()
             print('No file found, return')
             return
 
@@ -235,7 +236,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         except OSError:
             print('Cannot open file, continue! ', filepath)
             return
-
+        if v == 'sh':
+            ipdb.set_trace()
         dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 
         dar = dar[dar['time.hour'] == h].squeeze()
@@ -276,7 +278,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                 v = derived
 
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
-        if v in ['lw_out_PBLtop', 'tcwv', 'lsRain']:
+        if v in ['lw_out_PBLtop', 'tcwv', 'lsRain', 'sh']:
             try:
                 #regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
 
@@ -388,16 +390,16 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 # def run_hours(hh):
 data_path = '/media/ck/Elements/Africa/WestAfrica/CP4/CP4hist' #cnst.network_data + 'data/CP4/CLOVER/CP4hist'  # CP4 data directory
 ancils_path = cnst.network_data + 'data/CP4/ANCILS' # directory with seamatotRainsk file inside
-out_path ='/media/ck/Elements/Africa/WestAfrica/CP4/CP4_hist_5000km2_-50C_TCWV_Senegal' #CP4_16-19UTC_historical_5000km2_-50C_TCWV' #cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-50C_TCWV'  # out directory to save MCS files
+out_path ='/media/ck/Elements/Africa/WestAfrica/CP4/CP4_17-19UTC_historical_5000km2_-50C_TCWV_sensHeat' #CP4_16-19UTC_historical_5000km2_-50C_TCWV' #cnst.network_data + 'data/CP4/CLOVER/CP4_16-19UTC_future_5000km2_-50C_TCWV'  # out directory to save MCS files
 box = [-12, 15, 5, 25]  # W- E , S - N geographical coordinates box
 #datestring = '19990301'  # set this to date of file
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = np.array([ '03', '04', '05','06','07','08','09', '10', '11'])#([ '03', '04', '05', '06', '09', '10', '11'])
+months = np.array([ '06','07','08','09'])#([ '03', '04', '05', '06', '09', '10', '11'])
 days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
-h=19
+h=17
 
 plglob = glob.glob(data_path + '/q_pl/*.nc')
 pl_dummy = xr.open_dataset(plglob[0])
@@ -412,7 +414,7 @@ landsea_path = glob.glob(ancils_path + os.sep + 'landseamask*.nc')[0]
 landsea = xr.open_dataset(landsea_path, decode_times=False)
 ls = landsea['lsm']
 
-ls.rlon.values = ls.rlon.values - 360
+ls = ls.assign_coords(rlon = ls.rlon.values - 360)
 ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
 
 pos = np.where(ls_arr[0, 0, :, :] == 0)
@@ -436,6 +438,7 @@ vars['t_low'] = ([850], 12, (0, 0, 0))
 vars['t_srfc'] = ([925], 12, (0, 0, 0))
 vars['q_srfc'] = ([925], 12, (0, 0, 0))
 vars['tcwv'] = ([], 12, (inds,weights,shape))
+vars['sh'] = ([], 12, (inds,weights,shape))
 
 
 datelist = []

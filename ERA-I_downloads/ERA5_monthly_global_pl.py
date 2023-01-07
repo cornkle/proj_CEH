@@ -27,15 +27,16 @@ def download(year):
                 ],
                 'pressure_level': [
                     '200',
-                    '500', '850'
+                    '500', '650','850', '925'
                 ],
                 'format': 'netcdf',
                 'grid': '0.7/0.7',
+                'area': '90/-180/-90/180',
                 'time': ['00:00'],
         },
-        '/media/ck/Elements/global/ERA5/monthly/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
+        '/media/ck/Elements/global/ERA5/monthly_new/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
 
-for y in range(1979,2021):
-    if os.path.isfile('/media/ck/Elements/global/ERA5/monthly/ERA5_monthly_0.7deg_uv_'+str(y)+'.nc'):
+for y in range(2000,2022):
+    if os.path.isfile('/media/ck/Elements/global/ERA5/monthly_new/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(y)+'.nc'):
         continue
     download(y)

@@ -13,8 +13,12 @@ def download(year):
             {
                 'product_type': 'monthly_averaged_reanalysis',
                 'variable': [
-                    '10m_u_component_of_wind', '10m_v_component_of_wind', 'orography',
-                    'sea_surface_temperature', 'surface_pressure',
+                    '100m_u_component_of_wind', '100m_v_component_of_wind', '10m_u_component_of_wind',
+                '10m_v_component_of_wind', '2m_dewpoint_temperature', '2m_temperature',
+                'boundary_layer_height', 'convective_available_potential_energy', 'mean_sea_level_pressure',
+                'sea_surface_temperature', 'surface_latent_heat_flux', 'surface_pressure',
+                'surface_sensible_heat_flux', 'total_column_water_vapour', 'total_precipitation',
+                'vertically_integrated_moisture_divergence', 'volumetric_soil_water_layer_1', 'volumetric_soil_water_layer_4',
                 ],
                 'year': [
                    str(year),
@@ -27,11 +31,12 @@ def download(year):
                 ],
                 'format': 'netcdf',
                 'grid': '0.7/0.7',
+                'area': '90/-180/-90/180',
                 'time': ['00:00'],
         },
-        '/media/ck/Elements/global/ERA5/monthly/ERA5_monthly_0.7deg_'+str(year)+'.nc')
+        '/media/ck/Elements/global/ERA5/monthly_new/surface/ERA5_monthly_0.7deg_'+str(year)+'.nc')
 
-for y in range(2020,2021):
-    if os.path.isfile('/media/ck/Elements/global/ERA5/monthly/ERA5_monthly_0.7deg_'+str(y)+'.nc'):
+for y in range(2000,2022):
+    if os.path.isfile('/media/ck/Elements/global/ERA5/monthly_new/surface/ERA5_monthly_0.7deg_'+str(y)+'.nc'):
         continue
     download(y)
