@@ -10,7 +10,7 @@ import ipdb
 #dummy = xr.open_dataset(glob.glob('/prj/vera/cores_bigDomain/*.nc')[0])
 #grid = dummy.salem.grid
 
-filepath = glob.glob('/media/ck/Elements/Africa/WestAfrica/CP4/CP4hist/EF/*.nc')
+filepath = glob.glob('/media/ck/Elements/Africa/WestAfrica/CP4/CP4fut/EF/*.nc')
 
 #dlst = xr.open_dataset(filepath[0])
 #inds, weights, shape = u_int.interpolation_weights_grid(dlst['lon'].values, dlst['lat'].values, grid)

@@ -17,7 +17,7 @@ def download(year):
             'month': '08',
             'day': '28',
             'time': '12:00',
-        },   '/media/ck/Elements/SouthAmerica/ERA5/hourly/ERA5_static_hourly_0.25deg.nc')
+        },   '/media/ck/LStorage/SouthAmerica/ERA5/hourly/ERA5_static_hourly_0.25deg.nc')
 
 for y in range(2019,2020):
     print('Doing year', y)
