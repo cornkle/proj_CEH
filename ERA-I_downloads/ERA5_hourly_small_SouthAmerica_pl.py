@@ -56,17 +56,19 @@ def download(input, y):
   #               'u_component_of_wind', 'v_component_of_wind', 'vertical_velocity'
 strct = {
     'tcwv': ['total_column_water_vapour', [850], 'reanalysis-era5-single-levels'],
-    'u200': ['u_component_of_wind', [200],'reanalysis-era5-pressure-levels'],
+    #'u200': ['u_component_of_wind', [200],'reanalysis-era5-pressure-levels'],
+    'u250': ['u_component_of_wind', [250],'reanalysis-era5-pressure-levels'],
     #'u550', ['u_component_of_wind', 550],
     #'u850', ['u_component_of_wind', 850],
-    'v200':['v_component_of_wind', [200],'reanalysis-era5-pressure-levels'],
+    #'v200':['v_component_of_wind', [200],'reanalysis-era5-pressure-levels'],
     #'v550', ['v_component_of_wind', 550],
     #'v850', ['v_component_of_wind', 850],
     #'w650', ['w_component_of_wind', 650],
     #'v550', ['v_component_of_wind', 550],
-    'v850': ['v_component_of_wind', [850],'reanalysis-era5-pressure-levels'],
-    'u850': ['u_component_of_wind', [850],'reanalysis-era5-pressure-levels'],
-    'q850': ['specific_humidity', [850], 'reanalysis-era5-pressure-levels']
+    #'v850': ['v_component_of_wind', [850],'reanalysis-era5-pressure-levels'],
+    #'u850': ['u_component_of_wind', [850],'reanalysis-era5-pressure-levels'],
+    #'q850': ['specific_humidity', [850], 'reanalysis-era5-pressure-levels']
+
     #'rh850', ['relative_humidity', 850],
 
 
@@ -77,7 +79,7 @@ strct = {
 
 for st in strct.keys():
     input = strct[st]
-    for y in range(1985,2022):
+    for y in range(1985,2023):
         if os.path.isfile('/media/ck/LStorage/SouthAmerica/ERA5/hourly/15UTC/'+st+'_15UTC_'+str(y)+'_peru.nc'):
             print('File exists, continue!')
             continue
