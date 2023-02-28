@@ -75,7 +75,7 @@ strct = {
 }
 
 
-#for y in range(1985,2019):  # 89 missing
+#for y in range(1985,2019):  # 89 missing:q
 
 for st in strct.keys():
     input = strct[st]
