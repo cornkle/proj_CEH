@@ -269,6 +269,17 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
             except ValueError:
                 ipdb.set_trace()
+            if v == 'sh':
+
+                dt = pd.to_datetime(regrid.time)
+                window1 = dt - pd.Timedelta('7days')
+                window2 = dt + pd.Timedelta('7days')
+                ipdb.set_trace()
+                means = regrid.sel(time=slice(str(window1.year)+'-'+str(window1.month)+'-'+str(window1.day)+'T'+str(h).zfill(2)+':00:00',
+                                              str(window2.year)+'-'+str(window2.month)+'-'+str(window2.day)+'T'+str(h).zfill(2)+':00:00'))
+
+
+
             da = xr.DataArray(regrid,
                               coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
                                       'longitude': pl_dummy.longitude.values, },
@@ -401,6 +412,8 @@ top = topo['ht']
 top = top.assign_coords(rlon = top.rlon.values - 360)
 top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
 ##########
+
+mean = xr.open_mfdataset(data_path + '/sh/*.nc')
 
 pos = np.where(ls_arr[0, 0, :, :] == 0)
 lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
