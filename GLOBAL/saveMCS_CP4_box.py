@@ -321,19 +321,50 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         if (gi == 0):  # index 0 is always background, ignore!
             continue
         inds = np.where(labels == gi)
+        
         # cut a box for every single blob from msg - get min max lat lon of the blob
         latmax, latmin = np.nanmax(lats[inds]), np.nanmin(lats[inds])
         lonmax, lonmin = np.nanmax(lons[inds]), np.nanmin(lons[inds])
         mask = np.where(labels!=gi)
-
+       
         dbox = ds.copy(deep=True)
-
+        
         for vout in dbox.data_vars:
-            if vout not in ['lsRain','lw_out_PBLtop']:
+            if vout not in ['lsRain', 'lwout_noon']:
                continue
             (dbox[vout].values)[mask] = np.nan
+        
+        pos = np.argmin((dbox['lw_out_PBLtop'].values.flatten()[inds]))
+        tmin = np.nanmin((dbox['lw_out_PBLtop'].values.flatten()[inds]))
+        print(tmin)
 
-        ds_box = dbox.sel(latitude=slice(latmin,latmax), longitude=slice(lonmin, lonmax))
+        midlat = ((lats.flatten()[inds]))[pos] #latmin + (latmax-latmin)/2
+        midlon = ((lons.flatten()[inds]))[pos] #lonmin + (lonmax-lonmin)/2
+
+        # save only storms in defined storm box
+        if (midlon<sbox[0]) | (midlon>sbox[1]) | (midlat<sbox[2]) | (midlat>sbox[3]):
+            continue
+
+        point = dbox.sel(latitude=midlat, longitude=midlon, method='nearest')
+        plat = point['latitude'].values
+        plon = point['longitude'].values
+
+        xpos = np.where(dbox['longitude'].values == plon)
+        xpos = int(xpos[0])
+        ypos = np.where(dbox['latitude'].values == plat)
+        ypos = int(ypos[0])
+
+        distx=103 # ca 200km i.e. 45 *4.4km
+        disty = 103 # ca 80km i.e 18*4.4
+
+        try:
+            ds_box = dbox.isel(latitude=slice(ypos-disty,ypos+disty+1), longitude=slice(xpos-distx, xpos+distx+1))
+        except IndexError:
+            continue
+
+        if (len(ds_box.latitude) != disty*2+1) | (len(ds_box.longitude) != distx*2+1):
+            continue
+
         try:
             if np.nansum(ds_box['lsRain'])==0:
                 return
@@ -341,10 +372,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             if np.nansum(ds_box['totRain'])==0:
                 return
 
-        #if np.nansum(ds_box['lwout_noon'])<=0:
-        #   ipdb.set_trace()
-        #   print('lwout is lt 0', np.nansum(ds_box['lwout_noon']))
-        #   return
+        if np.nansum(ds_box['lwout_noon'])<=0:
+           ipdb.set_trace()
+           print('lwout is lt 0', np.nansum(ds_box['lwout_noon']))
+           return
 
         savefile = out_dir + os.sep + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
         try:
