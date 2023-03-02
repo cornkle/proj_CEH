@@ -2,22 +2,18 @@ import os
 
 ########## FILE PATHS
 if os.path.isdir('/home/ck/DIR/'):
-    ext_drive = '/home/ck/DIR/'
-    local_data = ext_drive + 'mymachine/'
-    network_data = ext_drive + 'cornkle/'
-    elements_drive = '/media/ck/Elements/'
-    lmcs_drive = '/media/ck/LStorage/'
+    lappi_drive = '/home/ck/DIR/'
+    local_data = lappi_drive + 'mymachine/'
+    network_data = lappi_drive + 'cornkle/'
+    ext_drive = '/media/ck/LStorage/'
+    lmcs_drive = ext_drive + 'global_water/'
+
 
 else:
     if os.path.isdir('/prj/global_water/'):
-        local_data = '/localscratch/wllf030/cornkle/'
-        network_data = '/users/global/cornkle/shared/'
-        elements_drive = '/media/ck/Elements/Obs_Data/'
-        lmcs_drive = '/prj/global_water/'
-    else:
-        ext_drive = '/media/ck/Seagate/DIR/'
-        local_data = ext_drive + 'mymachine/'
-        network_data = ext_drive + 'cornkle/'
+        scratch = '/scratch/cornkle/'
+        network_data = '/users/global/cornkle/shared/'  # private U drive i.e. laptop on CEH network
+        lmcs_drive = '/prj/global_water/'  # "external drive" on CEH network
 
 
 ANCILS = network_data + 'data/ancils_python/'
@@ -37,10 +33,10 @@ ERA5 = local_data + 'ERA5/'
 ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
 ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
 
-
-ERA5_MONTHLY_PL_SYNOP_HU = elements_drive + 'SouthAmerica/ERA5/monthly/pressure_levels/synop'
-ERA5_HOURLY_PL_HU = elements_drive + 'SouthAmerica/ERA5/hourly/pressure_levels/'
-ERA5_HOURLY_SRFC_HU = elements_drive + 'SouthAmerica/ERA5/hourly/surface/'
+#
+# ERA5_MONTHLY_PL_SYNOP_HU = elements_drive + 'SouthAmerica/ERA5/monthly/pressure_levels/synop'
+# ERA5_HOURLY_PL_HU = elements_drive + 'SouthAmerica/ERA5/hourly/pressure_levels/'
+# ERA5_HOURLY_SRFC_HU = elements_drive + 'SouthAmerica/ERA5/hourly/surface/'
 
 ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
 ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
@@ -103,5 +99,5 @@ GRIDSAT_RAW = local_data + 'GRIDSAT/'
 CHIRPS = network_data + 'data/OBS/CHIRPS/'
 CHIRPS_MONTHLY = network_data + 'data/OBS/CHIRPS/monthly/'
 
-TRMM_DAILY = elements_drive + 'TRMM/data/daily/aggregated/'
-TRMM_MONTHLY = elements_drive + 'TRMM/data/monthly/aggregated/'
+# TRMM_DAILY = elements_drive + 'TRMM/data/daily/aggregated/'
+# TRMM_MONTHLY = elements_drive + 'TRMM/data/monthly/aggregated/'
