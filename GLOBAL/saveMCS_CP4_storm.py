@@ -379,7 +379,7 @@ else:
 main = '/prj/global_water/CP_models'
 data_path = main + '/CP4_WestAfrica/'+fdir
 ancils_path = main + '/CP4_WestAfrica/ANCILS'
-out_path = main + '/MCS_files/MODELS/CP4/CP4_allHours_'+ftag+'_5000km2_-50_WAf'
+out_path = main + '/MCS_files/MODELS/CP4_test/CP4_allHours_'+ftag+'_5000km2_-50_WAf'
 box = [-18, 25, 4, 25]  # W- E , S - N geographical coordinates box
 
 years = np.array(np.arange(1998,2007), dtype=str)
