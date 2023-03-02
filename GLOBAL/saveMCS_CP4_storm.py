@@ -8,6 +8,7 @@ from scipy.interpolate import griddata
 import pandas as pd
 import ipdb
 import itertools
+import datetime
 from collections import OrderedDict
 from utils import constants as cnst, u_darrays as uda, u_interpolate as u_int
 import matplotlib.pyplot as plt
@@ -176,8 +177,6 @@ def cut_box(xpos, ypos, arr, dist=None):
             print("Please check kernel dimensions, there is something wrong")
             ipdb.set_trace()
 
-
-
     return kernel
 
 
@@ -269,15 +268,33 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
             except ValueError:
                 ipdb.set_trace()
-            if v == 'sh':
 
-                dt = pd.to_datetime(regrid.time)
-                window1 = dt - pd.Timedelta('7days')
-                window2 = dt + pd.Timedelta('7days')
-                ipdb.set_trace()
-                means = regrid.sel(time=slice(str(window1.year)+'-'+str(window1.month)+'-'+str(window1.day)+'T'+str(h).zfill(2)+':00:00',
-                                              str(window2.year)+'-'+str(window2.month)+'-'+str(window2.day)+'T'+str(h).zfill(2)+':00:00'))
-
+            # if v == 'sh':  # potential calculation of SH climatology around SH date. Not finished
+            #
+            #     ddate = dar.time.values.item()
+            #     dt = datetime.datetime(ddate.year, ddate.month, ddate.day,
+            #                            ddate.hour, ddate.minute, ddate.second)
+            #
+            #     window1 = dt - pd.Timedelta('7days')
+            #     window2 = dt + pd.Timedelta('7days')
+            #
+            #     doi = pd.date_range(window1, window2)
+            #     c1ds = []
+            #     for doi_id in doi:
+            #
+            #         cdate = str(doi_id.year) + str(doi_id.month).zfill(2) + str(doi_id.day).zfill(2) + '0030'
+            #
+            #         try:
+            #             c1 = xr.open_dataarray(glob.glob(data_path + '/sh/*_'+cdate+'-*.nc')[0])
+            #             c1ds.append(c1)
+            #         except:
+            #             pass
+            #     if len(c1ds) < 10:
+            #         print('Not enough dates to calc sh clim')
+            #         return
+            #
+            #     ipdb.set_trace()
+            #     shmean = xr.concat(c1ds, dim='time').mean('time')
 
 
             da = xr.DataArray(regrid,
@@ -376,7 +393,7 @@ if fdir == 'CP4hist':
 else:
     ftag = 'future'
 
-main = '/prj/global_water/CP_models'
+main = cnst.lmcs_drive + 'CP_models'
 data_path = main + '/CP4_WestAfrica/'+fdir
 ancils_path = main + '/CP4_WestAfrica/ANCILS'
 out_path = main + '/MCS_files/MODELS/CP4_test/CP4_allHours_'+ftag+'_5000km2_-50_WAf'
@@ -390,6 +407,7 @@ tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 h= int(sys.argv[1]) # hour to extract
 
 plglob = glob.glob(data_path + '/q_pl/*.nc')
+
 pl_dummy = xr.open_dataset(plglob[0])
 
 srfcglob = glob.glob(data_path + '/lw_out_PBLtop/*.nc')
@@ -413,8 +431,6 @@ top = top.assign_coords(rlon = top.rlon.values - 360)
 top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
 ##########
 
-mean = xr.open_mfdataset(data_path + '/sh/*.nc')
-
 pos = np.where(ls_arr[0, 0, :, :] == 0)
 lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
 
@@ -422,7 +438,6 @@ lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np
 inds, weights, shape = u_int.interpolation_weights(srfc_dummy.longitude, srfc_dummy.latitude, pl_dummy.longitude, pl_dummy.latitude)
 #regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
 
-#ipdb.set_trace()
 
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], h, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
