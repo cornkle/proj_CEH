@@ -45,7 +45,7 @@ def run():
             outpath_tir = cnst.ext_drive+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
             outpath_core = cnst.ext_drive+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
 
-            if len(glob.glob(cnst.ext_drive + '/nflics/stations/extract/*' + str(y) + str(m).zfill(2) + "*")) != 0:
+            if len(glob.glob(cnst.ext_drive + '/nflics/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
                 print('Files exist, continue')
                 continue
 
