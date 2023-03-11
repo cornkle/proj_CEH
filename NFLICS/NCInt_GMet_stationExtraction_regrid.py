@@ -14,8 +14,6 @@ def run():
     stations = pd.read_csv(cnst.ext_drive+'/nflics/stations/GMet_stations_lon_lat.csv', index_col='SHORT_STN_NAME')
 
     geoloc = xr.open_dataset(cnst.ext_drive+'/nflics/geoloc/nxny1640_580_nxnyds164580_blobdx0.04491576_area4_n23_20_32.nc')
-
-    time_index = []
     columns = stations.index.values
 
     lls = [geoloc.lons_mid.min(), geoloc.lons_mid.max(), geoloc.lats_mid.min(), geoloc.lats_mid.max()]
@@ -41,6 +39,7 @@ def run():
             for col in columns:
                 struc_tir[col] = []
                 struc_wav[col] = []
+            time_index = []
 
             outpath_tir = cnst.ext_drive+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
             outpath_core = cnst.ext_drive+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
