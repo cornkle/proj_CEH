@@ -14,6 +14,8 @@ else:
         scratch = '/scratch/cornkle/'
         network_data = '/users/global/cornkle/shared/'  # private U drive i.e. laptop on CEH network
         lmcs_drive = '/prj/global_water/'  # "external drive" on CEH network
+        ext_drive = '/prj/global_water/'
+        local_data = '/prj/global_water/'
 
 
 ANCILS = network_data + 'data/ancils_python/'
