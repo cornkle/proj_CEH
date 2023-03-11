@@ -34,7 +34,7 @@ def run():
         for mm in range(1,12):
             print('Doing ',yy, mm)
 
-            filepath = glob.glob(cnst.ext_drive+'/nflics/hist_cores/'+str(yy)+'/'+str(mm).zfill(2)+'/*/*.nc')
+            filepath = sorted(glob.glob(cnst.ext_drive+'/nflics/hist_cores/'+str(yy)+'/'+str(mm).zfill(2)+'/*/*.nc'))
 
             struc_tir = {}
             struc_wav = {}
@@ -45,6 +45,10 @@ def run():
             outpath_tir = cnst.ext_drive+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
             outpath_core = cnst.ext_drive+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
 
+            if len(glob.glob(cnst.ext_drive + '/nflics/stations/extract/*' + str(y) + str(m).zfill(2) + "*")) != 0:
+                print('Files exist, continue')
+                continue
+
             for ff in filepath:
 
                 base = os.path.basename(ff)
@@ -54,10 +58,6 @@ def run():
                 d = base[-9:-7]
                 h = base[-7:-5]
                 mi = base[-5:-3]
-
-                if len(glob.glob(cnst.ext_drive+'/nflics/stations/*'+str(y)+str(m).zfill(2)+"*")) != 0:
-                    print('Files exist, continue')
-                    continue
 
                 try:
                     dat = xr.open_dataset(ff)
