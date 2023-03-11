@@ -26,20 +26,20 @@ ANCILS = network_data + 'data/ancils_python/'
 # ERA_DAILY_SURFACE =   local_data + 'ERA-I/daily_2006-2010_12UTCsrfc.nc'
 # ERA_MONTHLY_TUVWZ_AFRICA = local_data + 'ERA-I/climatology/ERA-Int-MonthlyAvg-4D-TUVWZ_Africa.nc'
 
-ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_1983-2014_pl.nc'
+#ERA_DAILY_PL12UTC = local_data + 'ERA-I/daily_1983-2014_pl.nc'
 # ERA_DAILY_PL_NIGHT = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCpl_night.nc'
 # ERA_DAILY_SRFC_ANO = '/localscratch/wllf030/cornkle/ERA-I/daily_2006-2010_12UTCsrfc_anomaly.nc'
-ERA5 = local_data + 'ERA5/'
-ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
-ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
+#ERA5 = local_data + 'ERA5/'
+#ERA5_MONTHLY_PL_SYNOP = local_data + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
+#ERA5_MONTHLY_SRFC_SYNOP = local_data + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
 
 #
 # ERA5_MONTHLY_PL_SYNOP_HU = elements_drive + 'SouthAmerica/ERA5/monthly/pressure_levels/synop'
 # ERA5_HOURLY_PL_HU = elements_drive + 'SouthAmerica/ERA5/hourly/pressure_levels/'
 # ERA5_HOURLY_SRFC_HU = elements_drive + 'SouthAmerica/ERA5/hourly/surface/'
 
-ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
-ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
+#ERA5_HOURLY_SRFC = local_data + 'ERA5/hourly/surface/'
+#ERA5_HOURLY_PL = local_data +'ERA5/hourly/pressure_levels/'
 
 
 LSTA_TOPO = network_data + 'data/ancils_python/lsta_corr_topo.nc'
@@ -93,9 +93,9 @@ TRMM5KM_FILE = TRMM5KM + 'TRMM5km_2006-2010.nc'
 
 CMORPH = network_data + 'data/OBS/CMORPH/CMORPH_nc/'
 
-GRIDSAT = local_data + 'GRIDSAT/MCS18/'
-GRIDSAT_PERU = local_data + 'GRIDSAT/MCS18_peru/'
-GRIDSAT_RAW = local_data + 'GRIDSAT/'
+#GRIDSAT = local_data + 'GRIDSAT/MCS18/'
+#GRIDSAT_PERU = local_data + 'GRIDSAT/MCS18_peru/'
+#GRIDSAT_RAW = local_data + 'GRIDSAT/'
 CHIRPS = network_data + 'data/OBS/CHIRPS/'
 CHIRPS_MONTHLY = network_data + 'data/OBS/CHIRPS/monthly/'
 

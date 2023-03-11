@@ -30,7 +30,7 @@ def run():
     lonN, latN = grid3k.ll_coordinates
     ds = xr.Dataset()
 
-    for yy in range(2010,2022):
+    for yy in range(2004,2023):
         for mm in range(1,12):
             print('Doing ',yy, mm)
 
@@ -92,8 +92,6 @@ def run():
                     struc_wav[kk].append(point)
 
             if len(struc_tir['NAV']) > 0:
-
-                ipdb.set_trace()
 
                 df = pd.DataFrame(struc_tir, index=time_index)
                 df.to_csv(outpath_tir)
