@@ -177,3 +177,33 @@ def hist_freq(ax, data, **kwargs):
     weights = np.ones_like(data) / float(len(data))
     ax.hist(data, weights = weights, **kwargs)
     return ax
+
+
+def cursor_hover_values():
+    # % matplotlib
+    # notebook
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import mplcursors
+
+    # Generate a 2D array
+    array_2d = np.random.rand(10, 10)
+
+    # Create a figure and plot the 2D array
+    fig, ax = plt.subplots()
+    im = ax.imshow(array_2d)
+
+    # Create the annotation function
+    def on_move(event):
+        # Get the mouse position
+        x, y = event.xdata, event.ydata
+
+        # Get the data value at the mouse position
+        val = array_2d[int(y + 0.5), int(x + 0.5)]
+
+    cursor = mplcursors.cursor(im, hover=True)
+    cursor.connect('add', on_move)
+    cursor.selection_style = {'linewidth': 2}
+
+    # Show the plot
+    plt.show()

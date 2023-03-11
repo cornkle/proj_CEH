@@ -240,7 +240,7 @@ def rewriteMfgLonLat_Stitch():
 #  ny : pixel in y direction
 #  nx : pixel in x direction
 #========================================================================================
-def rewriteMsgLonLat(file, nx, ny):
+def rewriteMsgLonLat(file, nx, ny, nowrite=False):
     llFile = file
 
     llShape = (ny,nx)
@@ -250,11 +250,43 @@ def rewriteMsgLonLat(file, nx, ny):
     lat = ll[ny*nx:]
     lat.shape = llShape
     lon.shape = llShape
-
+    ipdb.set_trace()
     #ipdb.set_trace()
+    if nowrite:
+        return {'lon':lon, 'lat':lat}
 
-    llsavefile = file.replace('.gra', '')
-    np.savez(llsavefile,lon=lon,lat=lat)
+
+
+    else:
+        llsavefile = file.replace('.gra', '')
+        np.savez(llsavefile,lon=lon,lat=lat)
+
+
+
+#========================================================================================
+# Rewrites panAfrica msg lat lon to something nice (lat lon from blobs) [ corrects nx ny flip with standard code above ]
+#  file: lat lon grads file
+#  ny : pixel in y direction
+#  nx : pixel in x direction
+#========================================================================================
+def rewriteMsgAfricaLonLat(file, nx, ny, nowrite=False):
+    llFile = file
+
+    llShape = (ny,nx)
+    llMDI = np.float32(13.5)
+    ll = np.fromfile(llFile,dtype=llMDI.dtype)
+    # lon = ll[0:ny*nx]
+    # lat = ll[ny*nx:]
+    lon = ll[ny*nx:]
+    lat = ll[0:ny*nx]
+    lat.shape = llShape
+    lon.shape = llShape
+    if nowrite:
+        return {'lon':lon, 'lat':lat}
+
+    else:
+        llsavefile = file.replace('.gra', '')
+        np.savez(llsavefile,lon=lon,lat=lat)
 
 #========================================================================================
 # Rewrites modis lat lon to something nice (lat lon from blobs)
