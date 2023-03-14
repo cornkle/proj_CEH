@@ -38,17 +38,18 @@ def _interpolate(values, vtx, wts, fill_value=np.nan):
     ret[np.any(wts < 0, axis=1)] = fill_value
     return ret
 
-def interpolation_weights(x, y, new_x, new_y):
+def interpolation_weights(x, y, new_x, new_y, irregular_1d=False):
 
     """
-    :param x: current x variables (1 or 2d, definitely 2d if irregular!)
-    :param y: current y variables (1 or 2d, definitely 2d if irregular!)
+    :param x: current x variables (1 or 2d)
+    :param y: current y variables (1 or 2d)
     :param new_x: target x vars
     :param new_y: target y vars
+    :keyword irregular_1d = False , set to True if input is non-ordered points in 1d arrays
     :return:  triangulisation lookup table, point weights, 2d shape - inputs for interpolation func
     """
 
-    if x.ndim == 1:
+    if (x.ndim == 1) & ~irregular_1d:
         grid_xs, grid_ys = np.meshgrid(x, y)
     else:
         grid_xs = x
