@@ -36,6 +36,8 @@ def saveMCS_WA15(YRANGE):
 
     mJJAS = msg.ReadMsg(msg_folder)
     mMAMON = msg.ReadMsg(msg_folder2)
+    mFULL = msg.ReadMsg(msg_folder3)
+
     cnt = 0
     for _y in range(YRANGE, YRANGE+1):
         for _m in range(3,12):
@@ -52,25 +54,27 @@ def saveMCS_WA15(YRANGE):
                 _d = t['time.day'].values[0]
                 _mi = t['time.minute'].values[0]
 
-                if (_h <15) | (_h>21):
+                if (_h <15) | (_h>18):
                     print('Wrong hour')
                     continue
 
-                if (_m<3) | (_m>11):
-                    print('Wrong month')
-                    continue
+                # if (_m<3) | (_m>11):
+                #     print('Wrong month')
+                #     continue
 
                 da = t['HQprecipitation'].squeeze()
                 da = da.T
-                tdic = da.sel(lat=slice(5,25), lon=slice(-17,15))   #[-12, 15, 5, 25]
+                tdic = da.sel(lat=slice(5,10), lon=slice(-10,10))   #[-12, 15, 5, 25]
 
                 if np.sum(tdic.values) <= 0.01:
                     continue
 
-                if _m in [3,4,5,10,11]:
-                    m = mMAMON
-                else:
-                    m = mJJAS
+                # if _m in [3,4,5,10,11]:
+                #     m = mMAMON
+                # else:
+                #     m = mJJAS
+
+                m = mFULL
 
                 date = dt.datetime(_y, _m, _d, _h, _mi)
                 arr = np.array([15, 30, 45, 60, 0])
@@ -226,7 +230,7 @@ def saveMCS_WA15(YRANGE):
                     da.attrs['area'] = sum(mmask.flatten())
                     da.attrs['area_cut'] = sum(mask2)
                     da.close()
-                    savefile = cnst.network_data + 'MCSfiles/WA5000_5-25N_12W-15E_-50_afternoon_GPM/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+                    savefile = cnst.network_data + 'MCSfiles/WA5000_5-10N_10W-10E_-50_afternoon_GPM_fullyear_SOMS/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
                     try:
                         os.remove(savefile)
                     except OSError:
