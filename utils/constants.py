@@ -26,11 +26,11 @@ FIGS = network_data+'figs/'
 
 
 #West Africa ERA5
-ERA5_HOURLY_SRFC = DATA + 'ERA5/hourly/surface/'
-ERA5_HOURLY_PL = DATA +'ERA5/hourly/pressure_levels/'
-ERA5 = DATA + 'ERA5/'
-ERA5_MONTHLY_PL_SYNOP = DATA + 'ERA5/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
-ERA5_MONTHLY_SRFC_SYNOP = DATA + 'ERA5/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
+ERA5_HOURLY_SRFC = DATA + 'ERA5_WAf/hourly/surface/'
+ERA5_HOURLY_PL = DATA +'ERA5_WAf/hourly/pressure_levels/'
+ERA5 = DATA + 'ERA5_WAf/'
+ERA5_MONTHLY_PL_SYNOP = DATA + 'ERA5_WAf/monthly/synoptic/pl_1979-2019_monthly_synop_07x07.nc'
+ERA5_MONTHLY_SRFC_SYNOP = DATA + 'ERA5_WAf/monthly/synoptic/srfc_1979-2019_monthly_synop_07x07.nc'
 
 
 LSTA_TOPO = ANCILS + 'lsta_corr_topo.nc'

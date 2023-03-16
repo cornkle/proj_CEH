@@ -47,7 +47,7 @@ def perSys():
     #ipdb.set_trace()
 
     print('Nb files', len(files))
-    for y in range(2004,2019):
+    for y in range(2016,2019):
 
         yfiles = []
         for f in files:
