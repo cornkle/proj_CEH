@@ -212,7 +212,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         grid = (vars[outv])[4]
 
         try:
-            filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*'+datestring+'*.nc')[0]
+            filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*_'+datestring+'*.nc')[0]
         except IndexError:
             #ipdb.set_trace()
             print('No file found, return')

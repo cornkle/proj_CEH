@@ -24,6 +24,26 @@ import glob
 from wavelet import util
 import datetime
 
+################### Read gra file
+
+def readFile(bfile, nx, ny, nt):  # 1,72,2,12,5
+
+    startlon = -17.5
+    startlat = 5.5
+
+    full_lon = np.arange(startlon, startlon + nx)
+    full_lat = np.arange(startlat, startlat + ny)
+
+    rrShape = (nx, ny, nt)  # msg shape
+    rrMDI = np.uint8(255) #rrMDI = np.float32(13.5)  #
+    rr = np.fromfile(bfile, dtype=rrMDI.dtype)
+
+    rr.shape = rrShape
+
+    data_array = {'cloud_cover': rr, 'lon': full_lon, 'lat': full_lat, }  # lats lons numpy arrays!
+
+    return rr
+
 #========================================================================================
 # Rewrites 580x1640 msg lat lon to something nice (lat lon from blobs)
 #========================================================================================
