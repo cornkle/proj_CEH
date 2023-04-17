@@ -469,7 +469,7 @@ main = cnst.other_drive + 'CP4'
 main_lmcs = cnst.lmcs_drive + 'CP_models'
 data_path = main + '/CP4_WestAfrica/'+fdir
 ancils_path = main + '/CP4_WestAfrica/ANCILS'
-out_path = main_lmcs + '/MCS_files/MODELS/CP4_box/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box'
+out_path = main_lmcs + '/MCS_files/MODELS/CP4_box/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_anom'
 box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
