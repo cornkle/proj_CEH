@@ -174,7 +174,7 @@ def draw_map(data, lon, lat, title=None,  mask_sig=None, quiver=None, contour=No
 
 
 def hist_freq(ax, data, **kwargs):
-    weights = np.ones_like(data) / float(len(data))
+    weights = np.ones_like(data) / float(len(data))*100
     ax.hist(data, weights = weights, **kwargs)
     return ax
 

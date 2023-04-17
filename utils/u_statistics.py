@@ -54,7 +54,7 @@ class MidPointNorm(Normalize):
 
 
 def histo_frequency(data, **kwargs):
-    weights = np.ones_like(data) / float(len(data))
+    weights = np.ones_like(data) / float(len(data)) *100
     hist, h = np.histogram(data, weights=weights, **kwargs)
     count, h = np.histogram(data, **kwargs)
     return hist, count, h
