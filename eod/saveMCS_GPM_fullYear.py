@@ -24,23 +24,24 @@ HOD = range(24)  # hours of day
 def multi():
     pool = multiprocessing.Pool(processes=5)
 
-    res = pool.map(saveMCS_WA15, range(2004,2019))
+    res = pool.map(saveMCS_WA15, range(2014,2019))
 
 
 
 def saveMCS_WA15(YRANGE):
-    trmm_folder = cnst.DATA + 'data/OBS/IMERG_HQ_precip'
-    msg_folder = cnst.DATA + 'data/OBS/MSG_WA30' #meteosat_WA30'
-    msg_folder2 = cnst.DATA + 'data/OBS/MSG_MAMON'
-    msg_folder3 = cnst.DATA + 'data/OBS/tropWA'
+    trmm_folder = cnst.DATA + 'OBS/IMERG_HQ_precip'
+    msg_folder = cnst.DATA + 'OBS/MSG_WA30' #meteosat_WA30'
+    msg_folder2 = cnst.DATA + 'OBS/MSG_MAMON'
+    msg_folder3 = cnst.DATA + 'OBS/MSG_tropWA'
 
     mJJAS = msg.ReadMsg(msg_folder)
     mMAMON = msg.ReadMsg(msg_folder2)
     mFULL = msg.ReadMsg(msg_folder3)
 
     cnt = 0
+    cnt_match = 0
     for _y in range(YRANGE, YRANGE+1):
-        for _m in range(3,12):
+        for _m in range(12,13):
 
             files = glob.glob(trmm_folder + '/'+str(_y) + '/'+str(_m).zfill(2) +'/*.nc4')# area=[-12, 12, 4, 9])   # [-15, 15, 4, 21], [-10, 10, 10, 20]
 
@@ -54,7 +55,7 @@ def saveMCS_WA15(YRANGE):
                 _d = t['time.day'].values[0]
                 _mi = t['time.minute'].values[0]
 
-                if (_h <15) | (_h>18):
+                if (_h <16) | (_h>18):
                     print('Wrong hour')
                     continue
 
@@ -121,7 +122,8 @@ def saveMCS_WA15(YRANGE):
                         continue
 
                 print('TRMM:', date, 'MSG:', ndate.year, ndate.month, ndate.day, ndate.hour, ndate.minute )
-
+                cnt_match = cnt_match+1
+                print('Match', cnt_match)
                 lon1 = mdic['lon'].values
                 lat1 = mdic['lat'].values
                 mdic['t'].values[mdic['t'].values >= -50] = 0  # T threshold -10
@@ -131,8 +133,9 @@ def saveMCS_WA15(YRANGE):
                 n = np.bincount(inv)
 
                 goodinds = u[n > 556]  # defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res , 5000km2 = 556 pixel
-                print(goodinds)
+                print('goodinds', goodinds)
                 if not sum(goodinds) > 0:
+                    print('No good inds, continue')
                     continue
 
                 for gi in goodinds:
@@ -140,7 +143,10 @@ def saveMCS_WA15(YRANGE):
                         continue
 
                     inds = np.where(labels == gi)
-
+                    savefile = cnst.network_data + 'MCSfiles/WA5000_5-10N_10W-10E_-50_afternoon_GPM_fullyear_SOMS/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
+                    if os.path.isfile(savefile):
+                        print('File exists, continue')
+                        continue   
                     # cut a box for every single blob from msg - get min max lat lon of the blob, cut upper lower from TRMM to match blob
                     latmax, latmin = mdic['lat'].values[inds].max(), mdic['lat'].values[inds].min()
                     lonmax, lonmin = mdic['lon'].values[inds].max(), mdic['lon'].values[inds].min()
@@ -160,6 +166,7 @@ def saveMCS_WA15(YRANGE):
 
                     ml0 = m.get_data(llbox=[lonmin - 1,  lonmax + 1, latmin - 1, latmax + 1])
                     if not ml0:
+                        print('Couldnt get msg data, continue')
                         continue
 
                     #make salem grid
@@ -172,6 +179,7 @@ def saveMCS_WA15(YRANGE):
                     try:
                         outt = u_grid.quick_regrid(tdic['lon'].values, tdic['lat'].values, tdic.values, grid)
                     except ValueError:
+                        print('Regrid failure, continue')
                         continue
 
                     if np.sum(np.isfinite(outt)) < 5:  # at least 2 valid pixel
@@ -208,6 +216,7 @@ def saveMCS_WA15(YRANGE):
                     mask2 = np.isfinite(outl[tmask])
 
                     if (sum(mmask.flatten())*25 < 350) | (outt.max()>250):# or (sum(mmask.flatten())*25 > 1500000): #or (outt.max()<0.1)
+                        print('Too few TRMM pixel, continue')
                         continue
 
                     if sum(mask2.flatten()) < 5:  # sum(mmask.flatten())*0.3:
@@ -230,7 +239,6 @@ def saveMCS_WA15(YRANGE):
                     da.attrs['area'] = sum(mmask.flatten())
                     da.attrs['area_cut'] = sum(mask2)
                     da.close()
-                    savefile = cnst.network_data + 'MCSfiles/WA5000_5-10N_10W-10E_-50_afternoon_GPM_fullyear_SOMS/' + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '.nc'
                     try:
                         os.remove(savefile)
                     except OSError:
