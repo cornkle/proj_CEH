@@ -34,9 +34,9 @@ def download(year):
                 'area': '90/-180/-90/180',
                 'time': ['00:00'],
         },
-        '/media/ck/Elements/global/ERA5/monthly_new/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
+        '/media/ck/LStorage/global_water/other/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
 
-for y in range(2000,2022):
-    if os.path.isfile('/media/ck/Elements/global/ERA5/monthly_new/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(y)+'.nc'):
+for y in range(2022,2023):
+    if os.path.isfile('/media/ck/LStorage/global_water/other/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(y)+'.nc'):
         continue
     download(y)

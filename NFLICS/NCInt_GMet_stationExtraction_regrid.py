@@ -11,9 +11,9 @@ import datetime
 import matplotlib.pyplot as plt
 
 def run():
-    stations = pd.read_csv(cnst.ext_drive+'/nflics/stations/GMet_stations_lon_lat.csv', index_col='SHORT_STN_NAME')
+    stations = pd.read_csv(cnst.DATA+'/nflics/stations/GMet_stations_lon_lat.csv', index_col='SHORT_STN_NAME')
 
-    geoloc = xr.open_dataset(cnst.ext_drive+'/nflics/geoloc/nxny1640_580_nxnyds164580_blobdx0.04491576_area4_n23_20_32.nc')
+    geoloc = xr.open_dataset(cnst.DATA+'/nflics/geoloc/nxny1640_580_nxnyds164580_blobdx0.04491576_area4_n23_20_32.nc')
     columns = stations.index.values
 
     lls = [geoloc.lons_mid.min(), geoloc.lons_mid.max(), geoloc.lats_mid.min(), geoloc.lats_mid.max()]
@@ -32,7 +32,7 @@ def run():
         for mm in range(1,12):
             print('Doing ',yy, mm)
 
-            filepath = sorted(glob.glob(cnst.ext_drive+'/nflics/hist_cores/'+str(yy)+'/'+str(mm).zfill(2)+'/*/*.nc'))
+            filepath = sorted(glob.glob(cnst.other_drive+'/nflics/hist_cores/'+str(yy)+'/'+str(mm).zfill(2)+'/*/*.nc'))
 
             struc_tir = {}
             struc_wav = {}
@@ -41,10 +41,10 @@ def run():
                 struc_wav[col] = []
             time_index = []
 
-            outpath_tir = cnst.ext_drive+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
-            outpath_core = cnst.ext_drive+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
+            outpath_tir = cnst.DATA+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
+            outpath_core = cnst.DATA+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
 
-            if len(glob.glob(cnst.ext_drive + '/nflics/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
+            if len(glob.glob(cnst.DATA + '/nflics/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
                 print('Files exist, continue')
                 continue
 

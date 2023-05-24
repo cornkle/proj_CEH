@@ -14,35 +14,6 @@ def multi_test():
     print(res)
 
 
-
-def run_darrays(nb_processors, func, data, dic_names):
-
-    pool = multiprocessing.get_context('fork').Pool(processes=nb_processors)
-    print('Pooled')
-    res = pool.map(func, data)
-    pool.close()
-
-    res = [x for x in res if x is not None]
-
-
-    # res = []
-    # for d in data:
-    #     r = func(d)
-    #     res.append(r)
-
-    dic = {}
-
-    res = np.array(res)
-
-    for id, l in enumerate(dic_names):
-
-            dic[l] = np.squeeze(res[:,id,...])
-
-    return dic
-
-
-
-
 def run_arrays(nb_processors, func, data, dic_names):
 
     pool = multiprocessing.get_context('fork').Pool(processes=nb_processors)

@@ -11,9 +11,9 @@ import datetime
 import matplotlib.pyplot as plt
 
 def run():
-    stations = pd.read_csv(cnst.network_data+'data/nflics/core_gauge_comparison_ANACIM/stations/Position_MOD.csv', index_col='station number')
+    stations = pd.read_csv(cnst.DATA+'/nflics/stations/ANACIM/Position_MOD.csv', index_col='station number')
 
-    geoloc = xr.open_dataset(cnst.network_data+'data/nflics/geoloc/nxny1640_580_nxnyds164580_blobdx0.04491576_area4_n23_20_32.nc')
+    geoloc = xr.open_dataset(cnst.DATA+'/nflics/geoloc/nxny1640_580_nxnyds164580_blobdx0.04491576_area4_n23_20_32.nc')
     columns = stations.index.values
 
     lls = [geoloc.lons_mid.min(), geoloc.lons_mid.max(), geoloc.lats_mid.min(), geoloc.lats_mid.max()]
@@ -43,10 +43,17 @@ def run():
                 struc_wav[col] = []
             time_index = []
 
+<<<<<<< HEAD
             outpath_tir = cnst.network_data+'data/nflics/core_gauge_comparison_ANACIM/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
             outpath_core = cnst.network_data+'data/nflics/core_gauge_comparison_ANACIM/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
 
             if len(glob.glob(cnst.network_data + 'data/nflics/core_gauge_comparison_ANACIM/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
+=======
+            outpath_tir = cnst.DATA+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
+            outpath_core = cnst.DATA+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
+
+            if len(glob.glob(cnst.DATA + '/nflics/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
+>>>>>>> 68fa36cac88427856c3071d9b07aaa40b6493ecf
                 print('Files exist, continue')
                 continue
 

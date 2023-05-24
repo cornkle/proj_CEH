@@ -59,7 +59,7 @@ for mm in mregions.keys():
     mreg = mm
     box = mregions[mm][0]
 
-    for y in range(2012,2020):
+    for y in range(2000,2012):
         for m in range(1, 13):
             for d in range(1,mdays[m]+1):
 
