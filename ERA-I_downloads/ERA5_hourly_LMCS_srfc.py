@@ -46,13 +46,13 @@ def download(year, month, day, box,file):
 
 
 mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
- 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
- 'india' : [[70,90, 5,30], 'asia', 5], # 7
- 'china' : [[105,115,25,40], 'asia', 8 ], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
+'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
+'india' : [[70,90, 5,30], 'asia', 5], # 7
+'china' : [[105,115,25,40], 'asia', 8 ], # 4
+'australia' : [[120,140,-23, -11], 'asia', 9], # 3
+#'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
+# 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
+#'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
 
 }
 
@@ -62,7 +62,7 @@ mdays = {1:31, 2:28, 3:31, 4:30, 5:31,6:30, 7:31, 8:31, 9:30, 10:31, 11:30,12:31
 for mm in mregions.keys():
     mreg = mm
     box = mregions[mm][0]
-    for y in range(2000,2012):
+    for y in range(2000,2020):
         for m in range(1, 13):
             for d in range(1,mdays[m]+1):
 

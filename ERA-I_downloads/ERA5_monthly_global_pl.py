@@ -1,6 +1,6 @@
 import cdsapi
 import os
-
+from utils import constants as cnst
 
 # @ct.application(title='Download data')
 # @ct.output.download()
@@ -34,9 +34,9 @@ def download(year):
                 'area': '90/-180/-90/180',
                 'time': ['00:00'],
         },
-        '/media/ck/LStorage/global_water/other/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
+        cnst.lmcs_drive+'/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(year)+'.nc')
 
-for y in range(2022,2023):
-    if os.path.isfile('/media/ck/LStorage/global_water/other/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_uv_'+str(y)+'.nc'):
+for y in range(2000,2023):
+    if os.path.isfile(cnst.lmcs_drive+'/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_'+str(y)+'.nc'):
         continue
     download(y)

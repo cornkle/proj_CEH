@@ -22,9 +22,9 @@ import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
 from scipy.interpolate import griddata
 import multiprocessing
-import metpy
-from metpy import calc
-from metpy.units import units
+#import metpy
+#from metpy import calc
+#from metpy.units import units
 
 
 import pickle as pkl
@@ -34,14 +34,14 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 
-MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (7,9)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
- 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,5), (1,3)], # 10
- 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (8,12), (7,9)], # 7
- 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (8,12), (7,9)], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,5), (1,3)], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (9,12), (1,5), (1,3)] , # 16
+MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+ 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,12)], # 10
+ 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (1,12)], # 7
+ 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (1,12)], # 4
+ 'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,12)], # 3
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (9,12), (1,12)] , # 16
  #'trop_SA' : [[-75, -50, -20, -5], 'spac', -5, (1,12), (1,12), (1,12)], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (8,12), (7,9)] # # 18
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (1,12)] # # 18
 
 }
 
@@ -50,7 +50,7 @@ OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
 REGIONS = ['sub_SA', 'WAf', 'china', 'india', 'australia','SAf', 'GPlains']
 SENSOR = 'ERA5'
 SENSOP = 12 # (LT overpass)
-extag = 'SUMMER' #
+extag = 'FullYear' #
 INIT_DISTANCE = 0
 AREA = 5000 #1000
 TRACKTIME = 0
@@ -102,12 +102,14 @@ def composite(rawhour):
 
     print(REGION)
     path = cnst.lmcs_drive + '/ERA5_MCS_saveFiles/'
+    if not os.path.isdir(path):
+        os.mkdir(path)
 
-    for y in np.arange(2012, 2020):
+    for y in np.arange(2000, 2020):
 
         m1 = MONTHS[0]
         m2 = MONTHS[1]
-        outfile = path + "/" + REGION + "_" + SENSOR + "_2012-2019_MCSTRACK_localBulk_" + str(m1).zfill(
+        outfile = path + "/" + REGION + "_" + SENSOR + "_2000-2019_MCSTRACK_localBulk_" + str(m1).zfill(
             2) + '-' + \
                   str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + '_' + extag + ".csv"
 
@@ -413,6 +415,6 @@ def file_loop(fi):
 
 for regs in REGIONS:
     REGION = regs
-    MONTHS = (MREGIONS[REGION])[5]
-    MHOUR = 18
+    MONTHS = (MREGIONS[REGION])[4]
+    MHOUR = 16
     composite(MHOUR)

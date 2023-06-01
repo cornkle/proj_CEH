@@ -1,6 +1,7 @@
 import cdsapi
 import os
 from utils import constants as cnst
+import sys
 def download(year, month, day, box,file):
     c = cdsapi.Client()
 
@@ -10,7 +11,7 @@ def download(year, month, day, box,file):
             'format':'netcdf',
             'product_type':'reanalysis',
             'pressure_level': [
-                '925' , '850','650'
+                '500'
             ],
             # 'time': [
             #     str(h-3).zfill(2)+':00', str(h).zfill(2)+':00',
@@ -23,9 +24,7 @@ def download(year, month, day, box,file):
                      '16:00', '17:00', '18:00', '19:00',
                      '20:00', '21:00', '22:00', '23:00'],
             'variable': [
-                'divergence', 'geopotential', 'potential_vorticity',
-                'relative_humidity', 'specific_humidity', 'temperature',
-                'u_component_of_wind', 'v_component_of_wind', 'vertical_velocity'
+             'vertical_velocity'
             ],
             'year':[str(year) ],
             'day': [str(day)
@@ -42,37 +41,38 @@ def download(year, month, day, box,file):
 
 
 
-mregions = { 'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
- 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
- 'india' : [[70,90, 5,30], 'asia', 5], # 7
- 'china' : [[105,115,25,40], 'asia', 8 ], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
- #'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
+mregions = { # last is hourly offset to UCT # 12
+    'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
+    'india' : [[70,90, 5,30], 'asia', 5], # 7
+    'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
  #'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- #'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
+    'GPlains' : [[-100,-90,32,47], 'nam', -6], # # 18
+    'china': [[105, 115, 25, 40], 'asia', 8],  # 4
+    'australia': [[120, 140, -23, -11], 'asia', 9],  # 3
+    'WAf' : [[-18,25,4,25], 'spac', 0],
 
 }
 
 mdays = {1:31, 2:28, 3:31, 4:30, 5:31,6:30, 7:31, 8:31, 9:30, 10:31, 11:30,12:31}
+mm = sys.argv[1]
+#for mm in mregions.keys():
+mreg = mm
+box = mregions[mm][0]
 
-for mm in mregions.keys():
-    mreg = mm
-    box = mregions[mm][0]
+for y in range(2005,2020):
+    for m in range(1, 13):
+        for d in range(1,mdays[m]+1):
 
-    for y in range(2000,2020):
-        for m in range(1, 13):
-            for d in range(1,mdays[m]+1):
+            filename = "ERA5-w500_" + str(y) + "_" + str(m).zfill(2) +"_" + str(d).zfill(2) + "_"+ mreg + "_pl.nc"
 
-                filename = "ERA5_" + str(y) + "_" + str(m).zfill(2) +"_" + str(d).zfill(2) + "_"+ mreg + "_pl.nc"
+            path = cnst.lmcs_drive+"ERA5/hourly/pressure_levels/"+mreg+"/"
 
-                path = cnst.lmcs_drive+"ERA5/hourly/pressure_levels/"+mreg+"/"
+            if not os.path.isdir(path):
+                os.mkdir(path)
 
-                if not os.path.isdir(path):
-                    os.mkdir(path)
-
-                if os.path.isfile(path+filename):
-                    print('File exists, continue!')
-                    continue
+            if os.path.isfile(path+filename):
+                print('File exists, continue!')
+                continue
 
 
-                download(y, m, d, box, path+filename)
+            download(y, m, d, box, path+filename)

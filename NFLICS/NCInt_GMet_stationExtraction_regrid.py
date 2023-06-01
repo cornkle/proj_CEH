@@ -41,11 +41,11 @@ def run():
                 struc_wav[col] = []
             time_index = []
 
-            outpath_tir = cnst.DATA+'/nflics/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
-            outpath_core = cnst.DATA+'/nflics/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
+            outpath_tir = cnst.DATA+'/nflics/core_gauge_comparison_GMet/stations/extract/tir_stationLoc_' + str(yy) + str(mm).zfill(2) +'.csv'
+            outpath_core = cnst.DATA+'/nflics/core_gauge_comparison_GMet/stations/extract/core_stationLoc_' +  str(yy) + str(mm).zfill(2) +'.csv'
 
-            if len(glob.glob(cnst.DATA + '/nflics/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
-                print('Files exist, continue')
+            if len(glob.glob(cnst.DATA + '/nflics/core_gauge_comparison_GMet/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*")) != 0:
+                print(glob.glob(cnst.DATA + '/nflics/core_gauge_comparison_GMet/stations/extract/*' + str(yy) + str(mm).zfill(2) + "*"),'Files exist, continue')
                 continue
 
             for ff in filepath:
