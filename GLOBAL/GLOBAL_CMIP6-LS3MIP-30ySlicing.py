@@ -11,14 +11,17 @@ VARS=['tas', 'ua', 'va', 'prw', 'hfls', 'hfss', 'pr', 'psl'] # tasmax tasmin, mi
 #MODEL = cmip_models[1]
 MPI = {}
 for MODEL in cmip_models:
+    print(MODEL)
     for vv in VARS:
+        print(vv)
         for exp in experiments:
+            print(exp)
             if "amip" in exp:
                 exp_read = 'amip-lfmip-pdLC'
             else:
                 exp_read = exp
-            path = cnst.lmcs_drive+'CMIP6/LS3MIP/'+exp_read+'/'+vv+'*'+MODEL+'*.nc'
-            outpath = path.replace(vv+'*'+MODEL+'*', '30y/'+vv+'_30y_'+str(experiments[exp][0])+'-'+str(experiments[exp][1])+'_'+MODEL)
+            path = cnst.lmcs_drive+'CMIP6/LS3MIP/'+exp_read+'/'+vv+'_*_'+MODEL+'*.nc'
+            outpath = path.replace(vv+'_*_'+MODEL+'*', '30y/'+vv+'_30y_'+str(experiments[exp][0])+'-'+str(experiments[exp][1])+'_'+MODEL)
 
             if os.path.isfile(outpath):
                 print('File exists, continue')
