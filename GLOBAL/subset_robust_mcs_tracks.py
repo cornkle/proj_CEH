@@ -1,15 +1,10 @@
-"""
-This script subsets robust MCS tracks initiated within a region and saves to a new netCDF file.
-"""
-__author__ = "Zhe.Feng@pnnl.gov"
-__date__ = "08-Dec-2020"
-
 import sys
 import os
 import numpy as np
 import xarray as xr
 import glob
-import ipdb
+from GLOBAL import glob_util
+
 
 def subset_file(infile, outdir, lon_box, lat_box):
 
@@ -57,52 +52,36 @@ def subset_file(infile, outdir, lon_box, lat_box):
     return status
 
 
-def main(reg, inds,lon1, lon2, lat1, lat2):
-    # Read from input
-    lon_min = lon1 #float(sys.argv[1])
-    lon_max = lon2 #float(sys.argv[2])
-    lat_min = lat1 #float(sys.argv[3])
-    lat_max = lat2 #float(sys.argv[4])
-    inpath =  '/media/ck/LStorage/MCS_Feng/tracks/'+inds[1]+'/'#sys.argv[5]
-    outdir = '/media/ck/LStorage/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
-    #ipdb.set_trace()
-    # Subset region boundary
-    lon_box = [lon_min, lon_max]
-    lat_box = [lat_min, lat_max]
-    # lon_box = [-15, 45]
-    # lat_box = [-20, 30]
-    # lon_box = [-15, 40]
-    # lat_box = [-15, 25]
+def main(reg):
+    """
 
-    # Define output directory
-    # outdir = f'/global/cscratch1/sd/feng045/waccem/mcs_region/spac/subset_africa_stats/'
+    :param reg: sub-region string as defined in glob_util
+    """
+    # Read from input
+
+    consts = glob_util.MREGIONS[reg]
+    box = consts[0]
+
+    inpath =  '/media/ck/LStorage/MCS_Feng/tracks/'+consts[1]+'/' #sys.argv[5]
+    outdir = '/media/ck/LStorage/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
+
+    # Subset region boundary
+    lon_box = [box[0], box[1]]
+    lat_box = [box[2], box[3]]
     os.makedirs(outdir, exist_ok=True)
 
     # Call function
     for infile in glob.glob(inpath+'*.nc'):
-       # ipdb.set_trace()
         status = subset_file(infile, outdir, lon_box, lat_box)
 
-mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
- 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
- 'india' : [[70,90, 5,30], 'asia', 5], # 7
- 'china' : [[105,115,25,40], 'asia', 8 ], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6], # # 18
- 'EAf'     : [[33,52,-5,15],'spac', 3 ]
-
-}
-
-# for reg in ['EAf']:#'WAf', 'SAf', 'india', 'china', 'australia', 'sub_SA', 'trop_SA', 'GPlains']:
-#     inds = mregions[reg]
-#     lon1, lon2, lat1, lat2 = inds[0]
-#    # ipdb.set_trace()
-#     main(reg, inds, lon1, lon2, lat1, lat2)
 
 
 def filter(path):
+    """
+    Used to remove variables from existing track files.
+    :param path: path to track files
+    :return: slimmed-down track files
+    """
     for f in glob.glob(path+'/*1.nc'):
         ds = xr.open_dataset(f)
         drops = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',

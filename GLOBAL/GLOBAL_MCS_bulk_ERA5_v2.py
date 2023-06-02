@@ -22,6 +22,7 @@ import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
 from scipy.interpolate import griddata
 import multiprocessing
+from GLOBAL import glob_util
 #import metpy
 #from metpy import calc
 #from metpy.units import units
@@ -34,16 +35,7 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
 
-MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
- 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,12)], # 10
- 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (1,12)], # 7
- 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (1,12)], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,12)], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (9,12), (1,12)] , # 16
- #'trop_SA' : [[-75, -50, -20, -5], 'spac', -5, (1,12), (1,12), (1,12)], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (1,12)] # # 18
-
-}
+MREGIONS = glob_util.MREGIONS
 
 OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
 
@@ -83,20 +75,11 @@ def dictionary():
 
     return dic
 
-def composite(rawhour):
+def composite(lt_hour):
 
-    h = rawhour - (MREGIONS[REGION])[2]
-    def h_checker(h):
-        if h >= 24:
-            h = h-24
-        if h == 24:
-            h = 0
-        if h < 0:
-            h = h+24
-        return h
-    h = h_checker(h)
-    h2 = h_checker(h+1)
-    h1 = h_checker(h-1)
+    h = glob_util.LT_to_UTC_hour(lt_hour, REGION)
+    h2 = glob_util.LT_to_UTC_hour(lt_hour+1, REGION)
+    h1 = glob_util.LT_to_UTC_hour(lt_hour-1, REGION)
 
     print('Hour: ', h, h1, h2)
 
@@ -111,38 +94,28 @@ def composite(rawhour):
         m2 = MONTHS[1]
         outfile = path + "/" + REGION + "_" + SENSOR + "_2000-2019_MCSTRACK_localBulk_" + str(m1).zfill(
             2) + '-' + \
-                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + '_' + extag + ".csv"
+                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(lt_hour).zfill(2) + '_' + extag + ".csv"
 
         msg = pd.read_csv(
             cnst.lmcs_drive + '/save_files/' + REGION + '_initTime__mcs_tracks_extc_' + str(y) + '0101_' + str(
                 y) + '1231.csv')
         msg = msg.to_dict(orient='list')
 
-        msg['date'] = []
+        msg['lt_date'] = []
         msg['utc_date'] = []
-        msg['day'] = []
+        msg['utc_day'] = []
         msg['lt_hour'] = []
         msg['lt_init'] = []
         for yi, k in enumerate(msg['base_time']):
 
-            bbt = pd.to_datetime(k)  # - pd.Timedelta('1 days')
-            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0)
-            hourchange = (MREGIONS[REGION])[2]
+            dutc = pd.to_datetime(k)
+            lt_init = dutc.replace(hour=msg['init_hour'][yi], minute=0)
 
-            if hourchange < 0:
-                bbl = bbt - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-                binit = lt_init - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-            elif hourchange > 0:
-                bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-                binit = lt_init + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-            else:
-                bbl = bbt
-                binit = lt_init
 
             msg['utc_date'].append(bbt.replace(hour=0, minute=0))
             msg['lt_hour'].append(bbl.hour)
             msg['lt_init'].append(binit.hour)
-            msg['date'].append(bbl.replace(hour=0, minute=0))
+            msg['lt_date'].append(bbl.replace(hour=0, minute=0))
             msg['day'].append(bbt.day)
 
         for k in msg.keys():

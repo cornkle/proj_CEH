@@ -7,29 +7,16 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-import matplotlib
 import multiprocessing
 import ipdb
 import glob
 import pandas as pd
-import pickle as pkl
-import salem
 import os
 from utils import constants as cnst
-import json
+from GLOBAL import glob_util
 ### SIMILAR VERSION IN NOTEBOOK
 
-mregions = {'WAf' : [[-18,25,4,25], 'spac', 0], # last is hourly offset to UCT # 12
- 'SAf' : [[20,35, -35,-15], 'spac', 2], # 10
- 'india' : [[70,90, 5,30], 'asia', 5], # 7
- 'china' : [[108,123,23,40], 'asia', 8 ], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4] , # 16
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6] # # 18
-
-}
+mregions = glob_util.MREGIONS
 
 def multi():
     pool = multiprocessing.Pool(processes=5)
@@ -39,13 +26,12 @@ def multi():
 
 
 def run(year):
-    for rr in ['china']:  #'WAf', 'india', 'sub_SA', 'australia',  , 'SAf', 'GPlains'
+    for rr in ['china', 'WAf', 'india', 'sub_SA', 'australia', 'SAf', 'GPlains']:
         extract_box(rr, year)
 
 
 def extract_box(region, year):
-    dtag = region  # mregions[region][1]
-    #  box = mregions[region][0]
+    dtag = region
     files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
 
     out = cnst.lmcs_drive + 'save_files_new/'
@@ -84,17 +70,23 @@ def extract_box(region, year):
             else:
                 pfdic[dv] = []
 
-        pfdic['year'] = []
-        pfdic['month'] = []
-        pfdic['hour'] = []
-        pfdic['minute'] = []
+        pfdic['utc_year'] = []
+        pfdic['utc_month'] = []
+        pfdic['utc_hour'] = []
+        pfdic['utc_day'] = []
+        pfdic['utc_minute'] = []
         pfdic['tracktime'] = []
         pfdic['trackid'] = []
         pfdic['londiff_loc-init'] = []
         pfdic['latdiff_loc-init'] = []
         pfdic['init_lon'] = []
         pfdic['init_lat'] = []
-        pfdic['init_hour'] = []
+        pfdic['utc_init_time'] = []
+        pfdic['utc_init_hour'] = []
+        pfdic['lt_init_hour'] = []
+        pfdic['lt_init_time'] = []
+        pfdic['lt_time'] = []
+        pfdic['lt_hour'] = []
 
         for ids, ai in enumerate(ds.tracks):
             track = ds.sel(tracks=ai)
@@ -102,7 +94,8 @@ def extract_box(region, year):
             init_lon = track.sel(times=0)['meanlon'].values
             init_lat = track.sel(times=0)['meanlat'].values
 
-            init_hour = pd.Timestamp(track.sel(times=0)['base_time'].values).hour
+            init_date = pd.to_datetime(track.sel(times=0)['base_time'])
+            init_date_lt = glob_util.UTC_to_LT_date(init_date, region)
 
             for tids in track.times:
                 tt = track.sel(times=tids)
@@ -125,7 +118,10 @@ def extract_box(region, year):
                 pfdic['latdiff_loc-init'].append(float(tt['meanlat'].values - init_lat))
                 pfdic['init_lon'].append(float(init_lon))
                 pfdic['init_lat'].append(float(init_lat))
-                pfdic['init_hour'].append(int(init_hour))
+                pfdic['utc_init_hour'].append(int(init_date.hour))
+                pfdic['utc_init_time'].append(init_date.values)
+                pfdic['lt_init_hour'].append(int(init_date_lt.hour))
+                pfdic['lt_init_time'].append(init_date_lt.values)
 
 
                 for dv in tt.data_vars:
@@ -133,13 +129,17 @@ def extract_box(region, year):
                         continue
 
                     if dv == 'base_time':
-                        dtime = pd.Timestamp(tt[dv].values)
+                        dtime = pd.to_datetime(tt[dv].values)
+                        lt_dtime = glob_util.UTC_to_LT_date(dtime, region)
 
-                        pfdic['year'].append(dtime.year)
-                        pfdic['month'].append(dtime.month)
-                        pfdic['hour'].append(dtime.hour)
-                        pfdic['minute'].append(dtime.minute)
-                        pfdic[dv].append(tt[dv].values)
+                        pfdic['utc_year'].append(dtime.year)
+                        pfdic['utc_month'].append(dtime.month)
+                        pfdic['utc_hour'].append(dtime.hour)
+                        pfdic['utc_minute'].append(dtime.minute)
+                        pfdic['utc_day'].append(dtime.day)
+                        pfdic['utc_time'].append(tt[dv].values)
+                        pfdic['lt_time'].append(lt_dtime.values)
+                        pfdic['lt_hour'].append(lt_dtime.hour)
 
                     elif dv == 'direction':
                         pfdic['direction0'].append(tt[dv].values)

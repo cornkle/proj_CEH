@@ -13,29 +13,18 @@ import ipdb
 from utils import constants as cnst
 import matplotlib.patches as patches
 import pickle as pkl
+from GLOBAL import glob_util
 
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-
-MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (8,12), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
- 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,5), (1,12)], # 10
- 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (8,12), (1,12)], # 7
- 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (8,12), (1,12)], # 4
- 'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,5), (1,12)], # 3
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (9,12), (1,5), (1,12)] , # 16
- 'trop_SA' : [[-75, -50, -20, -5], 'spac', -5, (1,12), (1,12), (1,12)], # 17
- 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (8,12), (1,12)] # # 18
-
-}
-
+MREGIONS = glob_util.MREGIONS
 
 REGIONS = ['GPlains', 'sub_SA', 'WAf', 'china', 'india', 'australia']
 SENSOR = 'AMSR2'
 
 OUT = '/home/ck/DIR/cornkle/figs/GLOBAL_MCS/'
-
 
 MONTHS=(1,12)
 rawhour=2
