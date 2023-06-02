@@ -9,7 +9,7 @@ varlist_2d = ['ALBEDO', 'LH',  'HFX', 'OLR', 'PBLH',
            'LWDNB', 'SWDNB','SWUPB', 'LWUPB', 'T2C', 'TH2', 'TSK', 'U10', 'V10']
 
 static = ["LANDMASK", "LU_INDEX", "IVGTYP", "HGT"]
-varlist_3d = ['U']
+varlist_3d = ['U', 'V']
 
 def rewrite_wrf(disk_path, varlist=None, box=None):
 
