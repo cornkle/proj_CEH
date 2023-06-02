@@ -101,32 +101,15 @@ def composite(lt_hour):
                 y) + '1231.csv')
         msg = msg.to_dict(orient='list')
 
-        msg['lt_date'] = []
-        msg['utc_date'] = []
-        msg['utc_day'] = []
-        msg['lt_hour'] = []
-        msg['lt_init'] = []
-        for yi, k in enumerate(msg['base_time']):
-
-            dutc = pd.to_datetime(k)
-            lt_init = dutc.replace(hour=msg['init_hour'][yi], minute=0)
-
-
-            msg['utc_date'].append(bbt.replace(hour=0, minute=0))
-            msg['lt_hour'].append(bbl.hour)
-            msg['lt_init'].append(binit.hour)
-            msg['lt_date'].append(bbl.replace(hour=0, minute=0))
-            msg['day'].append(bbt.day)
-
         for k in msg.keys():
             msg[k] = np.array(msg[k])
 
-        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) &  (msg['month'] >= m1) & (msg['month'] <= m2) &\
+        inmask =   ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) &  (msg['month'] >= m1) & (msg['month'] <= m2) &\
                    ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
                     (msg['pf_landfrac'] > 0.99)  & (msg['pf_area1'] > AREA)) & np.isfinite(msg['pf_lat1'])
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & (msg['month'] >= m1) & (msg['month'] <= m2) & \
+            inmask = ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & (msg['month'] >= m1) & (msg['month'] <= m2) & \
                       ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
                       (msg['pf_area1'] > AREA)) & np.isfinite(msg['pf_lat1'])
 

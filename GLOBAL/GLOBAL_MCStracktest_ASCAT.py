@@ -88,14 +88,14 @@ def composite(lt_hour):
 
 
         inmask =   ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
-                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+                   ((msg['lt_hour']==h)  | (msg['lt_hour']==h1)  | (msg['lt_hour']==h2)) & \
                     (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
             inmask = ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
-                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+                      ((msg['lt_hour'] == h) | (msg['lt_hour'] == h1) | (msg['lt_hour'] == h2)) & \
                       (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
@@ -106,14 +106,14 @@ def composite(lt_hour):
         for k in msg.keys():
             msg[k] = (msg[k])[mask]
 
-        ubt = np.unique(msg['date'])
-        msg['date'] = np.array(msg['date'])
+        ubt = np.unique(msg['lt_date'])
+        msg['lt_date'] = np.array(msg['lt_date'])
 
         chunks = []
         for ut in ubt:
             daydir = {}
 
-            pos = np.where(msg['date'] == ut)  # [0]).astype(int)
+            pos = np.where(msg['lt_date'] == ut)  # [0]).astype(int)
             # ipdb.set_trace()
             for k in msg.keys():
                 daydir[k] = np.array(msg[k])[pos]
@@ -196,9 +196,9 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
 def file_loop(fi):
 
     print('Entered loop')
-    date = fi['date'][0]
+    date = fi['lt_date'][0]
 
-    hour = fi['hour']
+    hour = fi['lt_hour']
     print('Doing day: ', date, hour[0])
 
     box = (MREGIONS[REGION])[0]

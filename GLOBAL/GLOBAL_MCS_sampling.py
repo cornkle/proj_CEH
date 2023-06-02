@@ -70,6 +70,8 @@ def extract_box(region, year):
             else:
                 pfdic[dv] = []
 
+        pfdic['utc_time'] = []
+        pfdic['utc_date'] = []
         pfdic['utc_year'] = []
         pfdic['utc_month'] = []
         pfdic['utc_hour'] = []
@@ -83,9 +85,10 @@ def extract_box(region, year):
         pfdic['init_lat'] = []
         pfdic['utc_init_time'] = []
         pfdic['utc_init_hour'] = []
-        pfdic['lt_init_hour'] = []
         pfdic['lt_init_time'] = []
+        pfdic['lt_init_hour'] = []
         pfdic['lt_time'] = []
+        pfdic['lt_date'] = []
         pfdic['lt_hour'] = []
 
         for ids, ai in enumerate(ds.tracks):
@@ -118,6 +121,7 @@ def extract_box(region, year):
                 pfdic['latdiff_loc-init'].append(float(tt['meanlat'].values - init_lat))
                 pfdic['init_lon'].append(float(init_lon))
                 pfdic['init_lat'].append(float(init_lat))
+
                 pfdic['utc_init_hour'].append(int(init_date.hour))
                 pfdic['utc_init_time'].append(init_date.values)
                 pfdic['lt_init_hour'].append(int(init_date_lt.hour))
@@ -138,7 +142,10 @@ def extract_box(region, year):
                         pfdic['utc_minute'].append(dtime.minute)
                         pfdic['utc_day'].append(dtime.day)
                         pfdic['utc_time'].append(tt[dv].values)
+                        pfdic['utc_date'].append(tt[dv].replace(hour=0, minute=0).values)
+
                         pfdic['lt_time'].append(lt_dtime.values)
+                        pfdic['lt_date'].append(lt_dtime.replace(hour=0, minute=0).values)
                         pfdic['lt_hour'].append(lt_dtime.hour)
 
                     elif dv == 'direction':

@@ -9,7 +9,7 @@ import pandas as pd
 
 ### PROJECT DOMAINS
 MREGIONS = {'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (1,12)], # last is hourly offset to UCT
- 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (1,12)],
+ 'SAf' : [[18,35, -35,-15], 'spac', 2, (9,12), (1,12)],
  'india' : [[70,90, 5,30], 'asia', 5, (1,7), (1,12)],
  'china' : [[105,115,25,40], 'asia', 8 , (1,7), (1,12)],
  'australia' : [[120,140,-23, -11], 'asia', 9, (10,12), (1,12)],
