@@ -3,6 +3,7 @@ import ipdb
 import os
 import salem
 import sys
+import multiprocessing
 
 varlist_2d = ['ALBEDO', 'LH',  'HFX', 'OLR', 'PBLH',
            'PSFC' , 'Q2','QFX','PRCP','SNOWC',
@@ -11,10 +12,26 @@ varlist_2d = ['ALBEDO', 'LH',  'HFX', 'OLR', 'PBLH',
 static = ["LANDMASK", "LU_INDEX", "IVGTYP", "HGT"]
 varlist_3d = ['U', 'V']
 
-def rewrite_wrf(disk_path, varlist=None, box=None):
+boxes = {'western' : [-18,10] , 'central' : [-10,0], 'eastern' : [0,10]
+######################  INOUT CHANGES HERE
+WRF_IN = '/home/cornkle/WRF_testfiles/'
+WRF_OUT = '/home/cornkle/WRF_extractfiles/
+VARLIST = '3d'
+##################
 
-    #for f in glob.glob(disk_path):
-    f = disk_path
+def multiproc():
+
+    pool = multiprocessing.Pool(processes=5)
+    files = glob.glob(WRF_IN+'wrfout*')
+    res = pool.map(rewrite_wrf, files)
+
+    for f in files:
+        ds = rewrite_wrf(f)
+
+
+
+def rewrite_wrf(files):
+
     print('Doing', f)
     if varlist == '2d':
        varl = varlist_2d
@@ -29,8 +46,8 @@ def rewrite_wrf(disk_path, varlist=None, box=None):
     outp = f.replace('wrfout_', 'wrfout_small_'+varlist+'_')
 
     if os.path.isfile(outp):
-             print('File exists, continue')
-             return
+	     print('File exists, continue')
+	     return
     ds = salem.open_wrf_dataset(f, decode_times=False)
     ds = ds[varl]
     new_lat = ds['lat'].data[:, 0]
@@ -54,4 +71,3 @@ def rewrite_wrf(disk_path, varlist=None, box=None):
     del ds
 
 
-rewrite_wrf(sys.argv[1], sys.argv[2], None)
