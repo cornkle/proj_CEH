@@ -43,7 +43,7 @@ def filter_img(inarr, data_resolution):
         outt[inds] = 0
     for bi in goodinds:
         inds = np.where(labels==bi)
-        area_img[inds]= np.float(len(inds[0]))
+        area_img[inds]= float(len(inds[0]))
 
     outt[outt >= t_thresh_cut] = 150
 
