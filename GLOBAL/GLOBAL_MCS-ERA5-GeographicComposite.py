@@ -13,6 +13,7 @@ import datetime
 import glob
 from GLOBAL import glob_util
 import pickle as pkl
+import os
 #import matplotlib.patches as patches
 
 
@@ -38,7 +39,7 @@ def prepare_dates(s_region):
     for regs in MREGIONS.keys():
         bregs = MREGIONS[s_region][7]
         for ids, y in enumerate(range(2012,2020)):
-            test = pd.read_csv('/media/ck/LStorage/global_water/save_files/'+bregs+'_initTime__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
+            test = pd.read_csv(cnst.lmcs_drive+'save_files/'+bregs+'_initTime__mcs_tracks_extc_'+str(y)+'0101_'+str(y)+'1231.csv')
             if ids == 0:
                 test2 = pd.DataFrame(test)
             else :
@@ -92,17 +93,21 @@ def run(shift, s_region):
     'ice_orig' : [],
    # 'sh' : [],
     'rh' : [],
-    'zshear' : [],
+    'ushear' : [],
     #'theta' : [],
     'sh' : [],
     'lh' : [],
+    'sm' : [],
+    'pr' : [],
+    'vshear' : [],
+    'shear' : []
     }
 
     tab = prepare_dates(s_region)
-
+    REGION = MREGIONS[s_region][7]
     era5_files = cnst.lmcs_drive+ 'ERA5/hourly/' #cnst.ERA5 + 'hourly/
-    af_pl = sorted(glob.glob(era5_files+'pressure_levels/'+s_region+'/'+'*.nc'))
-    af_srfc = sorted(glob.glob(era5_files+'surface/'+s_region+'/'+'*.nc'))
+    af_pl = sorted(glob.glob(era5_files+'pressure_levels/'+REGION+'/'+'*.nc'))
+    af_srfc = sorted(glob.glob(era5_files+'surface/'+REGION+'/'+'*.nc'))
     
     for date in tab['lt_date']:
 
@@ -111,7 +116,7 @@ def run(shift, s_region):
 
         lt_dt = pd.to_datetime(date)
         lt_dt = lt_dt.replace(hour=shour)
-        dt = glob_util.LT_to_UTC_date(lt_dt, s_region)
+        dt = glob_util.LT_to_UTC_date(lt_dt, REGION)
         hour = dt.hour
         
         daystring = str(abs(shift))
@@ -127,8 +132,8 @@ def run(shift, s_region):
         fdate = '_' + str(dt.year) +'_' + str(dt.month).zfill(2) + '_' + str(dt.day).zfill(2)
 
         try:
-            pl_file = era5_files + 'pressure_levels/'+s_region+'/ERA5' + fdate + '_'+s_region+'_pl.nc'
-            srfc_file = era5_files + 'surface/'+s_region+'/ERA5' + fdate + '_'+s_region+'_srfc.nc'
+            pl_file = era5_files + 'pressure_levels/'+REGION+'/ERA5' + fdate + '_'+REGION+'_pl.nc'
+            srfc_file = era5_files + 'surface/'+REGION+'/ERA5' + fdate + '_'+REGION+'_srfc.nc'
           
             lsta = xr.open_dataset(pl_file)
             srfc = xr.open_dataset(srfc_file)
@@ -182,6 +187,10 @@ def run(shift, s_region):
         ice = srfc_low['tciw'].squeeze()
         sh = srfc_low['msshf'].squeeze()
         lh = srfc_low['mslhf'].squeeze()
+        sm = srfc_low['swvl1'].squeeze()
+        pr = srfc_low['mtpr'].squeeze()
+
+
         
         q_clim = lsta10_low['q'].squeeze().mean('time')
         qup_clim = lsta10_up['q'].squeeze().mean('time')
@@ -200,6 +209,9 @@ def run(shift, s_region):
         ice_clim = srfc10['tciw'].squeeze().mean('time')
         sh_clim = srfc10['msshf'].squeeze().mean('time')
         lh_clim = srfc10['mslhf'].squeeze().mean('time')
+        sm_clim = srfc10['swvl1'].squeeze().mean('time')
+        pr_clim = srfc10['mtpr'].squeeze().mean('time')
+
    
 
         print('Doing '+ 'AMSR_' + str(dt.year) + str(dt.month).zfill(2) + str(
@@ -238,10 +250,16 @@ def run(shift, s_region):
         dic['ice_orig'].append(ice.values)
 #         ws, wd = u_met.u_v_to_ws_wd(u.values-u100.values, v.values-v100.values)
 #         wsclim, wd = u_met.u_v_to_ws_wd(u_clim.values-u100_clim.values, v_clim.values-v100_clim.values)
-        dic['zshear'].append((u.values-u100.values)-(u_clim.values-u100_clim.values)) #-wsclim
+        dic['ushear'].append((u.values-u100.values)-(u_clim.values-u100_clim.values)) #-wsclim
         dic['cnt'].append(cnt)
         dic['sh'].append(sh.values-sh_clim.values)
         dic['lh'].append(lh.values-lh_clim.values)
+        dic['pr'].append(pr.values-pr_clim.values)
+        dic['sm'].append(sm.values-sm_clim.values)
+        dic['vshear'].append((v.values-v100.values)-(v_clim.values-v100_clim.values))
+        vshear = (v.values-v100.values)-(v_clim.values-v100_clim.values)
+        ushear = (u.values-u100.values)-(u_clim.values-u100_clim.values)
+        dic['shear'].append(np.sqrt(vshear**2+ushear**2))
 
         lat = lsta_low.latitude.values
         lon = lsta_low.longitude.values
@@ -265,11 +283,14 @@ def calc(dic):
 
 
 for s_region in MREGIONS.keys():
-    dic, lat, lon = run(0)
+    if os.path.isfile(cnst.DATA+'LMCS/geogComp/'+s_region+'_'+'_ERA5_12LT.p'):
+        print('File exists, continue!')
+
+    dic, lat, lon = run(0, s_region)
     dic = calc(dic)
     dic['lat'] = lat
     dic['lon'] = lon
 
-    pkl.dump(dic,open(cnst.DATA+'LMCS/geogComp/'+s_region+'_'+'_ERA5_12LT.p','rb'))
+    pkl.dump(dic,open(cnst.DATA+'LMCS/geogComp/'+s_region+'_'+'_ERA5_12LT.p','wb'))
 
 

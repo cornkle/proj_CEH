@@ -4,10 +4,10 @@ from utils import constants as cnst
 import os
 
 
-cmip_models = ['MPI-ESM1-2-LR', 'CESM2', 'IPSL-CM6A-LR', 'CNRM-CM6-1']#, 'EC-Earth3']
+cmip_models = ['MPI-ESM1-2-LR', 'CESM2', 'IPSL-CM6A-LR', 'CNRM-CM6-1', 'EC-Earth3']
 experiments = {'historical' : (1980,2007), 'ssp585': (2080,2101), 'amip-lfmip-pdLC_hist' : (1980,2007), 'amip-lfmip-pdLC_fut' : (2080,2101)}
 
-VARS=['tas', 'ua', 'va', 'prw', 'hfls', 'hfss', 'pr', 'psl'] # tasmax tasmin, missing in CESM2 historical
+VARS=['tas', 'ua', 'va', 'prw', 'hfls', 'hfss', 'pr', 'psl', 'tasmax', 'tasmin'] # tasmax tasmin, missing in CESM2 historical
 #MODEL = cmip_models[1]
 MPI = {}
 for MODEL in cmip_models:
@@ -26,8 +26,11 @@ for MODEL in cmip_models:
             if os.path.isfile(outpath):
                 print('File exists, continue')
                 continue
-
-            ds = xr.open_mfdataset(path, use_cftime=True)
+            try:
+                ds = xr.open_mfdataset(path, use_cftime=True)
+            except:
+                print('FIle not found, continue', path)
+                continue
             ds = ds.sel(time=(ds['time.year']>=experiments[exp][0]) & (ds['time.year']<=experiments[exp][1]))
             #ipdb.set_trace()
             uni = np.unique(ds['time.year'])
