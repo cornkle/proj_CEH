@@ -32,9 +32,9 @@ def run(year):
 
 def extract_box(region, year):
     dtag = region
-    files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
-
-    out = cnst.lmcs_drive + 'save_files_new/'
+    #files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
+    files = glob.glob(cnst.lmcs_drive + 'MCS_Feng/global_v2/tracks/custom/' + dtag + '/*_'+str(year)+'*.nc')
+    out = cnst.lmcs_drive + 'save_files_v2/'
 
     dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
