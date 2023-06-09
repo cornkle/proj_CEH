@@ -36,6 +36,30 @@ def shift_lons(ds, lon_dim='lon', save=False):
     return ds
 
 
+def roll_lons(ds, lon_dim='lon'):
+    lon_name = lon_dim  # whatever name is in the data
+
+    # Adjust lon values to make sure they are within (-180, 180)
+    ds['_longitude_adjusted'] = xr.where(
+        ds[lon_name] > 180,
+        ds[lon_name] - 360,
+        ds[lon_name])
+
+    # reassign the new coords to as the main lon coords
+    # and sort DataArray using new coordinate values
+    ds = (
+        ds
+        .swap_dims({lon_name: '_longitude_adjusted'})
+        .sel(**{'_longitude_adjusted': sorted(ds._longitude_adjusted)})
+        .drop(lon_name))
+
+    ds = ds.rename({'_longitude_adjusted': lon_name})
+
+    return ds
+
+
+
+
 def shift_lons_data(ds, lon_dim='lon', save=False):
     """ Shift longitudes from [0, 360] to [-180, 180] """
     lons = ds[lon_dim].values

@@ -4,6 +4,7 @@ import numpy as np
 import xarray as xr
 import glob
 from GLOBAL import glob_util
+from utils import constants as cnst
 
 
 def subset_file(infile, outdir, lon_box, lat_box):
@@ -62,8 +63,8 @@ def main(reg):
     consts = glob_util.MREGIONS[reg]
     box = consts[0]
 
-    inpath =  '/media/ck/LStorage/MCS_Feng/tracks/'+consts[1]+'/' #sys.argv[5]
-    outdir = '/media/ck/LStorage/MCS_Feng/tracks/custom/'+reg+'/' #sys.argv[6]
+    inpath =  '/media/ck/LStorage/MCS_Feng/global_v2/tracks/'+consts[1]+'/' #sys.argv[5]
+    outdir = '/media/ck/LStorage/MCS_Feng/global_v2/tracks/custom/'+reg+'/' #sys.argv[6]
 
     # Subset region boundary
     lon_box = [box[0], box[1]]
@@ -94,3 +95,8 @@ def filter(path):
 
         fout = f.replace('.nc', '_cut.nc')
         ds.to_netcdf(path=fout, mode='w', encoding=encoding, format='NETCDF4', unlimited_dims='tracks')
+
+
+
+for reg in glob_util.MREGIONS.keys():
+    main(reg)
