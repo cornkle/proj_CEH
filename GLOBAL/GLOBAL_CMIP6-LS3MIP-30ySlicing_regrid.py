@@ -7,7 +7,7 @@ import glob
 import ipdb
 
 cmip_models = ['MPI-ESM1-2-LR', 'CESM2', 'IPSL-CM6A-LR', 'CNRM-CM6-1', 'EC-Earth3']#, 'EC-Earth3']
-experiments = {'historical' : (1980,2007), 'ssp585': (2080,2101), 'amip-lfmip-pdLC_hist' : (1980,2007), 'amip-lfmip-pdLC_fut' : (2080,2101)}
+experiments = {'amip-lfmip-rmLC_hist' : (1980,2007), 'amip-lfmip-rmLC_fut' : (2080,2101), 'historical' : (1980,2007), 'ssp585': (2080,2101), 'amip-lfmip-pdLC_hist' : (1980,2007), 'amip-lfmip-pdLC_fut' : (2080,2101)}
 
 VARS=['tas', 'ua', 'va', 'prw', 'hfls', 'hfss', 'pr', 'psl','tasmax', 'tasmin'] # tasmax tasmin, missing in CESM2 historical
 print(cnst.lmcs_drive + 'CMIP6/LS3MIP/slices_30y/amip-lfmip-pdLC_hist/tas_30y_*_' + cmip_models[0] + '.nc')
@@ -25,13 +25,18 @@ for MODEL in cmip_models:
             print(exp)
 
             path = cnst.lmcs_drive+'CMIP6/LS3MIP/slices_30y/'+exp+'/'+vv+'_*_'+MODEL+'*.nc'
+
+
             oopath = glob.glob(path)
             for opath in oopath: 
                 outpath = opath.replace('slices_30y', 'slices_30y_regrid')
 
-                # if os.path.isfile(outpath):
-                #     print('File exists, continue')
-                #     continue
+                if ("MAM" in opath) | ("SON" in opath):
+                    continue
+
+                if os.path.isfile(outpath):
+                    print('File exists, continue')
+                    continue
 
                 ds = xr.open_dataset(opath)
                 # inds, weights, shape = u_int.interpolation_weights(ds.lon, ds.lat, dummy.lon, dummy.lat)
