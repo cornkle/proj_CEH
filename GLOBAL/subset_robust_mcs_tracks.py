@@ -63,7 +63,7 @@ def main(reg):
     consts = glob_util.MREGIONS[reg]
     box = consts[0]
 
-    inpath =  '/media/ck/LStorage/MCS_Feng/global_v2/tracks/'+consts[1]+'/' #sys.argv[5]
+    inpath =  '/media/ck/LStorage/MCS_Feng/global_v2/tracks/global/' #sys.argv[5]
     outdir = '/media/ck/LStorage/MCS_Feng/global_v2/tracks/custom/'+reg+'/' #sys.argv[6]
 
     # Subset region boundary
