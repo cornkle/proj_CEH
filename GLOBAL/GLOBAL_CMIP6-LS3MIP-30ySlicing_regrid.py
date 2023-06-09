@@ -31,9 +31,6 @@ for MODEL in cmip_models:
             for opath in oopath: 
                 outpath = opath.replace('slices_30y', 'slices_30y_regrid')
 
-                if ("MAM" in opath) | ("SON" in opath):
-                    continue
-
                 if os.path.isfile(outpath):
                     print('File exists, continue')
                     continue
