@@ -38,15 +38,15 @@ def extract_box(region, year):
 
     dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
-                'pixel_duration', 'julian_day',
-                'pixel_pcp', 'pf_skewness', 'mergecloudnumber', 'splitcloudnumber']
+                'pixel_duration', 'julian_day', 'merge_ccs_area' , 'split_ccs_area', 
+                'pixel_pcp', 'pf_skewness', 'merge_cloudnumber', 'split_cloudnumber']
 
     for ff in files:
 
         ds = xr.open_dataset(ff)
         fname = os.path.basename(ff)
 
-        outname = fname[0:-3].replace('robust', region + '_initTime_')
+        outname = fname[0:-3].replace('mcs_', region + '_mcs_')
 
         outfilename = out + outname + '.csv'
 
@@ -90,14 +90,15 @@ def extract_box(region, year):
         pfdic['lt_time'] = []
         pfdic['lt_date'] = []
         pfdic['lt_hour'] = []
+        pfdic['lt_day'] = []
+
 
         for ids, ai in enumerate(ds.tracks):
             track = ds.sel(tracks=ai)
 
             init_lon = track.sel(times=0)['meanlon'].values
             init_lat = track.sel(times=0)['meanlat'].values
-
-            init_date = pd.to_datetime(track.sel(times=0)['base_time'])
+            init_date = pd.to_datetime(track.sel(times=0)['base_time'].values)
             init_date_lt = glob_util.UTC_to_LT_date(init_date, region)
 
             for tids in track.times:
@@ -123,9 +124,9 @@ def extract_box(region, year):
                 pfdic['init_lat'].append(float(init_lat))
 
                 pfdic['utc_init_hour'].append(int(init_date.hour))
-                pfdic['utc_init_time'].append(init_date.values)
+                pfdic['utc_init_time'].append(init_date)
                 pfdic['lt_init_hour'].append(int(init_date_lt.hour))
-                pfdic['lt_init_time'].append(init_date_lt.values)
+                pfdic['lt_init_time'].append(init_date_lt)
 
 
                 for dv in tt.data_vars:
@@ -141,12 +142,14 @@ def extract_box(region, year):
                         pfdic['utc_hour'].append(dtime.hour)
                         pfdic['utc_minute'].append(dtime.minute)
                         pfdic['utc_day'].append(dtime.day)
-                        pfdic['utc_time'].append(tt[dv].values)
-                        pfdic['utc_date'].append(tt[dv].replace(hour=0, minute=0).values)
-
-                        pfdic['lt_time'].append(lt_dtime.values)
-                        pfdic['lt_date'].append(lt_dtime.replace(hour=0, minute=0).values)
+                        pfdic['utc_time'].append(pd.to_datetime(tt[dv].values))
+                        pfdic['utc_date'].append(pd.to_datetime(tt[dv].values).replace(hour=0, minute=0))
+                        #ipdb.set_trace()
+                        pfdic['lt_time'].append(lt_dtime)
+                        pfdic['base_time'].append(dtime)
+                        pfdic['lt_date'].append(lt_dtime.replace(hour=0, minute=0))
                         pfdic['lt_hour'].append(lt_dtime.hour)
+                        pfdic['lt_day'].append(lt_dtime.day)
 
                     elif dv == 'direction':
                         pfdic['direction0'].append(tt[dv].values)
@@ -164,8 +167,10 @@ def extract_box(region, year):
                             pfdic['direction1'].append(np.nan)
 
                     elif (tt[dv].size==3) & ("pf" in dv):
-                        for pfids, pftag in enumerate(['1', '2', '3']):
-                            pfdic[str(dv) + str(pftag)].append(tt[dv].values[pfids])
+                          #print(dv, tt[dv].values)
+                          #ipdb.set_trace()
+                          for pfids, pftag in enumerate(['1', '2', '3']):
+                            pfdic[str(dv) + str(pftag)].append(np.array(tt[dv].values[pfids]))
                     else:
                         pfdic[dv].append(tt[dv].values)
 
@@ -175,6 +180,11 @@ def extract_box(region, year):
         #         print(kk, len(pfdic[kk]))
         #     except:
         #         print(kk, pfdic[kk])
+        for k in pfdic.keys():
+            print(k,len(pfdic[k]))
         df = pd.DataFrame.from_dict(pfdic)
         df.to_csv(outfilename, index=False)
         print('Saved ', outfilename)
+
+#extract_box('GPlains', 2003)
+multi()
