@@ -39,7 +39,7 @@ matplotlib.rc('ytick', labelsize=10)
 MREGIONS = glob_util.MREGIONS
 
 
-REGIONS = ['sub_SA', 'WAf', 'china', 'india', 'australia','SAf', 'GPlains']
+REGIONS =  ['australia','SAf', 'GPlains'] #['china', 'india'] #['sub_SA', 'WAf']# 'china', 'india', 'australia','SAf', 'GPlains']
 SENSOR = 'ERA5'
 SENSOP = 12 # (LT overpass)
 extag = 'FullYear' #
@@ -55,12 +55,11 @@ INPATH = cnst.lmcs_drive + '/save_files_v2/'
 def dictionary():
 
     dic = {}
-    vars = ['hour', 'month', 'year', 'day', 'date', 'core_area', 'ccs_area', 'pf_area',
-            'lon', 'lat', 'clon', 'clat', 'direction',
-            'init_lon', 'init_lat', 'tlon', 'tlat',
-            'tmin', 'tmean_core', 'tmean_ccs', 'tcwv', 'tgrad2m', 'tgrad925',
+    vars = [ 
+            'direction', 'tminlon', 'tminlat', 'tmin_calc',
+            'tmin', 'tmean_core', 'tmean_ccs', 'tcwv', 'tgrad2m', 'tgrad925', 'smgrad', 'efgrad', 'shgrad', 'lhgrad',
             'pmax', 'pmean', 'ptot',
-            'q925', 'q650', 'q850', 'era_precip', 'sm'
+            'q925', 'q650', 'q850', 'era_precip', 'sm','ef',
             'u925', 'u650',
             'v925', 'v650',
             'w925', 'w650',
@@ -68,9 +67,9 @@ def dictionary():
             't925', 't650',
             'div925','div850', 'div650',
             'pv925', 'pv650',
-            'ushear925_650', 'ushear850_650', 'ushear925_850',
-            'vshear925_650', 'vshear850_650', 'vshear925_850',
-            'shear925_650', 'shear850_650', 'shear925_850',
+            'ushear925_650', 'ushear850_650', 'ushear925_850', 'ushear100m_650',
+            'vshear925_650', 'vshear850_650', 'vshear925_850', 'vshear100m_650',
+            'shear925_650', 'shear850_650', 'shear925_850', 'shear100m_650',
             'cape', 't2m']
 
     for v in vars:
@@ -78,6 +77,8 @@ def dictionary():
     
     dummy = pd.read_csv(glob.glob(INPATH + '*.csv')[0])
     for v in dummy.keys():
+        if 'direction' in v:
+            continue
         dic[v] = []
     
     return dic
@@ -99,7 +100,10 @@ def composite(lt_hour):
         outfile = OUTPATH + REGION + "_" + SENSOR + "_2000-2019_MCSTRACK_localBulk_" + str(m1).zfill(
             2) + '-' + \
                   str(m2).zfill(2) + '_' + str(y) + '_h' + str(lt_hour).zfill(2) + '_' + extag + ".csv"
-
+        print('Doing ', y)
+        if os.path.isfile(outfile):
+            print('File exists, continue')
+            continue
         msg = pd.read_csv(
             glob.glob(INPATH + REGION + '_mcs_tracks_final_' + str(y) + '*.0000_' + str(y+1) + '0101.0000.csv')[0])
         msg = msg.to_dict(orient='list')
@@ -136,18 +140,18 @@ def composite(lt_hour):
 
         print('Doing', y)
 
-        #pool = multiprocessing.Pool(processes=3)
-        #mdic = dictionary()  # defaultdict(list)
-        #res = pool.map(file_loop, chunks)
-        #pool.close()
+        pool = multiprocessing.Pool(processes=5)
+        mdic = dictionary()  # defaultdict(list)
+        res = pool.map(file_loop, chunks)
+        pool.close()
 
-        res = []
-        for f in chunks[0:10]:
+        #res = []
+        #for f in chunks[0:10]:
+        # 
+        #     out = file_loop(f)
+        #     res.append(out)
         
-             out = file_loop(f)
-             res.append(out)
-        
-        ipdb.set_trace()
+       # ipdb.set_trace()
 
         print('Back from multiproc')
         keys = mdic.keys()
@@ -163,8 +167,12 @@ def composite(lt_hour):
 
         for kk in mdic.keys():
             print(kk,len(mdic[kk]))
-
-        df = pd.DataFrame.from_dict(mdic)
+        try:
+            df = pd.DataFrame.from_dict(mdic)
+        except:
+            print('Nb problem')
+            for k in mdic.keys():
+                print(k, len(mdic[k]))
         df.to_csv(outfile, index=False)
         print('Saved ', outfile)
 
@@ -214,12 +222,23 @@ def file_loop(fi):
         print('MCS 2d field file missing')
         return
 
+    try:
+        era_wi100 = xr.open_dataset(
+            cnst.lmcs_drive + 'ERA5/hourly/surface/'+REGION+'/100mWind_ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(
+                2) + '_'+ str(edate.day).zfill(2) + '_'+REGION+'_srfc.nc')
+    except:
+        print('ERA5 missing')
+        return
+
+
     era_pl = u_darrays.flip_lat(era_pl)
     era_srfc = u_darrays.flip_lat(era_srfc)
+    era_wi100 = u_darrays.flip_lat(era_wi100) 
 
     edate = edate.replace(hour=12, minute=0).floor('S')
     era_pl_day = era_pl.sel(time=edate)
     era_srfc_day = era_srfc.sel(time=edate)
+    era_wi100_day = era_wi100.sel(time=edate)
 
     # if isinstance(fi['pf_maxrainrate1'], int):
     #     pr = np.array([fi['pf_maxrainrate1']])
@@ -233,78 +252,71 @@ def file_loop(fi):
         cloudnumber = fi['cloudnumber'][ids]
         single_mcs = mcs_2d['tb'].where((mcs_2d['cloudnumber']==cloudnumber)).squeeze()
         pos = np.unravel_index(single_mcs.argmin().values, single_mcs.shape)
-        print('Minimum MCS temp', single_mcs.values[pos], 'from track', fi['corecold_mintb'])
+        print('Minimum MCS temp', single_mcs.values[pos], 'from track', fi['corecold_mintb'][ids])
         tminlat = single_mcs.lat.values[pos[0]]
         tminlon = single_mcs.lon.values[pos[1]]
-        ipdb.set_trace() 
-        out['tlon'].append(tminlon)
-        out['tlat'].append(tminlat)
-
-        elon = fi['pf_lon1'][ids]
-        elat = fi['pf_lat1'][ids]
+        
+        #elon = fi['pf_lon1'][ids]
+        #elat = fi['pf_lat1'][ids]
+        elon = tminlon
+        elat = tminlat
 
         if (elon < box[0]) | (elon > box[1]) | (elat < box[2]) | (elat > box[3]):
             continue
 
+        out['tminlon'].append(tminlon)
+        out['tminlat'].append(tminlat)
+        out['tmin_calc'].append(single_mcs.values[pos])
+
+
         ####################
 
-        umean = fi['movement_distance_x']
-        vmean = fi['movement_distance_y']
-
+        umean = fi['movement_distance_x'][ids]
+        vmean = fi['movement_distance_y'][ids]
+         
         ws, direct = u_met.u_v_to_ws_wd(umean,vmean)
 
 
         ############
         for k in fi.keys():
-            out[k] = fi[k][ids]
+            if 'direction' in k:
+                continue
+            out[k].append(np.array(fi[k][ids]))
 
-#        out['init_lon'].append(fi['londiff_loc-init'][ids])
-#        out['init_lat'].append(fi['latdiff_loc-init'][ids])
         out['direction'].append(direct)
-
-#        out['hour'].append(fi['lt_hour'][ids])
-#        out['month'].append(fi['lt_month'][ids])
-#        out['year'].append(fi['lt_year'][ids])
-#        out['day'].append(fi['day'][ids])
-#        out['date'].append(fi['date'][ids])
-
-#        out['clat'].append(fi['meanlat'][ids])
-#        out['clon'].append(fi['meanlon'][ids])
-
         # era_day = era_pl_day.sel(latitude=elat, longitude=elon, method='nearest')  # take point of minimum T
         # era_day_srfc = era_srfc_day.sel(latitude=elat, longitude=elon, method='nearest')  # take point of minimum T
 
         era_day = era_pl_day.sel(latitude=slice(elat-0.5, elat+0.5), longitude=slice(elon-0.5,elon+0.5)).mean(['latitude','longitude'])
         era_day_srfc = era_srfc_day.sel(latitude=slice(elat - 0.5, elat + 0.5), longitude=slice(elon - 0.5, elon + 0.5)).mean(['latitude','longitude'])
+        era_day_wi100 = era_wi100_day.sel(latitude=slice(elat - 0.5, elat + 0.5), longitude=slice(elon - 0.5, elon + 0.5)).mean(['latitude','longitude'])
+
+        tgrad_lat = era_srfc_day.sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze()
+        tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)
+        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().size)
+
+        tgrad_pl = era_pl_day['t'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().polyfit(dim='latitude', deg=1)
 
 
-
-        tgrad = era_srfc_day['t2m'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze.polyfit(dim='latitude', deg=1)
-        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze.size)
-
-        tgrad_pl = era_pl_day['t'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze.polyfit(dim='latitude', deg=1)
+        ef_lat = tgrad_lat['mslhf'] / (tgrad_lat['mslhf'] + tgrad_lat['msshf'])
+        ef_poly = ef_lat.squeeze().polyfit(dim='latitude', deg=1)
+        ef_mean = era_day_srfc['mslhf'] / (era_day_srfc['mslhf']+ era_day_srfc['msshf'])
 
         e925 = era_day.sel(level=925).mean()
         e650 = era_day.sel(level=650).mean()
         e850 = era_day.sel(level=850).mean()
         srfc = era_day_srfc.mean()
+        wi100 = era_day_wi100.mean()
 
         del era_day
         del era_day_srfc
-
-#        out['ccs_area'].append(fi['ccs_area'][ids])
-#        out['core_area'].append(fi['core_area'][ids])
-#        out['pf_area'].append(fi['pf_area1'][ids])
-
-       out['tmin'].append(fi['mintb'][ids])
-       out['tmean_core'].append(fi['core_meantb'][ids])
-       out['tmean_ccs'].append(fi['meantb'][ids])
+        out['tmin'].append(fi['corecold_mintb'][ids])
+        out['tmean_ccs'].append(fi['corecold_meantb'][ids])
+        out['tmean_core'].append(fi['core_meantb'][ids])
 
         out['pmax'].append(fi['pf_maxrainrate1'][ids])
         out['pmean'].append(fi['pf_rainrate1'][ids])
         out['ptot'].append(fi['pf_accumrain1'][ids])
-#        out['lon'].append(elon)
-#        out['lat'].append(elat)
 
         try:
             out['q925'].append(float(e925['q']))
@@ -333,29 +345,38 @@ def file_loop(fi):
         out['t2m'].append(float(srfc['t2m']))
         out['era_precip'].append(float(srfc['mtpr'])*3600)
         out['sm'].append(float(srfc['swvl1']))
-
-        out['tgrad2m'].append(float(tgrad))
-        out['tgrad925'].append(float(tgrad_pl))
+        out['ef'].append(float(ef_mean))
+        out['tgrad2m'].append(float(tgrad['t2m_polyfit_coefficients'][0]))
+        out['tgrad925'].append(float(tgrad_pl.sel(level=925)['polyfit_coefficients'][0]))
+        out['shgrad'].append(float(tgrad['msshf_polyfit_coefficients'][0])*-1)
+        out['lhgrad'].append(float(tgrad['mslhf_polyfit_coefficients'][0])*-1)  # era fluxes opposite sign convention
+        out['efgrad'].append(float(ef_poly['polyfit_coefficients'][0]))
+        out['smgrad'].append(float(tgrad['swvl1_polyfit_coefficients'][0]))
 
         u9256 = float(e650['u'] - e925['u'])
         u8506 =float(e650['u'] - e850['u'])
         u8509 = float(e850['u'] - e925['u'])
+        u100 = float(e650['u'] - wi100['u100'])
 
         v9256 = float(e650['v'] - e925['v'])
         v8506 =float(e650['v'] - e850['v'])
         v8509 = float(e850['v'] - e925['v'])
+        v100 = float(e650['v'] - wi100['v100'])
 
         out['ushear925_650'].append(u9256)
         out['ushear850_650'].append(u8506)
         out['ushear925_850'].append(u8509)
+        out['ushear100m_650'].append(u100)
 
         out['vshear925_650'].append(v9256)
         out['vshear850_650'].append(v8506)
         out['vshear925_850'].append(v8509)
+        out['vshear100m_650'].append(v100)
 
         out['shear925_650'].append(np.sqrt(u9256**2+v9256**2))
         out['shear850_650'].append(np.sqrt(u8506**2+v8506**2))
         out['shear925_850'].append(np.sqrt(u8509**2+v8509**2))
+        out['shear100m_650'].append(np.sqrt(u100**2+v100**2))
 
     return out
 
