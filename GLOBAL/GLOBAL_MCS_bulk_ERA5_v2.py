@@ -325,7 +325,7 @@ def file_loop(fi):
 
         out['q650'].append(float(e650['q']))
         out['v925'].append(float(e925['v']))
-        out['v650'].append(float(e925['v']))
+        out['v650'].append(float(e650['v']))   # this was wrong in v2 dataset previously, saved is v925 for both levels 650 and 925
         out['u925'].append(float(e925['u']))
         out['u650'].append(float(e650['u']))
         out['w925'].append(float(e925['w']))
