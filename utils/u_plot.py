@@ -113,7 +113,7 @@ def discrete_cmap(N, base_cmap=None):
 
     # Note that if base_cmap is a string or None, you can simply do
     #    return plt.cm.get_cmap(base_cmap, N)
-    # The following works for string, None, or a colormap instance:
+    # The following works for string, None, or a colormap instance:discrete_cmap_norm(levels, cmap)
 
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, N))
