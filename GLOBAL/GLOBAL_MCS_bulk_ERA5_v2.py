@@ -27,9 +27,8 @@ from utils import u_met
 #import metpy
 #from metpy import calc
 #from metpy.units import units
-
-
 import pickle as pkl
+import sys
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -39,9 +38,9 @@ matplotlib.rc('ytick', labelsize=10)
 MREGIONS = glob_util.MREGIONS
 
 
-REGIONS =  ['australia','SAf', 'GPlains'] #['china', 'india'] #['sub_SA', 'WAf']# 'china', 'india', 'australia','SAf', 'GPlains']
+REGIONS = ['sub_SA', 'WAf'] #['australia','SAf', 'GPlains']  #['sub_SA', 'WAf']# 'china', 'india', 'australia','SAf', 'GPlains']
 SENSOR = 'ERA5'
-SENSOP = 12 # (LT overpass)
+SENSOP = 10 # (LT overpass)
 extag = 'FullYear' #
 INIT_DISTANCE = 0
 AREA = 5000 #1000
@@ -85,11 +84,7 @@ def dictionary():
 
 def composite(lt_hour):
 
-    h = glob_util.LT_to_UTC_hour(lt_hour, REGION)
-    h2 = glob_util.LT_to_UTC_hour(lt_hour+1, REGION)
-    h1 = glob_util.LT_to_UTC_hour(lt_hour-1, REGION)
-
-    print('Hour: ', h, h1, h2)
+    print('Hour: ',lt_hour)
 
     print(REGION)
 
@@ -97,9 +92,9 @@ def composite(lt_hour):
 
         m1 = MONTHS[0]
         m2 = MONTHS[1]
-        outfile = OUTPATH + REGION + "_" + SENSOR + "_2000-2019_MCSTRACK_localBulk_" + str(m1).zfill(
+        outfile = OUTPATH + REGION + "_" + SENSOR+'_'+str(SENSOP).zfill(2)+'LT'+ "_2000-2019_MCSTRACK_localBulk_" + str(m1).zfill(
             2) + '-' + \
-                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(lt_hour).zfill(2) + '_' + extag + ".csv"
+                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(lt_hour) + '_' + extag + ".csv"
         print('Doing ', y)
         if os.path.isfile(outfile):
             print('File exists, continue')
@@ -110,9 +105,14 @@ def composite(lt_hour):
 
         for k in msg.keys():
             msg[k] = np.array(msg[k])
-        inmask =   ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) &  (msg['utc_month'] >= m1) & (msg['utc_month'] <= m2) &\
-                   ((msg['lt_hour']==h)  | (msg['lt_hour']==h1)  | (msg['lt_hour']==h2)) & \
-                    (msg['pf_landfrac'] > 0.95)  & (msg['pf_area1'] > AREA)) & np.isfinite(msg['pf_lat1'])
+
+        if lt_hour[0] > lt_hour[1]:
+            hour_mask = (msg['lt_hour']>= lt_hour[0]) | (msg['lt_hour']<= lt_hour[1])
+        else:
+            hour_mask = (msg['lt_hour']>= lt_hour[0]) & (msg['lt_hour']<= lt_hour[1])
+
+        inmask =   ((msg['lt_init_hour'] >= SENSOP+2) &\
+                   hour_mask & (msg['pf_landfrac'] > 0.95)  & np.isfinite(msg['pf_lat1']))
 
 
         mask = np.where(inmask)
@@ -146,12 +146,12 @@ def composite(lt_hour):
         pool.close()
 
         #res = []
-        #for f in chunks[0:10]:
+        #for f in chunks:
         # 
         #     out = file_loop(f)
         #     res.append(out)
-        
-       # ipdb.set_trace()
+        # 
+        #ipdb.set_trace()
 
         print('Back from multiproc')
         keys = mdic.keys()
@@ -188,7 +188,7 @@ def file_loop(fi):
     box = (MREGIONS[REGION])[0]
     daybefore = fi['lt_date'][0]
     edate = pd.to_datetime(daybefore)
-    edate = edate.replace(hour=MHOUR, minute=0)
+    edate = edate.replace(hour=SENSOP, minute=0).floor('S')
     hourchange = (MREGIONS[REGION])[2]
 
 
@@ -235,7 +235,6 @@ def file_loop(fi):
     era_srfc = u_darrays.flip_lat(era_srfc)
     era_wi100 = u_darrays.flip_lat(era_wi100) 
 
-    edate = edate.replace(hour=12, minute=0).floor('S')
     era_pl_day = era_pl.sel(time=edate)
     era_srfc_day = era_srfc.sel(time=edate)
     era_wi100_day = era_wi100.sel(time=edate)
@@ -251,7 +250,11 @@ def file_loop(fi):
 
         cloudnumber = fi['cloudnumber'][ids]
         single_mcs = mcs_2d['tb'].where((mcs_2d['cloudnumber']==cloudnumber)).squeeze()
-        pos = np.unravel_index(single_mcs.argmin().values, single_mcs.shape)
+        try:
+            pos = np.unravel_index(single_mcs.argmin().values, single_mcs.shape)
+        except:
+            print('2d tir data empty? continue')
+            continue
         print('Minimum MCS temp', single_mcs.values[pos], 'from track', fi['corecold_mintb'][ids])
         tminlat = single_mcs.lat.values[pos[0]]
         tminlon = single_mcs.lon.values[pos[1]]
@@ -291,11 +294,11 @@ def file_loop(fi):
         era_day_srfc = era_srfc_day.sel(latitude=slice(elat - 0.5, elat + 0.5), longitude=slice(elon - 0.5, elon + 0.5)).mean(['latitude','longitude'])
         era_day_wi100 = era_wi100_day.sel(latitude=slice(elat - 0.5, elat + 0.5), longitude=slice(elon - 0.5, elon + 0.5)).mean(['latitude','longitude'])
 
-        tgrad_lat = era_srfc_day.sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze()
+        tgrad_lat = era_srfc_day.sel(latitude=slice(elat-2, elat+2), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze()
         tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)
-        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().size)
+        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat-2, elat+2), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().size)
 
-        tgrad_pl = era_pl_day['t'].sel(latitude=slice(elat-1.5, elat+1.5), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().polyfit(dim='latitude', deg=1)
+        tgrad_pl = era_pl_day['t'].sel(latitude=slice(elat-2, elat+2), longitude=slice(elon-0.5,elon+0.5)).mean('longitude').squeeze().polyfit(dim='latitude', deg=1)
 
 
         ef_lat = tgrad_lat['mslhf'] / (tgrad_lat['mslhf'] + tgrad_lat['msshf'])
@@ -385,5 +388,5 @@ def file_loop(fi):
 for regs in REGIONS:
     REGION = regs
     MONTHS = (MREGIONS[REGION])[4]
-    MHOUR = 17
-    composite(MHOUR)
+    MHOUR_SLICE = (15,21)
+    composite(MHOUR_SLICE)
