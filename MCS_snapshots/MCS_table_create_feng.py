@@ -1,15 +1,14 @@
 import numpy as np
-import datetime as dt
 import xarray as xr
-import os
-import ipdb
-import matplotlib.pyplot as plt
-import ipdb
 import pandas as pd
 import multiprocessing
 import glob
 import pickle as pkl
 from scipy.ndimage.measurements import label
+from GLOBAL import glob_util
+from utils import u_darrays
+import datetime
+from util import constants as cnst
 
 
 def dictionary():
@@ -139,6 +138,7 @@ def process_tir_image(ds, data_res, t_thresh=-50, min_mcs_size=5000):
 
 def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_name=None, env_tformat="%Y-%m-%d %H:%M:%S", env_hour=12):
     """
+    NEEDS TO BE IN SAME FILE (as in Zhe Fengs TIR/PRECIP files)
     This function saves rainfall and MCS environment variables. Rainfall is saved as mean across contiguous MCS area and max. rainfall at ~15km resolution (0.15deg)
     centred on the maximum rainfall pixel. All other variables are sampled as ~80km (0.75deg) averages around the pixel of minimum MCS cloud top temperature.
 
@@ -196,3 +196,79 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
                 else:
                     dic[vt] = [single[vt].values]
     return dic
+
+
+def ERA_dictionary(tab):
+    dic = {}
+    vars = [
+        'direction', 'tminlon', 'tminlat', 'tmin_calc',
+        'tmin', 'tmean_core', 'tmean_ccs', 'tcwv', 'tgrad2m', 'tgrad925', 'smgrad', 'efgrad', 'shgrad', 'lhgrad',
+        'pmax', 'pmean', 'ptot',
+        'q925', 'q650', 'q850', 'era_precip', 'sm', 'ef',
+        'u925', 'u650',
+        'v925', 'v650',
+        'w925', 'w650',
+        'rh925', 'rh650',
+        't925', 't650',
+        'div925', 'div850', 'div650',
+        'pv925', 'pv650',
+        'ushear925_650', 'ushear850_650', 'ushear925_850', 'ushear100m_650',
+        'vshear925_650', 'vshear850_650', 'vshear925_850', 'vshear100m_650',
+        'shear925_650', 'shear850_650', 'shear925_850', 'shear100m_650',
+        'cape', 't2m']
+
+    for v in vars:
+        dic[v] = []
+
+    dummy = tab
+    for v in dummy.keys():
+        dic[v] = []
+
+def run_ERA5_regional(tab):
+    #run per daily chunks
+    inpath = cnst.lmcs_drive + '/ERA5/hourly/'
+    outtab = ERA_dictionary(tab)
+
+    mcs_local_time = tab['lt_date']
+    era_hour = 10
+    etime_local = mcs_local_time.replace(hour=era_hour, minute=0).floor('S')
+    edate = glob_util.LT_to_UTC_date(etime_local)
+
+    try:
+        era_pl = xr.open_dataset(
+            inpath + 'pressure_levels/' + mreg + '/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(
+                2) + '_' + str(edate.day).zfill(2) + '_' + mreg + '_pl.nc')
+    except:
+        print('ERA5 missing')
+        return
+    try:
+        era_srfc = xr.open_dataset(
+            inpath + 'surface/' + mreg + '/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(
+                2) + '_' + str(edate.day).zfill(2) + '_' + mreg + '_srfc.nc')
+    except:
+        print('ERA5 srfc missing')
+        return
+
+    try:
+        era_wi100 = xr.open_dataset(
+            inpath + 'surface/'+mreg+'/100mWind_ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(
+                2) + '_'+ str(edate.day).zfill(2) + '_'+mreg+'_srfc.nc')
+    except:
+        print('ERA5 missing')
+        return
+
+
+    era_pl = u_darrays.flip_lat(era_pl)
+    era_srfc = u_darrays.flip_lat(era_srfc)
+    era_wi100 = u_darrays.flip_lat(era_wi100)
+
+    era_pl_day = era_pl.sel(time=edate)
+    era_srfc_day = era_srfc.sel(time=edate)
+    era_wi100_day = era_wi100.sel(time=edate)
+
+
+for regs in REGIONS:
+    REGION = regs
+    MONTHS = (MREGIONS[REGION])[4]
+    MHOUR_SLICE = (15,21)
+    composite(MHOUR_SLICE)

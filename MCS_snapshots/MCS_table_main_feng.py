@@ -4,17 +4,33 @@ import ipdb
 import pandas as pd
 import glob
 import os
+from utils import constants as cnst
+from GLOBAL import glob_util
+import datetime
+import numpy as np
+import multiprocessing
 
 
-def make_table():
+MREGIONS = {
+ 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (5,9), (1,12)], # # 18
+ 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (5,9), (1,12)], # 4
+ 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (5,9), (1,12)], # 7
+ 'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (5,9), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
+# 'australia' : [[120,140,-23, -11], 'asia', 9, (11,3), (11,3), (1,12)], # 3
+ 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (11,3), (11,3)], # 10
+ 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (11,3), (11,3), (1,12)] , # 16
+}
+
+def make_table(reg):
     """
     Start with scanning image for MCSs as defined in MCS_table_create.process_tir_image.
     :return:
     """
-    lmcs = '/prj/global_water/MCS_Feng/global_v2/2d_fields/'
-    out = '/prj/global_water/MCS_5000km2_tables/australia/'
-    box = [120,140,-23,-11] #EAf [26,52.5,-5.6, 15.5]
-    for yy in range(2001,2021):
+    lmcs = cnst.lmcs_drive + '/MCS_Feng/global_v2/2d_fields/'
+    out = cnst.lmcs_drive + '/MCS_5000km2_tables/'+reg+'/'
+    box = MREGIONS[reg][0] #EAf [26,52.5,-5.6, 15.5]
+
+    for yy in range(2000,2021):
         infiles = sorted(glob.glob(lmcs + str(yy) + '*/*.nc'))
         full_year = []
         out_dic = {}
@@ -54,3 +70,10 @@ def make_table():
         del merge_tab
         del basic_tab
 
+
+# for reg in MREGIONS.keys():
+#     make_table(reg)
+
+pool = multiprocessing.Pool(processes=5)
+res = pool.map(make_table, list(MREGIONS.keys()))
+pool.close()

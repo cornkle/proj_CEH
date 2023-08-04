@@ -36,7 +36,7 @@ def extract_box(region, year):
 
     out = cnst.lmcs_drive + 'save_files_v2/'
 
-    dumpkeys = ['datetimestring', 'movement_r', 'movement_r_meters_per_second',
+    dumpkeys = ['datetimestring', 'movement_r', 'movement_theta', 'movement_r_meters_per_second',
                 'movement_time_lag', 'movement_storm_x', 'movement_storm_y', 'pf_nuniqpix', 'location_idx',
                 'pixel_duration', 'julian_day', 'merge_ccs_area' , 'split_ccs_area', 
                 'pixel_pcp', 'pf_skewness', 'merge_cloudnumber', 'split_cloudnumber']
@@ -64,9 +64,9 @@ def extract_box(region, year):
 
                 for pftag in ['1','2','3']:
                     pfdic[str(dv)+str(pftag)] = []
-            elif dv=="movement_theta":
+            elif dv=="direction":
                 for pftag in ['1','-1','-2','0']:
-                    pfdic['direction'+str(pftag)] = []
+                    pfdic[str(dv)+str(pftag)] = []
             else:
                 pfdic[dv] = []
 
@@ -151,21 +151,20 @@ def extract_box(region, year):
                         pfdic['lt_hour'].append(lt_dtime.hour)
                         pfdic['lt_day'].append(lt_dtime.day)
 
-                    elif dv == 'movement_theta':
+                    elif dv == 'direction':
                         pfdic['direction0'].append(tt[dv].values)
                         if tm1>=0:
-                            pfdic['direction-1'].append(np.array(track.sel(times=tm1)['movement_theta'].values))
+                            pfdic['direction-1'].append(track.sel(times=tm1)['direction'].values)
                         else:
-                            pfdic['direction-1'].append(np.array(np.nan))
-                       
+                            pfdic['direction-1'].append(np.nan)
                         if tm2>=0:
-                            pfdic['direction-2'].append(np.array(track.sel(times=tm2)['movement_theta'].values))
+                            pfdic['direction-2'].append(track.sel(times=tm2)['direction'].values)
                         else:
-                            pfdic['direction-2'].append(np.array(np.nan))
+                            pfdic['direction-2'].append(np.nan)
                         try:
-                            pfdic['direction1'].append(np.array(track.sel(times=tm0)['movement_theta'].values))
+                            pfdic['direction1'].append(track.sel(times=tm0)['direction'].values)
                         except:
-                            pfdic['direction1'].append(np.array(np.nan))
+                            pfdic['direction1'].append(np.nan)
 
                     elif (tt[dv].size==3) & ("pf" in dv):
                           #print(dv, tt[dv].values)
