@@ -6,9 +6,8 @@ import glob
 import pickle as pkl
 from scipy.ndimage.measurements import label
 from GLOBAL import glob_util
-from utils import u_darrays
+from utils import u_darrays, constants as cnst
 import datetime
-from util import constants as cnst
 
 
 def dictionary():
