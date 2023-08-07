@@ -120,9 +120,9 @@ def create_regularGrid(lat2d, lon2d):
 
 
 def create_da(data, time, lat1d, lon1d, lat2d, lon2d, plevels=None):
-
-    if plevels != None:
-
+    print('plevels',plevels)
+    if plevels is not None:
+    
         da = xr.DataArray(data,
                           coords={'time': time, 'false_latitude': lat1d,
                                   'false_longitude': lon1d,
