@@ -7,12 +7,13 @@ from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
-from utils import u_met
+from utils import u_met, constants as cnst
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain_gt5k_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
-
+dic = pkl.load( open (cnst.network_data +'data/CLOVER/saves/bulk_-50_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+#bulk_-50_zeroRain_gt1k_shear_CP4
+#bulk_-40_zeroRain_gt5k_CP4
 
 # In[3]:
 
@@ -20,7 +21,7 @@ _p=np.array(dic['pmax']) # 98th perc per MCS
 _t=np.array(dic['tmin'])  #mean T
 _clat = np.array(dic['clat'])
 _area = np.array(dic['area'])*(4.4)**2
-_isfin = np.array(dic['isfin'])
+#_isfin = np.array(dic['isfin'])
 _po30 = np.array(dic['po30'])
 _perc = np.array(dic['pperc'])
 #_lon = np.array(dic['lonmax'])
@@ -48,7 +49,7 @@ print('Number MCSs:', p.size)
 # In[6]:
 
 bins=np.arange(-90, -30, 1)   # compute probability per temperature range (1degC)
-ppo30=np.where(p > 30)  
+ppo30=np.where(p > 50)
 to30=t[ppo30]   
 
 H1, bins1 = np.histogram(to30, bins=bins, range=(t.min(), t.max()))
@@ -94,7 +95,7 @@ rp = p.copy()[inds]
 
 # In[11]:
 
-path = '/users/global/cornkle/figs/CLOVER/CP4/'
+path = cnst.network_data + 'figs/CLOVER/CP4/'
 fig = plt.figure(figsize=(10, 3.5), dpi=300)
 cc=0.8
 ax1 = fig.add_subplot(121)
@@ -106,8 +107,8 @@ mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r', s=20, vmi
 ax1.set_ylabel('Max. precipitation (mm h$^{-1}$)')
 ax1.set_xlabel('Min. temperature (1 $^{\degree}C$ bins)')
 ax1.hlines(31, -95, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
-plt.text(-55, 18, '30 mm h$^{-1}$',  fontsize=12)
-ax1.set_xlim(-90,-40)
+plt.text(-55, 18, 'P99 | 50 mm h$^{-1}$',  fontsize=12)
+ax1.set_xlim(-100,-40)
 ax1.set_ylim(0,150)
 
 cbar = fig.colorbar(mappable)
@@ -120,16 +121,16 @@ ax1.scatter(center, histo, marker="o",color='#5ea1d4', s=30, zorder=2, edgecolor
 ax1.set_xlabel('Min. temperature ($^{\degree}C$)')
 ax1.set_ylabel('Probability (% | Extreme rain)')
 #plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
-ax1.set_xlim(-90,-40)
+ax1.set_xlim(-100,-40)
 fsiz = 14
 x = 0.02
-plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points')
-plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points')
+# plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+#                  textcoords='offset points')
+# plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+#                  textcoords='offset points')
 
 plt.tight_layout()
-plt.savefig(path+'scatter-40_gt5000_tmean_area.png')
+plt.savefig(path+'scatter-40_gt1000_tmin_area.png')
 #plt.savefig(path+'scatter-10_gt324.pdf')
 plt.close('all')
 

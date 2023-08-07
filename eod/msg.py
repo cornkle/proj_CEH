@@ -16,23 +16,30 @@ import pdb
 """
 MSG folder:
 meteosat_WA30: 2004 - 2014, JJAS, 4-21N, 18W - 32E, 580 x 1640 pixel, ~ 3-4km res, ev. 30 mins -> downloading 15mins!
-meteosat_SA15: 2006 - 2010, JJAS, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
+meteosat_SA15: 2006 - 2010, May-Oct, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
 
-meteosat_tropWA: 2004 - 2015, whole year, 4-10N, 14W - 25E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins
+meteosat_tropWA: 2004 - 2015, whole year, 4-10N, 14W - 25E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins, daytime only
 """
-y1 = 2004#2006
-y2 = 2017 #
+y1 = 2004 #2006
+y2 = 2020 #
+
 class ReadMsg(object):
-    def __init__(self, msg_folder, y1=y1, y2=y2):
+    def __init__(self, msg_folder, y1=y1, y2=y2, months=None):
 
         yrange = range(y1, y2+1)  # 1998, 2014
-        mrange = range(1,13)
+        if months is None:
+            mrange = range(1,13)
+        else:
+            if len(months) > 1:
+                mrange = months
+            else:
+                mrange = range(months[0],months[0]+1)
 
         try:
             lpath = uarr.locate('lon.npz', msg_folder, exclude = None)
         except:
             print('Not a directory or no msg lat/lon found')
-            quit()
+            return
 
         mpath = os.path.join(msg_folder, 'msg_raw_binary')
 
@@ -47,7 +54,7 @@ class ReadMsg(object):
 
             filepath = os.path.join(mpath, str(yr), str(mo).zfill(2))
             try:
-                files = uarr.locate('.gra', filepath, exclude = '_182')
+                files = uarr.locate('.gra', filepath, exclude = ['_182', '_167'])
             except OSError:
                 continue
 

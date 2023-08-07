@@ -7,9 +7,10 @@ Created on Thu Jun  2 14:08:18 2016
 import numpy as np
 #from wavelet import twod as w2d
 from scipy import ndimage
-from wavelet import wav
+from wavelet import wav, wav1d
 import pdb
 import matplotlib.pyplot as plt
+import ipdb
 
 def read_dic(dic):
     dt = dic['dx']
@@ -31,13 +32,23 @@ def _create_dic(dx, dist, start, nb):
 
 ############ Frequently used datasets
 DATASETS = {
-    'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),
+    'METEOSAT5K': _create_dic(5, 1 / 12., 15, 45),  # resolution, distance between scales,start scale, number of scales
+    'METEOSAT5K_vera': _create_dic(5, 0.5, 25, 2),  #28     0.5
+    'METEOSAT5K_veraTest': _create_dic(5, 0.5, 15, 2),  #28     0.5
+    'METEOSAT8K': _create_dic(8, 1 / 12., 24, 40),
+    'METEOSAT10K': _create_dic(10, 1 / 12., 30, 40),
     'GRIDSAT': _create_dic(8, 1 / 12., 24, 40),
-    'METSRFC': _create_dic(3, 0.45, 9, 10) # nb =14 also tested
+    'METSRFC': _create_dic(3, 0.45, 9, 10), # nb =14 also tested
+    'METSRFC_LS': _create_dic(3, 0.25, 27, 15), # larger scales
+    'METSRFC24': _create_dic(3, 0.25, 50, 10), # nb =14 also tested
+    'LSTATREND5K': _create_dic(5.55, 0.4, 16, 10),  # nb =14 also tested
+    'NOWCAST': _create_dic(4, 0.4, 20, 10),  # nb =14 also tested
+    'LSTATREND5K_GLOBAL': _create_dic(5.55, 0.4, 15, 14),  # nb =14 also tested
 }
 
 
 def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
+
 
     dic = {}
 
@@ -49,7 +60,7 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
         return
 
     #2D continuous wavelet analysis:
-    #TIR   
+    #TIR
     tir=t.copy()
     tir[tir>0] = 0
     tir = tir - np.mean(tir)
@@ -60,15 +71,73 @@ def waveletTP(t, p, dx=None, dist=None,start=None, nb=None, dataset=None):
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
     #Precip
     coeffsPCP, powerPCP = obj.calc_coeffs(p, le_thresh=0, fill=-0.01)
-        
+
     dic['t']=powerTIR
     dic['p']=powerPCP
     dic['scales'] = obj.scales
     dic['res'] = obj.res
     return dic
 
-
 def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    #2D continuous wavelet analysis:
+    #TIR
+    tir=t.copy()
+    tir[tir>0] = 0
+    tir = tir - np.mean(tir)
+
+    obj = wav.wavelet(dx, dist, nb, start=start)
+
+    #TIR
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
+
+    dic['t']=powerTIR
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    dic['coeffs'] = coeffsTIR
+    return dic
+
+
+
+def waveletT_normalised(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    #2D continuous wavelet analysis:
+    #TIR
+    tir=t.copy()
+    #tir[tir>0] = 0
+    tir = tir - np.mean(tir)
+
+    obj = wav.wavelet(dx, dist, nb, start=start)
+
+    #TIR
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
+
+    dic['t']=powerTIR
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    return dic
+
+
+def applyHat(t, dx=None, dist=None,start=None, nb=None, dataset=None):
 
     dic = {}
 
@@ -80,14 +149,41 @@ def waveletT(t, dx=None, dist=None,start=None, nb=None, dataset=None):
         return
 
     tir = t.copy()
-    tir[tir > 0] = 0
-    tir = tir - np.mean(tir)
+    #tir[tir > 0] = 0
+    tir = tir #- np.mean(tir)
 
     obj = wav.wavelet(dx, dist, nb, start=start)
     # TIR
     coeffsTIR, powerTIR = obj.calc_coeffs(tir, ge_thresh=0, fill=0.01)
 
-    dic['t'] = powerTIR
+    dic['power'] = powerTIR
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    dic['coeffs'] = coeffsTIR
+
+    return dic
+
+def applyHat_pure(t, dx=None, dist=None,start=None, nb=None, dataset=None):
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx, dist, nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    tir = t.copy()
+    #tir[tir > 0] = 0
+    tir = tir #- np.mean(tir)
+    #tir = (tir - np.mean(tir)) / np.std(tir)
+
+    obj = wav.wavelet(dx, dist, nb, start=start)
+    # TIR
+    coeffsTIR, powerTIR = obj.calc_coeffs(tir, normed='stddev')
+
+    dic['power'] = powerTIR
     dic['scales'] = obj.scales
     dic['res'] = obj.res
     dic['coeffs'] = coeffsTIR
@@ -99,8 +195,12 @@ def LSTA_maxPowerScale(t, dx=None, dist=None, start=None, nb=None, dataset=None)
     """
     Calculates dominant scale per pixel in an image i.e. it scans each scale column in the 3d wavelet
      power spectrum and identifies maximum power.
-    :param t:
-    :param dt:
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
     :return:
     """
     dic = {}
@@ -156,12 +256,12 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
     Calculates local power maxima in a 2d image within a scale column
     allowing superimposed maxima detection i.e. preferential pick
      of small scales
-    :param t:
-    :param dx:
-    :param dist:
-    :param start:
-    :param nb:
-    :param dataset:
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
     :return:
     """
 
@@ -204,7 +304,7 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
             power_locMax = power[ind]
             if (coeff_locMax < 0) | (tt < -1.) :  # coefficient negative or small negative T
                 scal = scal * -1
-            if power_locMax < 0.02:   # minimum power val, should find a more objective way
+            if power_locMax < 0.02:   # minimum power val, should find a more objective way, like standard deviation!
                 scal = np.nan
 
             dom_scale[i, j] = scal
@@ -217,7 +317,17 @@ def LSTA_LocalMax(t, dx=None, dist=None, start=None, nb=None, dataset=None):
 #
 #
 #
-def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom=None):
+def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom=False):
+    """
+    :param t: data , numpy array
+    :param dx: resolution of the data in unit of output (e.g. 3 if it's 3km)
+    :param dist: distance between scale disaggregation levels, will be logarithmic
+    :param start: smallest scale for scale decomposition
+    :param nb: number of scales to decompose into
+    :param dataset: abbreviation for existing dataset dictionary for quick use
+    :param dom: boolean, true if dominant scale should additionally be returned in the dictionary
+    :return: wavelet dictionary
+    """
 
     def dom_get(wseries, tpoint, scales):
 
@@ -257,10 +367,10 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
     tir = t.copy()
     obj = wav.wavelet(dx, dist, nb, start=start)
 
-    coeffsTIR_dry, powerTIR_dry = obj.calc_coeffs(tir, le_thresh=0, fill=0)
+    coeffsTIR_dry, powerTIR_dry = obj.calc_coeffs(tir, le_thresh=0, fill=0.01)
 
     tir = tir * -1
-    coeffsTIR_wet, powerTIR_wet = obj.calc_coeffs(tir, le_thresh=0, fill=0)
+    coeffsTIR_wet, powerTIR_wet = obj.calc_coeffs(tir, le_thresh=0, fill=0.01)
 
 
     for id, s in enumerate(obj.scales):
@@ -290,3 +400,51 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
 
     return dic
 #
+
+def waveletT1D(t, dx=None, dist=None,start=None, nb=None, dataset=None, mask=None, sign='positive'):
+
+
+    dic = {}
+
+    if dataset in DATASETS:
+        dx, dist, start, nb = read_dic(DATASETS[dataset])
+
+    if not np.array([dx,dist,nb]).all():
+        print('Information missing. Please provide either dataset or dx, dist and nb explicitly.')
+        return
+
+    #1D continuous wavelet analysis:
+    #TIR
+    tir=t.copy()
+    if sign!='positive':
+        tir = tir*-1
+    tir[tir<0] = 0
+    tir = (tir - np.mean(tir)) / np.std(tir)
+
+    obj = wav1d.wavelet(dx, dist, nb, start=start)
+
+    #TIR
+    coeffsTIRx, powerTIRx = obj.calc_coeffs(tir, le_thresh=0, fill=0.0001, direction='x')
+    coeffsTIRy, powerTIRy = obj.calc_coeffs(tir, le_thresh=0, fill=0.0001, direction='y')
+
+
+    tir_shuff = tir.copy()
+    np.random.shuffle(tir_shuff)
+
+    coeffsSIGx, powerSIGx = obj.calc_coeffs(tir_shuff, le_thresh=0, fill=0.0001, direction='x')
+    coeffsSIGy, powerSIGy = obj.calc_coeffs(tir_shuff, le_thresh=0, fill=0.0001, direction='y')
+
+    sigx = obj.significance(powerTIRx, powerSIGx, direction='x', mask=mask)
+    sigy = obj.significance(powerTIRy, powerSIGy, direction='y', mask=mask)
+
+
+    dic['powerx']=powerTIRx
+    dic['powery'] = powerTIRy
+    dic['scales'] = obj.scales
+    dic['res'] = obj.res
+    dic['coeffsx'] = coeffsTIRx
+    dic['coeffsy'] = coeffsTIRy
+    dic['sigx'] = sigx
+    dic['sigy'] = sigy
+
+    return dic

@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 from utils import u_statistics as ustat
 import pdb
 import scipy.stats as stats
+from utils import constants as cnst
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-60_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-50_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 
 
 fig = plt.figure(figsize=(12, 6))
@@ -178,6 +179,3 @@ ax4.set_ylabel('Probability Rainfall > 60mm h-1')
 #
 
 plt.tight_layout()
-
-
-

@@ -19,7 +19,7 @@ import pdb
 
 HOD = list(range(24))
 YRANGE = range(2004, 2015)
-MRANGE = range(3, 8)  # Jun - Sep
+MRANGE = range(3, 12)  # Jun - Sep
 MTRESH = 0
 
 """
@@ -57,7 +57,7 @@ class ReadWA(object):
 
         if not os.path.isdir(trmm_folder):
             print('Not a directory')
-            quit()
+            return
 
         fdic = {'fpath': [], 'tmins': [], 'date': []}
         rfiles = []

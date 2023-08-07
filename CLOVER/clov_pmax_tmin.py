@@ -8,6 +8,7 @@ sns.set_style("ticks")
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
+from utils import constants as cnst
 from scipy import stats
 import matplotlib.cm as cm
 
@@ -15,7 +16,7 @@ import matplotlib.cm as cm
 
 # In[173]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-40_zeroRain.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
 #dic2 = pkl.load( open ('/users/global/cornkle/C_paper/wavelet/saves/bulk_40big_size_zR.p', 'rb'))
 
 # In[174]:
@@ -63,13 +64,13 @@ sarea = np.sort(area)
 
 # In[177]:
 
-bins=list(range(0, 900000,5000))   # compute probability per temperature range (1degC) 
+bins=list(range(0, 900000,5000))   # compute probability per temperature range (1degC)
 bins=[300,1000,2000,5000,10000,15000,25000,50000,100000,250000,500000]
 #bins=np.percentile(area,np.arange(0,101,10))
 #bins=[10000,50000,100000,150000,230000,300000,500000]
 
-apo30=np.where(p > 30)  
-area30=area[apo30]   
+apo30=np.where(p > 30)
+area30=area[apo30]
 
 aH1, abins1 = np.histogram(area30, bins=bins)
 aH, abins = np.histogram(area, bins=bins)
@@ -143,7 +144,7 @@ np.sum(po30[area>25000])
 
 # In[180]:
 
-path = '/users/global/cornkle/figs/CLOVER/TRMM_MSG/'
+path = cnst.network_data + 'figs/CLOVER/TRMM_MSG/'
 fig = plt.figure(figsize=(5, 4), dpi=300)
 cc=0.8
 
@@ -180,7 +181,7 @@ ax1.legend(loc='lower left')
 
 
 plt.tight_layout()
-plt.savefig(path+'area-40_test.png')
+plt.savefig(path+'area-40_test_scatter.png')
 plt.close('all')
 
 fig = plt.figure(figsize=(8, 5), dpi=300)
@@ -250,4 +251,3 @@ print('Percentages nb systems', list(zip(abins, nnb)))
 # In[ ]:
 
 "Only 670 > 25000 left?! -> 940 systems (42% of ) > 10000 deliver 96% of heavy rain"
-

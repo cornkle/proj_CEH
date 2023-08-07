@@ -9,17 +9,19 @@ import matplotlib.pyplot as plt
 from utils import u_statistics as ustat
 import pdb
 import scipy.stats as stats
+from utils import constants as cnst
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-60_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
-
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-50_zeroRain_gt1k_shear_CP4.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb')
 
 fig = plt.figure(figsize=(12, 6))
 cc=0.8
 
 t = np.array(dic['pmax'])
-p = np.array(dic['shearmin']) * (-1)
+p = (np.array(dic['umax_srfc'])/np.array(dic['shearmin']))*-100
+p[np.isinf(p)]=0
+
 month = np.array(dic['month'])
 pos = np.where((t >= 1) & (p >= 4))  #
 
@@ -99,6 +101,7 @@ mappable = ax1.scatter(p, t, c=test, edgecolor='', cmap='viridis_r', s=20) # vir
 #ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 325 km$^2$ )')
 ax1.set_ylabel('Max. rainfall (mm h$^{-1}$)')
 ax1.set_xlabel('Max. u-shear')
+ax1.set_xlim(-10,50)
 ax1.set_title('Pearsonr: '+str(np.round(r[0], decimals=2)))
 cbar = fig.colorbar(mappable)
 cbar.set_label('Density')
@@ -125,7 +128,8 @@ cbar.set_label('Density')
 ax3 = fig.add_subplot(233)
 
 t = np.array(dic['qmax'])
-p = np.array(dic['shearmin'])*(-1)
+p = np.array(dic['shearmin'])
+p[np.isinf(p)]=0
 
 xy = np.vstack([t,p])
 z = gaussian_kde(xy)(xy)
@@ -177,6 +181,4 @@ ax4.set_ylabel('Probability Rainfall > 60mm h-1')
 #
 
 plt.tight_layout()
-
-
-
+plt.show()

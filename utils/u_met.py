@@ -3,16 +3,15 @@ from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
 from utils import constants
-import pdb
+import metpy
+from metpy import calc
+from metpy.units import units
+import ipdb
 
-
-planck_const = 6.62607004*1e-34 # m2 kg s-1 (h)
-c = 299792458 # speed of light m s-1
-boltzmann = 1.38064903*1e-23  # m2kg s-2K-1 (k)
-#Tb_lambda = 10.6*1e-6 # MSG window in micro metres
-Tb_lambda = 0.00032782597395146035
-Tconst = 0.7167381974248928    # 2 * kc / lambda**4 with OLR/Tb = 167 W m-2 / 233K
-sigma = 5.670373*1e-8 # W m-2K-2
+Lv = 2.501e6 # heat of vapourisation
+Cp = 1005 # heat capacity of dry air at static pressure
+g = 9.80665
+Rv =462 #[J kg-1 K-1]
 
 
 def u_v_to_ws_wd(u,v):
@@ -155,13 +154,81 @@ def theta_factor(pz):
 
 
 def theta(pz, t):
+
+    if np.max(t) >100:
+        print('t is very big, please check, should be given in C')
+
     ist = t + 273.15
-    ist = ((1000 / pz) ** 0.286) * ist
+    try:
+        ist =  ist * ((1000 / pz) ** 0.286)  # kappa = 0.286
+    except ValueError:
+        ist = (ist.T * ((1000 / pz) ** 0.286)).T
+
     return  ist-273.15
 
 
-def OLR_to_Tb(OLR):
-    return (OLR/sigma) ** 0.25
+def olr_to_bt(olr):
+    sigma = 5.670373e-8
+    return ((olr/sigma)**0.25)-273.15
 
-def Tb_to_OLR(Tb):
-    return (Tb)**4 * sigma
+
+def moist_static_energy(T, q, geop=None, z=None):
+
+    if geop is None:
+        try:
+            geop = z * g
+        except:
+            'Please provide z (height above ground) for calculation of geopotential'
+
+    mse = (T+273.15) * Cp  + geop + q * Lv
+    return mse  #J/kg
+
+def dry_static_energy(T, geop=None, z=None):
+
+    if geop is None:
+        try:
+            geop = z * g
+        except:
+            'Please provide z (height above ground) for calculation of geopotential'
+
+    mse = (T+273.15) * Cp  + geop
+    return mse
+
+
+def theta_e(pz, t, q):
+
+    if np.max(q) >10:
+        print('q is very big, please check, should be given in kg/kg')
+
+    if np.max(t) >100:
+        print('t is very big, please check, should be given in C')
+
+    ist = t + 273.15
+    try:
+        ist =  (ist + Lv/Cp*q) * ((1000 / pz) ** 0.286)  # kappa = 0.286
+    except ValueError:
+        ist = ((ist.T + Lv/Cp*q.T)* ((1000 / pz) ** 0.286)).T  # (T + Lv/cpd * mixRat)(p0/p)**kappa, Stull 1988
+
+    return  ist-273.15
+
+
+def qdeficit(q1,t2, p2):
+
+    pup = units.Quantity(p2, 'hPa')
+    tup = units.Quantity(t2, 'K')
+
+    thetae_up = np.array(calc.saturation_equivalent_potential_temperature(pup, tup))
+    theta_up = theta(p2, t2 - 273.15) + 273.15
+
+    qsat_inK = thetae_up - theta_up
+
+    try:
+        qsat =  ((qsat_inK * Cp / Lv)/ ((1000 / p2) ** 0.286))  # kappa = 0.286
+    except ValueError:
+        qsat = ((qsat_inK.T * Cp / Lv)/ ((1000 / p2) ** 0.286)).T  # (T + Lv/cpd * mixRat)(p0/p)**kappa, Stull 1988
+
+    qdef = qsat - q1
+
+    return qdef
+
+

@@ -1,4 +1,6 @@
 from ecmwfapi import ECMWFDataServer
+import os
+
 
 
 def download(year, month):
@@ -15,14 +17,18 @@ def download(year, month):
         "param": "60.128/130.128/131.128/132.128/133.128/135.128/155.128/157.128",
         "step": "0",
         "stream": "oper",
-        "time": "12:00:00/18:00:00/00:00:00/03:00:00",
+        "time": "06:00:00/09:00:00/12:00:00/15:00:00/18:00:00/21:00:00/00:00:00/03:00:00",
         "type": "an",
-        "area": "22/-18/4/15",
+        "area": "25/-18.5/3.5/17",
         "format": "netcdf",
         "target": file
     })
 
 
-for y in range(2000,2018):
+for y in range(2009,2019):
     for m in range(1, 13):
-            download(y, m)
+        file = "/prj/AMMA2050/ERA5/pressure_levels/ERA5_" + str(y) + "_" + str(m).zfill(2) + "_pl.nc"
+       # if os.path.isfile(file):
+       #     continue
+       # else:
+        download(y, m)

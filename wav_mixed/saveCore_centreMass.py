@@ -12,12 +12,13 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import pdb
 from scipy.ndimage.measurements import label
+from utils import constants as cnst
 
 
 def run():
     #  (1174, 378)
-    msg_folder = '/users/global/cornkle/data/OBS/meteosat_WA30'
-    pool = multiprocessing.Pool(processes=6)
+    msg_folder = cnst.network_data +'/data/OBS/MSG_WA30/'
+    pool = multiprocessing.Pool(processes=4)
 
     m = msg.ReadMsg(msg_folder, y1=2006, y2=2010)
     files  = m.fpath
@@ -51,7 +52,7 @@ def run():
     res = [x for x in res if x is not None]
 
     da = xr.concat(res, 'time')
-    savefile = '/users/global/cornkle/MCSfiles/blob_map_JJAS_-70CentreMass_GT5000k.nc'
+    savefile = cnst.network_data + 'MCSfiles/blob_map_JJAS_-70CentreMass_GT15000k_withT.nc'
 
     try:
         os.remove(savefile)
@@ -112,8 +113,12 @@ def file_loop(passit):
     date = dt.datetime(year, month, day, hour, minute)
 
     outt = u_int.interpolate_data(mdic['t'].values, inds, weights, shape)
+    outt_orig = outt.copy()
 
     figure = np.zeros_like(outt)
+    figure[outt_orig<=-40] = outt_orig[outt_orig<=-40]
+
+
 
     outt[outt > -70] = 0
     outt[np.isnan(outt)] = 0
@@ -123,8 +128,8 @@ def file_loop(passit):
     u, inv = np.unique(labels, return_inverse=True)
     n = np.bincount(inv)
 
-    badinds = u[(n < 200)]  # 40 / 200 pixels for 1000-5000k, 600 for 15k, all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
-    goodinds = u[(n > 200)]
+    badinds = u[(n < 600)]  # 40 / 200 pixels for 1000-5000k, 600 for 15k, all blobs with more than 36 pixels = 18 km x*y = 324 km2 (meteosat ca. 3km)
+    goodinds = u[(n > 600)]
 
     for bi in badinds:
         inds = np.where(labels == bi)

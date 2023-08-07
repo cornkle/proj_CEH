@@ -9,6 +9,52 @@ import os
 import numpy as np
 from scipy.ndimage.measurements import label
 from utils import u_mann_kendall as mk
+import itertools
+import ipdb
+import scipy.ndimage.interpolation as inter
+
+
+def merge_dicts(list_of_dicts, merge_lists=False):
+    d = {}
+    for dict in list_of_dicts:
+        for key in dict:
+            try:
+                d[key].append(dict[key])
+            except KeyError:
+                d[key] = [dict[key]]
+
+    if merge_lists:
+        for k in d.keys():
+            d[k] = [d for d in itertools.chain.from_iterable(d[k])]  # merges lists of list
+
+    return d
+
+def smooth(x,window_len=11,window='hanning'):
+
+    if x.ndim != 1:
+        raise ValueError("smooth only accepts 1 dimension arrays.")
+
+    if x.size < window_len:
+        raise ValueError("Input vector needs to be bigger than window size.")
+
+
+    if window_len<3:
+        return x
+
+
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+
+
+    s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
+    #print(len(s))
+    if window == 'flat': #moving average
+        w=np.ones(window_len,'d')
+    else:
+        w=eval('np.'+window+'(window_len)')
+
+    y=np.convolve(w/w.sum(),s,mode='valid')
+    return y
 
 
 def locate(pattern, root_path, exclude=None):
@@ -23,7 +69,17 @@ def locate(pattern, root_path, exclude=None):
                 if exclude in filepath:
                     continue
             except TypeError:
-                pass
+                cnt = 0
+                try:
+                    for ex in exclude:
+                        if ex in filepath:
+                            cnt =1
+                except:
+                    pass
+
+                if cnt == 1:
+                    continue
+
             strg.append(os.path.join(root_path, file))
     return strg
 
@@ -33,9 +89,16 @@ def distance(x1, y1, x2, y2):
     return np.sqrt((x1 - x2) *(x1 - x2) + (y1 - y2) * (y1 - y2))
 
 
-def closest_point(point, points):
+def closest_point(point, points):  # points is a 2d array like np.array(list(zip(mlon,mlat)))
     dist_2 = np.sum((points - point) * (points - point), axis=1)
     return np.argmin(dist_2)
+
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    diff = (np.abs(array - value))
+    idx = np.unravel_index(diff.argmin(), diff.shape)
+    return array[idx], idx
 
 
 """create one unique integer from two positive integers
@@ -76,13 +139,13 @@ y: y index of center point
 radius: radius in pixels, floats are handled including the farthest point
 Returns a tuple of (y index, x index)
 """
-def draw_ellipse(x, y, short, long):
+def draw_ellipse(x, y, xlength, ylength):
 
 
-    xloc = np.arange(x-np.round(short), x+np.round(short)+1)
-    yloc = np.arange(y-np.round(long), y+np.round(long)+1)[:,None]
+    xloc = np.arange(x-np.round(xlength), x+np.round(xlength)+1)
+    yloc = np.arange(y-np.round(ylength), y+np.round(ylength)+1)[:,None]
     #xloc, yloc = np.meshgrid(xloc1, yloc1)
-    distloc = ((xloc - x)/short)**2 + ((yloc - y)/long)**2 <=1
+    distloc = ((xloc - x)/xlength)**2 + ((yloc - y)/ylength)**2 <=1
 
     pos = np.where(distloc)
 
@@ -247,8 +310,44 @@ def cut_kernel_3d(array, xpos, ypos, dist_from_point):
     return kernel
 
 
+def cut_box(xpos, ypos, arr, dist=None):
+    """
+
+    :param xpos: x coordinate in domain for kernel centre point
+    :param ypos: y coordinate in domain for kernel centre point
+    :param arr: numpy array (2d)
+    :param dist: distance from kernel centre point to kernel edge (total width = 2*dist+1)
+    :return: the kernel of dimensions (2*dist+1, 2*dist+1)
+    """
+
+    if dist == None:
+        'Distance missing. Please provide distance from kernel centre to edge (number of pixels).'
+        return
+    if arr.ndim == 3:
+        kernel = cut_kernel_3d(arr, xpos, ypos, dist)
+        if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            ipdb.set_trace()
+    else:
+        kernel = cut_kernel(arr,xpos, ypos,dist)
+        if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
+            print("Please check kernel dimensions, there is something wrong")
+            ipdb.set_trace()
+
+
+
+    return kernel
 
 def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
+    """
+
+    :param array: 2d input array
+    :param thresh: cloud threshold
+    :param min_area: minimum area of the cloud
+    :param max_area: maximum area of the cloud
+    :param minmax_area: tuple indicating only clouds bigger than tuple[0] and smaller than tuple[1]
+    :return: 2d array with labelled blobs
+    """
     array[array >= thresh] = 0  # T threshold maskout
     array[np.isnan(array)] = 0  # set ocean nans to 0
 
@@ -263,9 +362,9 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         goodinds = u[(n>=min_area) & (u!=0)]
         badinds = u[n<min_area]
 
-        for b in badinds:
-            pos = np.where(labels==b)
-            labels[pos]=0
+        # for b in badinds:
+        #     pos = np.where(labels==b)
+        #     labels[pos]=0
 
     if max_area != None:
         goodinds = u[(n<=max_area)  & (u!=0)]
@@ -275,6 +374,7 @@ def blob_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
         badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
 
+    if (min_area is not None) | (max_area is not None) | (minmax_area is not None):
         for b in badinds:
             pos = np.where(labels==b)
             labels[pos]=0
@@ -300,7 +400,22 @@ def linear_trend(x, eps=0.001, alpha=0.01):
 
 
 
+def rotate(array, direction, ref_angle=None):
+    """
+    :param array: 2d array
+    :param lat: latitude
+    :param lon: longitude
+    :param level:  ERA pressure level in hPa, note: level 0 means surface. Available: 0, 925, 850, 700, 600
+    :param ref_angle: the reference angle to rotate to (direction where all wind should come from)
+    :return: rotated array
+    """
 
+    if array.ndim != 2:
+        raise IndexError('Cut kernel only allows 2D arrays.')
 
+    if ref_angle==None:
+        ref_angle=0
 
+    rot_array = inter.rotate(array, ref_angle - direction, reshape=False, cval=np.nan, prefilter=False, order=0)
 
+    return rot_array

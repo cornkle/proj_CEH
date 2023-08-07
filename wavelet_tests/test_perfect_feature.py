@@ -7,7 +7,8 @@ import matplotlib.gridspec as gridspec
 from scipy import ndimage
 import pdb
 from wavelet import util
-from utils import u_plot
+from utils import u_plot, u_normalise
+
 
 
 
@@ -15,17 +16,17 @@ def ellipse_simple():
     matplotlib.rc('xtick', labelsize=10)
     matplotlib.rc('ytick', labelsize=10)
 
-    ellipse = np.zeros((100,100))
+    ellipse = np.zeros((100,100))+20
 
     ycirc, xcirc = ua.draw_ellipse(10,10,4, 4)
     yycirc, xxcirc = ua.draw_ellipse(25, 50, 10, 10)
 
 
-    ellipse[ycirc,xcirc] = 20
-    ellipse[yycirc, xxcirc] = 20
+    ellipse[ycirc,xcirc] = 30
+    ellipse[yycirc, xxcirc] = 30
 
 
-    wav = util.waveletLSTA_power(ellipse, 1)
+    wav = util.applyHat(ellipse, dataset='METSRFC')
     lab = 'power'
     wll = wav[lab]
 
@@ -35,8 +36,10 @@ def ellipse_simple():
     f = plt.figure()
     plt.imshow(ellipse)
 
+
     f = plt.figure()
     plt.imshow(wll[0,:,:])
+
 
     print('Small scale max', np.max(np.abs(wll[0,:,:])))
 
@@ -44,15 +47,17 @@ def ellipse_simple():
     plt.imshow(wll[1, :, :])
     print('Mid scale max', np.max(np.abs(wll[1, :, :])))
 
+
     f = plt.figure()
     plt.imshow(wll[2, :, :])
     print('Large scale max', np.max(np.abs(wll[2, :, :])))
+
 
     f = plt.figure()
 
     plt.contourf(np.arange(wll.shape[1]),wav['scales'],wll[:,60,:])
     plt.colorbar()
-
+    plt.show()
     print((np.max(wll[1, :, :])-np.max(wll[0,:,:])) / np.max(wll[1, :, :]))
 
 def ellipse():
@@ -69,11 +74,11 @@ def ellipse():
     ellipse[yycirc, xxcirc] = -50
 
 
-    wav = util.waveletLSTA_power(ellipse, 1)
+    wav = util.applyHat_pure(ellipse, dataset='LSTATREND5K')
     lab = 'power'
     wll = wav[lab]
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     arr = np.round(wav['scales'])
     maxs = np.zeros_like(wll)
@@ -326,9 +331,146 @@ def circle():
     plt.show()
 
     plt.figure()
-    plt.plot(wll[amax[0],50,:])
-    plt.plot(ellipse[50, :])
-    plt.plot(wav['coeffs'][amax[0],50,:])
-
+    plt.plot(wll[amax[0],50,:], label='scale')
+    plt.plot(ellipse[50, :], label='ellipse')
+    plt.plot(wav['coeffs'][amax[0],50,:], label='coeffs')
+    plt.legend()
     print(np.sum(wll[amax[0],50,:]>0))
     print(amax[0])
+
+
+
+def circle_negative():
+    matplotlib.rc('xtick', labelsize=10)
+    matplotlib.rc('ytick', labelsize=10)
+
+    ellipse = np.zeros((100, 100)) #+4
+    short = 5
+
+    xcirc, ycirc = ua.draw_circle(50, 25, short)
+
+    ellipse[ycirc, xcirc] = -5#8
+
+    xcirc, ycirc = ua.draw_circle(50, 50, 10)
+
+    ellipse[ycirc, xcirc] = 3#1
+
+    xcirc, ycirc = ua.draw_circle(50, 65, 2)
+
+    ellipse[ycirc, xcirc] = 3#1
+
+
+
+    #ellipse = ellipse+2
+
+    nb = 41
+    wav = util.applyHat_pure(ellipse, dx=1, dist=0.08, start=3, nb=nb)  # dx=5, dist=0.08,start=15,nb=15 )
+
+    wll = wav['coeffs']
+    arr = np.round(wav['scales'])
+    print('AVAIL WAVELET SCALES: ', arr)
+    maxs = np.zeros_like(wll)
+    yl = []
+    xl = []
+
+
+    # f = plt.figure(figsize=(6.5, 11), dpi=300)
+    # #
+    # gridspec.GridSpec(3, 1)
+    # posi = 50  # 116 ## 118
+    # ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+    # ax3 = plt.subplot2grid((3, 1), (2, 0))
+    # #
+    # lev = np.arange(-90, -39, 4)
+    # mt = ax1.contourf(np.arange(wll.shape[2]) , np.arange(wll.shape[1]) , ellipse, cmap='Greys',
+    #                   levels=lev)
+    # ax1.plot(np.arange(wll.shape[2]), [posi ] * len(np.arange(wll.shape[2]) ), linestyle='--',
+    #          linewidth=2, color='black')
+    # ax1.invert_yaxis()
+    # ax1.legend(loc=4)
+    # ax1.set_ylabel('Spatial extent (km)')
+    # # colors = cm.viridis(np.linspace(0, 1, len([0,1, 2,5,10,20,40,60,80,100])))
+    # #
+    # mp = ax3.contourf(np.arange(wll.shape[2]), arr, wll[:, posi, :],
+    #                   levels=[0, 1, 2, 5, 10, 20, 40, 80, 100, 130, 150, 180, 200, 300, 400], cmap='viridis')
+    # maxs = np.mean(maxs[:, posi - 1:posi + 2, :], 1)  # -1, +2
+    # # ax3.contour(np.arange(wll.shape[2])*5, arr,maxs, cmap='Greys_r')
+    #
+    # ppos = np.where(maxs)
+    #
+    # # for p1, p2 in zip(ppos[1], ppos[0]):
+    # #    ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arr[p2], xerr=arr[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
+    # # ax3.set_xlim(100,700)
+    # ax3.set_ylim(15, 180)
+    # ax3.set_xlabel('Spatial extent (km)')
+    # ax3.set_ylabel('Length scale (km)')
+    #
+    # # plt.tight_layout()
+    #
+    # f.subplots_adjust(right=0.86)
+    #
+    # cax = f.add_axes([0.87, 0.545, 0.025, 0.415])
+    # cb = plt.colorbar(mt, cax=cax, label='Cloud-top temperature ($^{\circ}$C)')
+    # cb.ax.tick_params(labelsize=12)
+    #
+    # cax = f.add_axes([0.87, 0.065, 0.025, 0.175])
+    # cb = plt.colorbar(mp, cax=cax, label='Wavelet power')
+    # cb.ax.tick_params(labelsize=12)
+    #
+    # plt.show()
+
+    f = plt.figure()
+    plt.imshow(ellipse)
+    print(xl, yl)
+    plt.plot(xl, yl, 'ro')
+    plt.show()
+
+    # f = plt.figure()
+    # pos = np.argmin(np.abs((2 * short + 1) * wav['res'] - arr))
+    #
+    # plt.imshow(wll[pos, :, :])
+    # print(xl, yl)
+    # plt.plot(xl, yl, 'ro')
+    # plt.show()
+    # f = plt.figure()
+    #
+    # print(xl, yl)
+    # plt.plot(xl, yl, 'ro')
+    # plt.show()
+
+    f = plt.figure(figsize=(9,15))
+    ax = f.add_subplot(311)
+    plt.imshow(ellipse)
+    plt.hlines(50,0,100)
+    plt.colorbar()
+    print(xl, yl)
+    plt.plot(xl, yl, 'ro')
+
+    ax = f.add_subplot(312)
+    plt.plot(ellipse[50, :], label='signal')
+    plt.text(21,-1.5,'10km')
+    plt.text(41, 1, '20km')
+    #plt.text(60, 2.7, '3km')
+    plt.text(63, 1, '4km')
+    plt.hlines(0, 0, 100, linestyle='dotted')
+    plt.legend()
+
+    ax = f.add_subplot(313)
+    #plt.plot(ellipse[50, :], label='signal')
+    x = 1
+    a = wav['coeffs'][x,50,:]/(np.std(wav['coeffs'][x,50,:]))
+    plt.plot(a, label='w_coeff '+str(wav['scales'][x]))
+    x = 21
+    a =  wav['coeffs'][x,50,:]/(np.std(wav['coeffs'][x,50,:]))
+    plt.plot(a, label='w_coeff '+str(wav['scales'][x]))
+    x = 32
+    a = wav['coeffs'][x,50,:]/(np.std(wav['coeffs'][x,50,:]))
+    plt.plot(a, label='w_coeff '+str(wav['scales'][x]))
+
+
+    plt.hlines(0,0,100, linestyle='dotted')
+    plt.legend()
+    #plt.vlines([20],-4,6)
+    #plt.vlines([36, 44], -3, 4, 'r')
+
+

@@ -37,3 +37,7 @@ class TestUtils(unittest.TestCase):
 
         assert np.unique(uni).size == x.size-2
         assert np.unique(unir).size == xrand.size
+
+
+if __name__ == '__main__':
+    unittest.main()

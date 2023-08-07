@@ -12,9 +12,24 @@ import numpy as np
 import os
 import salem
 import pdb
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
+from matplotlib import colors
 
 
-def quick_map_xr(xar, save = None, vmax=None, vmin=None, cmap=None, title=None):
+class MidpointNormalize(colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+        self.vcenter = vcenter
+        colors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        return np.interp(value, x, y)
+
+
+def quick_map_xr(xar, save = None, title=None, cmap=None, **kwargs):
 
     f = plt.figure(figsize=(10, 6), dpi=300)
     if not cmap:
@@ -107,6 +122,15 @@ def discrete_cmap(N, base_cmap=None):
     #return base.from_list(cmap_name, color_list, N)
     return plt.cm.get_cmap(base_cmap, N)
 
+
+def discrete_cmap_norm(levels, cmap):
+
+    # pick the desired colormap, sensible levels, and define a normalization
+    # instance which takes data values and translates those into levels.
+    cmap = plt.get_cmap(cmap)
+    norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
+    return norm
+
 def savefig(savepath, filename, filetype):
 
     start = 1
@@ -115,3 +139,41 @@ def savefig(savepath, filename, filetype):
 
     plt.savefig(savepath+os.sep+filename+str(start).zfill(2)+'.'+filetype)
 
+
+## a clean way of plotting - use matplotlib functions directly:
+
+def draw_map(data, lon, lat, title=None,  mask_sig=None, quiver=None, contour=None, cbar_label=None, **kwargs):
+    f=plt.figure(figsize=(15,7))  # this opens a plot window
+    ax = f.add_subplot(111, projection=ccrs.PlateCarree())  # this opens a new plot axis
+    mapp = ax.contourf(lon, lat, data, transform=ccrs.PlateCarree(), **kwargs)  # this is the actual plot
+
+    ## mask for significance indicator
+    if mask_sig is not None:
+         plt.contourf(lon, lat, mask_sig, colors='none', hatches='.',
+                     levels=[0.5, 1], linewidth=0.1)
+
+    ## quiver list
+    if quiver is not None:
+        qu = ax.quiver(quiver['x'], quiver['y'], quiver['u'], quiver['v'], scale=quiver['scale'])
+    ## additional contour on plot
+    if contour is not None:
+        ax.contour(contour['x'], contour['y'], contour['data'], levels=contour['levels'], cmap=contour['cmap'] )
+
+
+    ax.coastlines()   ## adds coastlines
+    # Gridlines
+    xl = ax.gridlines(draw_labels=True);   # adds latlon grid lines
+    xl.xlabels_top = False   ## labels off
+    xl.ylabels_right = False
+    plt.title(title)
+    # Countries
+    ax.add_feature(cartopy.feature.BORDERS, linestyle='--'); # adds country borders
+    cbar = plt.colorbar(mapp)  # adds colorbar
+    cbar.set_label(cbar_label)
+    plt.show()
+
+
+def hist_freq(ax, data, **kwargs):
+    weights = np.ones_like(data) / float(len(data))
+    ax.hist(data, weights = weights, **kwargs)
+    return ax

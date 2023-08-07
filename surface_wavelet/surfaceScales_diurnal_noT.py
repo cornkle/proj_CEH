@@ -12,7 +12,8 @@ import matplotlib
 import multiprocessing
 import pdb
 import pandas as pd
-from utils import constants
+from utils import constants as cnst, u_plot as uplot
+import numpy.ma as ma
 import pickle as pkl
 import statsmodels.stats.proportion as prop
 
@@ -55,7 +56,7 @@ def loop():
 def plot():
 
 
-    dic = pkl.load( open("/users/global/cornkle/figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
+    dic = pkl.load( open(cnst.network_data + "figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
 
     bin = np.array(dic['bin'])
     bin = bin[3:-3]
@@ -63,12 +64,12 @@ def plot():
 
     data = (dic['blob']- dic['scale'])/(dic['scale'])#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
     data = data[:,3:-3]*100
-    data[0:3,-5::]= np.abs(data[0:3,-5::])
-    data[3:7, -9:-4] = np.abs(data[3:7, -9:-4])
+    # data[0:3,-5::]= np.abs(data[0:3,-5::])
+    # data[3:7, -9:-4] = np.abs(data[3:7, -9:-4])
     f = plt.figure()
     plt.imshow(data, origin='lower')
 
-    db = dic['blobc']
+    db = dic['blobc'][:,3:-3]
     filler = np.zeros_like(db)
     for i in range(db.shape[0]):
         for j in range(db.shape[1]):
@@ -78,13 +79,13 @@ def plot():
             filler[i,j] = unrange
 
     mask = np.zeros_like(db)
-    mask[filler[:,3:-3]>(np.abs(dic['blob'][:,3:-3]- dic['scale'][:,3:-3])+0.004)] = 1
-
-    #mask = mask[:,-3:3]
-    data[np.where(mask)] = 0
+    #mask[filler>(np.abs(dic['blob'][:,3:-3]- dic['scale'][:,3:-3])+0.004)] = 1
+    #
+    # mask = mask[:,-3:3]
+    # data[np.where(mask)] = 0
 
     #data[np.where(data > 0)] += 1
-    # data[np.where(np.abs(data*100)<8)]=0
+    data[np.where(np.abs(data)<8)]=0
     levels=[-40,-30,-20,-10,-5,5,10,20,30,40]
     f = plt.figure(figsize=(7,5))
     ax = plt.subplot(111)
@@ -113,11 +114,91 @@ def plot():
     cbar.ax.tick_params(labelsize=11)
     cbar.set_label('Difference in surface-scale frequency (%)', fontsize=11)
 
+    plt.show()
+
     print(np.sum(dic['blobc']>0)/np.sum(dic['nblobs']))
 
     print(np.sum(np.isfinite(dic['blobc'])))
 
     print(np.sum(data, axis=0))
+
+def plot_colormesh():
+
+
+    dic = pkl.load( open(cnst.network_data + "figs/LSTA-bullshit/scales/new/dominant_scales_save/scales.p", "rb"))
+
+    bin = np.array(dic['bin'])
+    bin = bin[3:-3]
+    center = bin[0:-1] + (bin[1::]-bin[0:-1])/2
+
+    data = (dic['blob']- dic['scale'])/(dic['scale'])#dic['scale']#(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))## (np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc'])) #dic['scale']  #(np.sum(dic['blobc'], axis=0)/np.sum(dic['blobc']))
+    data = data[:,3:-3]*100
+    # data[0:3,-5::]= np.abs(data[0:3,-5::])
+    # data[3:7, -9:-4] = np.abs(data[3:7, -9:-4])
+    f = plt.figure()
+    plt.imshow(data, origin='lower')
+
+    db = dic['blobc']
+    filler = np.zeros_like(db)
+    for i in range(db.shape[0]):
+        for j in range(db.shape[1]):
+            low , up = prop.proportion_confint(db[i,j], np.nansum(db[i,:]))
+
+            unrange = (db[i,j] / np.nansum(db[i,:])) - low
+            filler[i,j] = unrange
+
+    #mask = np.zeros_like(db)
+    #mask[filler[:,3:-3]>(np.abs(dic['blob'][:,3:-3]- dic['scale'][:,3:-3])+0.004)] = 1
+
+    #mask = mask[:,-3:3]
+    #data[np.where(mask)] = 0
+
+    #data[np.where(data > 0)] += 1
+    data[np.where(np.abs(data*100)<8)]=0
+    levels=[-40,-30,-20,-10,-5,5,10,20,30,40]
+    f = plt.figure(figsize=(7,5))
+    ax = plt.subplot(111)
+
+    pmap = ax.contourf(center, np.arange(0,24), data, levels=[-30, -20, -15, -10,-5,5,10,15, 20, 30], cmap='PuOr_r', extend='both')
+    plt.axvline(0, c='k', linestyle='--')
+    ax.set_xticks(center, minor=False)
+    ax.set_xticklabels(np.array(center, dtype=int)) # center
+
+    X, Y = np.meshgrid(center,np.arange(0,24))
+    cmapp = uplot.discrete_cmap(9, base_cmap='RdBu_r')
+
+    Zm = ma.masked_where(np.isnan(data),data)
+
+    mappable = ax.pcolormesh(X, Y, Zm, cmap=cmapp, vmin=-35, vmax=35) # viridis_rvmin=20, vmax=40
+    ax.set_ylabel('Time of day')
+    ax.set_xlabel('Scale of pos/neg. amplitude (km)')
+
+    cbar = f.colorbar(mappable, ticks=np.linspace(-35,35,10)) # ticks=np.linspace(30,45,11) , ticks=np.linspace(20,40,11)
+    cbar.set_label('Difference in surface-scale frequency (%)')
+
+
+    # cbar = plt.colorbar(pmap)
+    # cbar.set_label('Difference in scale frequency | Blobs')
+
+    # ax.set_yticks(np.arange(0,24), minor=False)
+    # ax.set_yticklabels(np.arange(0,24))
+    # ax.set_xlabel('Scales of pos/neg. amplitude (km)')
+    # ax.set_ylabel('Time of day')
+
+
+    ax1 = ax.twinx()
+    ax1.set_yticks(np.arange(dic['blob'].shape[0]), minor=False)
+    ax1.set_yticklabels(dic['nblobs'])
+
+    plt.tight_layout()
+    f.subplots_adjust(right=0.81)
+    cax = f.add_axes([0.89, 0.15, 0.02, 0.75])
+    # cbar = f.colorbar(pmap, cax)
+    # cbar.ax.tick_params(labelsize=11)
+    # cbar.set_label('Difference in surface-scale frequency (%)', fontsize=11)
+
+    plt.show()
+
 
 
 def composite(h):

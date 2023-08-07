@@ -4,7 +4,7 @@
 """
 import numpy as np
 from wavelet import twod as w2d
-import pdb
+import ipdb
 import matplotlib.pyplot as plt
 
 class wavelet(object):
@@ -23,12 +23,13 @@ class wavelet(object):
         :param mother2d: a wavelet object, by default Mexican hat
         """
         if start:
-            s0 = 2 * start / mother2d.flambda()  # user-defined start scale
+            s0 =  2* start / mother2d.flambda()  # user-defined start scale 2 *
         else:
             print('No start scale given, set to 2*dx')
-            s0 = 4 * res / mother2d.flambda()  # default start scale: 2 * dx
+            s0 = 4 * res / mother2d.flambda()  # default start scale: 2 * dx, conversion into Fourier wavelength
 
         a = s0 * 2. ** (np.arange(0, nb + 1) * dist)  # The scales in wavelet space ('wavelet scale')
+        #print(a)
         freqs = 1. / (mother2d.flambda() * a)  # As of Mallat 1999
         period = 1. / freqs
         scales = period/2. #(period/3)*2 # # 'real' scale approximation, alternative: (period/3)*2
@@ -42,7 +43,7 @@ class wavelet(object):
 
 
 
-    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0):
+    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0, normed='scale'):
         """
         Calculate pos/neg wavelet coefficients and scale-normalised (always positive) wavelet powers
         :param data: 2d array to decompose into scales
@@ -54,7 +55,9 @@ class wavelet(object):
         """
 
         wav_coeffs = w2d.cwt2d(data, self.res, self.res, dj=self.scale_dist, s0=self.scale_start, J=self.scale_number)
-        wav_coeffs_pure = wav_coeffs.copy()
+
+
+        wav_coeffs_pure = np.real(wav_coeffs.copy())
         if le_thresh!=None:
             wav_coeffs[np.real(wav_coeffs <= le_thresh)] = fill
 
@@ -63,8 +66,20 @@ class wavelet(object):
 
         norm_power = (np.abs(wav_coeffs)) * (np.abs(wav_coeffs))  # squared wavelet coefficients
         scale_dummy = np.reshape(self.norm_scales, (len(self.norm_scales), 1, 1))
-        norm_power = norm_power / (scale_dummy * scale_dummy) # Normalized wavelet power spectrum
-        # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - we emphasize small scales more.
+
+        if normed == 'scale':
+            norm_power = norm_power / (scale_dummy * scale_dummy) # Normalized wavelet power spectrum
+            # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - we emphasize small scales more.
+        if normed == 'stddev':
+
+            for ids in range(norm_power.shape[0]):
+                arr = norm_power[ids,:,:]
+                out = arr / np.std(arr)
+                norm_power[ids,:,:] = out
+
+            for ids in range(wav_coeffs.shape[0]):
+                arr = wav_coeffs[ids,:,:]
+                out = arr / np.std(arr)
+                wav_coeffs[ids,:,:] = out
 
         return wav_coeffs_pure, norm_power
-

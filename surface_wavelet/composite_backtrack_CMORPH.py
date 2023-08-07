@@ -14,7 +14,8 @@ import pandas as pd
 import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
 from scipy.interpolate import griddata
-
+from utils import constants as cnst
+import ipdb
 import pickle as pkl
 
 
@@ -24,28 +25,44 @@ matplotlib.rc('ytick', labelsize=10)
 
 def diurnal_loop():
 
-    for l in [17,20]:
+    afternoon = list(range(14,24))
+    night = list(range(0,8))
+    all = afternoon + night
+
+    for l in all:
         print('Doing '+str(l))
         composite(l)
 
 
 def composite(h):
 
-    file = constants.MCS_CENTRE70
+    file = cnst.MCS_POINTS_DOM
 
     msg = xr.open_dataarray(file)
-    msg = msg[((msg['time.hour'] >= 17 ) &  (msg['time.hour'] <= 21 )) & (msg['time.minute'] == 0) & (
-        msg['time.year'] >= 2008) & (msg['time.year'] <= 2010) & (msg['time.month'] == 6) ]
 
-    msg = msg.sel(lat=slice(10.9,19), lon=slice(-9.8,9.8))
-
-    dic = u_parallelise.run_arrays(5,file_loop,msg,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
-
-    for k in dic.keys():
-       dic[k] = np.nansum(dic[k], axis=0)
+    for year in np.arange(2006, 2011):
+        msgo = msg[((msg['time.hour'] == h )) & (msg['time.minute'] == 0) & (
+            msg['time.year'] == year) & ((msg['time.month'] >=6) & (msg['time.month'] <=9))]
 
 
-    pkl.dump(dic, open("/users/global/cornkle/figs/LSTA-bullshit/corrected_LSTA/system_scale/doug/composite_backtrack_CMORPH_JUN_"+str(h).zfill(2)+".p", "wb"))
+        msgo = msgo.sel(lat=slice(10.2,19), lon=slice(-9.9,9.9))
+        #ipdb.set_trace()
+        dic = u_parallelise.run_arrays(5,file_loop,msgo,['ano', 'regional', 'cnt',  'prob', 'cntp']) #'rano', 'rregional', 'rcnt',
+        #
+        # res = []
+        # for m in msg:
+        #     out = file_loop(m)
+        #     res.append(out)
+        #
+        # ipdb.set_trace()
+        # return
+        #
+        #
+        for k in dic.keys():
+           dic[k] = np.nansum(dic[k], axis=0)
+
+        print('Dumped file')
+        pkl.dump(dic, open(cnst.network_data + "figs/LSTA/corrected_LSTA/new/ERA5/composite_backtrack_CMORPH_"+str(year)+'_'+str(h).zfill(2)+"_cores_noSouthRain.p", "wb"))
 
 
 def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False, probs=False):
@@ -95,19 +112,25 @@ def cut_kernel(xpos, ypos, arr, date, lon, lat, t, parallax=False, rotate=False,
 def get_previous_hours(date):
 
 
-    tdic = {16 : ('34 hours', '13 hours'),
-            17: ('35 hours', '14 hours'),
-            18 : ('36 hours', '15 hours'),
-            19 : ('37 hours', '16 hours'),
-            20: ('38 hours', '17 hours'),
-            21: ('39 hours', '18 hours'),
-            22: ('40 hours', '9 hours'),
-            23: ('41 hours', '20 hours'),
-            0: ('42 hours', '21 hours'),
-            1: ('43 hours', '22 hours'),
-            2: ('44 hours', '23 hours'),
-            3: ('45 hours', '24 hours'),
-            6: ('48 hours', '27 hours')}
+    tdic = {14 : ('32 hours', '4 hours'),
+            15: ('33 hours', '5 hours'),
+            16 : ('34 hours', '6 hours'),  # 6am prev - 10am storm day
+            17: ('35 hours', '7 hours'),
+            18 : ('36 hours', '8 hours'),
+            19 : ('37 hours', '9 hours'),
+            20: ('38 hours', '10 hours'),
+            21: ('39 hours', '11 hours'),
+            22: ('40 hours', '12 hours'),
+            23: ('41 hours', '13 hours'),
+            0: ('42 hours', '14 hours'),
+            1: ('43 hours', '15 hours'),
+            2: ('44 hours', '16 hours'),
+            3: ('45 hours', '17 hours'),
+            4: ('46 hours', '17 hours'),
+            5: ('47 hours', '18 hours'),
+            6: ('48 hours', '19 hours'),
+            7: ('49 hours', '20 hours')}
+
     before = pd.Timedelta(tdic[date.hour][0])
     before2 = pd.Timedelta(tdic[date.hour][1])
 
@@ -124,13 +147,11 @@ def get_previous_hours(date):
         cmm = xr.open_dataarray(file + 'CMORPH_WA_' + str(date.year) + '.nc')
     except:
         return None
-    cmm = cmm.sel( time=slice(t1, t2)).sum(dim='time') # lat=slice(10.9,19), lon=slice(-9.8,9.8),
+    cmm = cmm.sel( time=slice(t1, t2)).sum(dim='time')
     # cmm = cmm.sel(lat=slice(10.9, 19), lon=slice(-9.8, 9.8))
-    # posi = np.where(pd.to_datetime(cmm.time.values) == date)
-    #
-    # cmm = cmm.isel(time=slice(posi[0][0]-2,posi[0][0]))
+
     cm = cmm
-    pos = np.where(cm.values>=10) #(msg.values >= 5) & (msg.values < 65)) # #
+    pos = np.where(cm.values>=10)
 
     out = np.zeros_like(cm)
     out[pos] = 1
@@ -153,7 +174,7 @@ def file_loop(fi):
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 
-    if (fi['time.hour'].values) <= 16:
+    if (fi['time.hour'].values) <= 13:
         print('Nighttime')
         daybefore = date - dayd
     else:
@@ -183,7 +204,7 @@ def file_loop(fi):
 
     lsta_da.values[ttopo.values>=450] = np.nan
     lsta_da.values[gradsum>30] = np.nan
-    pos = np.where( fi.values==2 )  #(fi.values >= 5) & (fi.values < 65)
+    pos = np.where((fi.values >= 5) & (fi.values <= 65) )  # # fi.values==1
 
     if (np.sum(pos) == 0):
         print('No blobs found')
@@ -203,17 +224,32 @@ def file_loop(fi):
         return None
 
 
-    # f = plt.figure()
-    # ax = f.add_subplot(111)
-    #
-    # plt.contourf(probs_on_lsta, cmap='viridis',extend='both')
-    # plt.colorbar(label='K')
-    # plt.show()
-
+    mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
+    counter = 0
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]
         lon = fi['lon'][x]
+
+        mhour = mcs_hour.sel(time=pd.datetime(int(fdate[0:4]), int(fdate[4:6]), int(fdate[6:8]), 14), lon=lon,
+                             lat=lat).values
+
+
+        if mhour <= 13:
+            mhour += 24
+
+        if mhour == 0:
+            mhour += 24
+
+        chour = fi['time.hour'].values
+
+        # ipdb.set_trace()
+
+        if (chour >= 0) & (chour <= 13):
+            chour += 24
+        if (mhour < chour) | (np.isnan(mhour)):
+            print('Core overlaps: earliest:', mhour, ' core: ', chour)
+            continue
 
         point = lsta_da.sel(lat=lat, lon=lon, method='nearest')
         plat = point['lat'].values
@@ -228,13 +264,19 @@ def file_loop(fi):
         except TypeError:
             continue
 
+        rainarea = prkernel[110:150,181:221]  # [-270-150kmSouth] x120km wide (x120km high)
+
+        if np.nansum(rainarea)/rainarea.size >= 0.25 :   # filter out cases with rainfall to the south
+            print('Southward rainfall, continue')
+            continue
+
 
         kernel2_list.append(kernel2)
         kernel3_list.append(kernel3)
         prkernel_list.append(prkernel)
         cnt_list.append(cnt)
         cntp_list.append(cntp)
-
+    #ipdb.set_trace()
     if kernel2_list == []:
         return None
 
@@ -248,10 +290,12 @@ def file_loop(fi):
         cntp_sum = np.nansum(np.stack(cntp_list, axis=0), axis=0)
         pr_sum = np.nansum(np.stack(prkernel_list, axis=0), axis=0)
 
-
     print('Returning')
 
     return (kernel2_sum, kernel3_sum, cnt_sum, pr_sum, cntp_sum)
+
+
+
 
 
 def plot_gewex(h):

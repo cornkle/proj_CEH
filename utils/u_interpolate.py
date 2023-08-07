@@ -79,7 +79,8 @@ def interpolate_data(data, inds, weights, shape):
 
     """
     This routine interpolates only over the 2d plane i.e. spatial interpolation
-    :param data: original data, 2d, 3d or 4d (e.g. incl. time and pressure levels)
+    :param data: original data, 2d, 3d or 4d (e.g. incl. time steps and pressure levels).
+
     :param inds: lookup table from weights func
     :param weights: index weights from weights func
     :param shape: 2d shape of plane
@@ -94,12 +95,11 @@ def interpolate_data(data, inds, weights, shape):
     if data.ndim > 2:
         for d in data:
             if d.ndim == 2:
-                pdb.set_trace()
+
                 d2d = _interpolate(d.flatten(), inds, weights)
-
                 d2d = d2d.reshape(shape)
-
                 coll.append(d2d[None, ...])
+
             if d.ndim == 3:
                 plevs = []
 
@@ -141,7 +141,7 @@ def regrid_irregular_quick(x, y, new_x, new_y, data):
     return coll
 
 
-def griddata_lin(data, x, y, new_x, new_y, isll=False):
+def griddata_int(data, x, y, new_x, new_y, isll=False, method='linear'):
 
     """
     :param x: current x variables (1 or 2d, definitely 2d if irregular!)
@@ -174,8 +174,7 @@ def griddata_lin(data, x, y, new_x, new_y, isll=False):
     shape = new_xs.shape
 
     # Interpolate using delaunay triangularization
-    data = griddata(points, data.flatten(), inter, method='linear')
+    data = griddata(points, data.flatten(), inter, method=method)
     data = data.reshape((shape[0], shape[1]))
 
     return data
-

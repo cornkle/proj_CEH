@@ -9,12 +9,12 @@ import os
 import xarray as xr
 import numpy as np
 import pandas as pd
-from scipy.interpolate import griddata
-from utils import constants as cnst
+from utils import constants as cnst, u_interpolate as uint
+import ipdb
 
 def saveNetcdf():
 
-    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = '/users/global/cornkle/shared/data/OBS/MSG_LSTA/lsta_raw_binary_1330'
     pool = multiprocessing.Pool(processes=7)
     files = glob.glob(modis_folder+'/lsta_daily_2*.gra')
 
@@ -28,7 +28,7 @@ def saveDailyBlobs():
     :return:
     """
 
-    msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant.nc'
     msg = xr.open_dataarray(msgfile)
 
     # def first_nozero(array_like, axis):
@@ -51,24 +51,79 @@ def saveDailyBlobs():
 
     md.values[md.values>23] = md.values[md.values>23]-24
 
-    md.to_netcdf('/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc')
+    md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc')
+
+
+def saveDailyMCS():
+    """
+    Converts hourly centre-point convective-core files to daily netcdf files so they can be saved with LSTA daily data
+    :return:
+
+    For a single file: cdo mergetime file1.nc file2.nc fileout.nc
+    """
+
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS.nc'
+    msg = xr.open_dataarray(msgfile)
+    slices = [(0,int(len(msg['time'])/2)-7, '1')]  #(int(len(msg['time'])/2)-5, int(len(msg['time'])), '2'),
+
+    for sl in slices:
+
+        m1 = msg.isel(time=slice(sl[0], sl[1])).load()
+        m1.values[m1.values == 0] = np.nan
+
+        for m in m1:
+
+            if m['time.hour'].values >= 14:
+                m.values[np.isfinite(m.values)] = m['time.hour'].values
+            else:
+                m.values[np.isfinite(m.values)] = m['time.hour'].values + 24
+
+        ### this is useful, it removes all pixels which got rain twice on a day
+        print('Starting resample')
+
+        md = m1.resample(time='24H', base=14, skipna=True).min('time')
+
+        md = md[(md['time.month'] >= 6) & (md['time.month'] <= 9)]
+
+        md.values[md.values > 23] = md.values[md.values > 23] - 24
+
+
+        md.to_netcdf(cnst.network_data + 'MCSfiles/blob_map_MCSs_-50_JJAS_gt15k_daily_14UTC_'+sl[2]+'.nc')
+        del md
+        del m1
+
 
 
 def saveNetcdf_blobs():
 
-    modis_folder = '/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary_new'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
+    modis_folder = cnst.network_data + 'data/OBS/MSG_LSTA/lsta_raw_binary_1330'#'/users/global/cornkle/data/OBS/MSG_LSTA/lsta_raw_binary'
     td = pd.Timedelta('16 hours')
     files = glob.glob(modis_folder + '/lsta_daily_*.gra') #2*.gra')
 
-    msgfile = '/users/global/cornkle/MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
+    msgfile = cnst.network_data + 'MCSfiles/blob_map_allscales_-50_JJAS_points_dominant_daily.nc'
     msg = xr.open_dataarray(msgfile)
 
+    ll = np.load(cnst.network_data + 'data/OBS/MSG_LSTA/lsta_728_348_lat_lon.npz')
+    blat = ll['lat']
+    blon = ll['lon']
 
+    latmin = np.min(blat)
+    latmax = np.max(blat)
+    lonmin = -9.98 #np.min(blon)
+    lonmax = 9.98 #np.max(blon)
+    dist = np.round(np.float(np.mean(blon[0,:][1::] - blon[0,:][0:-1])), decimals=4)
+
+    lat_regular = np.arange(latmin + 10*dist, latmax - 10*dist , dist)
+    lon_regular = np.arange(lonmin , lonmax  , dist)
+
+    inds, weights, shape = uint.interpolation_weights(blon, blat, lon_regular, lat_regular)
+    int_input = {'x' : lon_regular, 'y' : lat_regular, 'inds' : inds, 'weights' : weights, 'shape' : shape}
 
     for f in files:
-        ds,out = rewrite_data.rewriteLSTA_toNetcdf(f, write=False)
+
+        ds,out = rewrite_data.rewriteLSTA_toNetcdf(f, int_input)
         ds['LSTA'].values[ds['LSTA'].values < -800] = np.nan
-        ds['LSTA'].values = ds['LSTA'].values - np.nanmean(ds['LSTA'].values)
+        #ds['LSTA'].values = ds['LSTA'].values - np.nanmean(ds['LSTA'].values)
 
         m = msg[(msg['time']-td).values==ds['time'].values]
         m = m.sel(lat=slice(10.3,19.7), lon=slice(-9.7,9.7))
@@ -101,8 +156,11 @@ def saveNetcdf_blobs():
 
             ds['cell'].values[0,ypos,xpos] = m.values[0,y,x]
 
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var: comp for var in ds.data_vars}
+
         try:
-            ds.to_netcdf(out)
+            ds.to_netcdf(out, format='NETCDF4', encoding=encoding)
         except OSError:
             print('Did not find ' + out)
             print('Out directory not found')

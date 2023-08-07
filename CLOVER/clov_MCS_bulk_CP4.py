@@ -12,133 +12,174 @@ from utils import constants
 from utils import u_met
 import cartopy
 import pdb
+from utils import constants as cnst
+import metpy
+from metpy import calc
+from metpy.units import units
+
+
+def dictionary():
+
+    dic = {}
+    vars = ['hour', 'month', 'year', 'area',
+            'lon', 'lat', 'clon', 'clat',
+            'tmin', 'tmean', 'thetamean', 'thetamax', 'tmidmax', 'tmidmean', 'tsrfcmax', 'tsrfcmean',
+            'pmax', 'pmean',
+            'qmax' , 'qmean',
+            'tcwv', 'tcwvmean',
+            'tgrad', 'tdiff',
+            'umax_srfc', 'umean_srfc',
+            'umin_mid', 'umean_mid',
+            'shearmin', 'shearmean',
+            'pgt30', 'pgt01'
+            'isvalid',
+             't', 'p', 'q', 'u_srfc', 'u_mid', 'shear' ]
+
+    for v in vars:
+        dic[v] = []
+    return dic
 
 def perSys():
 
-    pool = multiprocessing.Pool(processes=5)
+    pool = multiprocessing.Pool(processes=3)
     tthresh = '-50'
-    files = ua.locate(".nc", '/users/global/cornkle/data/CP4/CLOVER/MCS_-50_1000km2_JA_sahel')
+    #files = ua.locate(".nc", cnst.network_data +'data/CP4/CLOVER/CP4_16-19UTC_historical_5000km2_-50C_TCWV') # CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
+    files = ua.locate(".nc", '/media/ck/Elements/Africa/WestAfrica/CP4/CP4_16-19UTC_future_5000km2_-50C_TCWV')
     print('Nb files', len(files))
-    mdic = defaultdict(list)
-    res = pool.map(file_loop, files)
-    pool.close()
-    #
-    #res = [item for sublist in res for item in sublist]  # flatten list of lists
+    for y in range(1998,2007):
 
-    #
-    p=[]
-    t=[]
+        yfiles = []
+        for f in files:
+            if str(y) in f:
+                yfiles.append(f)
+        pool = multiprocessing.Pool(processes=4)
 
-    for v in res:
-        try:
-            mdic['tmin'].append(v[0])
-            mdic['pmax'].append(v[1])
-            mdic['area'].append(v[2])
-            mdic['ao60'].append(v[3])
-            mdic['tmean'].append(v[4])
-            mdic['pperc'].extend(v[5])
-            mdic['clat'].append(v[6])
-            mdic['po30'].append(v[7])
-            mdic['isfin'].append(v[8])
-            mdic['t'].append(v[9])
-            mdic['lon30'].extend(v[10])
-            mdic['lat30'].extend(v[11])
-            mdic['lonisfin'].extend(v[12])
-            mdic['latisfin'].extend(v[13])
-            mdic['hour'].append(v[14])
-            mdic['month'].append(v[15])
-            mdic['latmin'].append(v[16])
-            mdic['latmax'].append(v[17])
-            mdic['isnz'].append(v[18])
-            mdic['clon'].append(v[19])
-            mdic['p'].append(v[20])
-            mdic['year'].append(v[21])
-            mdic['date'].append(v[22])
-        except TypeError:
-            continue
+        mdic = dictionary() #defaultdict(list)
+        print('Yearly files', len(yfiles))
+        res = pool.map(file_loop, yfiles)
+        pool.close()
+
+        # res=[]
+        # for f in files:
+        #     res.append(file_loop(f))
 
 
-        # if v[2]*25 > 1000000:
-        #     tplt = v[9]
-        #     tplt[np.where(tplt==np.nan)]=0
-            # f = plt.figure()
-            # ax = plt.axes(projection=ccrs.PlateCarree())
-            # plt.contourf(v[10], v[11], tplt, transform=ccrs.PlateCarree())
-            # ax.coastlines()
-            # plt.colorbar()
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle='--')
+        keys = mdic.keys()
+        for v in res:
+            for k in keys:
+                try:
+                    mdic[k].append(v[k])
+                except TypeError:
+                    continue
 
 
-
-    # f = plt.figure()
-    # siz = 3
-    #
-    # ax = f.add_subplot(1, 1, 1)
-    # plt.scatter(mdic['tmin'], mdic['pmax'])
-    # plt.title('bulk', fontsize=9)
-
-    pkl.dump(mdic, open('/users/global/cornkle/data/CLOVER/saves/bulk_'+tthresh+'_zeroRain_gt1k_shear_CP4_JA_sahel.p',
+        #ipdb.set_trace()
+        pkl.dump(mdic, open(cnst.network_data +'data/CLOVER/saves/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_5-20N_-50C_TCWV_fut_'+str(y)+'.p',
                            'wb'))
 
 
 def file_loop(f):
-    #print('Doing file: ' + f)
+    print('Doing file: ' + f)
     dic = xr.open_dataset(f)
-    res = []
-    out = dic['lw_out_PBLtop'].values
-    outt = u_met.OLR_to_Tb(out)
-    outt = outt-273.15
-    outp = dic['lsRain'].values * 3600
-    lon = dic['longitude'].values
-    lat = dic['latitude'].values
-    h = dic['time.hour'].values
-    m = dic['time.month'].values
-    y = dic['time.year'].values
+    out = dictionary()
 
-    lons, lats = np.meshgrid(lon,lat)
+    outt = dic['lw_out_PBLtop'].values
+    try:
+        outp = dic['lsRain'].values
+    except KeyError:
+        outp = dic['totRain'].values
+    outu_srfc = dic['u_srfc'].values
+    outu_mid = dic['u_mid'].values
+    outshear = dic['shear'].values
+    outq = dic['q_srfc'].values
+    tmid = dic['t_mid'].values
+    tsrfc = dic['t_srfc'].values
 
-    date = dic['time']
+    pes = units.Quantity(650, 'hPa')
+    tes = units.Quantity(tmid+273.15, 'K')
+
+    theta_low = u_met.theta_e(925, tsrfc, outq/1000.)
+
+    theta_es = calc.saturation_equivalent_potential_temperature(pes, tes)
+
+    theta = theta_low-(np.array(theta_es)-273.15)
+    tcwv = dic['tcwv'].values
+    tgrad = dic.attrs['Tgrad']
+    tdiff = dic.attrs['Tgradbox']
+
+    #print(theta)
+
+    #ipdb.set_trace()
+
+    out['lon'] = dic['longitude'].values
+    out['lat'] = dic['latitude'].values
+    out['hour'] = dic['time.hour'].item()
+    out['month'] = dic['time.month'].item()
+    out['year'] = dic['time.year'].item()
+    out['date'] = dic['time'].values
 
     t_thresh = -50  # -40C ~ 167 W m-2
+    mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
+    antimask = ~mask
+
+    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid,tsrfc]:
+        var[antimask] = np.nan
 
 
-    clat = np.min(lat)+((np.max(lat)-np.min(lat))*0.5)
-    clon = np.min(lon) + ((np.max(lon) - np.min(lon)) * 0.5)
-    pdb.set_trace()
-    tt = np.min(outt[(np.isfinite(outp))&((outt<=t_thresh))])
-    pp = np.max(outp[(np.isfinite(outp))&((outt<=t_thresh))])
-
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-
-    if isfin < 3:
+    if np.sum(mask) < 3:
         return
 
-    try:
-        pperc = outp[(outt<=t_thresh) & (outp>0.1)]
-    except IndexError:
-        pperc = np.nan
-    tmean = np.mean(outt[(np.isfinite(outp)) & (outt<=t_thresh)])
+    maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
+    minpos = np.unravel_index(np.nanargmin(outt), outt.shape)
 
-    print(np.nanmax(outt))
+    out['area'] = np.sum((outt<=t_thresh))
 
-    area = np.sum(outt<=t_thresh)
+    out['clat'] = np.min(out['lat'])+((np.max(out['lat'])-np.min(out['lat']))*0.5)
+    out['clon'] = np.min(out['lon']) + ((np.max(out['lon']) - np.min(out['lon'])) * 0.5)
 
+    out['tmin'] = np.nanmin(outt)
+    out['tmean'] = np.mean(outt[mask])
+    out['tgrad'] = tgrad
+    out['tdiff'] = tdiff
 
-    ao40 = np.sum(outt<=t_thresh)
-    po30 = np.sum(outp[(np.isfinite(outp))&((outt<=t_thresh))]>30)
-    isfin = np.sum((np.isfinite(outp)) & ((outt<=t_thresh)))
-    isnz = np.sum((outp>0.1) & ((outt<=t_thresh)))
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 30km
 
-    lon30 = lons[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lat30 = lats[(np.isfinite(outp) & ((outt<=t_thresh)) & (outp > 30))]
-    lonisfin = lons[(np.isfinite(outp)) & ((outt<=t_thresh))]
-    latisfin = lats[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    #out['pmax'] = np.max(outp[mask]) # rain at 4.4km
+    out['pmean'] = np.mean(outp[mask])
+    out['qmax'] = np.nanmean(ua.cut_kernel(outq,minpos[1], minpos[0],3)) #np.max(outq[mask]) #30km q and shear
 
-    latmin = lat.min()
-    latmax = lat.max()
+    out['qmean'] = np.nanmean(outq[mask])
+    out['umax_srfc'] = np.max(outu_srfc[mask])
+    out['umean_srfc'] = np.nanmean(outu_srfc[mask])
+    out['umin_mid'] = np.min(outu_mid[mask])
+    out['umean_mid'] = np.mean(outu_mid[mask])
 
-    p = outp[(np.isfinite(outp))&((outt<=t_thresh))]
-    outt = outt[(np.isfinite(outp)) & ((outt<=t_thresh))]
+    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minpos[1], minpos[0],3))
+
+    out['shearmean'] = np.mean(outu_mid[mask]) - np.nanmean(outu_srfc[mask]) #np.mean(outshear[mask])
+    #out['thetamax'] = np.max(theta[mask])
+
+    out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
+    out['tcwv'] = np.nanmean(ua.cut_kernel(tcwv, minpos[1], minpos[0], 3))
+    out['tcwvmean'] = np.mean(tcwv[mask])
+
+    out['thetamean'] = np.mean(theta[mask])
+    out['tmidmax'] = np.max(tmid[mask])
+    out['tmidmean'] = np.mean(tmid[mask])
+    out['tsrfcmax'] = np.max(tsrfc[mask])
+    out['tsrfcmean'] = np.mean(tsrfc[mask])
+
+    out['pgt30'] = np.sum(outp[mask]>30)
+    out['isvalid'] = np.sum(mask)
+    out['pgt01'] = np.sum(outp[mask]>0.1)
+
+    out['p'] = outp[mask]
+    out['t'] = outt[mask]
+    out['q'] = outq[mask]
+    out['u_mid'] = outu_mid[mask]
+    out['u_srfc'] = outu_srfc[mask]
+    out['shear'] = outshear[mask]
 
     dic.close()
-    return (tt,pp, area, ao40, tmean, pperc, clat, po30, isfin, outt, lon30, lat30, lonisfin, latisfin, h, m, latmin, latmax, isnz, clon, p, y, date)
+
+    return out

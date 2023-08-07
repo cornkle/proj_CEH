@@ -44,9 +44,9 @@ plt.show()
 
 print('no trend', stats.pearsonr(t1,t2))
 
-print('T2', stats.pearsonr(t1+trend1,t2+(trend2)*-1))
-print('T2S', stats.spearmanr(t1+trend1,t2+(trend2)))
-print('Ktau', stats.kendalltau(t1+trend1,t2+(trend2)))
+print('Trend pearson', stats.pearsonr(t1+trend1,t2+(trend2)))
+print('Trend spearman', stats.spearmanr(t1+trend1,t2+(trend2)))
+print('Trend Ktau', stats.kendalltau(t1+trend1,t2+(trend2)))
 
 
 

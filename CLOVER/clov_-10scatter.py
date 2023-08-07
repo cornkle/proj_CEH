@@ -1,5 +1,6 @@
 import seaborn as sns
 import pickle as pkl
+from utils import constants as cnst
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
@@ -10,8 +11,9 @@ import pdb
 
 # In[2]:
 
-dic = pkl.load( open ('/users/global/cornkle/data/CLOVER/saves/bulk_-40_zeroRain.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
-
+dic = pkl.load( open (cnst.CLOVER_SAVES + 'bulk_-50_5000km2_GPM_ERA-I.p', 'rb')) #MSG_TRMM_temp_pcp_300px2004-2013_new.p', 'rb'))
+# bulk_-40_zeroRain
+#bulk_-50_5000km2_GPM_ERA-I
 
 # In[3]:
 
@@ -19,9 +21,9 @@ _p=np.array(dic['pmax']) # 98th perc per MCS
 _t=np.array(dic['tmin'])  #mean T
 _clat = np.array(dic['clat'])
 _area = np.array(dic['area'])*25
-_isfin = np.array(dic['isfin'])
-_po30 = np.array(dic['po30'])
-_perc = np.array(dic['pperc'])
+#_isfin = np.array(dic['isfin'])
+#_po30 = np.array(dic['po30'])
+#_perc = np.array(dic['pperc'])
 #_lon = np.array(dic['lonmax'])
 print('Number MCSs:', _p.size)
 
@@ -35,21 +37,21 @@ clat = 8
 p = _p[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
 t = _t[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
 area = _area[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
-po30 = _po30[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
+#po30 = _po30[(_p<=pthresh)&(_area<=athresh)&(_p>=pthresh2)&(_clat<=clat)]
 
 print(np.min(area), np.max(area))
 
-print(np.sum(po30))
-print(np.percentile(_perc[_perc>0.1], 99))
-print(np.percentile(_perc[_perc>0.1], 50))
+#print(np.sum(po30))
+#print(np.percentile(_perc[_perc>0.1], 99))
+# print(np.percentile(_perc[_perc>0.1], 50))
 print('Number MCSs:', p.size)
 
 
 # In[6]:
 
-bins=np.arange(-90, -30, 1)   # compute probability per temperature range (1degC)
-ppo30=np.where(p > 30)  
-to30=t[ppo30]   
+bins=np.arange(-100, -30, 1)   # compute probability per temperature range (1degC)
+ppo30=np.where(p > 25)
+to30=t[ppo30]
 
 H1, bins1 = np.histogram(to30, bins=bins, range=(t.min(), t.max()))
 H, bins = np.histogram(t, bins=bins, range=(t.min(), t.max()))
@@ -95,7 +97,7 @@ rp = p.copy()[inds]
 
 # In[11]:
 
-path = '/users/global/cornkle/figs/CLOVER/TRMM_MSG/'
+path = cnst.network_data + 'figs/CLOVER/TRMM_MSG/'
 fig = plt.figure(figsize=(10, 3.5), dpi=300)
 cc=0.8
 ax1 = fig.add_subplot(121)
@@ -106,9 +108,9 @@ mappable = ax1.scatter(rt, rp, c=test, edgecolor='', cmap='viridis_r', s=20, vmi
 #ax1.set_title('~13400 contiguous cold clouds (< -10$^{\degree}C$, > 325 km$^2$ )')
 ax1.set_ylabel('Max. precipitation (mm h$^{-1}$)')
 ax1.set_xlabel('Min. temperature ($^{\degree}C$)')
-ax1.hlines(31, -95, -10, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
-plt.text(-55, 18, '30 mm h$^{-1}$',  fontsize=12)
-ax1.set_xlim(-95,-40)
+ax1.hlines(31, -100, -40, linestyles='dashed', label='99$^{th}$ percentile', linewidth=1.5, color='black')
+plt.text(-64, 35, 'P99 | 30 mm h$^{-1}$',  fontsize=9)
+ax1.set_xlim(-100,-40)
 ax1.set_ylim(-0.2,150)
 cbar = fig.colorbar(mappable)
 cbar.set_label('Area (10$^3$ km$^2$)')
@@ -120,16 +122,15 @@ ax1.scatter(center, histo, marker="o",color='#5ea1d4', s=30, zorder=2, edgecolor
 ax1.set_xlabel('Min. temperature (1 $^{\degree}C$ bins)')
 ax1.set_ylabel('Probability (% | Extreme rain)')
 #plt.text(0.03, 0.9, 'b', transform=ax1.transAxes, fontsize=20)
-ax1.set_xlim(-90,-40)
+ax1.set_xlim(-100,-40)
 fsiz = 14
 x = 0.02
-plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points')
-plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
-                 textcoords='offset points')
+# plt.annotate('a)', xy=(0.02, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+#                  textcoords='offset points')
+# plt.annotate('b)', xy=(0.51, 0.935), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
+#                  textcoords='offset points')
 
 plt.tight_layout()
-plt.savefig(path+'scatter-40_gt5000_tmin_area.png')
+plt.savefig(path+'scatter-50_gt5000_tmin_area_GPM.png')
 #plt.savefig(path+'scatter-10_gt324.pdf')
 plt.close('all')
-

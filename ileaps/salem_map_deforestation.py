@@ -2,7 +2,7 @@ import salem
 from salem.utils import get_demo_file
 import xarray as xr
 import matplotlib.pyplot as plt
-import pdb
+import ipdb
 import numpy as np
 from functools import partial
 from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
@@ -14,22 +14,23 @@ from matplotlib import patches
 from matplotlib import lines
 import shapely.geometry as shpg
 from matplotlib.patches import Polygon
+from utils import constants as cnst
 
 
 # path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'
 
-path = '/users/global/cornkle/MCSfiles/'
-figpath = '/users/global/cornkle/figs/Ileaps/'
+path = cnst.network_data + 'MCSfiles/old_MSG_blobmaps_forIleaps_VERA/'
+figpath = cnst.network_data + 'figs/VERA/chris_egu'
 
 hours = '18-19'
-tstring = '-69'
+tstring = '-73'
 file18 = path+'blob_map_35km_'+tstring+'_MAMJ_16-19UTC.nc'#blob_map_35km_-70_15-18UTC.nc' #blob_map_35km_-75_sum_0-3UTC.nc'
 
-fpath = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/topo/gtopo_1min_afr.nc'
-vegfra = '/users/global/cornkle/data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_treecover2000_10N_010W.tif'
-lst = '/users/global/cornkle/data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_loss_10N_010W.tif'
-lossyear = '/users/global/cornkle/data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_lossyear_10N_010W.tif'
-vegfra = '/users/global/cornkle/data/LandCover/evergreen_trees.tif'
+fpath = cnst.ANCILS + 'gtopo_1min_afr.nc'
+vegfra = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_treecover2000_10N_010W.tif'
+lst = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_loss_10N_010W.tif'
+lossyear = cnst.local_data + 'obs_data/LandCover/landsat_forest/Hansen_GFC-2015-v1.3_lossyear_10N_010W.tif'
+vegfra = cnst.local_data + 'obs_data/LandCover/evergreen_trees.tif'
 
 if not os.path.isfile(path+'blob_map_35km_'+tstring+'_sum_MAMJ_'+hours+'UTC_2006.nc'):
 
@@ -57,8 +58,8 @@ else:
 
 top = xr.open_dataarray(fpath)
 
-tdummy = xr.open_mfdataset('/users/global/cornkle/data/MODIS/LST_MOD11C3/clim/2006-2009_*_day.nc')
-tdummy2 = xr.open_mfdataset('/users/global/cornkle/data/MODIS/LST_MOD11C3/clim/2012-2015_*_day.nc')
+tdummy = xr.open_mfdataset(cnst.network_data + 'data/MODIS/LST_MOD11C3/clim/2006-2009_*_day.nc')
+tdummy2 = xr.open_mfdataset(cnst.network_data + 'data/MODIS/LST_MOD11C3/clim/2012-2015_*_day.nc')
 
 # coord = [-8.55,-5,5,7.7,6.1,6.5, -7.6, -7.4]
 # name='Tai park'
@@ -108,8 +109,8 @@ map.set_shapefile(rivers=True)
 oceans = salem.read_shapefile(salem.get_demo_file('ne_50m_ocean.shp'),
                               cached=True)
 
-river = salem.read_shapefile('/users/global/cornkle/data/pythonWorkspace/proj_CEH/shapes/rivers/ne_10m_rivers_lake_centerlines.shp', cached=True)
-lakes = salem.read_shapefile('/users/global/cornkle/data/pythonWorkspace/proj_CEH/shapes/lakes/ne_10m_lakes.shp', cached=True)
+river = salem.read_shapefile(cnst.ANCILS + 'shapes/rivers/ne_10m_rivers_lake_centerlines.shp', cached=True)
+lakes = salem.read_shapefile(cnst.ANCILS + 'shapes/lakes/ne_10m_lakes.shp', cached=True)
 map.set_shapefile(lakes, edgecolor='k', facecolor='grey', linewidth=1, linestyle='dotted')
 
 
@@ -127,6 +128,8 @@ ls = g.get_vardata()
 ls = np.array(ls, dtype=float)
 lst_on_ds, lut = ds18_present.salem.lookup_transform(ls, grid=g.grid, return_lut=True)
 lst_on_ds = lst_on_ds*100
+lst_on_ds = lst_on_ds.assign_coords(lon=grid.ll_coordinates[0][0,:], lat=grid.ll_coordinates[1][:,0])
+
 
 #evergreen forest
 # g = GeoTiff(vegfra)
@@ -151,6 +154,10 @@ ls = np.array(ls, dtype=float)
 ls[ls > 200] = np.nan
 ls = grid.map_gridded_data(ls, g.grid)
 vegfra_on_ds = ds18_present.salem.lookup_transform(ls, grid=grid)
+vegfra_on_ds = vegfra_on_ds.assign_coords(lon=grid.ll_coordinates[0][0,:], lat=grid.ll_coordinates[1][:,0])
+
+
+
 
 #year forest
 g = GeoTiff(lossyear)
@@ -162,9 +169,9 @@ ls = g.get_vardata()
 ls = np.array(ls, dtype=float)
 # ls[ls >100] = np.nan
 # ls = grid.map_gridded_data(ls, g.grid)
-ls = ls.astype(np.int64())
+ls = np.round(ls).astype(int)
 year_on_ds = ds18_present.salem.lookup_transform(ls, grid=g.grid, lut=lut, method=lambda x:np.bincount(x[np.where(x>0)]).argmax())
-
+year_on_ds = year_on_ds.assign_coords(lon=grid.ll_coordinates[0][0,:], lat=grid.ll_coordinates[1][:,0])
 # deforestation before 2009: set to 0
 #pdb.set_trace()
 #lst_on_ds[np.where(year_on_ds<=9)]=0
@@ -262,14 +269,15 @@ print(pearsonr((ds2f-ds2f.min())/(ds2f.max()-ds2f.min()), (dsf-dsf.min())/(dsf.m
 #
 # # plt.savefig('/users/global/cornkle/VERA/plots/map_'+name+'.png', dpi=300)
 #
-lats = slice(coord[4], coord[5])
-topo = srtm_on_ds.sel(lat=lats).mean(dim='lat')
-temp = lst_on_ds.sel(lat=lats).mean(dim='lat')
-veg = vegfra_on_ds.sel(lat=lats).mean(dim='lat')
-dsp = ds18_hist.sel(lat=lats).mean(dim='lat')
-dsp2 = ds18_present.sel(lat=lats).mean(dim='lat')
-tt = t_on_ds.sel(lat=lats).mean(dim='lat')
-tt2 = t2_on_ds.sel(lat=lats).mean(dim='lat')
+lats = [coord[4], coord[5]]
+
+topo = srtm_on_ds.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+temp = lst_on_ds.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+veg = vegfra_on_ds.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+dsp = ds18_hist.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+dsp2 = ds18_present.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+tt = t_on_ds.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
+tt2 = t2_on_ds.sel(lat=slice(lats[0], lats[1])).mean(dim='lat')
 
 f=plt.figure(figsize=(11,4))
 ax = f.add_subplot(111)

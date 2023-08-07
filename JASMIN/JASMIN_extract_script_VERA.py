@@ -9,15 +9,17 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
 from utils import u_interpolate
+from utils import constants_lappi as cnst
 
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'
 
 ### 2d vars , xmh*.pc*.nc files
-vera_folder = '/home/users/cornkle/linked_vera/' #'/users/global/cornkle/figs/VERA/bamba/w2018_bamba/'
-ancils = vera_folder + 'ancils/'   # where to find veg_past, veg_current and topography
+vera_folder = cnst.network_data + 'data/vera_out/'#'/home/users/cornkle/linked_vera/' #'/users/global/cornkle/figs/VERA/bamba/w2018_bamba/'
+ancils = vera_folder + '/raw/raw_ancil/'   # where to find veg_past, veg_current and topography
+
 #in_folder = vera_folder + 'intest/'
-out =  '/work/scratch/cornkle/vera_out/' ##vera_folder + 'outtest/'
-dummy_grid = vera_folder + 'dummy_grid.nc'   # this dummy grid is the big vera grid (ancils have no coord info)
+out =  cnst.network_data + 'data/vera_out/'#'/work/scratch/cornkle/vera_out/' ##vera_folder + 'outtest/'
+dummy_grid = vera_folder + '/raw/grid/dummy_grid.nc'   # this dummy grid is the big vera grid (ancils have no coord info)
 
 atmo_bstream = '.pb'
 flux_cstream = '.pc'
@@ -34,10 +36,9 @@ dict_cstream = {
     'STASH_m01s03i217_2': 'SH',
     'STASH_m01s03i234_2': 'LH',
     #'STASH_m01s05i205_2': 'ConvRain',
-    'STASH_m01s05i216_2': 'TotalRain',
+    'STASH_m01s05i216_2': 'TotalRain'}
     #'STASH_m01s04i203_2': 'LargeScaleRain',
 
-}
 
 dict_bstream = {
     'STASH_m01s00i024': 'lst',
@@ -52,8 +53,7 @@ dict_bstream = {
     'STASH_m01s30i204': 'T_pl',
     'STASH_m01s30i205': 'q_pl',
     'STASH_m01s30i206': 'rh_pl',
-    'STASH_m01s30i208': 'omega_pl',
-}
+    'STASH_m01s30i208': 'omega_pl'}
 
 units = {'sw_net': 'W m-2',
          'sw_in': 'W m-2',
@@ -171,7 +171,7 @@ def run_datafiles():
     # start_lon =
 
     for f in flist:
-        
+
         print('Doing ',f)
         fname = f.split(os.sep)[-1]
 
@@ -271,7 +271,7 @@ def create_ancils():
     dummy = dummy.isel(grid_longitude_t=slice(box[0], box[1]), grid_latitude_t=slice(box[2], box[3]))
 
     files = glob.glob(ancils+'*.nc')
-
+    files
     for f in files:
         varsdat = xr.open_dataset(f, decode_times=False)
 
@@ -309,9 +309,6 @@ def create_ancils():
                                                      ['false_latitude', 'false_longitude'], dummy.longitude_t.values)},
                                    dims=['false_latitude', 'false_longitude'])
 
-    ds.to_netcdf(out+'ancils_vera.nc')
+    ds.to_netcdf(out+'ancils/ancils_vera.nc')
 
 # xarray.DataArray(var.data, var.coords, var.dims, var.attrs)
-
-
-
