@@ -11,20 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy
-import matplotlib.pylab as pylab
 import glob
 import os
-from collections import OrderedDict
-import salem
 from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import metpy
-from metpy import calc
-from metpy.units import units
+from GLOBAL import glob_util
 
 import pickle as pkl
 
@@ -56,20 +46,11 @@ TRACKTIME = 0
 
 #TOPO = xr.open_dataarray('/home/ck/DIR/cornkle/data/ancils_python/gtopo_1min.nc').sel(longitude=slice(-110,125), latitude=slice(-50,55))
 
-def composite(rawhour):
+def composite(lt_hour):
 
-    h = rawhour - (MREGIONS[REGION])[2]
-    def h_checker(h):
-        if h >= 24:
-            h = h-24
-        if h == 24:
-            h = 0
-        if h < 0:
-            h = h+24
-        return h
-    h = h_checker(h)
-    h2 = h_checker(h+1)
-    h1 = h_checker(h-1)
+    h = glob_util.LT_to_UTC_hour(lt_hour, REGION)
+    h2 = glob_util.LT_to_UTC_hour(lt_hour+1, REGION)
+    h1 = glob_util.LT_to_UTC_hour(lt_hour-1, REGION)
 
     print('Hour: ', h, h1, h2)
 
@@ -82,41 +63,12 @@ def composite(rawhour):
         m2 = MONTHS[1]
         outfile = path + "/" + REGION + "_SM_" + SENSOR + "_SWA_2012-2019_MCSTRACK_BOX-ANNUAL_PF_DAY_" + str(m1).zfill(
             2) + '-' + \
-                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(rawhour).zfill(2) + '_' + extag + ".p"
+                  str(m2).zfill(2) + '_' + str(y) + '_h' + str(lt_hour).zfill(2) + '_' + extag + ".p"
 
         msg = pd.read_csv(
             cnst.lmcs_drive + '/save_files/' + REGION + '_initTime__mcs_tracks_extc_' + str(y) + '0101_' + str(
                 y) + '1231.csv')
         msg = msg.to_dict(orient='list')
-
-        domain = (MREGIONS[REGION])[0]
-
-        msg['date'] = []
-        msg['utc_date'] = []
-        msg['day'] = []
-        msg['lt_hour'] = []
-        msg['lt_init'] = []
-        for yi, k in enumerate(msg['base_time']):
-
-            bbt = pd.to_datetime(k)  # - pd.Timedelta('1 days')
-            lt_init = bbt.replace(hour=msg['init_hour'][yi], minute=0)
-            hourchange = (MREGIONS[REGION])[2]
-
-            if hourchange < 0:
-                bbl = bbt - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-                binit = lt_init - pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-            elif hourchange > 0:
-                bbl = bbt + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-                binit = lt_init + pd.Timedelta(str(np.abs(hourchange)) + ' hours')
-            else:
-                bbl = bbt
-                binit = lt_init
-
-            msg['utc_date'].append(bbt.replace(hour=0, minute=0))
-            msg['lt_hour'].append(bbl.hour)
-            msg['lt_init'].append(binit.hour)
-            msg['date'].append(bbl.replace(hour=0, minute=0))
-            msg['day'].append(bbt.day)
 
         for k in msg.keys():
             msg[k] = np.array(msg[k])
@@ -135,15 +87,15 @@ def composite(rawhour):
         #                           np.abs(msg['latdiff_loc-init']) >= INIT_DISTANCE)))
 
 
-        inmask =   ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
-                   ((msg['hour']==h)  | (msg['hour']==h1)  | (msg['hour']==h2)) & \
+        inmask =   ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
+                   ((msg['lt_hour']==h)  | (msg['lt_hour']==h1)  | (msg['lt_hour']==h2)) & \
                     (msg['pf_landfrac'] > 0.99)  & (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
 
         if (np.sum(inmask) == 0) & (REGION in ['GPlains']):
-            inmask = ((msg['lt_init'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
-                      ((msg['hour'] == h) | (msg['hour'] == h1) | (msg['hour'] == h2)) & \
+            inmask = ((msg['lt_init_hour'] >= SENSOP+2) & (msg['tracktime'] >= TRACKTIME) & \
+                      ((msg['lt_hour'] == h) | (msg['lt_hour'] == h1) | (msg['lt_hour'] == h2)) & \
                       (msg['pf_mcsstatus'] > 0)) & np.isfinite(msg['pf_lat1'])
 
 
@@ -154,14 +106,14 @@ def composite(rawhour):
         for k in msg.keys():
             msg[k] = (msg[k])[mask]
 
-        ubt = np.unique(msg['date'])
-        msg['date'] = np.array(msg['date'])
+        ubt = np.unique(msg['lt_date'])
+        msg['lt_date'] = np.array(msg['lt_date'])
 
         chunks = []
         for ut in ubt:
             daydir = {}
 
-            pos = np.where(msg['date'] == ut)  # [0]).astype(int)
+            pos = np.where(msg['lt_date'] == ut)  # [0]).astype(int)
             # ipdb.set_trace()
             for k in msg.keys():
                 daydir[k] = np.array(msg[k])[pos]
@@ -244,9 +196,9 @@ def cut_kernel(xpos, ypos, arr, inits, wd = None):
 def file_loop(fi):
 
     print('Entered loop')
-    date = fi['date'][0]
+    date = fi['lt_date'][0]
 
-    hour = fi['hour']
+    hour = fi['lt_hour']
     print('Doing day: ', date, hour[0])
 
     box = (MREGIONS[REGION])[0]

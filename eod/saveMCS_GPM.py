@@ -29,9 +29,10 @@ def multi():
 
 
 def saveMCS_WA15(YRANGE):
-    trmm_folder = cnst.network_data + 'data/OBS/IMERG_HQ_precip'
-    msg_folder = cnst.network_data + 'data/OBS/MSG_WA30' #meteosat_WA30'
-    msg_folder2 = cnst.network_data + 'data/OBS/MSG_MAMON'
+    trmm_folder = cnst.DATA + 'data/OBS/IMERG_HQ_precip'
+    msg_folder = cnst.DATA + 'data/OBS/MSG_WA30' #meteosat_WA30'
+    msg_folder2 = cnst.DATA + 'data/OBS/MSG_MAMON'
+    msg_folder3 = cnst.DATA + 'data/OBS/tropWA'
 
     mJJAS = msg.ReadMsg(msg_folder)
     mMAMON = msg.ReadMsg(msg_folder2)

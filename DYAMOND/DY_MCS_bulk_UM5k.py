@@ -18,7 +18,7 @@ def dictionary():
     dic = {}
     vars = ['hour', 'month', 'year', 'area',
             'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean', 'tcw',
+            'tmin', 'tmean', 'tcw', 'shear', #'ef',
             'pmax', 'pmean',
              't', 'p' ]
 
@@ -57,7 +57,7 @@ def perSys():
                 continue
 
 
-    pkl.dump(mdic, open('/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/MCS/WA/UM-5k_5000km2_-40_9-22N_tir_prcp.p',
+    pkl.dump(mdic, open('/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/MCS/WA/UM-5k_5000km2_-40_tir_newShear.p',
                            'wb'))
 
 
@@ -97,6 +97,12 @@ def file_loop(f):
     out['p'] = ds['prcp'].values[tmask]
 
     out['tcw'] = np.nanmean(ua.cut_kernel(ds['tcw'].values,minpos[1], minpos[0],1))
+   # ipdb.set_trace()
+    try:
+        out['shear'] = np.nanmean(ua.cut_kernel(ds['shear'].values, minpos[1], minpos[0], 1))
+    except:
+        return
+    #out['ef'] = np.nanmean(ua.cut_kernel(ds['ef'].values, minpos[1], minpos[0], 1))
     out['lon'] = ds['longitude'].values
     out['lat'] = ds['latitude'].values
 

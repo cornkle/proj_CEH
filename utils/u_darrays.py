@@ -23,37 +23,80 @@ def shift_lons(ds, lon_dim='lon', save=False):
     lons = ds[lon_dim].values
     new_lons = np.empty_like(lons)
     mask = lons > 180
-    new_lons[mask] = -(360. - lons[mask])
+    new_lons[mask] = -(360 - lons[mask])
     new_lons[~mask] = lons[~mask]
     new_lons = np.sort(new_lons)
     #ds[lon_dim].values = new_lons
     #ipdb.set_trace()
     #ipdb.set_trace()
     ds = ds.assign_coords({lon_dim:new_lons})
-
+   # ipdb.set_trace()s
     if save:
         ds.to_netcdf(save)
     return ds
 
 
+def roll_lons(ds, lon_dim='lon'):
+    lon_name = lon_dim  # whatever name is in the data
+
+    # Adjust lon values to make sure they are within (-180, 180)
+    ds['_longitude_adjusted'] = xr.where(
+        ds[lon_name] > 180,
+        ds[lon_name] - 360,
+        ds[lon_name])
+
+    # reassign the new coords to as the main lon coords
+    # and sort DataArray using new coordinate values
+    ds = (
+        ds
+        .swap_dims({lon_name: '_longitude_adjusted'})
+        .sel(**{'_longitude_adjusted': sorted(ds._longitude_adjusted)})
+        .drop(lon_name))
+
+    ds = ds.rename({'_longitude_adjusted': lon_name})
+
+    return ds
+
+
+
+
 def shift_lons_data(ds, lon_dim='lon', save=False):
     """ Shift longitudes from [0, 360] to [-180, 180] """
     lons = ds[lon_dim].values
-    new_lons = np.empty_like(lons)
-    new_data = np.empty_like(ds.values)
-    mask = np.where(lons >= 180)
-    mask2 = np.where(lons < 180)
-    argpos = np.argmin(np.abs(ds.lon.values-180))
-    new_lons = lons - ds.lon.values[argpos]#179.0625
+
+    mask = np.where(lons > 180)
+    mask2 = np.where((lons < 180)  & (lons != 0))
     #ipdb.set_trace()
-    try:
-        new_data[:,mask2[0]] = ds.values[:,mask[0]]
-        new_data[:,mask[0]] = ds.values[:,mask2[0]]
-    except:
-        new_data[:,:,mask2[0]] = ds.values[:,:,mask[0]]
-        new_data[:,:,mask[0]] = ds.values[:,:,mask2[0]]
-    ds = ds.assign_coords({'lon': new_lons})
-    ds.values = new_data
+    argpos = np.argmin(np.abs(ds[lon_dim].values-180))
+    new_lons = lons - ds[lon_dim].values[argpos]#179.0625
+    #ipdb.set_trace()
+    for dv in ds.data_vars:
+        new_data = np.empty_like(ds[dv].values)
+        ndims = new_data.ndim
+        if ndims == 2:
+            try:
+                new_data[:,mask2[0]] = ds[dv].values[:,mask[0]]
+                new_data[:,mask[0]] = ds[dv].values[:,mask2[0]]
+            except:
+                print('2dim prob')
+                ipdb.set_trace()
+        if ndims == 3:
+            try:
+                new_data[:,:,mask2[0]] = ds[dv].values[:,:,mask[0]]
+                new_data[:,:,mask[0]] = ds[dv].values[:,:,mask2[0]]
+            except:
+                print('3dim prob')
+                ipdb.set_trace()
+        if ndims == 4:
+            try:
+                new_data[:,:, :, mask2[0]] = ds[dv].values[:, :, :, mask[0]]
+                new_data[:, : , :, mask[0]] = ds[dv].values[:,:, :, mask2[0]]
+            except:
+                print('4dim prob')
+                ipdb.set_trace()
+
+        ds[dv] = ds[dv].assign_coords({lon_dim: new_lons})
+        ds[dv].values = new_data
     #ipdb.set_trace()
     if save:
         ds.to_netcdf(save)

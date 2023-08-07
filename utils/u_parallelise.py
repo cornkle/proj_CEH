@@ -14,8 +14,6 @@ def multi_test():
     print(res)
 
 
-
-
 def run_arrays(nb_processors, func, data, dic_names):
 
     pool = multiprocessing.get_context('fork').Pool(processes=nb_processors)

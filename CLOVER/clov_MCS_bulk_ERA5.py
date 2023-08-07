@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import pickle as pkl
 from collections import defaultdict
-from utils import constants as cnst, u_met
+from utils import constants as cnst
 
 
 import pdb
@@ -47,10 +47,10 @@ def perSys():
     #ipdb.set_trace()
 
     print('Nb files', len(files))
-    for y in range(2004,2019):
+    for y in range(2019,2021):
 
         yfiles = []
-        for f in files:
+        for f in sorted(files):
             if str(y) in f:
                 yfiles.append(f)
 

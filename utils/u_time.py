@@ -8,6 +8,14 @@ Created on Wed Mar 16 10:04:08 2016
 from datetime import datetime, timedelta
 import numpy as np
 
+
+def round_dt(dt, delta):
+    return datetime.min + round((dt - datetime.min) / delta) * delta
+
+def localTimeApprox(myDateTime, longitude):
+   """Returns local hour approximation"""
+   return myDateTime+timedelta(hours=(longitude*12/180))
+
 """
 Transforms a number representing the seconds in the day to a hour, minutes, seconds structure
 

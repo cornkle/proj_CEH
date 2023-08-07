@@ -9,6 +9,7 @@ import ipdb
 
 import glob
 from scipy import ndimage
+from utils import u_interpolate as u_int
 
 
 HOD = range(24)  # hours of day
@@ -21,30 +22,84 @@ def olr_to_bt(olr):
 
 def saveMCS():
 
-    ffiles = '/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/WA/'
+    ffiles = '/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/SAm/'
     vars = ['rlut', 'pr']
 
     metum_res = 5
 
     fnames = glob.glob(ffiles+'/rlut/*.nc')
 
+    windgrid = glob.glob(ffiles+'/ua/*.nc')
+    vgrid = glob.glob(ffiles + '/va/*.nc')
+
+    srfc_dummy = xr.open_dataset(fnames[0])
+    pl_dummy = xr.open_dataset(windgrid[5])
+    plv_dummy = xr.open_dataset(vgrid[5])
+
+    inds, weights, shape = u_int.interpolation_weights(pl_dummy.longitude, pl_dummy.latitude, srfc_dummy.longitude,
+                                                       srfc_dummy.latitude)
+
+    indsv, weightsv, shapev = u_int.interpolation_weights(plv_dummy.longitude, plv_dummy.latitude, srfc_dummy.longitude,
+                                                       srfc_dummy.latitude)
+
     cnt = 0
     for f in fnames:
 
-        orl = (xr.open_dataset(f)['toa_outgoing_longwave_flux']).load()
+        orl = (xr.open_dataset(f)['rlut']).load()
         vals = orl.values
         nvals = olr_to_bt(vals)
         orl.values = nvals
 
 
         bname = os.path.basename(f)
-        strdate = bname[-11:-3]
+        strdate = bname[-17:-9]
+        #ipdb.set_trace()
+        pfile = glob.glob(ffiles+'/pr/*-'+strdate+'*.nc')
+        pcp = (xr.open_dataset(pfile[0])['pr'])*3600
 
-        pfile = glob.glob(ffiles+'/pr/*'+strdate+'.nc')
-        pcp = (xr.open_dataset(pfile[0])['precipitation_flux'])*3600
-        pfile = glob.glob(ffiles + '/prw/*' + strdate + '.nc')
-        tcw = (xr.open_dataset(pfile[0])['atmosphere_water_vapor_content'])
-        w = (tcw[tcw['time.hour'] == 10]).squeeze()
+        pfile = glob.glob(ffiles + '/prw/*-'+strdate+'*.nc')
+        try:
+            tcw = (xr.open_dataset(pfile[0])['prw'])
+        except:
+            continue
+        pfile = glob.glob(ffiles + '/ua/*-'+strdate+'*.nc')
+        uu = (xr.open_dataset(pfile[0])['ua'])
+        udiff = uu.sel(model_level_number=24) - uu.sel(model_level_number=3)
+        pfile = glob.glob(ffiles + '/va/*-'+strdate+'*.nc')
+        vv = (xr.open_dataset(pfile[0])['va'])
+        vdiff = vv.sel(model_level_number=24) - vv.sel(model_level_number=3)
+
+        pfile = glob.glob(ffiles + '/hfss/*-'+strdate+'*.nc')
+        sh = (xr.open_dataset(pfile[0])['hfss'])
+        pfile = glob.glob(ffiles + '/hfls/*-'+strdate+'*.nc')
+        lh = (xr.open_dataset(pfile[0])['hfls'])
+        ef = lh / (sh+lh)
+        ef.values[ef.values>1] = np.nan
+        ef.values[ef.values<0] = np.nan
+        w = (tcw[tcw['time.hour'] == 15]).mean('time').squeeze()
+        eff = (ef[ef['time.hour'] == 15]).mean('time').squeeze()
+        u12 = (udiff[udiff['time.hour'] == 15]).squeeze()
+        v12 = (vdiff[vdiff['time.hour'] == 15]).squeeze()
+        inds, weights, shape = u_int.interpolation_weights(u12.longitude, u12.latitude, srfc_dummy.longitude,
+                                                           srfc_dummy.latitude)
+        indsv, weightsv, shapev = u_int.interpolation_weights(v12.longitude, v12.latitude, srfc_dummy.longitude,
+                                                           srfc_dummy.latitude)
+        try:
+            u12_regrid = u_int.interpolate_data(u12.values, inds, weights, shape)
+        except:
+            ipdb.set_trace()
+            print('Regrid failed, continue')
+            continue
+        v12_regrid = u_int.interpolate_data(v12.values, indsv, weightsv, shapev)
+
+        shear_wg = np.sqrt(u12_regrid**2+v12_regrid**2)
+
+
+        #ipdb.set_trace()
+        shear = w.copy(deep=True)
+        shear.values = shear_wg
+        shear.name = 'ua'
+
         lon, lat = np.meshgrid(orl.longitude, orl.latitude)
 
         for p,t in zip(pcp, orl):
@@ -80,6 +135,9 @@ def saveMCS():
 
                 inds = np.where(labels == gi)
 
+                tmin = np.min(t.values[inds])
+                if tmin > -50:
+                    continue
 
                 # cut a box for every single blob from msg - get min max lat lon of the blob, cut upper lower from TRMM to match blob
                 try:
@@ -91,12 +149,15 @@ def saveMCS():
                 tout = t.sel(latitude=slice(latmin,latmax), longitude=slice(lonmin,lonmax))
                 pout = p.sel(latitude=slice(latmin,latmax), longitude=slice(lonmin,lonmax))
                 wout = w.sel(latitude=slice(latmin, latmax), longitude=slice(lonmin, lonmax))
-
+                efout = eff.sel(latitude=slice(latmin, latmax), longitude=slice(lonmin, lonmax))
+                shearout = shear.sel(latitude=slice(latmin, latmax), longitude=slice(lonmin, lonmax))
 
                 ds = xr.Dataset()
                 ds['tir'] = tout
                 ds['tcw'] = wout
                 ds['prcp'] = pout
+                ds['ef'] = efout
+                ds['shear'] = shearout
 
                 #ipdb.set_trace()
 
@@ -125,7 +186,7 @@ def saveMCS():
                 ds.attrs['maxP'] = np.max(p.values[inds])
                 ds.attrs['area'] = inds[0].size
 
-                savefile = '/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/MCS/WA/UM-5km/' + strdate + '_'+str(_h).zfill(2)+str(_mi).zfill(2)+'_' + str(gi) + '.nc'
+                savefile = '/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/MCS/SAm/UM-5km/' + strdate + '_'+str(_h).zfill(2)+str(_mi).zfill(2)+'_' + str(gi) + '.nc'
                 # try:
                 #     os.remove(savefile)
                 # except OSError:
