@@ -24,7 +24,7 @@ meteosat_SA15: 2006 - 2010, May-Oct, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km
 meteosat_tropWA: 2004 - 2015, whole year, 4-10N, 14W - 25E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins, daytime only
 """
 y1 = 2004 #2006
-y2 = 2020 #
+y2 = 2022 #
 
 class ReadMsg(object):
     def __init__(self, msg_folder, y1=y1, y2=y2, months=None):
@@ -39,7 +39,6 @@ class ReadMsg(object):
                 mrange = range(months[0],months[0]+1)
 
         try:
-            #ipdb.set_trace()
             lpath = glob.glob(msg_folder+'grads/*.npz')[0]
             msg_latlon = np.load(lpath)
             mlon = msg_latlon['lon']
@@ -57,7 +56,7 @@ class ReadMsg(object):
                 return
 
 
-        mpath = cnst.other_drive+'nflics/SSA_data/ch9/'
+        mpath = msg_folder + '/data/ch9/'
 
         try:
             os.path.isdir(mpath)

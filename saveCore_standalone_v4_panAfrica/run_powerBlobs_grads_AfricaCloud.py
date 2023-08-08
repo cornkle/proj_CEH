@@ -89,7 +89,7 @@ def _loop(passit):
 for yy in range((filepath[dataset])[2][0],((filepath[dataset])[2][1])+1):
 
     meteosat_folder = (filepath[dataset])[0]
-    outpath = meteosat_folder.replace('ch9', 'ch9_wavelet')
+    data_folder = meteosat_folder + '/data/'
     print('Reading ' +meteosat_folder)
 
     for mm in (filepath[dataset])[1]:
