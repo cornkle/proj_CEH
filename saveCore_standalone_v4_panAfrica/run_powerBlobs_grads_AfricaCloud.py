@@ -15,7 +15,7 @@ from eod import msg_panAfrica
 
 filepath = {
 
-    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2010,2010)]  # 2004, 2022
+    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/data/', np.arange(1,13), (2010,2010)]  # 2004, 2022
 }
 
 dataset = 'panAfrica'

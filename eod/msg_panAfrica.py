@@ -57,7 +57,7 @@ class ReadMsg(object):
                 return
 
 
-        mpath = cnst.other_drive+'nflics/SSA_data/ch9/'
+        mpath = cnst.other_drive+'nflics/SSA_data/data/ch9/'
 
         try:
             os.path.isdir(mpath)
