@@ -15,7 +15,7 @@ from eod import msg_panAfrica
 
 filepath = {
 
-    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/data/', np.arange(1,13), (2010,2010)]  # 2004, 2022
+    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2010,2010)]  # 2004, 2022
 }
 
 dataset = 'panAfrica'
@@ -89,12 +89,16 @@ def _loop(passit):
 for yy in range((filepath[dataset])[2][0],((filepath[dataset])[2][1])+1):
 
     meteosat_folder = (filepath[dataset])[0]
-    outpath = meteosat_folder.replace('ch9', 'ch9_wavelet')
+    data_folder = meteosat_folder + '/data/'
     print('Reading ' +meteosat_folder)
 
     for mm in (filepath[dataset])[1]:
 
             m = msg_panAfrica.ReadMsg(meteosat_folder, y1=yy, y2=yy, months=[mm])
+
+            if len(m.fpath) == 0:
+                print('No files for this year or month, continue', yy, mm)
+                continue
 
             files  = m.fpath
 

@@ -24,7 +24,7 @@ meteosat_SA15: 2006 - 2010, May-Oct, 10-20N, 10W - 10E, 350 x 728 pixel, ~ 3-4km
 meteosat_tropWA: 2004 - 2015, whole year, 4-10N, 14W - 25E, 350 x 728 pixel, ~ 3-4km, ev. 15 mins, daytime only
 """
 y1 = 2004 #2006
-y2 = 2020 #
+y2 = 2022 #
 
 class ReadMsg(object):
     def __init__(self, msg_folder, y1=y1, y2=y2, months=None):
@@ -39,7 +39,6 @@ class ReadMsg(object):
                 mrange = range(months[0],months[0]+1)
 
         try:
-            #ipdb.set_trace()
             lpath = glob.glob(msg_folder+'grads/*.npz')[0]
             msg_latlon = np.load(lpath)
             mlon = msg_latlon['lon']
@@ -56,8 +55,7 @@ class ReadMsg(object):
                 print('Not a directory or no msg lat/lon found')
                 return
 
-
-        mpath = cnst.other_drive+'nflics/SSA_data/data/ch9/'
+        mpath = msg_folder + '/data/ch9/'
 
         try:
             os.path.isdir(mpath)
@@ -68,7 +66,7 @@ class ReadMsg(object):
         rfiles = []
         for yr, mo in itertools.product(yrange, mrange):  # rain_f4 files only available for 6 to 10
 
-            filepath = mpath+'/'+str(yr)+'/'+str(mo)+'/'+str(yr)+str(mo).zfill(2)
+            filepath = mpath+'/'+str(yr)+'/'+str(mo).zfill(2)+'/'+str(yr)+str(mo).zfill(2)
             try:
                 files = glob.glob(filepath+'*.gra')
             except OSError:
@@ -76,7 +74,6 @@ class ReadMsg(object):
                 continue
 
             rfiles.extend(files)
-
         rfiles.sort(key=ul.natural_keys)
 
 
@@ -172,7 +169,7 @@ class ReadMsg(object):
 
         rrShape = (self.ny, self.nx)  # msg shape
         rrMDI = np.uint8(255)
-        rr = np.fromfile(self.dpath, dtype=rrMDI.dtype)
+        rr = np.fromfile(file, dtype=rrMDI.dtype)
         rr.shape = rrShape
 
         rr = rr.astype(np.int32) - 173
