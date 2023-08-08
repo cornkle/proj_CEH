@@ -72,6 +72,7 @@ class ReadMsg(object):
             try:
                 files = glob.glob(filepath+'*.gra')
             except OSError:
+                print('OSError')
                 continue
 
             rfiles.extend(files)
@@ -162,33 +163,30 @@ class ReadMsg(object):
             return False
 
         str = file.split(os.sep)[-1]
+
         curr_date = [
-            datetime.datetime(np.int(str[0:4]), np.int(str[4:6]), np.int(str[6:8]), np.int(str[8:10]), np.int(str[10:12]))]
+            datetime.datetime(int(str[0:4]), int(str[4:6]), int(str[6:8]), int(str[8:10]), int(str[10:12]))]
         date = curr_date  # or np.atleast_1d(dt.datetime())
 
         self.set_date(date[0].year, date[0].month, date[0].day, date[0].hour, date[0].minute)
 
         rrShape = (self.ny, self.nx)  # msg shape
         rrMDI = np.uint8(255)
+        rr = np.fromfile(self.dpath, dtype=rrMDI.dtype)
+        rr.shape = rrShape
 
-        rr = np.fromfile(file, dtype=rrMDI.dtype)
-
-        try:
-            rr.shape = rrShape
-        except ValueError:
-            print('Got big domain, no slice needed')
-            rrShape = (self.ny, self.nx_big)
-            rr.shape = rrShape
-            rr = rr[::-1,:]
+        rr = rr.astype(np.int32) - 173
 
         if llbox:
             i, j = np.where(
                 (self.lon > llbox[0]) & (self.lon < llbox[1]) & (self.lat > llbox[2]) & (self.lat < llbox[3]))
             blat = self.lat[i.min():i.max() + 1, j.min():j.max() + 1]
             blon = self.lon[i.min():i.max() + 1, j.min():j.max() + 1]
+            rr = rr[i.min():i.max() + 1, j.min():j.max() + 1]
         else:
             blat = self.lat
             blon = self.lon
+            rr = rr
 
         da = xr.DataArray(rr[None, ...], coords={'time': (('time'), date),
                                                    'lat': (('y', 'x'), blat),
