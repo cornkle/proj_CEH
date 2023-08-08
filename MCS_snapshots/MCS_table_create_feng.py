@@ -8,6 +8,7 @@ from scipy.ndimage.measurements import label
 from GLOBAL import glob_util
 from utils import u_darrays, constants as cnst
 import datetime
+import ipdb
 
 
 def dictionary():
@@ -174,8 +175,9 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
             ppos_2d = np.unravel_index(pmax_pos, rain.shape)
             pmax_lon = rain.lon[ppos_2d[1]]
             pmax_lat = rain.lat[ppos_2d[0]]
-            pmax = rain.sel(lon=slice(pmax_lon - 0.075, pmax_lon + 0.075), lat=slice(pmax_lat - 0.075, pmax_lat + 0.075)).mean().values
-
+            pmax = rain.sel(lon=slice(pmax_lon - 0.075, pmax_lon + 0.075), lat=slice(pmax_lat - 0.075, pmax_lat + 0.075))
+          #  ipdb.set_trace()
+            pmax = pmax.mean().values
             if (rainvar_name + '_mean') not in dic.keys():
                 for tag in ['_mean', '_max', '_p95', '_p99']:
                     dic[rainvar_name + tag] = []
@@ -188,7 +190,9 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
         if len(envvar_take) > 0:
             tabdate = pd.to_datetime(date, format=tab_tformat).replace(hour=env_hour, minute=0)  # hour of environment sampling
             pos = envdates == tabdate
-            single = ds.isel(time=pos).sel(longitude=slice(tlon - 0.375, tlon + 0.375), latitude=slice(tlat - 0.375, tlat + 0.375)).mean()
+            single = ds.isel(time=pos).sel(longitude=slice(tlon - 0.375, tlon + 0.375), latitude=slice(tlat - 0.375, tlat + 0.375))
+          #  ipdb.set_trace()
+            single = single.mean()
             for vt in envvar_take:
                 if vt in dic.keys():
                     dic[vt].append(single[vt].values)
