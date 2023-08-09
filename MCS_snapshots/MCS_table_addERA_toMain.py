@@ -214,6 +214,7 @@ def run_ERA5_regional(fi):
             ipdb.set_trace()
         era_day_srfc = era_srfc_day.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 0.35, elon + 0.35)).mean(['latitude', 'longitude'])
         era_day_wi100 = era_wi100_day.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 0.35, elon + 0.35)).mean(['latitude', 'longitude'])
+        era_day_accum = era_accum.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 0.35, elon + 0.35)).mean(['latitude', 'longitude'])
 
         tgrad_lat = era_srfc_day.sel(latitude=slice(elat - 2, elat + 2), longitude=slice(elon - 0.35, elon + 0.35)).mean('longitude').squeeze()
         tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)
@@ -234,7 +235,7 @@ def run_ERA5_regional(fi):
         e850 = era_day.sel(level=850).mean()
         srfc = era_day_srfc.mean()
         wi100 = era_day_wi100.mean()
-        accum = era_accum.mean()
+        accum = era_day_accum.mean()
 
         del era_day
         del era_day_srfc
