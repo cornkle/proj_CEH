@@ -15,7 +15,7 @@ from eod import msg_panAfrica
 
 filepath = {
 
-    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2010,2010)]  # 2004, 2022
+    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2013,2022)]  # 2004, 2022
 }
 
 dataset = 'panAfrica'
@@ -61,6 +61,7 @@ def _loop(passit):
     wObj = cores.dataset('METEOSAT3K_veraLS')
 
     wObj.read_img(data, dat.lon.values, dat.lat.values, edge_smoothing=False)
+    
     wObj.applyWavelet(normed='scale')
     dummy, max_location = wObj.scaleWeighting(wtype='nflics3k')
 
@@ -106,12 +107,12 @@ for yy in range((filepath[dataset])[2][0],((filepath[dataset])[2][1])+1):
             for f in files:
                 passit.append((m, f))
 
-            # res = []
-            # for pas in passit:
-            #     back = _loop(pas)
-            #     res.append(back)
+            #res = []
+            #for pas in passit:
+            #    back = _loop(pas)
+            #    res.append(back)
 
-            pool = multiprocessing.Pool(processes=6)
+            pool = multiprocessing.Pool(processes=5)
             res = pool.map(_loop, passit)
 
 
