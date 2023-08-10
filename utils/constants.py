@@ -10,14 +10,17 @@ if os.path.isdir('/home/ck/DIR/'):
     scratch = ext_drive # scratch does not exist locally, so save on external drive
 
 
-else:
-    if os.path.isdir('/prj/global_water/'):
+elif os.path.isdir('/prj/global_water/'):
         scratch = '/scratch/cornkle/'  # scratch in CEH network
         network_data = '/users/global/cornkle/shared/'  # private U drive , equivalent of /cornkle/ on lappi
         lmcs_drive = '/prj/global_water/'  # lmcs stuff
         ext_drive = lmcs_drive # no external drive on CEH network, links to global_water proj
-        other_drive = '/prj/global_water/other/' # other project's big files / external drive locally
-
+        other_drive = '/prj/global_water/other/' # other project's big files / external drive 
+elif os.path.isdir('/home/users/cornkle/CP4home/'):
+        scratch = '/work/scratch-nopw2/cklein/'
+        network_data = '/home/users/cornkle/'
+        lmcs_drive = '/home/users/cornkle/lmcs/'
+        other_drive = lmcs_drive +'other/'
 
 ANCILS = network_data + 'data/ancils_python/'
 
