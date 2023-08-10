@@ -506,14 +506,14 @@ ls = landsea['lsm']
 
 ls = ls.assign_coords(rlon = ls.rlon.values - 360)
 ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-###########
-topo_path = glob.glob(ancils_path + os.sep + 'orog_combined*.nc')[0]
-topo = xr.open_dataset(topo_path, decode_times=False)
-top = topo['ht']
-
-top = top.assign_coords(rlon = top.rlon.values - 360)
-top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-##########
+# ###########
+# topo_path = glob.glob(ancils_path + os.sep + 'orog_combined*.nc')[0]
+# topo = xr.open_dataset(topo_path, decode_times=False)
+# top = topo['ht']
+#
+# top = top.assign_coords(rlon = top.rlon.values - 360)
+# top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
+# ##########
 
 pos = np.where(ls_arr[0, 0, :, :] == 0)
 lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
