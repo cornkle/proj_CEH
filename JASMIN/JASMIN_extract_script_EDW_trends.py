@@ -9,26 +9,29 @@ import pdb
 def run(orig_names=False):
 
     fpath = '/home/users/cornkle/runscript/in'
-    outpath = '/home/users/cornkle/runscript/out'
+    outpath = '/home/users/cornkle/runscript/out_EDW'
 
     local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
     #hq_box = [-18+360,-10+360, 12, 17]
     hq_box = [-18+360,25+360, 3.5, 20]
-    months = [6,9] # March-May
+    months = [1,12] # March-May
+    full_box = [-18+360, 52+360, -36,39]
 
     dic = {
 
-        #'t2' : ([temp_box], ['keep'], [], [12,3,6]),
-        #'u10': ([temp_box], ['keep'], [], [12,3,6]),
-        #'v10': ([temp_box], ['keep'], [], [12,3,6]),
-        #'lw_out_PBLtop' : ([temp_box], ['keep'], [], []),
+        't2' : ([full_box], ['keep'], [], []),
+        'q2' : ([full_box], ['keep'], [], []),
+        #'t2_daily' : ([full_box], ['keep'], [], []),
+        'u10': ([temp_box], ['keep'], [], [12,3,6]),
+        'v10': ([temp_box], ['keep'], [], [12,3,6]),
+        'lw_out_PBLtop' : ([full_box], ['keep'], [], []),
         #'v_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
         #'u_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
         #'t_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
         #'geoH_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
         #'omega_pl' : ([temp_box], ['keep'], [650,300], [12,3,6]),
-        #'lsRain' : ([temp_box], ['keep'], [], []),
+        'lsRain' : ([full_box], ['keep'], [], []),
         #'totRain' : ([temp_box], ['keep'], [], []),
         #'q_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
         #'colDryMass' : ([temp_box], ['keep'], [], [12,3,6]),
@@ -38,15 +41,17 @@ def run(orig_names=False):
         #'colWetMass' : ([temp_box], ['daily'], [], []),
         #'u_pl' : ([temp_box], ['daily'], [600, 650,925], []),
         #'rh_pl' : ([temp_box], ['keep'], [400, 500, 600, 700, 850, 925], [12]),
-        #'sh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        #'lh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        #'SM' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        'q2' : ([temp_box], ['keep'], [], [12,3,6]),
+        #'sh' : ([full_box], ['keep'], [], [10,12,15,18]),
+        #'lh' : ([full_box], ['keep'], [], [10,12,15,18]),
+        #'SM' : ([full_box], ['keep'], [], [10,12,15,18])
+        'p_srfc' : ([full_box], ['keep'], [], []),
+        'u10' : ([full_box], ['keep'], [], []),
+        'v10' : ([full_box], ['keep'], [], [])
     }
     keys = dic.keys()
 
     for k in keys:
-
+        print('Doing ', k)
         info = cnst.VARDIC[k]
         dinfo = dic[k]
         var = mv.create_CP4_filename(k)
@@ -64,12 +69,6 @@ def run(orig_names=False):
             fname = os.path.basename(f)
             outname = fname.replace(var, k+'_fullPL_')
             outfile = outfolder + os.sep + outname
-            fmonth = outfile[-11:-9]
-            #pdb.set_trace()
-            if (int(fmonth)<months[0]) | (int(fmonth)>months[1]):
-                print('Wrong month, continue')
-                continue
-
             print('Trying '+outfile)
             if os.path.isfile(outfile):
                 print('File already exists, continue.')
@@ -81,10 +80,15 @@ def run(orig_names=False):
             except OSError:
              print('Netcdf OSError')
              continue
-            mins = np.unique(ds[var]['time.minute'])[0]  # 0 in most cases, but may be 30 for fluxes
+
+            if (ds['time.month'][0]<months[0]) | (ds['time.month'][0]>months[1]):
+               print('Wrong month, continue') 
+               continue
+
             if dinfo[3] != []:
-                ds = ds.isel(time=(([np.in1d(ds['time.hour'].values, dinfo[3])][0]) & (ds['time.minute']==mins))) 
+                ds = ds.isel(time=(([np.in1d(ds['time.hour'].values, dinfo[3])][0]) & (ds['time.minute']==0))) 
             box = dinfo[0]
+
             for id, b in enumerate(box):
 
                 agg = dinfo[1][id]
@@ -94,15 +98,14 @@ def run(orig_names=False):
                 try:
                   da = cut[var]
                 except KeyError:
-                    
-                    try:
-                        da = cut['c03238'] # stupid t2 problem
-                    except KeyError:
-                        try:
-                           da = cut['a04203'] # stupid lsRain_hFreq proble
-                        except KeyError:
-                           print('KEY ERROR, name missing')
-                           pdb.set_trace()
+                   try:
+                      da = cut['c03238'] # stupid t2 problem
+                   except KeyError:
+                      try:
+                         da = cut['a04203'] # stupid lsRain_hFreq problem
+                      except:
+                         print('STUPID KEY ERROR') 
+                         pdb.set_trace()
 
                 if pres != []:
                    # da = da.sel(pressure=pres)
@@ -117,6 +120,7 @@ def run(orig_names=False):
                 comp = dict(zlib=True, complevel=5)
 
                 da.name = k
+                #pdb.set_trace()
                 da = da.assign_coords(longitude=da.longitude.values-360)
                 #encoding = {var: comp for var in da.data_vars}
                 encoding = {k: {'complevel': 5, 'zlib': True}}

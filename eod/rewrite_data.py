@@ -869,8 +869,9 @@ def rewrite_topo():
 def rewrite_CP4_TCWV():
     tags = ['CP4hist', 'CP4fut']
     for t in tags:
-        path = '/prj/global_water/CP_models/CP4_WestAfrica/'+t+'/'
+        #path = '/prj/global_water/CP_models/CP4_WestAfrica/'+t+'/'
         #path = '/media/ck/Elements/Africa/WestAfrica/CP4/'+t+'/'
+        path = '/home/users/cornkle/CP4home/'+t+'/'    # JASMIN
 
         dcol = glob.glob(path+'colDryMass/*')
         #wcol = glob.glob(path+'colWetMass/*')
