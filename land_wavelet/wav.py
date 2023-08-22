@@ -44,7 +44,7 @@ class wavelet(object):
 
 
 
-    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0, power_normed='stddev'):
+    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0, power_normed='scale'):
         """
         Calculate pos/neg wavelet coefficients and scale-normalised (always positive) wavelet powers
         :param data: 2d array to decompose into scales
@@ -66,9 +66,13 @@ class wavelet(object):
 
         norm_power = (np.abs(wav_coeffs)) * (np.abs(wav_coeffs))  # squared wavelet coefficients = power
         scale_dummy = np.reshape(self.wav_scales, (len(self.wav_scales), 1, 1))
-        if power_normed == 'scale':
+        if power_normed == 'scale_squared':
             norm_power = norm_power / (scale_dummy * scale_dummy) # Normalized wavelet power spectrum by squared scale
-            # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - we emphasize small scales more.
+            # Note: Liu et al 2007 JOAT suggest dividing by wavelet scale only - this emphasizes small scales more.
+        ###standard approach of norming
+        if power_normed == 'scale':
+            norm_power = norm_power / (scale_dummy)
+
         if power_normed == 'stddev':
 
             for ids in range(norm_power.shape[0]):

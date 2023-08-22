@@ -23,7 +23,7 @@ for idx, dats in enumerate([hist, fut]):
     cp4_full_path = cnst.other_drive + 'CP4/CP4_WestAfrica/'+tags[idx]+'/'
     cp4_all_files = sorted(glob.glob(cp4_full_path + var + '/' + var +'_*.nc'))
     
-    for file in dats[0:100]:  ########restricted files for testing
+    for file in dats[0:500]:  ########restricted files for testing
         fname = os.path.basename(file)
         u_dates.append(fname[0:4]+fname[5:7]+fname[8:10])
     loop_dates = np.unique(u_dates)
@@ -43,7 +43,7 @@ for idx, dats in enumerate([hist, fut]):
 
         cp4_pos = cp4_all_files.index(cp4_file)
 
-        files_toread = np.array(cp4_all_files)[cp4_pos-10:cp4_pos+10]
+        files_toread = np.array(cp4_all_files)[cp4_pos-15:cp4_pos+15]
 
         cp4_agg = xr.open_mfdataset(files_toread)[var]
             
@@ -56,6 +56,8 @@ for idx, dats in enumerate([hist, fut]):
             cp4_box = cp4_agg.sel(longitude=slice(lon-0.35, lon+0.34), latitude=slice(lat-0.35, lat+0.35)).mean(['latitude','longitude'])
             cp4_mean = cp4_box.groupby('time.hour').mean('time')
             cp4_anom = cp4_box.groupby('time.hour')-cp4_mean
+
+            print(cp4_mean.hour)
 
             strct[tags[idx]].append(cp4_box.values)
             strct_anom[tags[idx]].append(cp4_anom.values)
