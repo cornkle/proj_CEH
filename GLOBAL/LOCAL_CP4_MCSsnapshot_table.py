@@ -17,7 +17,6 @@ tags = ['CP4hist', 'CP4fut']
 
 strct = {'CP4hist' : [], 'CP4fut' : []}
 strct_anom = {'CP4hist' : [], 'CP4fut' : []}
-
 for idx, dats in enumerate([hist, fut]):
     u_dates = []
     cp4_full_path = cnst.other_drive + 'CP4/CP4_WestAfrica/'+tags[idx]+'/'
@@ -62,3 +61,4 @@ for idx, dats in enumerate([hist, fut]):
 
 pkl.dump(strct, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_timeseries_-10to+10days_'+hour+'.p','wb'))
 pkl.dump(strct_anom, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_anom_timeseries_-10to+10days_'+hour+'.p','wb'))
+print('Written files', var)

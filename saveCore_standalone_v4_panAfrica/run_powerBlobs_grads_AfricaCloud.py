@@ -15,7 +15,7 @@ from eod import msg_panAfrica
 
 filepath = {
 
-    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2013,2022)]  # 2004, 2022
+    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2016,2022)]  # 2004, 2022
 }
 
 dataset = 'panAfrica'
@@ -63,7 +63,11 @@ def _loop(passit):
     wObj.read_img(data, dat.lon.values, dat.lat.values, edge_smoothing=False)
     
     wObj.applyWavelet(normed='scale')
-    dummy, max_location = wObj.scaleWeighting(wtype='nflics3k')
+    try:
+        dummy, max_location = wObj.scaleWeighting(wtype='nflics3k')
+    except:
+        print('Date failed, return', date)
+        return
 
     nflics3k_da = wObj.to_dataarray(date=date, names=['cores', 'tir'])
 
