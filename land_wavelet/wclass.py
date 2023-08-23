@@ -1,4 +1,4 @@
-from land_wavelet import constants, wav
+from land_wavelet import constants, wav, wav1d
 import numpy as np
 from scipy.ndimage.measurements import label
 from scipy import ndimage
@@ -13,7 +13,7 @@ class landwav(object):
         if dataname in constants.NAMES:
             dic = constants.NAMES[dataname]
         else:
-            print('Dataset not found')
+            print('Dataset not found, ERROR')
             return
 
         self.name = dataname
@@ -24,9 +24,11 @@ class landwav(object):
 
 
         wobj = wav.wavelet(self.res, self.dist, self.nb, start=self.start)
+        wobj_1d = wav1d.wavelet_1d(self.res, self.dist, self.nb, start=self.start)
         self.scales = wobj.scales # actual scales at across-scale power maximum
         self.period = wobj.period # period scale better representative of coeff > 0 area.
         self.wobj = wobj
+        self.wobj_1d = wobj_1d
 
         print('Initialised wavelet with scales: ', self.scales)
 
@@ -84,7 +86,7 @@ class landwav(object):
         self.lat = lat
 
 
-    def applyWavelet(self, ge_thresh=0, fill=0.01, le_thresh=None, normed='none'):
+    def applyWavelet(self, ge_thresh=None, fill=0.01, le_thresh=None, normed='none'):
         """
         Applies the wavelet functions and handles wavelet coefficient filtering.
         :param ge_thresh: greater-equal threshold for coefficient filtering.
@@ -104,6 +106,34 @@ class landwav(object):
         #obj = wav.wavelet(self.res, self.dist, self.nb, start=self.start)
 
         coeffs, power = self.wobj.calc_coeffs(data, ge_thresh=ge_thresh, fill=fill, le_thresh=le_thresh, power_normed=normed)
+
+        self.power = power
+        self.coeffs = coeffs
+
+        del data
+
+        return coeffs, power, self.scales, self.period
+
+    def applyWavelet_1d(self, ge_thresh=None, fill=0.01, le_thresh=None, normed='none', direction='x'):
+        """
+        Applies the wavelet functions and handles wavelet coefficient filtering.
+        :param ge_thresh: greater-equal threshold for coefficient filtering.
+        :param fill: fill value for filtering thresholds
+        :param le_thresh: less-equal threshold for coefficient filtering.
+        :return: Wavelet coefficient and wavelet power attributes of the wavelet object.
+        """
+
+        try:
+            data = self.image.copy()
+        except NameError:
+            print('No image found to apply wavelet. Please read in an image first.')
+            return
+
+        print('Wavelet coeffs (none or stddev) and power (none, stddev or scale) normed by:', normed, 'Please note: Choose none if value reconstruction is intended.')
+
+        #obj = wav.wavelet(self.res, self.dist, self.nb, start=self.start)
+
+        coeffs, power = self.wobj_1d.calc_coeffs(data, ge_thresh=ge_thresh, fill=fill, le_thresh=le_thresh, normed=normed, direction=direction)
 
         self.power = power
         self.coeffs = coeffs
