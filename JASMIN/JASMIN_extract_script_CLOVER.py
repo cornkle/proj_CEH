@@ -8,14 +8,14 @@ import pdb
 
 def run(orig_names=False):
 
-    fpath = '/home/users/cornkle/runscript/in'
-    outpath = '/home/users/cornkle/runscript/out'
+    fpath = '/home/users/cornkle/runscript/fut_in'
+    outpath = '/home/users/cornkle/runscript/fut_out'
 
     local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
     #hq_box = [-18+360,-10+360, 12, 17]
     hq_box = [-18+360,25+360, 3.5, 20]
-    months = [6,9] # March-May
+    months = [7,9] # March-May
 
     dic = {
 
@@ -38,9 +38,9 @@ def run(orig_names=False):
         #'colWetMass' : ([temp_box], ['daily'], [], []),
         #'u_pl' : ([temp_box], ['daily'], [600, 650,925], []),
         #'rh_pl' : ([temp_box], ['keep'], [400, 500, 600, 700, 850, 925], [12]),
-        #'sh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        #'lh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        #'SM' : ([temp_box], ['keep'], [], [12,15,18,21]),
+        'sh' : ([temp_box], ['keep'], [], [12,15,18,21]),
+        'lh' : ([temp_box], ['keep'], [], [12,15,18,21]),
+        'SM' : ([temp_box], ['keep'], [], [12,15,18,21]),
         'q2' : ([temp_box], ['keep'], [], [12,3,6]),
     }
     keys = dic.keys()
@@ -76,11 +76,15 @@ def run(orig_names=False):
                 continue
             #if '199809220100-199809230000' in outfile:
             # continue
+ 
             try:
              ds = xr.open_dataset(f).load()
             except OSError:
              print('Netcdf OSError')
              continue
+            if (var == 'e08223') & ('fut_in25' in infolder):
+                ds = ds.rename({'sm' : 'e08223', 't':'time', 'level6' : 'depth'})
+
             mins = np.unique(ds[var]['time.minute'])[0]  # 0 in most cases, but may be 30 for fluxes
             if dinfo[3] != []:
                 ds = ds.isel(time=(([np.in1d(ds['time.hour'].values, dinfo[3])][0]) & (ds['time.minute']==mins))) 

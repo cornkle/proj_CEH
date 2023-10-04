@@ -9,6 +9,7 @@ import datetime
 import multiprocessing
 from utils import constants as cnst
 from eod import msg_panAfrica
+import ipdb
 
 #### Defines path to original ch9 grads files and years to consider.
 filepath = {
@@ -48,6 +49,7 @@ def _loop(passit):
     dat = dat.where((dat.lon >= lls[0]) & (dat.lon <= lls[1]) & (dat.lat >= lls[2]) & (dat.lat <= lls[3]), drop=True) # cut out domain
     print('filtered data shape', dat.shape)
 
+    ipdb.set_trace()
     hour = dat['time.hour']
     minute = dat['time.minute']
     day = dat['time.day']

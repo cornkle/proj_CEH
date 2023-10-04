@@ -89,9 +89,11 @@ def write_grads(dist=3, meridional=True):
 
     era5f_pl = xr.open_mfdataset(glob.glob(mainpath + 'pressure_levels/*.nc'))
     era5f_pl = u_darrays.flip_lat(era5f_pl)
+    era5f_pl = era5f_pl.sel(latitude=slice(-45,45), longitude=slice(-130,170))
 
     era5f_srfc = xr.open_mfdataset(glob.glob(mainpath + 'surface/*.nc'))
     era5f_srfc = u_darrays.flip_lat(era5f_srfc)
+    era5f_srfc = era5f_srfc.sel(latitude=slice(-45, 45), longitude=slice(-130,170))
 
     for mm in range(1,13):
         print('Doing month', mm)
@@ -103,9 +105,7 @@ def write_grads(dist=3, meridional=True):
             tag = 'zonal'
             direct = 'x'
 
-        if len(glob.glob(mainpath + 'gradients/ef_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')) > 0:
-            print('Month exists, continue')
-            continue
+
 
         sh = era5f_srfc['sshf'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
         sh = sh / -86400
@@ -117,13 +117,17 @@ def write_grads(dist=3, meridional=True):
 
         ef = lh / (sh+lh)
 
-        vnames = ['sh', 'ef']#, 'lh']#, 't2', 't925']
+        vnames = ['sh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
 
-        for ids, das in enumerate([sh, ef]):#, lh, t2, era_t]):
+        for ids, das in enumerate([t2]):#, lh, t2, era_t]):
             print('Doing var', vnames[ids])
 
+            if len(glob.glob(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus' + str(dist) + 'deg_' + tag + '_' + str(mm).zfill(2) + '.nc')) > 0:
+                print('Month exists, continue')
+                continue
+
             shpoly = calc_grad(das, tcoord='year', dim=direct, dist=dist)
-            shpoly.to_netcdf(mainpath + 'gradients/'+vnames[ids]+'_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')
+            shpoly.to_netcdf(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')
 
 
 
@@ -135,10 +139,13 @@ def write_corr(dist=3, meridional=True):
     #era5f_pl = xr.open_mfdataset('/media/ck/LStorage/global_water/ERA5_global_0.7/monthly/pressure_levels/*.nc')
     era5f_pl = xr.open_mfdataset(glob.glob(mainpath + 'pressure_levels/*.nc'))
     era5f_pl = u_darrays.flip_lat(era5f_pl)
+    era5f_pl = era5f_pl.sel(latitude=slice(-45, 45), longitude=slice(-130, 170))
 
     #era5f_pl = xr.open_mfdataset('/media/ck/LStorage/global_water/ERA5_global_0.7/monthly/pressure_levels/*.nc')
     era5f_srfc = xr.open_mfdataset(glob.glob(mainpath + 'surface/*.nc'))
     era5f_srfc = u_darrays.flip_lat(era5f_srfc)
+    era5f_srfc = era5f_srfc.sel(latitude=slice(-45, 45), longitude=slice(-130, 170))
+
 
     # era5u_mean = era5f_pl['u'].load()
     # era5v_mean = era5f_pl['v'].load()
@@ -148,7 +155,7 @@ def write_corr(dist=3, meridional=True):
     else:
         tag = 'zonal'
 
-    vnames = ['sh', 'ef'] #, 'lh', 't2', 't925']
+    vnames = ['sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
 
     for mm in range(1,13):
         try:
@@ -163,12 +170,12 @@ def write_corr(dist=3, meridional=True):
         era_vshear = era_vh - era_vl
         era_shear = np.sqrt(era_ushear ** 2 + era_vshear ** 2)
 
-        wnames = ['ushear', 'vshear', 'shear']#, 'ul', 'uh', 'vl', 'vh']
+        wnames = ['ushear', 'shear']#, 'ul', 'uh', 'vl', 'vh'] 'vshear',
 
         for ids, das in enumerate(vnames):
 
-            for idx, was in enumerate([era_ushear, era_shear, era_vshear]):  #, era_ul, era_uh, era_vl, era_vh
-                outf = mainpath + 'correlations/'+vnames[ids]+'_versus_'+wnames[idx]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc'
+            for idx, was in enumerate([era_ushear, era_shear]):  #, era_ul, era_uh, era_vl, era_vh
+                outf = mainpath + 'correlations_new/'+vnames[ids]+'_versus_'+wnames[idx]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc'
                 if os.path.isfile(outf):
                     print('File exists')
                     continue
