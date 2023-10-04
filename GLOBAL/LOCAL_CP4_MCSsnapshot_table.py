@@ -17,13 +17,12 @@ tags = ['CP4hist', 'CP4fut']
 
 strct = {'CP4hist' : [], 'CP4fut' : []}
 strct_anom = {'CP4hist' : [], 'CP4fut' : []}
-
 for idx, dats in enumerate([hist, fut]):
     u_dates = []
     cp4_full_path = cnst.other_drive + 'CP4/CP4_WestAfrica/'+tags[idx]+'/'
     cp4_all_files = sorted(glob.glob(cp4_full_path + var + '/' + var +'_*.nc'))
     
-    for file in dats[0:100]:  ########restricted files for testing
+    for file in dats[0:500]:  ########restricted files for testing
         fname = os.path.basename(file)
         u_dates.append(fname[0:4]+fname[5:7]+fname[8:10])
     loop_dates = np.unique(u_dates)
@@ -43,7 +42,7 @@ for idx, dats in enumerate([hist, fut]):
 
         cp4_pos = cp4_all_files.index(cp4_file)
 
-        files_toread = np.array(cp4_all_files)[cp4_pos-10:cp4_pos+10]
+        files_toread = np.array(cp4_all_files)[cp4_pos-15:cp4_pos+15]
 
         cp4_agg = xr.open_mfdataset(files_toread)[var]
             
@@ -57,8 +56,11 @@ for idx, dats in enumerate([hist, fut]):
             cp4_mean = cp4_box.groupby('time.hour').mean('time')
             cp4_anom = cp4_box.groupby('time.hour')-cp4_mean
 
+            print(cp4_mean.hour)
+
             strct[tags[idx]].append(cp4_box.values)
             strct_anom[tags[idx]].append(cp4_anom.values)
 
 pkl.dump(strct, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_timeseries_-10to+10days_'+hour+'.p','wb'))
 pkl.dump(strct_anom, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_anom_timeseries_-10to+10days_'+hour+'.p','wb'))
+print('Written files', var)
