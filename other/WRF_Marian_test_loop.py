@@ -15,7 +15,7 @@ varlist_3d = ['U', 'V']
 boxes = {'western' : [-18,10] , 'central' : [-10,0], 'eastern' : [0,10]
 ######################  INOUT CHANGES HERE
 WRF_IN = '/home/cornkle/WRF_testfiles/'
-WRF_OUT = '/home/cornkle/WRF_extractfiles/
+WRF_OUT = '/home/cornkle/WRF_extractfiles/'
 VARLIST = '3d'
 ##################
 
