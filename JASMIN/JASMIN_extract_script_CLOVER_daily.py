@@ -8,40 +8,29 @@ import pdb
 
 def run(orig_names=False):
 
-    fpath = '/home/users/cornkle/runscript/fut_in'
-    outpath = '/home/users/cornkle/runscript/fut_out'
+    fpath = '/home/users/cornkle/runscript/in25'
+    outpath = '/home/users/cornkle/runscript/out25_day'
 
-    local_box = [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
-    #hq_box = [-18+360,-10+360, 12, 17]
-    hq_box = [-18+360,25+360, 3.5, 20]
-    months = [7,9] # March-May
+    months = [6,9] # March-May
 
     dic = {
 
-        #'t2' : ([temp_box], ['keep'], [], [12,3,6]),
-        #'u10': ([temp_box], ['keep'], [], [12,3,6]),
-        #'v10': ([temp_box], ['keep'], [], [12,3,6]),
-        #'lw_out_PBLtop' : ([temp_box], ['keep'], [], []),
-        #'v_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
-        #'u_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
-        #'t_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
-        #'geoH_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
-        #'omega_pl' : ([temp_box], ['keep'], [650,300], [12,3,6]),
-        #'lsRain' : ([temp_box], ['keep'], [], []),
-        #'totRain' : ([temp_box], ['keep'], [], []),
-        #'q_pl' : ([temp_box], ['keep'], [200, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 925], [12,6]),
-        #'colDryMass' : ([temp_box], ['keep'], [], [12,3,6]),
-        #'colWetMass' : ([temp_box], ['keep'], [], [12,3,6]),
-        #'lsRain_hFreq' : ([hq_box], ['keep'], [], []),
+        #'v_pl' : ([temp_box], ['daily'], [ 650, 850, 925], []),
+        #'lsRain' : ([temp_box], ['daily'], [], []),
+        #'totRain' : ([temp_box], ['daily'], [], []),
         #'colDryMass' : ([temp_box], ['daily'], [], []),
         #'colWetMass' : ([temp_box], ['daily'], [], []),
-        #'u_pl' : ([temp_box], ['daily'], [600, 650,925], []),
-        #'rh_pl' : ([temp_box], ['keep'], [400, 500, 600, 700, 850, 925], [12]),
-        'sh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        'lh' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        'SM' : ([temp_box], ['keep'], [], [12,15,18,21]),
-        'q2' : ([temp_box], ['keep'], [], [12,3,6]),
+        #'u_pl' : ([temp_box], ['daily'], [ 650, 850, 925], []),
+        'sh' : ([temp_box], ['daily'], [], []),
+        'lh' : ([temp_box], ['daily'], [], []),
+        'SM' : ([temp_box], ['daily'], [], []),
+        'q2' : ([temp_box], ['daily'], [], []),
+        't2' : ([temp_box], ['daily'], [], []),
+        't_pl' : ([temp_box], ['daily'], [650,850,925], []),
+        'q_pl' : ([temp_box], ['daily'], [650,850,925], []),
+        'v_pl' : ([temp_box], ['daily'], [650,850,925], []),
+
     }
     keys = dic.keys()
 
@@ -57,7 +46,7 @@ def run(orig_names=False):
             pathvar = var
         
         infolder = fpath+os.sep + pathvar
-        outfolder = outpath +os.sep +  k 
+        outfolder = outpath +os.sep +  k + '_daily' 
         files = glob.glob(infolder + os.sep + var+'*.nc' )
         for f in files:
             
@@ -76,16 +65,18 @@ def run(orig_names=False):
                 continue
             #if '199809220100-199809230000' in outfile:
             # continue
- 
             try:
              ds = xr.open_dataset(f).load()
             except OSError:
              print('Netcdf OSError')
              continue
-            if (var == 'e08223') & ('fut_in25' in infolder):
-                ds = ds.rename({'sm' : 'e08223', 't':'time', 'level6' : 'depth'})
-
-            mins = np.unique(ds[var]['time.minute'])[0]  # 0 in most cases, but may be 30 for fluxes
+            try:
+                mins = np.unique(ds[var]['time.minute'])[0]  # 0 in most cases, but may be 30 for fluxes
+            except:
+                if var == 'e08223':
+                    var = 'SM'
+                    mins = np.unique(ds[var]['time.minute'])[0]
+             
             if dinfo[3] != []:
                 ds = ds.isel(time=(([np.in1d(ds['time.hour'].values, dinfo[3])][0]) & (ds['time.minute']==mins))) 
             box = dinfo[0]
@@ -111,13 +102,19 @@ def run(orig_names=False):
                 if pres != []:
                    # da = da.sel(pressure=pres)
                      da = da.sel(pressure=slice(pres[0],pres[-1]))
-
                 if agg != 'keep':
                     da.values[da.values==0] = np.nan
-                    #da = da.mean('time')
-                    da = da.resample(time='D').mean('time').isel(time=slice(0,-1))
-                    #pdb.set_trace()
+                    if "Rain" not in k:
 
+                    #da = da.mean('time')
+                        da = da.resample(time='D').mean('time')#.isel(time=slice(0,-1))
+                    else:
+                        da = da.resample(time='D').sum('time')#.isel(time=slice(0,-1)) # mm/day
+                    
+                    if ("25" not in fpath) | ("_pl" in k):                      
+                        if len(da.time)>1:
+                           da = da.isel(time=slice(0,-1))
+                #pdb.set_trace()
                 comp = dict(zlib=True, complevel=5)
 
                 da.name = k
