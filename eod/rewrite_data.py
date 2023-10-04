@@ -867,15 +867,16 @@ def rewrite_topo():
 
 
 def rewrite_CP4_TCWV():
-    tags = ['CP4hist', 'CP4fut']
+    dtag = '_daily'
+    #tags = ['CP4hist', 'CP4fut']
+    tags = ['CP4hist'+dtag, 'CP4fut'+dtag]
     for t in tags:
         #path = '/prj/global_water/CP_models/CP4_WestAfrica/'+t+'/'
         #path = '/media/ck/Elements/Africa/WestAfrica/CP4/'+t+'/'
         path = '/home/users/cornkle/CP4home/'+t+'/'    # JASMIN
 
-        dcol = glob.glob(path+'colDryMass/*')
+        dcol = glob.glob(path+'colDryMass'+dtag+'/*')
         #wcol = glob.glob(path+'colWetMass/*')
-
         for dry in dcol:
 
             date = dry[-28:-5]
