@@ -107,10 +107,6 @@ def file_loop(f):
     tgrad = dic.attrs['Tgrad']
     tdiff = dic.attrs['Tgradbox']
 
-    #print(theta)
-
-    #ipdb.set_trace()
-
     out['lon'] = dic['longitude'].values
     out['lat'] = dic['latitude'].values
     out['hour'] = dic['time.hour'].item()
@@ -124,7 +120,6 @@ def file_loop(f):
 
     for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid,tsrfc]:
         var[antimask] = np.nan
-
 
     if np.sum(mask) < 3:
         return
@@ -144,7 +139,6 @@ def file_loop(f):
 
     out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 30km
 
-    #out['pmax'] = np.max(outp[mask]) # rain at 4.4km
     out['pmean'] = np.mean(outp[mask])
     out['qmax'] = np.nanmean(ua.cut_kernel(outq,minpos[1], minpos[0],3)) #np.max(outq[mask]) #30km q and shear
 
@@ -159,7 +153,7 @@ def file_loop(f):
     out['shearmean'] = np.mean(outu_mid[mask]) - np.nanmean(outu_srfc[mask]) #np.mean(outshear[mask])
     #out['thetamax'] = np.max(theta[mask])
 
-    out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
+    out['theta'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
     out['tcwv'] = np.nanmean(ua.cut_kernel(tcwv, minpos[1], minpos[0], 3))
     out['tcwvmean'] = np.mean(tcwv[mask])
 

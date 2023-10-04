@@ -1,40 +1,39 @@
 import numpy as np
 import xarray as xr
 from utils import u_arrays as ua
-from scipy import ndimage
-import matplotlib.pyplot as plt
 import multiprocessing
 import ipdb
 import pickle as pkl
-from collections import defaultdict
-import cartopy.crs as ccrs
-from utils import constants
-from utils import u_met
-import cartopy
-import pdb
 from utils import constants as cnst
-import metpy
 from metpy import calc
 from metpy.units import units
 import glob
+import pandas as pd
+import os
 
+TIMETAG = 'hist'
 
-def dictionary():
+def dictionary(dummy):
 
     dic = {}
-    vars = ['hour', 'month', 'year', 'area',
-            'lon', 'lat', 'clon', 'clat',
-            'tmin', 'tmean', 'thetamean', 'thetamax', 'tmidmax', 'tmidmean', 'tsrfcmax', 'tsrfcmean',
-            'pmax', 'pmean',
-            'qmax' , 'qmean',
-            'tcwv', 'tcwvmean',
-            'tgrad',
-            'umax_srfc', 'umean_srfc',
-            'umin_mid', 'umean_mid',
-            'shearmin', 'shearmean',
-            'pgt30', 'pgt01'
-            'isvalid',
-             't', 'p', 'q', 'u_srfc', 'u_mid', 'shear' ]
+    for vn in dummy.data_vars:
+        dic[vn+'_0.25deg'] = []  # 30km
+
+    for vn in dummy.data_vars:
+        dic[vn+'_1deg'] = []  # 1deg
+
+    for vn in dummy.data_vars:
+        dic[vn+'_2deg'] = []  # 2deg
+
+    for vn in dummy.data_vars:
+        dic[vn+'_Smean'] = [] # storm mean
+
+    vars = ['hour', 'month', 'year', 'day',
+            'lon', 'lat',
+            'tmin', 'pmax', 'theta', 'rh', 'div'
+            'pgt30', 'pgt1', 'isvalid',
+            'tgrad', 'SMgrad', 'SHgrad', 'LHgrad', 'tcwv_cl', 'sh_cl', 'lh_cl',
+            'area', 'area-70', 'area-80', 'area-60', 'area_1mm', 'area_5mm', 'area_10mm']
 
     for v in vars:
         dic[v] = []
@@ -42,149 +41,193 @@ def dictionary():
 
 def perSys():
 
+    timetag = TIMETAG
+    anom = 'anom'
+
+
+    if anom == 'anom':
+        a1 = '_anom'
+        a2 = 'anom_'
+    else:
+        a1 = ''
+        a2 = ''
+
+    if timetag == 'hist':
+        ftag = 'historical'
+    else:
+        ftag = 'future'
+
     pool = multiprocessing.Pool(processes=3)
-    tthresh = '-50'
-    files = glob.glob('/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box/CP4_allHours_historical_5000km2_-50_WAf_box_v2/*.nc') # CP4_18UTC_5000km2_-50_5-20N_new')  #CP25_-50C_5000km2
-    #files = glob.glob('/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box/CP4_allHours_future_5000km2_-50_WAf_box_v2/*.nc')
+    files = glob.glob('/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box'+a1+'/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_'+a2+'v2/*.nc')
+
     print('Nb files', len(files))
-    for y in range(1998,2007):
+    # for y in range(1998,2007):
+    #
+    #     yfiles = []
+    #     for f in files:
+    #         if str(y)+'-' in f:
+    #             yfiles.append(f)
 
-        yfiles = []
-        for f in files:
-            if str(y) in f:
-                yfiles.append(f)
-        pool = multiprocessing.Pool(processes=4)
+    # pool = multiprocessing.Pool(processes=4)
+    dummy = xr.open_dataset(files[0])
+    #
+    mdic = dictionary(dummy) #defaultdict(list)
+    # print('NB files', len(files))
+    # res = pool.map(file_loop, files)
+    # pool.close()
 
-        mdic = dictionary() #defaultdict(list)
-        print('Yearly files', len(yfiles))
-        # res = pool.map(file_loop, yfiles)
-        # pool.close()
+    res=[]
+    for f in files:
+        res.append(file_loop(f))
 
-        res=[]
-        for f in files:
-            res.append(file_loop(f))
-            ipdb.set_trace()
+    keys = mdic.keys()
+    for v in res:
+        for k in keys:
+            try:
+                mdic[k].append(v[k])
+            except TypeError:
+                continue
 
-        keys = mdic.keys()
-        for v in res:
-            for k in keys:
-                try:
-                    mdic[k].append(v[k])
-                except TypeError:
-                    continue
+    df = pd.DataFrame.from_dict(mdic, orient="index")
+    df.to_csv('/home/ck/DIR/cornkle/data/LMCS/MCS_files/CP4_box/'+timetag+'_table_1700_inclStormChar'+a1+'_200km.csv')
 
-
-        #ipdb.set_trace()
-        pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
-                           'wb'))
+        # pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
+        #                    'wb'))
 
 
 def file_loop(f):
     print('Doing file: ' + f)
-    dic = xr.open_dataset(f)
-    out = dictionary()
+    ds = xr.open_dataset(f)
+    out = dictionary(ds)
 
-    outt = dic['lw_out_PBLtop'].values
-    try:
-        outp = dic['lsRain'].values
-    except KeyError:
-        outp = dic['totRain'].values
-    outu_srfc = dic['u_srfc'].values
-    outu_mid = dic['u_mid'].values
-    outshear = dic['shear'].values
-    outq = dic['q_srfc'].values
-    tmid = dic['t_mid'].values
-    tsrfc = dic['t_srfc'].values
 
+
+    outt = ds['lw_out_PBLtop'].values
+    outp = ds['lsRain'].values
+    outp_noon = ds['lsRain_noon'].values
+    outp_noon[outp_noon!=0] = np.nan
+
+    if np.sum(np.isnan(outp_noon[54:62, 54:62])) > 0:
+        print('Noon rainfall, continue')
+        return
+
+    outu_srfc = ds['u_srfc'].values
+    outu_mid = ds['u_mid'].values
+    outshear = ds['shear'].values
+    outq = ds['q_srfc'].values
+    tmid = ds['t_mid'].values
+    tsrfc = ds['t_srfc'].values
+    ####################################################
     pes = units.Quantity(650, 'hPa')
     pes_down = units.Quantity(925, 'hPa')
     tes_up = units.Quantity(tmid+273.15, 'K')
     qes = units.Quantity(outq/1000, 'kg/kg')
     tes_down = units.Quantity(tsrfc+273.15, 'K')
 
-    theta_low = u_met.theta_e(925, tsrfc, outq/1000.)
     rh = calc.relative_humidity_from_specific_humidity(pes_down, tes_down, qes)
     dew = calc.dewpoint_from_specific_humidity(pes_down, tes_down, qes)
     theta_e = calc.equivalent_potential_temperature(pes_down, tes_down,dew)
     theta_es = calc.saturation_equivalent_potential_temperature(pes, tes_up)
-    ipdb.set_trace()
-    theta = theta_low-(np.array(theta_es)-273.15)
-    tcwv = dic['tcwv'].values
+
+    theta = (np.array(theta_e-theta_es))
+   ######################################################
+
+    u = units.Quantity(ds['u_srfc'].values, 'm/s')
+    v = units.Quantity(ds['v_srfc'].values, 'm/s')
+
+    dx = units.Quantity(4400, 'm')
+    div = calc.divergence(u, v, dx=dx, dy=dx)
+   ########################################################
 
 
-    out['lon'] = dic.minlon
-    out['lat'] = dic.minlat
-    out['hour'] = dic['time.hour'].item()
-    out['month'] = dic['time.month'].item()
-    out['year'] = dic['time.year'].item()
-    out['date'] = dic['time'].values
+    out['lon'] = ds.minlon
+    out['lat'] = ds.minlat
+    out['hour'] = ds['time.hour'].item()
+    out['month'] = ds['time.month'].item()
+    out['year'] = ds['time.year'].item()
+    out['day'] = ds['time.day'].item()
 
-    out['rh'] = rh
 
     t_thresh = -50  # -40C ~ 167 W m-2
-    mask = np.isfinite(outp) & (outt<=t_thresh) & np.isfinite(outq) & np.isfinite(outshear)
-    antimask = ~mask
 
-    for var in [outt,outp,outu_srfc,outu_mid,outshear,outq,theta,tmid,tsrfc]:
-        var[antimask] = np.nan
-
-
-    if np.sum(mask) < 3:
+    mask = (outt<=t_thresh)
+    varmask = (outt<=-10) & (np.isfinite(outp_noon))
+    if np.sum(mask)<=3:
         return
+
+    rainfield = outp[mask]
+
+    out['area'] = np.sum((outt<=t_thresh))
+    out['area-60'] = np.sum((outt <= -60))
+    out['area-70'] = np.sum((outt <= -70))
+    out['area-80'] = np.sum((outt <= -80))
+    out['area_1mm'] = np.sum((outp >=1))
+    out['area_5mm'] = np.sum((outp>=5))
+    out['area_10mm'] = np.sum((outp>=10))
 
     maxpos = np.unravel_index(np.nanargmax(outp), outp.shape)
     minpos = np.unravel_index(np.nanargmin(outt), outt.shape)
 
-    tgrad_lat = dic.isel(longitude=slice(minpos[1] - 3, minpos[1] + 3)).mean('longitude').squeeze()
-    ipdb.set_trace()
+    out['tmin'] = np.nanmin(outt)
+    out['pmax'] = np.nanmean(ua.cut_kernel(outp, maxpos[1], maxpos[0], 1))  # degrade rainfall to 15km
+    out['pmax_native'] = np.max(outp[mask])  # rain at 4.4km
+    #######
+    if 'CP4_box_anom' in f:
+        basefile = os.path.basename(f)
+        timetag = TIMETAG
+        if timetag == 'hist':
+            ftag = 'historical'
+        else:
+            ftag = 'future'
+        dpath = '/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box/CP4_allHours_' + ftag + '_5000km2_-50_WAf_box_v2/'
+        try:
+            dcl = xr.open_dataset(dpath + basefile)
+            out['tcwv_cl'] = np.nanmean(ua.cut_kernel(dcl['tcwv'].values, minpos[1], minpos[0], 11))
+            out['sh_cl'] = np.nanmean(ua.cut_kernel(dcl['sh'].values, minpos[1], minpos[0], 11))
+            out['lh_cl'] = np.nanmean(ua.cut_kernel(dcl['lh'].values, minpos[1], minpos[0], 11))
+            del dcl
+        except:
+            return
+            #out['tcwv_cl'] = np.nan
+   ########
+    for boxes in ((11, '_1deg'), (22, '_2deg'), (3, '_0.25deg'), (mask, '_Smean')):
+
+        dist = boxes[0]
+        tag = boxes[1]
+        yy = minpos[0]
+        xx = minpos[1]
+
+        for vn in ds.data_vars:
+
+            if isinstance(dist, int):
+                cnt = ds[vn].where(varmask).sel(latitude=slice(dist*-1, dist), longitude=slice(dist*-1, dist)).count(['longitude', 'latitude'])
+                if cnt > 0.5 * ((dist*2)**2):
+                    data = float(ds[vn].sel(latitude=slice(dist*-1, dist), longitude=slice(dist*-1, dist)).mean(['longitude', 'latitude']).values)  # box of 1deg or 0.25deg
+                else:
+                    data = np.nan
+            else:
+                data = float(ds[vn].where(mask).mean(['longitude', 'latitude']).values)  # storm mask
+            out[vn + tag] = (float(data))
+
+    out['rh'] = np.nanmean(ua.cut_kernel(rh,minpos[1], minpos[0],11)) # 1deg RH
+    out['theta'] = np.nanmean(ua.cut_kernel(theta, minpos[1], minpos[0], 11))
+    out['div'] = np.nanmean(ua.cut_kernel(theta, minpos[1], minpos[0], 11))
+
+    tgrad_lat = ds.isel(longitude=slice(minpos[1] - 11, minpos[1] + 11)).mean('longitude').squeeze() #1deg strip for gradients
     tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)
 
-    out['area'] = np.sum((outt<=t_thresh))
+    out['tgrad'] = float((tgrad['t2_polyfit_coefficients'])[0])
+    try:
+        out['SMgrad'] = float((tgrad['SM_polyfit_coefficients'])[0])
+    except:
+        out['SMgrad'] = np.nan
+    out['SHgrad'] = float((tgrad['sh_polyfit_coefficients'])[0])
+    out['LHgrad'] = float((tgrad['lh_polyfit_coefficients'])[0])
 
-
-    out['tmin'] = np.nanmin(outt)
-    out['tmean'] = np.mean(outt[mask])
-    out['tgrad'] = tgrad
-
-    out['pmax'] = np.nanmean(ua.cut_kernel(outp,maxpos[1], maxpos[0],1)) # degrade rainfall to 15km
-
-    out['pmax_native'] = np.max(outp[mask]) # rain at 4.4km
-    out['pmean'] = np.mean(outp[mask])
-    out['qmax30'] = np.nanmean(ua.cut_kernel(outq,minpos[1], minpos[0],3)) #np.max(outq[mask]) #30km q and shear
-
-    out['qmean'] = np.nanmean(outq[mask])
-    out['umax_srfc'] = np.max(outu_srfc[mask])
-    out['umean_srfc'] = np.nanmean(outu_srfc[mask])
-    out['umin_mid'] = np.min(outu_mid[mask])
-    out['umean_mid'] = np.mean(outu_mid[mask])
-
-    out['shearmin'] =  np.nanmean(ua.cut_kernel(outshear,minpos[1], minpos[0],3))
-
-    out['shearmean'] = np.mean(outu_mid[mask]) - np.nanmean(outu_srfc[mask]) #np.mean(outshear[mask])
-    #out['thetamax'] = np.max(theta[mask])
-
-    out['thetamax'] = np.nanmean(ua.cut_kernel(theta,minpos[1], minpos[0],3))
-    out['tcwv'] = np.nanmean(ua.cut_kernel(tcwv, minpos[1], minpos[0], 3))
-    out['tcwvmean'] = np.nanmean(tcwv[mask])
-    out['rh'] = np.nanmean(rh[mask])
-
-    out['thetamean'] = np.mean(theta[mask])
-    out['tmidmax'] = np.max(tmid[mask])
-    out['tmidmean'] = np.mean(tmid[mask])
-    out['tsrfcmax'] = np.max(tsrfc[mask])
-    out['tsrfcmean'] = np.mean(tsrfc[mask])
-
-    out['pgt30'] = np.sum(outp[mask]>30)
+    out['pgt30'] = np.sum(rainfield>30)
     out['isvalid'] = np.sum(mask)
-    out['pgt01'] = np.sum(outp[mask]>0.1)
+    out['pgt1'] = np.sum(rainfield>1)
 
-    out['p'] = outp[mask]
-    out['t'] = outt[mask]
-    out['q'] = outq[mask]
-    out['u_mid'] = outu_mid[mask]
-    out['u_srfc'] = outu_srfc[mask]
-    out['shear'] = outshear[mask]
-
-    dic.close()
+    ds.close()
 
     return out

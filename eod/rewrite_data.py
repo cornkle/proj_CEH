@@ -287,7 +287,12 @@ def rewriteMsgLonLat(file, nx, ny, nowrite=False):
 # Rewrites panAfrica msg lat lon to something nice (lat lon from blobs) [ corrects nx ny flip with standard code above ]
 #  file: lat lon grads file
 #  ny : pixel in y direction
-#  nx : pixel in x direction
+#  nx : pixel in x direction, panAfrica domain
+
+# The MSG window is defined by
+# nx = 2268, ny = 2080, x1 = 320, y1 = 638(y1 is southernmost row, x1 is easternmost
+# column) I’ve created a file of coordinates if that’s useful, 2 arrays of floats, lat and lon, in
+# / prj / nflics / SSA_data / grads / lat_lon_2268_2080.gra
 #========================================================================================
 def rewriteMsgAfricaLonLat(file, nx, ny, nowrite=False):
     llFile = file
