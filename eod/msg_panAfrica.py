@@ -46,6 +46,7 @@ class ReadMsg(object):
         except:
             try:
                 lpath = glob.glob(msg_folder+'grads/*.gra')[0]
+
                 nx = 2268
                 ny = 2080
                 lldic = rewrite_data.rewriteMsgAfricaLonLat(lpath, nx, ny, nowrite=True)
