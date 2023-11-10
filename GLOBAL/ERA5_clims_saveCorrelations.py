@@ -118,7 +118,6 @@ def write_grads(dist=3, meridional=True):
 
         ef = lh / (sh+lh)
 
-<<<<<<< HEAD
         vnames = ['sh','t2','lh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
 
         for ids, das in enumerate([sh,t2,lh]):#, lh, t2, era_t]):
@@ -157,11 +156,7 @@ def write_corr(dist=3, meridional=True):
     else:
         tag = 'zonal'
 
-<<<<<<< HEAD
     vnames = ['sh', 't2', 'lh'] #, 'lh', 't2', 't925'] #'sh', 'ef'
-=======
-    vnames = ['t2','sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
->>>>>>> origin/master
 
     for mm in range(1,13):
         try:
@@ -220,7 +215,7 @@ def write_corr_degradedRes(dist=3, meridional=True):
     else:
         tag = 'zonal'
 
-    vnames = ['t2','sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
+    vnames = ['t2','sh','lh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
 
     for mm in range(1,13):
         try:
@@ -240,7 +235,7 @@ def write_corr_degradedRes(dist=3, meridional=True):
 
         dummy, lut = grid.lookup_transform(era_ushear, return_lut=True)  # t2d.salem.lookup_transform(da3['tir']) #
 
-        wnames = [('vshear', era_vshear)]#, 'ul', 'uh', 'vl', 'vh'] '('ushear', era_ushear), ('shear', era_shear)
+        wnames = [('ushear', era_ushear), ('shear', shear), ('vshear', era_vshear)]#, 'ul', 'uh', 'vl', 'vh'] '('ushear', era_ushear), ('shear', era_shear)
 
         for ids, das in enumerate(vnames):
 
