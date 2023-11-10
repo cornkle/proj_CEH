@@ -16,6 +16,7 @@ import pandas as pd
 import scipy
 import glob
 import os
+import salem
 
 def calc_grad(da, tcoord='time', dim='y', dist=1.5):
     out = da.copy(deep=True) * np.nan
@@ -117,9 +118,9 @@ def write_grads(dist=3, meridional=True):
 
         ef = lh / (sh+lh)
 
-        vnames = ['sh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
+        vnames = ['t2', 'sh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
 
-        for ids, das in enumerate([t2]):#, lh, t2, era_t]):
+        for ids, das in enumerate([t2, sh]):#, lh, t2, era_t]):
             print('Doing var', vnames[ids])
 
             if len(glob.glob(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus' + str(dist) + 'deg_' + tag + '_' + str(mm).zfill(2) + '.nc')) > 0:
@@ -155,7 +156,7 @@ def write_corr(dist=3, meridional=True):
     else:
         tag = 'zonal'
 
-    vnames = ['sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
+    vnames = ['t2','sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
 
     for mm in range(1,13):
         try:
@@ -170,19 +171,91 @@ def write_corr(dist=3, meridional=True):
         era_vshear = era_vh - era_vl
         era_shear = np.sqrt(era_ushear ** 2 + era_vshear ** 2)
 
-        wnames = ['ushear', 'shear']#, 'ul', 'uh', 'vl', 'vh'] 'vshear',
+        wnames = [('shear', era_shear)]#, 'ul', 'uh', 'vl', 'vh'] 'vshear', , 'shear', 'vshear'
 
         for ids, das in enumerate(vnames):
 
-            for idx, was in enumerate([era_ushear, era_shear]):  #, era_ul, era_uh, era_vl, era_vh
-                outf = mainpath + 'correlations_new/'+vnames[ids]+'_versus_'+wnames[idx]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc'
+            for idx, was in enumerate(wnames):  #, era_ul, era_uh, era_vl, era_vh, , era_shear, era_vshear
+                outf = mainpath + 'correlations_new/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc'
                 if os.path.isfile(outf):
                     print('File exists')
                     continue
 
                 print('Doing', outf)
-                grad_da = xr.open_dataarray(mainpath + 'gradients/'+vnames[ids]+'_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')
-                corr_ds = corr(was, grad_da, tcoord='year')
+                grad_da = xr.open_dataarray(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')
+                corr_ds = corr(was[1], grad_da, tcoord='year')
+
+                corr_ds.to_netcdf(outf)
+
+                del grad_da
+                del was
+                del corr_ds
+
+
+
+def write_corr_degradedRes(dist=3, meridional=True):
+
+    mainpath = cnst.lmcs_drive + '/ERA5_global_0.7/monthly/'
+    #era5f_pl = xr.open_mfdataset('/media/ck/LStorage/global_water/ERA5_global_0.7/monthly/pressure_levels/*.nc')
+    era5f_pl = xr.open_mfdataset(glob.glob(mainpath + 'pressure_levels/*.nc'))
+    era5f_pl = u_darrays.flip_lat(era5f_pl)
+    era5f_pl = era5f_pl.sel(latitude=slice(-45, 45), longitude=slice(-130, 170))
+
+    #era5f_pl = xr.open_mfdataset('/media/ck/LStorage/global_water/ERA5_global_0.7/monthly/pressure_levels/*.nc')
+    era5f_srfc = xr.open_mfdataset(glob.glob(mainpath + 'surface/*.nc'))
+    era5f_srfc = u_darrays.flip_lat(era5f_srfc)
+    era5f_srfc = era5f_srfc.sel(latitude=slice(-45, 45), longitude=slice(-130, 170))
+
+
+    # era5u_mean = era5f_pl['u'].load()
+    # era5v_mean = era5f_pl['v'].load()
+
+    if meridional:
+        tag = 'meridional'
+    else:
+        tag = 'zonal'
+
+    vnames = ['t2','sh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
+
+    for mm in range(1,13):
+        try:
+            era_uh = era5f_pl['u'].sel(time=era5f_pl['time.month']==mm, level=650).groupby('time.year').mean(['time']).squeeze().load()
+        except:
+            continue
+        era_ul = era5f_pl['u'].sel(time=era5f_pl['time.month']==mm, level=925).groupby('time.year').mean(['time']).squeeze().load()
+        era_vh = era5f_pl['v'].sel(time=era5f_pl['time.month']==mm, level=650).groupby('time.year').mean(['time']).squeeze().load()
+        era_vl = era5f_pl['v'].sel(time=era5f_pl['time.month']==mm, level=925).groupby('time.year').mean(['time']).squeeze().load()
+
+        era_ushear = era_uh - era_ul
+        era_vshear = era_vh - era_vl
+        era_shear = np.sqrt(era_ushear ** 2 + era_vshear ** 2)
+
+        grid = era_ushear.salem.grid.regrid(factor=0.5)
+        grid_coords = grid.to_dataset()
+
+        dummy, lut = grid.lookup_transform(era_ushear, return_lut=True)  # t2d.salem.lookup_transform(da3['tir']) #
+
+        wnames = [('vshear', era_vshear)]#, 'ul', 'uh', 'vl', 'vh'] '('ushear', era_ushear), ('shear', era_shear)
+
+        for ids, das in enumerate(vnames):
+
+            for idx, was in enumerate(wnames):  #, era_ul, era_uh, era_vl, era_vh, , era_shear, era_vshear
+                outf = mainpath + 'correlations_new_degraded/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'_degraded.nc'
+                if os.path.isfile(outf):
+                    print('File exists')
+                    continue
+
+                print('Doing', outf)
+                grad_da = xr.open_dataarray(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'.nc')
+
+                grad_da_regrid = grid.lookup_transform(grad_da, method=np.mean, lut=lut)
+                var_da_regrid = grid.lookup_transform(was[1], method=np.mean, lut=lut)
+
+
+                grad_da_regrid = xr.DataArray(grad_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
+                var_da_regrid = xr.DataArray(var_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
+
+                corr_ds = corr(var_da_regrid, grad_da_regrid, tcoord='year')
 
                 corr_ds.to_netcdf(outf)
 
