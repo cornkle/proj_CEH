@@ -50,7 +50,7 @@ def _loop(passit):
 ############################
 # Loop initiaition for defined years, calling multiprocessing.
 
-meteosat_folder = '/prj/Africa_cloud/wavelet/*.nc'
+meteosat_folder = '/prj/Africa_cloud/ch9_wavelet/*/*/*.nc'
 
 files = glob.glob(meteosat_folder)
 
