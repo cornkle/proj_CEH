@@ -2,11 +2,7 @@ import numpy as np
 import datetime as dt
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
-import ipdb
 import pandas as pd
-import multiprocessing
 import glob
 import pickle as pkl
 from scipy.ndimage.measurements import label
@@ -160,7 +156,7 @@ for idx, ff in enumerate(cp4_files[1::]):
 
     basic_tab = process_hw_image(da[var].load(), 4.4)
     del da
-    
+
     outpath = '/outpath/outpath/'
     outfile = 'test_table'
     pd.DataFrame(basic_tab).to_csv(outpath+outfile+'.csv')
