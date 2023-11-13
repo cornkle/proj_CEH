@@ -41,7 +41,7 @@ def download(year):
         },
         cnst.lmcs_drive+'/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_'+str(year)+'_pl.nc')
 
-for y in range(2000,2023):
+for y in range(1980,2001):
     if os.path.isfile(cnst.lmcs_drive+'/ERA5_global_0.7/monthly/pressure_levels/ERA5_monthly_0.7deg_'+str(y)+'_pl.nc'):
         continue
     download(y)
