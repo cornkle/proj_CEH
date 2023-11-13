@@ -17,7 +17,8 @@ def dictionary():
     dic = {}
     vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', 'tmax',
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat', 'tmaxlon', 'tmaxlat',
-            'tmean', 'tp1', 'tp99', 'HW_ID', 'hwMask', 'hw']
+            'tmean', 'tp1', 'tp99', 'HW_ID']
+           #, 'hwMask', 'hw']
 
 
     for v in vars:
@@ -76,9 +77,9 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None, dim
     return labels, goodinds
 
 
-def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=80, max_hw_size=None):
+def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None):
     """
-    This function cuts out MCSs. By default, an MCS is defined as contiguous brightness temperature area at <=-50 degC over >= 5000km2.
+    This function cuts out HWs. By default, a HW is defined as contiguous wet bulb temperature area at >= 35 degC over at least 60 km2 (3 CP4 pixels).
     :param hw: hw temperature image (in degC)
     :param data_res: spatial resolution of input image (approximately, in km - this defines how many pixel are needed to define a heat wave)
     :param t_thresh: temperature threshold (in degC) for considered contiguous HW - minimum threshold to avoid counting one-pixel spikes.
@@ -137,8 +138,8 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=80, max_hw_size=None
         dic['tp1'].append(np.nanpercentile(hw_obj, 1)) # percentiles within object
         dic['tp99'].append(np.nanpercentile(hw_obj, 99)) # percentiles within object
         dic['HW_ID'].append(datestr + '_' + str(g)) # some unique ID including date
-        dic['hwMask'].append(labels==g)
-        dic['hw'].append(hw_obj.values)
+        #dic['hwMask'].append(labels==g)
+        #dic['hw'].append(hw_obj.values) # full heatwave array, can only be saved in pickle not csv
 
     # for k in dic.keys():
     #     print(k, len(dic[k]))
@@ -146,17 +147,22 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=80, max_hw_size=None
     return dic
 
 
-def make_table():
-    """
-    Start with scanning image for MCSs as defined in MCS_table_create.process_tir_image.
-    :return:
-    """
-    infile = '/path/to/CP4/variables/'
-    da = xr.open_dataarray(infile)
-
-    return process_hw_image(da, 4.4)
-
 
 ############
 ### Heat wave cutout
-basic_tab = make_table()
+
+infile = '/path/to/CP4/variables/'
+var = 't2'
+cp4_files = sorted(glob.glob('/CP4/path/' + var + '/' + var + '*.nc'))  # needs more clever way to bring CP4 dates in order
+chunks = []
+for idx, ff in enumerate(cp4_files[1::]):
+    da = xr.open_mfdataset(cp4_files[idx-1:idx+1], concat_dim="days", combine="nested", decode_times=False)
+
+    basic_tab = process_hw_image(da[var].load(), 4.4)
+    del da
+    
+    outpath = '/outpath/outpath/'
+    outfile = 'test_table'
+    pd.DataFrame(basic_tab).to_csv(outpath+outfile+'.csv')
+
+    #pkl.dump(basic_tab, open(outpath+outfile+".p", "wb")) to alternatively save original dictionary including full arrays
