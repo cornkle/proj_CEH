@@ -92,11 +92,10 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
 
     labels, numL = label(array)
 
-
     same_count = np.sum(labels == labels[0,:,:], axis=0)  # count number of repeated label over time
 
     labels = labels[0,:,:]
-    ipdb.set_trace()
+
     labels[same_count != array.shape[0]] = 0  # consider only pixels with same label over all timestep == effective scale of HW
 
     # lmask = np.broadcast_to(same_count != array.shape[0], array.shape) for 3d masking
