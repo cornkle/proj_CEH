@@ -91,10 +91,13 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
     array[np.isnan(array)] = 0  # set nans to 0
 
     labels, numL = label(array)
-    same_count = np.sum(labels == labels[0,:,:], axis=0)
 
-    labels = np.mean(labels, axis=0)
-    labels[same_count != array.shape[0]] = 0
+
+    same_count = np.sum(labels == labels[0,:,:], axis=0)  # count number of repeated label over time
+
+    labels = labels[0,:,:]
+    ipdb.set_trace()
+    labels[same_count != array.shape[0]] = 0  # consider only pixels with same label over all timestep == effective scale of HW
 
     # lmask = np.broadcast_to(same_count != array.shape[0], array.shape) for 3d masking
     # labels[lmask] = 0    # determine pixels affected over all time steps.
@@ -202,14 +205,14 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None
 infile = '/media/ck/LStorage/global_water/other/CP4/CP4_WestAfrica/CP4hist/'
 var = 't2'
 
-cp4_files = sorted(glob.glob(infile + var + '/' + var + '*_200005*.nc'))  # needs more clever way to bring CP4 dates in order
+cp4_files = sorted(glob.glob(infile + var + '/' + var + '*_200006*.nc'))  # needs more clever way to bring CP4 dates in order
 chunks = []
 
 for idx, ff in enumerate(cp4_files[1::]):
 
     da = xr.open_mfdataset(cp4_files[idx:idx+3], concat_dim="time", combine="nested", decode_times=False)
 
-    basic_tab = process_hw_image(da[var].load()-273.15, 4.4)
+    basic_tab = process_hw_image(da[var].load()-273.15, 4.4, t_thresh=26)
     del da
 
     outpath = '/outpath/outpath/'
