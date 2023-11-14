@@ -5,7 +5,8 @@ import os
 import pandas as pd
 import glob
 import pickle as pkl
-from scipy.ndimage.measurements import label
+import ipdb
+from scipy.ndimage import label
 
 
 def dictionary():
@@ -21,7 +22,7 @@ def dictionary():
         dic[v] = []
     return dic
 
-def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None, dims_3d=True):
+def hw_define_wloop(array, thresh, min_area=None, max_area=None, minmax_area=None):
     """
 
     :param array: 3d input array, assuming input as X day rolling slices i.e. time dimension reflects minimum length of considered HW
@@ -35,40 +36,90 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None, dim
     array[np.isnan(array)] = 0  # set nans to 0
 
     labels, numL = label(array)
+
     u, inv = np.unique(labels, return_inverse=True)
-    n = np.bincount(inv)
+    goodinds_size = u[u != 0]
 
-    goodinds_size = u[u!=0]
+    goodinds = []
+    badinds = []
 
-    if dims_3d == True:
+    for uni in goodinds_size:
 
-        if array.ndim !=3:
-            print('I did not find 3 dimensions (dims_3d=True), function stopping. Please set dims_3d=False if working on 2d image.')
-            return
-        min_day_check = labels.copy()
-        min_day_check[min_day_check==0] = np.nan
-        min_day_mask = np.sum(min_day_check, axis=0)
-        hw_3day_inds = np.unique(min_day_mask[np.isifinite(min_day_mask)]) # good object inds with contiguous X day HW
-        goodinds = np.intersect1d(goodinds_size, hw_3day_inds)
-    else:
-        goodinds = goodinds_size  # goodinds based on 2d image only.
+        l_dummy = labels.copy()
+        l_dummy[l_dummy!=uni] = 0
+        dummy = np.mean(l_dummy, axis=0)
 
-    if min_area != None:
-        goodinds = u[(n>=min_area) & (u!=0)]
-        badinds = u[n<min_area]
+        if min_area != None:
+            if np.sum(dummy == uni) >= min_area:
+                goodinds.append(uni)
+            else:
+                badinds.append(uni)
 
-    if max_area != None:
-        goodinds = u[(n<=max_area)  & (u!=0)]
-        badinds = u[n>max_area]
+        if max_area != None:
+            if np.sum(dummy == uni) <= max_area:
+                goodinds.append(uni)
+            else:
+                badinds.append(uni)
 
-    if minmax_area != None:
-        goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
-        badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
+        if minmax_area != None:
+            if (np.sum(dummy == uni) <= max_area) & (np.sum(dummy==uni) >= min_area):
+                goodinds.append(uni)
+            else:
+                badinds.append(uni)
+
+        del l_dummy
 
     if (min_area is not None) | (max_area is not None) | (minmax_area is not None):
         for b in badinds:
             pos = np.where(labels==b)
             labels[pos]=0
+
+    return labels, np.array(goodinds)
+
+
+def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
+    """
+
+    :param array: 3d input array, assuming input as X day rolling slices i.e. time dimension reflects minimum length of considered HW
+    :param thresh: heat wave threshold
+    :param min_area: minimum area of considered HW
+    :param max_area: maximum area of considered HW
+    :param minmax_area: tuple indicating only HW bigger than tuple[0] and smaller than tuple[1]
+    :return: 2d array with labelled HW blobs
+    """
+    array[array <= thresh] = 0  # T threshold maskout
+    array[np.isnan(array)] = 0  # set nans to 0
+
+    labels, numL = label(array)
+    same_count = np.sum(labels == labels[0,:,:], axis=0)
+
+    labels = np.mean(labels, axis=0)
+    labels[same_count != array.shape[0]] = 0
+
+    # lmask = np.broadcast_to(same_count != array.shape[0], array.shape) for 3d masking
+    # labels[lmask] = 0    # determine pixels affected over all time steps.
+
+    u, inv = np.unique(labels, return_inverse=True)
+    n = np.bincount(inv)
+
+    goodinds = u[u != 0]
+
+    if min_area != None:
+        goodinds = u[(n >= min_area) & (u != 0)]
+        badinds = u[n < min_area]
+
+    if max_area != None:
+        goodinds = u[(n <= max_area) & (u != 0)]
+        badinds = u[n > max_area]
+
+    if minmax_area != None:
+        goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n >= minmax_area[0])]
+        badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
+
+    if (min_area is not None) | (max_area is not None) | (minmax_area is not None):
+        for b in badinds:
+            pos = np.where(labels == b)
+            labels[pos] = 0
 
     return labels, goodinds
 
@@ -112,6 +163,7 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None
 
         hw_obj = hw.copy()
         hw_obj.values[npos] = np.nan
+        ipdb.set_trace()
         tmin_pos = np.nanargmin(hw_obj.values)
         tpos_2d = np.unravel_index(tmin_pos, hw_obj.shape)
 
@@ -147,14 +199,17 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None
 ############
 ### Heat wave cutout
 
-infile = '/path/to/CP4/variables/'
+infile = '/media/ck/LStorage/global_water/other/CP4/CP4_WestAfrica/CP4hist/'
 var = 't2'
-cp4_files = sorted(glob.glob('/CP4/path/' + var + '/' + var + '*.nc'))  # needs more clever way to bring CP4 dates in order
-chunks = []
-for idx, ff in enumerate(cp4_files[1::]):
-    da = xr.open_mfdataset(cp4_files[idx-1:idx+1], concat_dim="days", combine="nested", decode_times=False)
 
-    basic_tab = process_hw_image(da[var].load(), 4.4)
+cp4_files = sorted(glob.glob(infile + var + '/' + var + '*_200005*.nc'))  # needs more clever way to bring CP4 dates in order
+chunks = []
+
+for idx, ff in enumerate(cp4_files[1::]):
+
+    da = xr.open_mfdataset(cp4_files[idx:idx+3], concat_dim="time", combine="nested", decode_times=False)
+
+    basic_tab = process_hw_image(da[var].load()-273.15, 4.4)
     del da
 
     outpath = '/outpath/outpath/'
