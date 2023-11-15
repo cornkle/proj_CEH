@@ -122,7 +122,7 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         for b in badinds:
             pos = np.where(labels == b)
             labels[pos] = 0
-    ipdb.set_trace()
+
     return labels, goodinds
 
 
