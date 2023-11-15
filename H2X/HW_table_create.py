@@ -122,7 +122,7 @@ def hw_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
         for b in badinds:
             pos = np.where(labels == b)
             labels[pos] = 0
-
+    ipdb.set_trace()
     return labels, goodinds
 
 
@@ -151,8 +151,15 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None
         if g==0:
             continue
 
-        pos = np.where(labels==g)
-        npos = np.where(labels!=g)
+        # pos = labels==g
+        # npos = labels!=g
+
+        pos = np.broadcast_to(labels==g, hw.shape) #for 3d masking
+        npos = np.broadcast_to(labels!=g, hw.shape)  # for 3d masking
+
+
+        ############################## A DECISION NEEDS TO BE MADE HERE WHETHER STATISTICS ARE CALCULATED PER HW TIME STEP OR IN AGGREGATED WAYS
+
         datestr = str(hw['time.year'].values)+'-'+str(hw['time.month'].values).zfill(2)+'-'+str(hw['time.day'].values).zfill(2)+'_'+\
                       str(hw['time.hour'].values).zfill(2)+':'+str(hw['time.minute'].values).zfill(2)
 
@@ -165,7 +172,7 @@ def process_hw_image(hw, data_res, t_thresh=35, min_hw_size=60, max_hw_size=None
 
         hw_obj = hw.copy()
         hw_obj.values[npos] = np.nan
-        ipdb.set_trace()
+
         tmin_pos = np.nanargmin(hw_obj.values)
         tpos_2d = np.unravel_index(tmin_pos, hw_obj.shape)
 
@@ -211,7 +218,7 @@ for idx, ff in enumerate(cp4_files[1::]):
 
     da = xr.open_mfdataset(cp4_files[idx:idx+3], concat_dim="time", combine="nested", decode_times=False)
 
-    basic_tab = process_hw_image(da[var].load()-273.15, 4.4, t_thresh=26)
+    basic_tab = process_hw_image(da[var].load()-273.15, 4.4, t_thresh=30)
     del da
 
     outpath = '/outpath/outpath/'
