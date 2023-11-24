@@ -235,12 +235,12 @@ def write_corr_degradedRes(dist=3, meridional=True):
 
         dummy, lut = grid.lookup_transform(era_ushear, return_lut=True)  # t2d.salem.lookup_transform(da3['tir']) #
 
-        wnames = [('ushear', era_ushear), ('shear', shear), ('vshear', era_vshear)]#, 'ul', 'uh', 'vl', 'vh'] '('ushear', era_ushear), ('shear', era_shear)
+        wnames = [('ushear', era_ushear), ('shear', era_shear), ('vshear', era_vshear)]#, 'ul', 'uh', 'vl', 'vh'] '('ushear', era_ushear), ('shear', era_shear)
 
         for ids, das in enumerate(vnames):
 
             for idx, was in enumerate(wnames):  #, era_ul, era_uh, era_vl, era_vh, , era_shear, era_vshear
-                outf = mainpath + 'correlations_new_degraded/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'_degraded.nc'
+                outf = mainpath + 'correlations_new_degraded/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'_degraded_2000-2020.nc'
                 if os.path.isfile(outf):
                     print('File exists')
                     continue
@@ -253,8 +253,9 @@ def write_corr_degradedRes(dist=3, meridional=True):
 
 
                 grad_da_regrid = xr.DataArray(grad_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
+                grad_da_regrid = grad_da_regrid.sel(year=(grad_da_regrid.year>=2000))
                 var_da_regrid = xr.DataArray(var_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
-
+                var_da_regrid = var_da_regrid.sel(year=(var_da_regrid.year>=2000))
                 corr_ds = corr(var_da_regrid, grad_da_regrid, tcoord='year')
 
                 corr_ds.to_netcdf(outf)
