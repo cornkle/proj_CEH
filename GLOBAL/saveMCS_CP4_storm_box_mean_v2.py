@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage.measurements import label
+from scipy.ndimage import label
 import xarray as xr
 import os
 import ipdb
@@ -406,6 +406,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds.data_vars}
+        ipdb.set_trace()
         filt.to_netcdf(path=savefile, mode='w', encoding=encoding)
         print('Saved ' + savefile)
         print('Saved MCS no.'+str(gi)+ ' as netcdf.')
@@ -480,7 +481,7 @@ vars['t_mid'] = ([650], 12, (0, 0, 0), 't_pl', '')   # INPUT IN T * 100!!
 #vars['t_low'] = ([850], 12, (0, 0, 0), 't_pl', '')
 vars['t_srfc'] = ([925], 12, (0, 0, 0), 't_pl', '')
 vars['q_srfc'] = ([925], 12, (0, 0, 0), 'q_pl', '')
-vars[' geoH_srfc'] = ([925], 12, (inds,weights,shape), 'geoH_pl', 'srfc')
+vars['geoH_srfc'] = ([925], 12, (inds,weights,shape), 'geoH_pl', 'srfc')
 vars['tcwv'] = ([], 12, (inds,weights,shape), 'tcwv', 'srfc')
 vars['sh'] = ([], 12, (inds,weights,shape), 'sh', 'srfc')
 vars['lh'] = ([], 12, (inds,weights,shape), 'lh', 'srfc')

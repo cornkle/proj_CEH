@@ -77,8 +77,7 @@ for idx, dats in enumerate([hist, fut]):
 
         # CONTINUE DEVELOPING CODE HERE!!
 
-        strct_coeff[tags[idx]].append(ds['coeffs'].values)
-        strct_power[tags[idx]].append(ds['power'].values)
+
 
         del sda
         del wObj

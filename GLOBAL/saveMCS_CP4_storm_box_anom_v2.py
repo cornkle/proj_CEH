@@ -405,6 +405,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             (dbox[vout].values)[mask] = np.nan
 
         filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
+        for raw_var in ['lsRain', 'lw_out_PBLtop']:
+            filt[raw_var] = dbox[raw_var]
 
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
