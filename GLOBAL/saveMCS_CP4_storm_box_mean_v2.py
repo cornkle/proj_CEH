@@ -349,6 +349,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             (dbox[vout].values)[mask] = np.nan
 
         filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
+        for raw_var in ['lsRain', 'lw_out_PBLtop']:
+            filt[raw_var] = dbox[raw_var]
 
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
@@ -489,8 +491,7 @@ vars['t2'] = ([], 12, (inds,weights,shape), 't2', 'srfc')
 vars['q2'] = ([], 12, (inds,weights,shape), 'q2', 'srfc')
 vars['lsRain_noon'] =  ([], 12, (inds,weights,shape), 'lsRain', 'srfc')
 vars['lwout_noon'] =  ([], 12, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')
-if ftag == 'historical':
-    vars['SM'] = ([], 12, (inds, weights, shape), 'SM', 'srfc')
+vars['SM'] = ([], 12, (inds, weights, shape), 'SM', 'srfc')
 
 datelist = []
 for y,m,d in itertools.product(years, months, days):

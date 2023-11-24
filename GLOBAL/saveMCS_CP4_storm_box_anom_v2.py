@@ -546,8 +546,7 @@ vars['t2'] = ([], 12, (inds,weights,shape), 't2', 'srfc')
 vars['q2'] = ([], 12, (inds,weights,shape), 'q2', 'srfc')
 vars['lsRain_noon'] =  ([], 12, (inds,weights,shape), 'lsRain', 'srfc')
 vars['lwout_noon'] =  ([], 12, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')
-if ftag == 'historical':
-    vars['SM'] = ([], 12, (inds, weights, shape), 'SM', 'srfc')
+vars['SM'] = ([], 12, (inds, weights, shape), 'SM', 'srfc')
 
 datelist = []
 for y,m,d in itertools.product(years, months, days):
