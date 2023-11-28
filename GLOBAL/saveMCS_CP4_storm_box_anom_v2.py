@@ -408,6 +408,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         for raw_var in ['lsRain', 'lw_out_PBLtop']:
             filt[raw_var] = dbox[raw_var]
 
+        filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
+
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
         # point = dbox.sel(latitude=tmin.latitude, longitude=tmin.longitude, method='nearest')
@@ -486,7 +488,7 @@ box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = ([ '06', '07', '08', '09'])
+months = (['07','09']) #([ '06', '07', '08', '09'])
 days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
