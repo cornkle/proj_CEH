@@ -23,6 +23,7 @@ NAMES = {
     'SM5k_sensiTest': _create_dic(5, 0.25, 5, 20),
     'CP4_VARS': _create_dic(4.4, 0.5, 12, 10),  # nb =14 also tested
     'CP4_OBS_VARS': _create_dic(3, 0.5, 12, 10),  # nb =14 also tested
+    'P25_VARS': _create_dic(25, 0.5, 25, 8),  # nb =14 also tested
 }
 
 ########## Test case data

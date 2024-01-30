@@ -187,6 +187,7 @@ def filtering(dar, v, outv, pl):
 
     if (v == 'SM'):
         dar = dar.sel(depth=0.05)
+        dar = dar.where(dar< 500, other=np.nan)
 
     if 'pressure' in dar.coords:
 

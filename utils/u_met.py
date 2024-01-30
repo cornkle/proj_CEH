@@ -167,9 +167,20 @@ def theta(pz, t):
     return  ist-273.15
 
 
-def olr_to_bt(olr):
+def olr_to_bt_uncorrected(olr):
     sigma = 5.670373e-8
     return ((olr/sigma)**0.25)-273.15
+
+
+def olr_to_bt(olr):
+    # after Yang and Slingo (2001)
+    a = 1.228
+    b = -1.106e-3
+    sigma = 5.67e-8
+    tf = (olr/sigma)**0.25
+    tb = (-a + np.sqrt(a**2 + 4*b*tf))/(2*b)
+    return tb
+
 
 
 def moist_static_energy(T, q, geop=None, z=None):
