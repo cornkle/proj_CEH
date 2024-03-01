@@ -486,7 +486,7 @@ box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = ([ '06', '07', '08', '09'])
+months = (['07', '08', '09'])
 days = np.array(np.arange(1,32), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
