@@ -7,6 +7,7 @@ import datetime
 import sys
 import pickle as pkl
 import sys
+import salem
 #sys.path.append('/home/users/cornkle/pythonWorkspace/')
 from land_wavelet import wclass
 from utils import constants as cnst
@@ -18,6 +19,11 @@ hour = '12'
 #for yy in range(1997,2006):
 hist = sorted(glob.glob(cnst.other_drive + '/CP4/CP4_WestAfrica/CP4hist/'+var+'/'+var+'*.nc')) #+'_'+str(yy)+'*.nc'))
 fut = sorted(glob.glob(cnst.other_drive + '/CP4/CP4_WestAfrica/CP4fut/'+var+'/'+var+'*.nc')) #+'_'+str(yy)+'*.nc'))
+
+dummy = xr.open_dataarray(glob.glob(cnst.other_drive + '/CP4/CP4_WestAfrica/CP25fut/t2/t2*.nc')[0]).isel(time=0)
+dummy2 = xr.open_dataarray(glob.glob(cnst.other_drive + '/CP4/CP4_WestAfrica/CP4fut/t2/t2*.nc')[0]).isel(time=0).sel(latitude=slice(8, 15), longitude=slice(-12, 20))
+
+regrid, lut = dummy.salem.lookup_transform(dummy2, return_lut=True)
 
 tags = ['CP4hist', 'CP4fut']
 
@@ -33,17 +39,28 @@ for idx, dats in enumerate([hist, fut]):
             continue
         if int(fname[6:8]) not in [15]:
             continue
-
         print('Doing', u_date)
 
         # sda = xr.open_dataset(sf)
         # lines = sda[var].sel(time=(sda['time.hour']==12), latitude=slice(8,15), longitude=slice(-15,25)).squeeze()
-        sdc = xr.open_mfdataset(dats[idp-15:idp+15])
-        lines_clim = sdc[var].sel(time=(sdc['time.hour'] == 12), latitude=slice(8, 15), longitude=slice(-15, 25)).std('time').load()
+        try:
+            sdc = xr.open_mfdataset(dats[idp-15:idp+15])
+            if 'depth' in sdc.coords:
+                sdc = sdc.isel(depth=0)
+                sdc = sdc['SM'].where(sdc['SM'] < 500, other=np.nan)
+            else:
+                sdc = sdc[var]
+        except:
+            continue
 
-        cp4_mcs_wav = lines_clim.values.flatten()#- lines_clim)
+        lines_clim = sdc.sel(time=(sdc['time.hour'] == 12), latitude=slice(8, 15), longitude=slice(-12, 20)).load()
+        #ipdb.set_trace()
+        lines_clim_25 = dummy.salem.lookup_transform(lines_clim, lut=lut)
+        lines_clim_25 = lines_clim_25.std('time')
 
-        strct_std[tags[idx]].extend(cp4_mcs_wav)
+        cp4_mcs_wav = lines_clim_25.values.flatten()#- lines_clim)
+
+        strct_std[tags[idx]].extend(cp4_mcs_wav[np.isfinite(cp4_mcs_wav)])
 
 
-pkl.dump(strct_std, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_stddev_'+hour+'_Aug.p','wb'))
+pkl.dump(strct_std, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_stddev_'+hour+'_Aug_CP4_on25.p','wb'))

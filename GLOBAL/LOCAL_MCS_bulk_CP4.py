@@ -11,7 +11,8 @@ import glob
 import pandas as pd
 import os
 
-TIMETAG = 'hist'
+TIMETAG = 'fut'
+ANOMTAG = 'anom'
 
 def dictionary(dummy):
 
@@ -30,7 +31,7 @@ def dictionary(dummy):
 
     vars = ['hour', 'month', 'year', 'day',
             'lon', 'lat',
-            'tmin', 'pmax', 'theta', 'rh', 'div'
+            'tmin', 'pmax', 'thetae_srfc', 'cape_proxy', 'cin_proxy', 'rh', 'div',
             'pgt30', 'pgt1', 'isvalid',
             'tgrad', 'SMgrad', 'SHgrad', 'LHgrad', 'tcwv_cl', 'sh_cl', 'lh_cl',
             'area', 'area-70', 'area-80', 'area-60', 'area_1mm', 'area_5mm', 'area_10mm']
@@ -39,10 +40,13 @@ def dictionary(dummy):
         dic[v] = []
     return dic
 
+
+
+
 def perSys():
 
     timetag = TIMETAG
-    anom = 'anom'
+    anom = ANOMTAG
 
 
     if anom == 'anom':
@@ -89,7 +93,7 @@ def perSys():
                 continue
 
     df = pd.DataFrame.from_dict(mdic, orient="index")
-    df.to_csv('/home/ck/DIR/cornkle/data/LMCS/MCS_files/CP4_box/'+timetag+'_table_1700_inclStormChar'+a1+'_200km.csv')
+    df.to_csv('/home/ck/DIR/cornkle/data/LMCS/MCS_files/CP4_box/'+timetag+'_table_1700_inclStormChar'+a1+'_200km_div.csv')
 
         # pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
         #                    'wb'))
@@ -117,11 +121,13 @@ def file_loop(f):
     outq = ds['q_srfc'].values
     tmid = ds['t_mid'].values
     tsrfc = ds['t_srfc'].values
+    qmid = ds['q_mid'].values
     ####################################################
     pes = units.Quantity(650, 'hPa')
     pes_down = units.Quantity(925, 'hPa')
     tes_up = units.Quantity(tmid+273.15, 'K')
     qes = units.Quantity(outq/1000, 'kg/kg')
+    qes_up = units.Quantity(qmid / 1000, 'kg/kg')
     tes_down = units.Quantity(tsrfc+273.15, 'K')
 
     rh = calc.relative_humidity_from_specific_humidity(pes_down, tes_down, qes)
@@ -129,7 +135,12 @@ def file_loop(f):
     theta_e = calc.equivalent_potential_temperature(pes_down, tes_down,dew)
     theta_es = calc.saturation_equivalent_potential_temperature(pes, tes_up)
 
-    theta = (np.array(theta_e-theta_es))
+    dew_up = calc.dewpoint_from_specific_humidity(pes, tes_up, qes_up)
+    theta_e_up = calc.equivalent_potential_temperature(pes, tes_up,dew_up)
+
+    cape_proxy = (np.array(theta_e-theta_es))
+    cin_proxy = (np.array(theta_e-theta_e_up))
+
    ######################################################
 
     u = units.Quantity(ds['u_srfc'].values, 'm/s')
@@ -210,8 +221,10 @@ def file_loop(f):
             out[vn + tag] = (float(data))
 
     out['rh'] = np.nanmean(ua.cut_kernel(rh,minpos[1], minpos[0],11)) # 1deg RH
-    out['theta'] = np.nanmean(ua.cut_kernel(theta, minpos[1], minpos[0], 11))
-    out['div'] = np.nanmean(ua.cut_kernel(theta, minpos[1], minpos[0], 11))
+    out['thetae_srfc'] = np.nanmean(ua.cut_kernel(theta_e, minpos[1], minpos[0], 11))
+    out['cape_proxy'] = np.nanmean(ua.cut_kernel(cape_proxy, minpos[1], minpos[0], 11))
+    out['cin_proxy'] = np.nanmean(ua.cut_kernel(cin_proxy, minpos[1], minpos[0], 11))
+    out['div'] = np.nanmean(ua.cut_kernel(div, minpos[1], minpos[0], 11))
 
     tgrad_lat = ds.isel(longitude=slice(minpos[1] - 11, minpos[1] + 11)).mean('longitude').squeeze() #1deg strip for gradients
     tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)

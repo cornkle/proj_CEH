@@ -44,7 +44,7 @@ class wavelet(object):
 
 
 
-    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0, power_normed='scale'):
+    def calc_coeffs(self, data, le_thresh=None, ge_thresh=None, fill=0, power_normed=None):
         """
         Calculate pos/neg wavelet coefficients and scale-normalised (always positive) wavelet powers
         :param data: 2d array to decompose into scales

@@ -187,6 +187,7 @@ def filtering(dar, v, outv, pl):
 
     if (v == 'SM'):
         dar = dar.sel(depth=0.05)
+        dar = dar.where(dar < 500, other=np.nan)
 
     if 'pressure' in dar.coords:
 
@@ -352,6 +353,8 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         for raw_var in ['lsRain', 'lw_out_PBLtop']:
             filt[raw_var] = dbox[raw_var]
 
+        filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
+
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
         # point = dbox.sel(latitude=tmin.latitude, longitude=tmin.longitude, method='nearest')
@@ -408,7 +411,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds.data_vars}
-        
         filt.to_netcdf(path=savefile, mode='w', encoding=encoding)
         print('Saved ' + savefile)
         print('Saved MCS no.'+str(gi)+ ' as netcdf.')

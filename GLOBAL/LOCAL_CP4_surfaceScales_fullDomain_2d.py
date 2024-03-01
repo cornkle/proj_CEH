@@ -13,6 +13,8 @@ from utils import constants as cnst
 import matplotlib.pyplot as plt
 
 var = sys.argv[1]
+sign = sys.argv[2]
+norming = sys.argv[3] # 'stddev' or 'scale_squared'
 hour = '17'
 
 #for yy in range(1997,2006):
@@ -24,9 +26,21 @@ tags = ['CP4hist', 'CP4fut']
 strct_coeff = {'CP4hist' : [], 'CP4fut' : []}
 strct_power = {'CP4hist' : [], 'CP4fut' : []}
 
-tag = 'negOnly'
+if sign == 'pos':
+    tag = 'posOnly'
+if sign == 'neg':
+    tag = 'negOnly'
+if sign == 'both':
+    tag = 'both'
+
+if os.path.isfile(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_wcoeffs_fullDomain_'+hour+'_'+tag+'_'+norming+'_17N.p'):
+    pass
 
 for idx, dats in enumerate([hist, fut]):
+
+
+
+    print('DOING', tags[idx])
     u_dates = []
     for idp, sf in enumerate(dats):  ########restricted files for testing
         fname = os.path.basename(sf).split('_')[-1]
@@ -40,9 +54,21 @@ for idx, dats in enumerate([hist, fut]):
         print('Doing', u_date)
 
         sda = xr.open_dataset(sf)
-        lines = sda[var].sel(time=(sda['time.hour']==12), latitude=slice(7,25), longitude=slice(-15,25)).squeeze()
-        sdc = xr.open_mfdataset(dats[idp-10:idp+10])
-        lines_clim = sdc[var].sel(time=(sdc['time.hour'] == 12), latitude=slice(7, 25), longitude=slice(-15, 25)).mean('time').load()
+        if 'depth' in sda.keys():
+            sda = sda.isel(depth=0).squeeze()
+            sda['SM'] = sda['SM'].where(sda['SM'] < 500, other=np.nan)
+        else:
+            sda[var] = sda[var]
+
+        lines = sda[var].sel(time=(sda['time.hour']==12), latitude=slice(5, 25), longitude=slice(-15,25)).squeeze()
+        lines = lines#-lines.mean('longitude')
+        # sdc = xr.open_mfdataset(dats[idp-10:idp+10])
+        # if 'depth' in sdc.keys():
+        #     sdc = sdc.isel(depth=0).squeeze()
+        #     sdc['SM'] = sdc['SM'].where(sdc['SM'] < 500, other=np.nan)
+        # else:
+        #     sdc[var] = sdc[var]
+        # lines_clim = sdc[var].sel(time=(sdc['time.hour'] == 12), latitude=slice(6, 15), longitude=slice(-10, 25)).mean('time').load()
 
         cp4_mcs_wav = (lines )#- lines_clim)
         cp4_mcs_wav = cp4_mcs_wav.where(np.isfinite(cp4_mcs_wav), other=0)#-#np.nanmean(cp4_mcs_wav)
@@ -52,7 +78,12 @@ for idx, dats in enumerate([hist, fut]):
         wObj = wclass.landwav('CP4_VARS')
 
         wObj.read_img(cp4_mcs_wav.values, cp4_mcs_wav.longitude.values, cp4_mcs_wav.latitude.values)
-        coeffs, power, scales, period = wObj.applyWavelet(normed='scale_squared', ge_thresh=0, fill=0)
+        if sign == 'pos':
+            coeffs, power, scales, period = wObj.applyWavelet(normed=norming, le_thresh=0, fill=0)
+        if sign == 'neg':
+            coeffs, power, scales, period = wObj.applyWavelet(normed=norming,ge_thresh=0, fill=0)
+        if sign == 'both':
+            coeffs, power, scales, period = wObj.applyWavelet(normed=norming,ge_thresh=None, fill=0)
 
 
         ds = xr.Dataset()
@@ -61,7 +92,7 @@ for idx, dats in enumerate([hist, fut]):
 
 
 
-        ds = ds.sel(latitude=slice(10,17), longitude=slice(-12,15))#latitude=slice(9,17), longitude=slice(-12,12))
+        ds = ds.sel(latitude=slice(8,16), longitude=slice(-12,20))#latitude=slice(9,17), longitude=slice(-12,12))
 
         # f = plt.figure()
         # ax = f.add_subplot(121)
@@ -77,14 +108,16 @@ for idx, dats in enumerate([hist, fut]):
 
         # CONTINUE DEVELOPING CODE HERE!!
 
-
+        strct_coeff[tags[idx]].append(ds['coeffs'].values)
+        strct_power[tags[idx]].append(ds['power'].values)
 
         del sda
         del wObj
         del ds
 
+
 strct_coeff['scales'] = scales
 strct_power['scales'] = scales
 
-pkl.dump(strct_coeff, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_wcoeffs_fullDomain_'+hour+'_'+tag+'.p','wb')) #'_'+str(yy)+'.p','wb'))
-pkl.dump(strct_power, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_power_fullDomain_'+hour+'_'+tag+'.p','wb')) #'_'+str(yy)+'.p','wb'))
+pkl.dump(strct_coeff, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_wcoeffs_fullDomain_'+hour+'_'+tag+'_'+norming+'_17N_south.p','wb')) #'_'+str(yy)+'.p','wb'))
+pkl.dump(strct_power, open(cnst.network_data+ 'data/LMCS/CP4_study_saves/'+var+'_power_fullDomain_'+hour+'_'+tag+'_'+norming+'_17N_south.p','wb')) #'_'+str(yy)+'.p','wb'))
