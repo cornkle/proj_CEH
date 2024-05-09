@@ -19,6 +19,7 @@ MREGIONS = {
 'australia' : [[120,140,-23, -11], 'asia', 9, (11,3), (11,3), (1,12)], # 3
 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (11,3), (11,3)], # 10
 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (11,3), (11,3), (1,12)] , # 16
+'SA_big' : [[9.5, 52, -36,-5.5], 'spac', 2, (9,12), (11,3), (11,3)],
 }
 ####################### READS 5000km2 files that include TIR/IMERG from 2d fields to add ERA5 here.
 def ERA_dictionary(tab):

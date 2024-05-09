@@ -14,7 +14,7 @@ import ipdb
 def dictionary():
 
     dic = {}
-    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '70area', 'tmin',
+    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '70area', '60area', '50area',
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat', 'tminlon', 'tminlat',
             'tmin', 'tmean', 'tp1', 'tp99', 'stormID', 'cloudMask', 'tir']
 
@@ -68,7 +68,7 @@ def mcs_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
     return labels, goodinds
 
 
-def process_tir_image(ds, data_res, t_thresh=-50, min_mcs_size=5000):
+def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
     """
     This function cuts out MCSs. By default, an MCS is defined as contiguous brightness temperature area at <=-50 degC over >= 5000km2.
     :param ctt: brightness temperature image (in degC)
@@ -115,6 +115,8 @@ def process_tir_image(ds, data_res, t_thresh=-50, min_mcs_size=5000):
         lonmax = np.nanmax(ctt.lon.values[pos[1]])
         dic['area'].append(np.sum(np.isfinite(storm.values))*data_res**2)
         dic['70area'].append(np.sum(storm.values<=-70)*data_res**2)
+        dic['60area'].append(np.sum(storm.values <= -60) * data_res ** 2)
+        dic['50area'].append(np.sum(storm.values <= -50) * data_res ** 2)
         dic['minlon'].append(lonmin)
         dic['minlat'].append(latmin)
         dic['maxlon'].append(lonmax)
