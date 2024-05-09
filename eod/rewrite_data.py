@@ -1094,6 +1094,100 @@ def rewrite_NFLICS_LSTA_onCores_interpolate():
 
         del lsw
 
+def MSGpix2geo(column, row, domain):
+    import numpy as np
+
+    if domain == "WAfrica":
+        lr_row = 2000
+        lr_col = 824
+    elif domain == "DakarStrip":
+        lr_row = 2000
+        lr_col = 2464
+
+    elif domain == "SSA":
+        lr_row = 2080
+        lr_col = 2268
+    else:
+        print("ERROR! Please select a configured domain to use!")
+        return
+
+    column = column + lr_col  # 824 WAfrica, 2464 Dakar strip
+    row = row + lr_row  # 2000 WAfrica, 2000 Dakar strip
+
+    # define parameters needed
+    ITwoToSixteen = 2 ** 16
+    RTwoToSixteen = float(ITwoToSixteen)
+    RRTwoToSixteen = 1.0 / RTwoToSixteen
+    PI = 3.14159265359
+
+    # These values taken from EUMETSAT document CGMS03 "LRIT/HRIT Global Specification".
+    SAT_HEIGHT = 42164.0  # Satellite distance from centre of Earth (km).
+    R_EQ = 6378.169  # Radius of Earth at equator (km).
+    R_POL = 6356.5838  # Radius of Earth at poles (km).
+    SUB_LON = 0.0  # Longitude of Sub-Satellite Point (degrees).
+    Q2 = (R_EQ * R_EQ) / (R_POL * R_POL)  # = 1.006803 (-).
+    RQ2 = 1.0 / Q2  # = 0.993243  (-).
+    D2 = SAT_HEIGHT * SAT_HEIGHT - R_EQ * R_EQ  # = 1737121856.0 (km^2).
+    RAT1 = 1.0 - (R_POL * R_POL) / (R_EQ * R_EQ)  # = 0.00675701 (-).
+
+    # These are the values applicable to the full disc.
+    # Negative FAC values indicate South-to-North and East-to-West
+    # scanning directions.  i.e. pixel (1,1) is South-Easternmost point.
+    # See "LRIT/HRIT Mission Specific Implementation" (EUM/MSG/SPE/057)
+    # for derivation of CFAC, LFAC, COFF, LOFF.
+    CFAC_FD = -781651420  # Coefficient of image spread in E-W direction (/ra.
+    LFAC_FD = -781651420  # Coefficient of image spread in N-S direction (/rad).
+    COFF_FD = 1856  # Column offset of centre pixel on full disc.
+    LOFF_FD = 1856  # Line offset of centre pixel on full disc.
+
+    # Use either user-defined or default full-disc offsets of
+    # centre pixel and image spread parameters.
+    ccoff = COFF_FD
+    lloff = LOFF_FD
+    ccfac = CFAC_FD
+    llfac = LFAC_FD
+
+    c = column
+    l = row
+
+    # Calculate viewing angle of the satellite by use of the equation
+    # on page 28, Ref [1].
+    x = float(RTwoToSixteen * (c - ccoff)) / ccfac
+    y = float(RTwoToSixteen * (l - lloff)) / llfac
+
+    #  Now calculate the inverse projection using equations on page 25, Ref. [1]
+    #
+    #  First check for visibility, whether the pixel is located on the earth
+    #  surface or in space.
+    #  To do this calculate the argument to sqrt of "sd", which is named "sa".
+    #  If it is negative then the pixel will be located in space, otherwise all
+    #  is fine and the pixel is located on the Earth surface.
+
+    sa = (SAT_HEIGHT * np.cos(x) * np.cos(y)) ** 2 - (np.cos(y) * np.cos(y) + Q2 * np.sin(y) * np.sin(y)) * D2
+    if (sa <= 0.0):
+        latitude = -999.999
+        longitude = -999.999
+    else:
+        # Now calculate the rest of the formulas using eq. on page 25 Ref [1].
+        sd = np.sqrt(sa)
+        sn = (SAT_HEIGHT * np.cos(x) * np.cos(y) - sd) / (np.cos(y) * np.cos(y) + Q2 * np.sin(y) * np.sin(y))
+
+        s1 = SAT_HEIGHT - sn * np.cos(x) * np.cos(y)
+        s2 = sn * np.sin(x) * np.cos(y)
+        s3 = -sn * np.sin(y)
+
+        sxy = np.sqrt(s1 * s1 + s2 * s2)
+        # Using the previous calculations now the inverse projection can be
+        # calculated, which means calculating the lat./lon. from the pixel
+        # row and column by equations on page 25, Ref [1].
+        loni = np.arctan(s2 / s1 + SUB_LON)
+        lati = np.arctan((Q2 * s3) / sxy)
+
+        # Convert from radians into degrees.
+        latitude = lati * 180. / PI
+        longitude = loni * 180. / PI
+    return latitude, longitude
+
 
 
 
