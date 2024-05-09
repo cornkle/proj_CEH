@@ -25,14 +25,14 @@ def haversine(lon1, lat1, lon2, lat2):
     return c * r, math.degrees(c)
 
 
-def parallax_correction(slon, slat, plon, plat, height, sheight):
+def parallax_correction(slon, slat,  sheight, plon, plat, height,):
     """(
     :param slon: Satellite longitude
     :param slat: Satellite latitude
+    :param sheight: Satellite height (km)
     :param plon: Cloud point longitude
     :param plat: Cloud point latitude
-    :param height: Cloud top height
-    :param sheight: Satellite height
+    :param height: Cloud top height (km)
     :return: Tuple, (parallax in x direction (km), parallax in y direction (km)), (parallax in lon direction (deg), parallax in lat direction (deg))
              Note: Parallax is the absolute distance between the point the satellite "assumes" to see and the actual location
              of the cloud. For coordinate correction, the parallax of cloud points to the West and South of the satellite are
@@ -81,50 +81,51 @@ def parallax_correction(slon, slat, plon, plat, height, sheight):
     return (lax_x, lax_y), (math.degrees(lax_lon), math.degrees(lax_lat))
 
 
-def era_Tlapse_height(month, temp, lon, lat):
-    """
-    Estimates the height (in metres) of a given atmospheric temperature from ERA-I monthly temperatures and
-    geopotential heights on pressure levels
-
-    :param month:
-    :param temp: cloud top temperature of point
-    :param lon: longitude
-    :param lat: latitude
-    :return: approximate height above surface
-    """
-    file = constants.ERA_MONTHLY_TUVWZ_AFRICA  # path to ERA5
-    da = xr.open_dataset(file)
-    da = da.sel(longitude=lon, latitude=lat, method='nearest')
-    da = da.isel(month=month-1)
-    print('Read ERA data')
-
-    g = 9.80665
-    t = da['t']-273.15 # for comparison with cloud top T in celsius
-    z = da['z']
-    zm = z / g  ## geopotential / gravity constant
-    ismin = np.argmin(t.values)
-
-    gradient, intercept, r_value, p_value, std_err = stats.linregress(zm[ismin:ismin+2], t[ismin:ismin+2])
-    t[0:ismin + 1] = gradient * zm[0:ismin + 1] + intercept ## linear tropopause correction (after tmin, temp rises!)
-
-    X = np.abs(t-temp)
-    idx = np.argmin(X.values)
-    height = zm.values[idx]
-
-    #plt.plot(zm, t)
-    # plt.plot(zm[0:ismin+1], gradient*zm[0:ismin+1]+intercept)
-    return height
-
-
-
-def call_parallax_era(month, t_cloud, lon_cloud, lat_cloud, lon_sat, lat_sat):
-
-    height = era_Tlapse_height(month, t_cloud, lon_cloud, lat_cloud)  # height in meters
-    msg_height = 35786 # msg satellite height in km
-    km, coords = parallax_correction(lon_sat, lat_sat, lon_cloud, lat_cloud, height / 1000, msg_height)
-
-    return km, coords
-
+#
+# def era_Tlapse_height(month, temp, lon, lat):
+#     """
+#     Estimates the height (in metres) of a given atmospheric temperature from ERA-I monthly temperatures and
+#     geopotential heights on pressure levels
+#
+#     :param month:
+#     :param temp: cloud top temperature of point
+#     :param lon: longitude
+#     :param lat: latitude
+#     :return: approximate height above surface
+#     """
+#     file = constants.ERA_MONTHLY_TUVWZ_AFRICA  # path to ERA5
+#     da = xr.open_dataset(file)
+#     da = da.sel(longitude=lon, latitude=lat, method='nearest')
+#     da = da.isel(month=month-1)
+#     print('Read ERA data')
+#
+#     g = 9.80665
+#     t = da['t']-273.15 # for comparison with cloud top T in celsius
+#     z = da['z']
+#     zm = z / g  ## geopotential / gravity constant
+#     ismin = np.argmin(t.values)
+#
+#     gradient, intercept, r_value, p_value, std_err = stats.linregress(zm[ismin:ismin+2], t[ismin:ismin+2])
+#     t[0:ismin + 1] = gradient * zm[0:ismin + 1] + intercept ## linear tropopause correction (after tmin, temp rises!)
+#
+#     X = np.abs(t-temp)
+#     idx = np.argmin(X.values)
+#     height = zm.values[idx]
+#
+#     #plt.plot(zm, t)
+#     # plt.plot(zm[0:ismin+1], gradient*zm[0:ismin+1]+intercept)
+#     return height
+#
+#
+#
+# def call_parallax_era(month, t_cloud, lon_cloud, lat_cloud, lon_sat, lat_sat):
+#
+#     height = era_Tlapse_height(month, t_cloud, lon_cloud, lat_cloud)  # height in meters
+#     msg_height = 35786 # msg satellite height in km
+#     km, coords = parallax_correction(lon_sat, lat_sat, lon_cloud, lat_cloud, height / 1000, msg_height)
+#
+#     return km, coords
+#
 
 
 
