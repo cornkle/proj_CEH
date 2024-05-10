@@ -1,4 +1,4 @@
-from MCS_snapshots import MCS_table_create_feng
+from MCS_snapshots import MCS_table_create_01deg
 import xarray as xr
 import ipdb
 import pandas as pd
@@ -52,8 +52,8 @@ def make_table(reg):
                 print('2d file open error, continue')
                 continue
             da = da.sel(lon=slice(box[0],box[1]), lat=slice(box[2], box[3])) 
-            basic_tab = MCS_table_create_feng.process_tir_image(da, 10)
-            merge_tab = MCS_table_create_feng.add_environment_toTable(basic_tab, da,  envvar_take=[], rainvar_name='precipitation')
+            basic_tab = MCS_table_create_01deg.process_tir_image(da, 10)
+            merge_tab = MCS_table_create_01deg.add_environment_toTable(basic_tab, da,  envvar_take=[], rainvar_name='precipitation')
             
             merge_tab.pop('cloudMask')
             merge_tab.pop('tir')
@@ -81,6 +81,6 @@ def make_table(reg):
 #for reg in MREGIONS.keys():
 #     make_table(reg)
 
-pool = multiprocessing.Pool(processes=5)
-res = pool.map(make_table, list(MREGIONS.keys()))
-pool.close()
+# pool = multiprocessing.Pool(processes=5)
+# res = pool.map(make_table, list(MREGIONS.keys()))
+# pool.close()
