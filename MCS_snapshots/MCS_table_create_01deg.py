@@ -12,12 +12,10 @@ import ipdb
 
 
 def dictionary():
-
     dic = {}
     vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '70area', '60area', '50area',
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat', 'tminlon', 'tminlat',
             'tmin', 'tmean', 'tp1', 'tp99', 'stormID', 'cloudMask', 'tir']
-
 
     for v in vars:
         dic[v] = []
@@ -42,28 +40,28 @@ def mcs_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
     u, inv = np.unique(labels, return_inverse=True)
     n = np.bincount(inv)
 
-    goodinds = u[u!=0]
+    goodinds = u[u != 0]
 
     if min_area != None:
-        goodinds = u[(n>=min_area) & (u!=0)]
-        badinds = u[n<min_area]
+        goodinds = u[(n >= min_area) & (u != 0)]
+        badinds = u[n < min_area]
 
         # for b in badinds:
         #     pos = np.where(labels==b)
         #     labels[pos]=0
 
     if max_area != None:
-        goodinds = u[(n<=max_area)  & (u!=0)]
-        badinds = u[n>max_area]
+        goodinds = u[(n <= max_area) & (u != 0)]
+        badinds = u[n > max_area]
 
     if minmax_area != None:
-        goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n>=minmax_area[0])]
+        goodinds = u[(n <= minmax_area[1]) & (u != 0) & (n >= minmax_area[0])]
         badinds = u[(n > minmax_area[1]) | (n < minmax_area[0])]
 
     if (min_area is not None) | (max_area is not None) | (minmax_area is not None):
         for b in badinds:
-            pos = np.where(labels==b)
-            labels[pos]=0
+            pos = np.where(labels == b)
+            labels[pos] = 0
 
     return labels, goodinds
 
@@ -77,26 +75,26 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
     :param min_mcs_size: minimum size of contiguous cloud to be considered an MCS (in km2)
     :return: dictionary with dates and MCS characteristics from cloud top information only.
     """
-    ctt = (ds['tb']).squeeze()-273.15
-    min_pix_nb = min_mcs_size / data_res**2
+    ctt = (ds['tb']).squeeze() - 273.15
+    min_pix_nb = min_mcs_size / data_res ** 2
 
-    max_pix_nb = 300000 / data_res**2  # this is to capture satellite artefacts that come in large contiguous stripes.
-    labels, goodinds = mcs_define(ctt.values, t_thresh, minmax_area=[min_pix_nb, max_pix_nb]) # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
+    max_pix_nb = 300000 / data_res ** 2  # this is to capture satellite artefacts that come in large contiguous stripes.
+    labels, goodinds = mcs_define(ctt.values, t_thresh, minmax_area=[min_pix_nb, max_pix_nb])  # 7.7x7.7km = 64km2 per pix in gridsat? 83 pix is 5000km2
     dic = dictionary()
-    #plt.figure()
-    #plt.pcolormesh(labels)
-    #plt.colorbar()
-    #plt.show()
+    # plt.figure()
+    # plt.pcolormesh(labels)
+    # plt.colorbar()
+    # plt.show()
     for g in goodinds:
 
-        if g==0:
+        if g == 0:
             continue
 
-        pos = np.where(labels==g)
-        npos = np.where(labels!=g)
-        datestr = str(int(ctt['time.year'].values))+'-'+str(int(ctt['time.month'].values)).zfill(2)+'-'+str(int(ctt['time.day'].values)).zfill(2)+'_'+\
-                      str(int(ctt['time.hour'].values)).zfill(2)+':'+str(int(ctt['time.minute'].values)).zfill(2)
-        
+        pos = np.where(labels == g)
+        npos = np.where(labels != g)
+        datestr = str(int(ctt['time.year'].values)) + '-' + str(int(ctt['time.month'].values)).zfill(2) + '-' + str(int(ctt['time.day'].values)).zfill(2) + '_' + \
+                  str(int(ctt['time.hour'].values)).zfill(2) + ':' + str(int(ctt['time.minute'].values)).zfill(2)
+
         dic['date'].append(datestr)
         dic['month'].append(int(ctt['time.month']))
         dic['hour'].append(int(ctt['time.hour']))
@@ -108,21 +106,21 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
         storm.values[npos] = np.nan
         tmin_pos = np.nanargmin(storm.values)
         tpos_2d = np.unravel_index(tmin_pos, storm.shape)
-        
+
         latmin = np.nanmin(ctt.lat.values[pos[0]])
         latmax = np.nanmax(ctt.lat.values[pos[0]])
         lonmin = np.nanmin(ctt.lon.values[pos[1]])
         lonmax = np.nanmax(ctt.lon.values[pos[1]])
-        dic['area'].append(np.sum(np.isfinite(storm.values))*data_res**2)
-        dic['70area'].append(np.sum(storm.values<=-70)*data_res**2)
+        dic['area'].append(np.sum(np.isfinite(storm.values)) * data_res ** 2)
+        dic['70area'].append(np.sum(storm.values <= -70) * data_res ** 2)
         dic['60area'].append(np.sum(storm.values <= -60) * data_res ** 2)
         dic['50area'].append(np.sum(storm.values <= -50) * data_res ** 2)
         dic['minlon'].append(lonmin)
         dic['minlat'].append(latmin)
         dic['maxlon'].append(lonmax)
         dic['maxlat'].append(latmax)
-        dic['clon'].append(lonmin + (lonmax - lonmin)/2)
-        dic['clat'].append(latmin + (latmax - latmin)/2)
+        dic['clon'].append(lonmin + (lonmax - lonmin) / 2)
+        dic['clat'].append(latmin + (latmax - latmin) / 2)
         dic['tmin'].append(np.nanmin(storm))
         dic['tminlat'].append(float(ctt.lat[tpos_2d[0]].values))
         dic['tminlon'].append(float(ctt.lon[tpos_2d[1]].values))
@@ -130,7 +128,7 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
         dic['tp1'].append(float(np.nanpercentile(storm, 1)))
         dic['tp99'].append(float(np.nanpercentile(storm, 99)))
         dic['stormID'].append(datestr + '_' + str(g))
-        dic['cloudMask'].append(labels==g)
+        dic['cloudMask'].append(labels == g)
         dic['tir'].append(storm.values)
 
     # for k in dic.keys():
@@ -138,7 +136,7 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
     return dic
 
 
-def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_name=None, env_tformat="%Y-%m-%d %H:%M:%S", env_hour=12):
+def add_environment_toTable(tab, in_ds, envvar_take=[], tabvar_skip=[], rainvar_name=None, env_tformat="%Y-%m-%d %H:%M:%S", env_hour=12):
     """
     NEEDS TO BE IN SAME FILE (as in Zhe Fengs TIR/PRECIP files)
     This function saves rainfall and MCS environment variables. Rainfall is saved as mean across contiguous MCS area and max. rainfall at ~15km resolution (0.15deg)
@@ -157,7 +155,7 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
     tab_tformat = "%Y-%m-%d_%H:%M"
     dic = {}
     for k in tab.keys():
-        if k in tabvar_skip:   # option to add variables to be excluded from environment table
+        if k in tabvar_skip:  # option to add variables to be excluded from environment table
             continue
         dic[k] = tab[k]
 
@@ -166,25 +164,24 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
     ###### sample variables
     for tlat, tlon, date, mask, tir in zip(dic['tminlat'], dic['tminlon'], dic['date'], dic['cloudMask'], dic['tir']):
 
-
-        #save cloud-wide rainfall stats, and rainfall maximum at ~0.15deg
+        # save cloud-wide rainfall stats, and rainfall maximum at ~0.15deg
         if rainvar_name is not None:
             tabdate = pd.to_datetime(date, format=tab_tformat)  # rainfall sampling same time as TIR
 
             pos = envdates == tabdate
-            rain = ds[rainvar_name].isel(time=pos).where(mask).squeeze() # to mm/h
+            rain = ds[rainvar_name].isel(time=pos).where(mask).squeeze()  # to mm/h
             pmax_pos = np.nanargmax(rain.values)
             ppos_2d = np.unravel_index(pmax_pos, rain.shape)
             pmax_lon = rain.lon[ppos_2d[1]]
             pmax_lat = rain.lat[ppos_2d[0]]
             pmax = rain.sel(lon=slice(pmax_lon - 0.075, pmax_lon + 0.075), lat=slice(pmax_lat - 0.075, pmax_lat + 0.075))
-          #  ipdb.set_trace()
+            #  ipdb.set_trace()
             pmax = pmax.mean().values
             if (rainvar_name + '_mean') not in dic.keys():
                 for tag in ['_mean', '_max', '_p95', '_p99']:
                     dic[rainvar_name + tag] = []
-            dic[rainvar_name + '_mean'].append(float(rain.mean().values)) # full cloud mean
-            dic[rainvar_name + '_max'].append(float(pmax)) # ~0.15deg rain max
+            dic[rainvar_name + '_mean'].append(float(rain.mean().values))  # full cloud mean
+            dic[rainvar_name + '_max'].append(float(pmax))  # ~0.15deg rain max
             dic[rainvar_name + '_p95'].append(float(rain.quantile(0.95).values))
             dic[rainvar_name + '_p99'].append(float(rain.quantile(0.99).values))
 
@@ -193,7 +190,7 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
             tabdate = pd.to_datetime(date, format=tab_tformat).replace(hour=env_hour, minute=0)  # hour of environment sampling
             pos = envdates == tabdate
             single = ds.isel(time=pos).sel(longitude=slice(tlon - 0.375, tlon + 0.375), latitude=slice(tlat - 0.375, tlat + 0.375))
-          #  ipdb.set_trace()
+            #  ipdb.set_trace()
             single = single.mean()
             for vt in envvar_take:
                 if vt in dic.keys():
@@ -201,4 +198,3 @@ def add_environment_toTable(tab, in_ds, envvar_take=[],tabvar_skip=[], rainvar_n
                 else:
                     dic[vt] = [single[vt].values]
     return dic
-
