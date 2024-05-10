@@ -81,6 +81,6 @@ def make_table(reg):
 #for reg in MREGIONS.keys():
 #     make_table(reg)
 
-pool = multiprocessing.Pool(processes=5)
-res = pool.map(make_table, list(MREGIONS.keys()))
-pool.close()
+#pool = multiprocessing.Pool(processes=5)
+#res = pool.map(make_table, list(MREGIONS.keys()))
+#pool.close()
