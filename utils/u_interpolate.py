@@ -61,6 +61,7 @@ def interpolation_weights(x, y, new_x, new_y, irregular_1d=False):
         new_xs = new_x
         new_ys = new_y
 
+    #pdb.set_trace()
     points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
     inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
 
