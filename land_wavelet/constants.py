@@ -24,6 +24,7 @@ NAMES = {
     'CP4_VARS': _create_dic(4.4, 0.5, 12, 10),  # nb =14 also tested
     'CP4_OBS_VARS': _create_dic(3, 0.5, 12, 10),  # nb =14 also tested
     'P25_VARS': _create_dic(25, 0.5, 25, 8),  # nb =14 also tested
+    'organisation' : _create_dic(1, 0.25, 1, 25),  # nb =14 also tested
 }
 
 ########## Test case data
