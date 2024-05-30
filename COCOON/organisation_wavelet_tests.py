@@ -95,7 +95,7 @@ def main():
     image_size = 100
     num_features = 10
     feature_size = 5
-    random_seed = 66
+    random_seed = 40
 
     random.seed(random_seed)
     np.random.seed(random_seed)
@@ -172,6 +172,9 @@ def run_wav(strc):
         img = strc[k]
         wObj.read_img(img, np.arange(img.shape[1]), np.arange(img.shape[0]))
         coeffs, power, scales, period = wObj.applyWavelet(normed='none', le_thresh=0, fill=0.01)
+
+        for ids, s in enumerate(scales):
+            power[ids,:,:] = power[ids,:,:] * s
 
 
         frac_power = (np.sum(power,axis=(1,2))/np.sum(power))*100

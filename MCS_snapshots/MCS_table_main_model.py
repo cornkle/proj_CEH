@@ -2,10 +2,17 @@ from LMCS import MCS_table_create
 import xarray as xr
 import ipdb
 import pandas as pd
+import numpy as np
 
 def olr_to_bt(olr):
+    #Application of Stefan-Boltzmann law
     sigma = 5.670373e-8
-    return ((olr/sigma)**0.25)-273.15
+    tf = (olr/sigma)**0.25
+    #Convert from bb to empirical BT (degC) - Yang and Slingo, 2001
+    a = 1.228
+    b = -1.106e-3
+    Tb = (-a + np.sqrt(a**2 + 4*b*tf))/(2*b)
+    return Tb - 273.15
 
 
 def make_table():
