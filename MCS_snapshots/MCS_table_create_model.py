@@ -92,8 +92,8 @@ def process_tir_image(ctt, data_res, t_thresh=-50, min_mcs_size=5000):
 
         pos = np.where(labels==g)
         npos = np.where(labels!=g)
-        datestr = str(ctt['time.year'].values)+'-'+str(ctt['time.month'].values).zfill(2)+'-'+str(ctt['time.day'].values).zfill(2)+'_'+\
-                      str(ctt['time.hour'].values).zfill(2)+':'+str(ctt['time.minute'].values).zfill(2)
+        datestr = str(int(ctt['time.year']))+'-'+str(int(ctt['time.month'])).zfill(2)+'-'+str(int(ctt['time.day'])).zfill(2)+'_'+\
+                      str(int(ctt['time.hour'])).zfill(2)+':'+str(int(ctt['time.minute'])).zfill(2)
 
         dic['date'].append(datestr)
         dic['month'].append(int(ctt['time.month']))

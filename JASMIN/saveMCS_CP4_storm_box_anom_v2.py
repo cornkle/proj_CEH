@@ -74,135 +74,6 @@ def griddata_lin(data, x, y, new_x, new_y):
 
     return data
 
-def cut_kernel(array, xpos, ypos, dist_from_point):
-    """
-     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
-     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
-    :param array: 2darray
-    :param xpos: middle x point of kernel
-    :param ypos: middle y point of kernel
-    :param dist_from_point: distance to kernel edge to each side
-    :return: 2d array of the chosen kernel size.
-    """
-
-    if array.ndim != 2:
-        raise IndexError('Cut kernel only allows 2D arrays.')
-
-    kernel = np.zeros((dist_from_point*2+1, dist_from_point*2+1)) * np.nan
-
-    if xpos - dist_from_point >= 0:
-        xmin = 0
-        xmindist = dist_from_point
-    else:
-        xmin = (xpos - dist_from_point) * -1
-        xmindist = dist_from_point + (xpos - dist_from_point)
-
-    if ypos - dist_from_point >= 0:
-        ymin = 0
-        ymindist = dist_from_point
-    else:
-        ymin = (ypos - dist_from_point) * -1
-        ymindist = dist_from_point + (ypos - dist_from_point)
-
-    if xpos + dist_from_point < array.shape[1]:
-        xmax = kernel.shape[1]
-        xmaxdist = dist_from_point + 1
-    else:
-        xmax = dist_from_point - (xpos - array.shape[1])
-        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[1])
-
-    if ypos + dist_from_point < array.shape[0]:
-        ymax = kernel.shape[0]
-        ymaxdist = dist_from_point + 1
-    else:
-        ymax = dist_from_point - (ypos - array.shape[0])
-        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[0])
-
-    cutk = array[ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
-
-
-    kernel[ymin: ymax, xmin:xmax] = cutk
-
-    return kernel
-
-def cut_kernel_3d(array, xpos, ypos, dist_from_point):
-    """
-     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
-     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
-    :param array: 2darray
-    :param xpos: middle x point of kernel
-    :param ypos: middle y point of kernel
-    :param dist_from_point: distance to kernel edge to each side
-    :return: 2d array of the chosen kernel size.
-    """
-
-    if array.ndim != 3:
-        raise IndexError('Cut kernel3d only allows 3D arrays.')
-
-    kernel = np.zeros((array.shape[0], dist_from_point*2+1, dist_from_point*2+1)) * np.nan
-
-    if xpos - dist_from_point >= 0:
-        xmin = 0
-        xmindist = dist_from_point
-    else:
-        xmin = (xpos - dist_from_point) * -1
-        xmindist = dist_from_point + (xpos - dist_from_point)
-
-    if ypos - dist_from_point >= 0:
-        ymin = 0
-        ymindist = dist_from_point
-    else:
-        ymin = (ypos - dist_from_point) * -1
-        ymindist = dist_from_point + (ypos - dist_from_point)
-
-    if xpos + dist_from_point < array.shape[2]:
-        xmax = kernel.shape[2]
-        xmaxdist = dist_from_point + 1
-    else:
-        xmax = dist_from_point - (xpos - array.shape[2])
-        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[2])
-
-    if ypos + dist_from_point < array.shape[1]:
-        ymax = kernel.shape[1]
-        ymaxdist = dist_from_point + 1
-    else:
-        ymax = dist_from_point - (ypos - array.shape[1])
-        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[1])
-
-    cutk = array[:, ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
-
-
-    kernel[:, ymin: ymax, xmin:xmax] = cutk
-
-    return kernel
-
-
-def cut_box(xpos, ypos, arr, dist=None):
-    """
-
-    :param xpos: x coordinate in domain for kernel centre point
-    :param ypos: y coordinate in domain for kernel centre point
-    :param arr: numpy array (2d)
-    :param dist: distance from kernel centre point to kernel edge (total width = 2*dist+1)
-    :return: the kernel of dimensions (2*dist+1, 2*dist+1)
-    """
-
-    if dist == None:
-        'Distance missing. Please provide distance from kernel centre to edge (number of pixels).'
-        return
-    if arr.ndim == 3:
-        kernel = cut_kernel_3d(arr, xpos, ypos, dist)
-        if kernel.shape != (kernel.size[0], dist * 2 + 1, dist * 2 + 1):
-            print("Please check kernel dimensions, there is something wrong")
-            ipdb.set_trace()
-    else:
-        kernel = cut_kernel(arr,xpos, ypos,dist)
-        if kernel.shape != (dist * 2 + 1, dist * 2 + 1):
-            print("Please check kernel dimensions, there is something wrong")
-            ipdb.set_trace()
-
-    return kernel
-
 
 def filtering(dar, v, outv, pl):
 
@@ -237,8 +108,7 @@ def filtering(dar, v, outv, pl):
 
 
 
-
-def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, lons, lats):
+def file_save(cp_dir, out_dir, vars, datestring, box, tthresh, pos):
 
     keys = vars.keys()
 
@@ -384,12 +254,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             da.values[da.values >= tthresh] = 0  # T threshold maskout
             da.values[np.isnan(da.values)] = 0 # set ocean nans to 0
 
-
-            # try:
-            #     date = da.time.values[0]
-            # except IndexError:
-            #     date = da.time.values
-
             date = pd.Timestamp(datestring)
             date = date.replace(hour=h)
 
@@ -398,11 +262,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 517]  # 517 == 10000km2. defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            ## labels and filtering not needed if object location table is used for identification!
+            goodinds = u[n >= 258]  # 258 == 5000km2 area threshold used here. defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
                 print('No goodinds!')
                 return
-         
 
         if (v == 'lsRain') | (v == 'totRain'):
             da.values = da.values*3600  # rain to mm/h
@@ -412,16 +276,10 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         print('Saved ', outv, h)
 
-
     for gi in goodinds:
         if (gi == 0):  # index 0 is always background, ignore!
             continue
-        inds = np.where(labels == gi)
-        # cut a box for every single blob from msg - get min max lat lon of the blob
-        # latmax, latmin = np.nanmax(lats[inds]), np.nanmin(lats[inds])
-        # lonmax, lonmin = np.nanmax(lons[inds]), np.nanmin(lons[inds])
         mask = np.where(labels!=gi)
-
         dbox = ds.copy(deep=True)
 
         for vout in dbox.data_vars:
@@ -429,14 +287,15 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                continue
             (dbox[vout].values)[mask] = np.nan
 
-        filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
-        for raw_var in ['lsRain', 'lw_out_PBLtop']:
-            filt[raw_var] = dbox[raw_var]
+        # Optional rain and cloud filter, keep off for now!
+        # filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
+        # for raw_var in ['lsRain', 'lw_out_PBLtop']:
+        #     filt[raw_var] = dbox[raw_var]
 
-        filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
-
+        # location of minimum cloud top temperature, could come from table
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
+        # use this point location when minlon, minlat are saved in table as intermediate step - lon,lat will not correspond exactly to use "==" method
         # point = dbox.sel(latitude=tmin.latitude, longitude=tmin.longitude, method='nearest')
         plat = tmin['latitude'].values
         plon = tmin['longitude'].values
@@ -452,7 +311,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             ypos = int(ypos[0])
         except TypeError:
             continue
-
 
         distx = 57  # 57 = 250 km at 4.4 res, 500km across
         disty = 57
@@ -507,7 +365,7 @@ else:
 main = '/home/users/cornkle/linked_CP4/'
 main_lmcs = '/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/'
 data_path = main + '/'+fdir
-ancils_path = main + '/CP4_WestAfrica/ANCILS'
+ancils_path = '/home/users/cornkle/impala/shared/CP4A/ncfiles/4km/ANCILS/'
 out_path = main_lmcs + 'CP4_box_anom_JASMIN/CP4_'+ftag+'_5000km2_-50_box_anom_v3'
 box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
@@ -520,12 +378,12 @@ tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 h= int(sys.argv[1]) # hour to extract
 
 plglob = glob.glob(data_path + '/q_pl/*.nc')
-
-pl_dummy = xr.open_dataset(plglob[0])
+pl_dummy = load_file(plglob[0], mu.create_CP4_filename('q_pl'))
 
 srfcglob = glob.glob(data_path + '/lw_out_PBLtop/*.nc')
-srfc_dummy = xr.open_dataset(srfcglob[0])
+srfc_dummy =load_file(srfcglob[0], mu.create_CP4_filename('lw_out_PBLtop'))
 
+## getting interpolation weights for later use
 pl_dummy = pl_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 srfc_dummy = srfc_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 # load seamask
@@ -535,22 +393,11 @@ ls = landsea['lsm']
 
 ls = ls.assign_coords(rlon = ls.rlon.values - 360)
 ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-# ###########
-# topo_path = glob.glob(ancils_path + os.sep + 'orog_combined*.nc')[0]
-# topo = xr.open_dataset(topo_path, decode_times=False)
-# top = topo['ht']
-#
-# top = top.assign_coords(rlon = top.rlon.values - 360)
-# top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-# ##########
+
 
 pos = np.where(ls_arr[0, 0, :, :] == 0)
 lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
-
-#plinds, plweights, plshape = u_int.interpolation_weights(pl_dummy.longitude, pl_dummy.latitude, ls_arr.rlon, ls_arr.rlat)
 inds, weights, shape = u_int.interpolation_weights(srfc_dummy.longitude, srfc_dummy.latitude, pl_dummy.longitude, pl_dummy.latitude)
-#regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
-
 
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], h, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
@@ -562,7 +409,6 @@ vars['v_mid'] = ([650], 12, (0, 0, 0), 'v_pl', '')
 vars['v_srfc'] = ([925], 12, (0, 0, 0), 'v_pl', '')
 vars['q_mid'] = ([650], 12, (0, 0, 0), 'q_pl', '')  # INPUT IN T * 100!!
 vars['t_mid'] = ([650], 12, (0, 0, 0), 't_pl', '')   # INPUT IN T * 100!!
-#vars['t_low'] = ([850], 12, (0, 0, 0), 't_pl', '')
 vars['t_srfc'] = ([925], 12, (0, 0, 0), 't_pl', '')
 vars['q_srfc'] = ([925], 12, (0, 0, 0), 'q_pl', '')
 vars['geoH_srfc'] = ([925], 12, (inds,weights,shape), 'geoH_pl', 'srfc')
@@ -588,11 +434,5 @@ for d in datelist:
         continue
 
     print('Doing ', d)
-    file_save(data_path, out_path, ancils_path, vars, d, box, tthresh, pos, lons, lats)
-
-# for d in datelist[0:10]:
-#
-#     if (d['time.year']<1998) | (d['time.month']<3) | (d['time.month']>11):
-#         continue
-#     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
+    file_save(data_path, out_path, vars, d, box, tthresh, pos)
 
