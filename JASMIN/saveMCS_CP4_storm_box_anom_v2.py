@@ -13,10 +13,34 @@ from collections import OrderedDict
 from utils import constants as cnst, u_darrays as uda, u_interpolate as u_int
 import matplotlib.pyplot as plt
 import sys
+from JASMIN import MetUM_variables as mu
+
+def load_file(ffile,var):
+    try:
+        ds=xr.open_dataset(ffile)[var]
+    except:
+        #Deal with funny landseamask file
+        ds=xr.open_dataset(ffile,decode_times=False)[var]
+        ds=ds.rename({"rlat":"latitude","rlon":"longitude"})
+    ds=ds.assign_coords({"longitude":(ds.longitude-360)})
+
+    try:
+        ds=ds.isel(pressure=slice(None,None,-1))
+    except:
+        pass
+    return ds
+
 
 def olr_to_bt(olr):
+    #Application of Stefan-Boltzmann law
     sigma = 5.670373e-8
-    return ((olr/sigma)**0.25)-273.15
+    tf = (olr/sigma)**0.25
+    #Convert from bb to empirical BT (degC) - Yang and Slingo, 2001
+    a = 1.228
+    b = -1.106e-3
+    Tb = (-a + np.sqrt(a**2 + 4*b*tf))/(2*b)
+    return Tb - 273.15
+
 
 def griddata_lin(data, x, y, new_x, new_y):
 
@@ -475,16 +499,16 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 ### Inputs:
 ##### Provide hour when you run script!!! as sys.argv[1]
 fdir = str(sys.argv[2])
-if fdir == 'CP4hist':
+if fdir == 'hist':
     ftag = 'historical'
 else:
     ftag = 'future'
 
-main = cnst.other_drive + 'CP4'
-main_lmcs = cnst.lmcs_drive + 'CP_models'
-data_path = main + '/CP4_WestAfrica/'+fdir
+main = '/home/users/cornkle/linked_CP4/'
+main_lmcs = '/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/'
+data_path = main + '/'+fdir
 ancils_path = main + '/CP4_WestAfrica/ANCILS'
-out_path = main_lmcs + '/MCS_files/MODELS/CP4_box_anom/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_anom_v2'
+out_path = main_lmcs + 'CP4_box_anom_JASMIN/CP4_'+ftag+'_5000km2_-50_box_anom_v3'
 box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
