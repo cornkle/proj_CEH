@@ -15,9 +15,9 @@ from scipy.ndimage.measurements import label
 def dictionary():
 
     dic = {}
-    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '70area', 'tmin',
+    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '60area','65area','70area', '75area', 'tmin',
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat', 'tminlon', 'tminlat',
-            'tmin', 'tmean', 'tp1', 'tp99', 'stormID', 'cloudMask', 'tir']
+            'tmin', 'tmean', 'tp1', 'stormID', 'cloudMask', 'tir']
 
 
     for v in vars:
@@ -92,8 +92,8 @@ def process_tir_image(ctt, data_res, t_thresh=-50, min_mcs_size=5000):
 
         pos = np.where(labels==g)
         npos = np.where(labels!=g)
-        datestr = str(int(ctt['time.year']))+'-'+str(int(ctt['time.month'])).zfill(2)+'-'+str(int(ctt['time.day'])).zfill(2)+'_'+\
-                      str(int(ctt['time.hour'])).zfill(2)+':'+str(int(ctt['time.minute'])).zfill(2)
+        datestr = str(int(ctt['time.year']))+'-'+str(int(ctt['time.month'])).zfill(2)+'-'+str(int(ctt['time.day'])).zfill(2)
+        #+'_'+\str(int(ctt['time.hour'])).zfill(2)+':'+str(int(ctt['time.minute'])).zfill(2)
 
         dic['date'].append(datestr)
         dic['month'].append(int(ctt['time.month']))
@@ -113,7 +113,10 @@ def process_tir_image(ctt, data_res, t_thresh=-50, min_mcs_size=5000):
         lonmax = np.nanmax(ctt.longitude.values[pos[1]])
 
         dic['area'].append(np.sum(np.isfinite(storm.values)))
+        dic['65area'].append(np.sum(storm.values<=-60))
+        dic['60area'].append(np.sum(storm.values<=-65))
         dic['70area'].append(np.sum(storm.values<=-70))
+        dic['75area'].append(np.sum(storm.values<=-75))
         dic['minlon'].append(lonmin)
         dic['minlat'].append(latmin)
         dic['maxlon'].append(lonmax)
@@ -125,7 +128,6 @@ def process_tir_image(ctt, data_res, t_thresh=-50, min_mcs_size=5000):
         dic['tminlon'].append(ctt.longitude[tpos_2d[1]].values)
         dic['tmean'].append(np.nanmean(storm))
         dic['tp1'].append(np.nanpercentile(storm, 1))
-        dic['tp99'].append(np.nanpercentile(storm, 99))
         dic['stormID'].append(datestr + '_' + str(g))
         dic['cloudMask'].append(labels==g)
         dic['tir'].append(storm.values)
