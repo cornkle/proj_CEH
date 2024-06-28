@@ -18,6 +18,140 @@ def olr_to_bt(olr):
     sigma = 5.670373e-8
     return ((olr/sigma)**0.25)-273.15
 
+def griddata_lin(data, x, y, new_x, new_y):
+
+    """
+    :param x: current x variables (1 or 2d, definitely 2d if irregular!)
+    :param y: current y variables (1 or 2d, definitely 2d if irregular!)
+    :param new_x: target x vars
+    :param new_y: target y vars
+    :return:  triangulisation lookup table, point weights, 2d shape - inputs for interpolation func
+    """
+
+    if x.ndim == 1:
+        grid_xs, grid_ys = np.meshgrid(x, y)
+    else:
+        grid_xs = x
+        grid_ys = y
+
+    if new_x.ndim == 1:
+        new_xs, new_ys = np.meshgrid(new_x, new_y)
+    else:
+        new_xs = new_x
+        new_ys = new_y
+
+    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
+    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
+    shape = new_xs.shape
+
+    # Interpolate using delaunay triangularization
+    data = griddata(points, data.flatten(), inter, method='linear')
+    data = data.reshape((shape[0], shape[1]))
+
+    return data
+
+def cut_kernel(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 2:
+        raise IndexError('Cut kernel only allows 2D arrays.')
+
+    kernel = np.zeros((dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[1]:
+        xmax = kernel.shape[1]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[1])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[1])
+
+    if ypos + dist_from_point < array.shape[0]:
+        ymax = kernel.shape[0]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[0])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[0])
+
+    cutk = array[ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
+def cut_kernel_3d(array, xpos, ypos, dist_from_point):
+    """
+     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
+     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
+    :param array: 2darray
+    :param xpos: middle x point of kernel
+    :param ypos: middle y point of kernel
+    :param dist_from_point: distance to kernel edge to each side
+    :return: 2d array of the chosen kernel size.
+    """
+
+    if array.ndim != 3:
+        raise IndexError('Cut kernel3d only allows 3D arrays.')
+
+    kernel = np.zeros((array.shape[0], dist_from_point*2+1, dist_from_point*2+1)) * np.nan
+
+    if xpos - dist_from_point >= 0:
+        xmin = 0
+        xmindist = dist_from_point
+    else:
+        xmin = (xpos - dist_from_point) * -1
+        xmindist = dist_from_point + (xpos - dist_from_point)
+
+    if ypos - dist_from_point >= 0:
+        ymin = 0
+        ymindist = dist_from_point
+    else:
+        ymin = (ypos - dist_from_point) * -1
+        ymindist = dist_from_point + (ypos - dist_from_point)
+
+    if xpos + dist_from_point < array.shape[2]:
+        xmax = kernel.shape[2]
+        xmaxdist = dist_from_point + 1
+    else:
+        xmax = dist_from_point - (xpos - array.shape[2])
+        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[2])
+
+    if ypos + dist_from_point < array.shape[1]:
+        ymax = kernel.shape[1]
+        ymaxdist = dist_from_point + 1
+    else:
+        ymax = dist_from_point - (ypos - array.shape[1])
+        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[1])
+
+    cutk = array[:, ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
+
+
+    kernel[:, ymin: ymax, xmin:xmax] = cutk
+
+    return kernel
+
 
 def cut_box(xpos, ypos, arr, dist=None):
     """
@@ -48,12 +182,14 @@ def cut_box(xpos, ypos, arr, dist=None):
 
 def filtering(dar, v, outv, pl):
 
-    if (v == 'q_pl') | (v == 't_pl') | (v == 'lw_out_PBLtop'):
-        dar.values = np.array(dar.values / 100).astype(float)
+    if (v == 'lw_out_PBLtop'):
+        dar.values = olr_to_bt(dar.values)
+
+    # if (v == 'q_pl') | (v == 't_pl'): #| (v == 'lw_out_PBLtop'):
+    #     dar.values = np.array(dar.values / 100).astype(float)
 
     if (v == 'SM'):
         dar = dar.sel(depth=0.05)
-        dar = dar.where(dar< 500, other=np.nan)
 
     if 'pressure' in dar.coords:
 
@@ -68,7 +204,8 @@ def filtering(dar, v, outv, pl):
             return
         if (len(pl) > 1) & (outv == 'shear'):
 
-            shear = dar.sel(pressure=650).values - dar.sel(pressure=925).values
+            shear = (dar.sel(pressure=650).values - dar.sel(pressure=925).values).squeeze()
+
             dar = dar.sum(dim='pressure').squeeze()
             dar.values = shear
 
@@ -80,7 +217,7 @@ def filtering(dar, v, outv, pl):
 
 
 
-def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, lons, lats):
+def file_save(cp_dir, out_dir, vars, datestring, box, tthresh):
 
     keys = vars.keys()
 
@@ -88,6 +225,9 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         print('please provide ORL first in dictionary')
         return
 
+    yyf = np.array(datestring[0:4]).astype(int)
+    mmf = np.array(datestring[4:6]).astype(int)
+    ddf = np.array(datestring[6:8]).astype(int)
 
     goodinds = 0
 
@@ -111,19 +251,41 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         v = (vars[outv])[3]
         grid = (vars[outv])[4]
 
-        try:
-            filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*_'+datestring+'*.nc')[0]
-        except IndexError:
-            #ipdb.set_trace()
-            print('No file found, return')
-            return
+        if '_pl' in v:
+            try:
+                filepath = glob.glob(cp_dir + os.sep + str(v) + os.sep + '*_' + str(yyf) + str(mmf).zfill(2) + str(ddf).zfill(2) + '*.nc')[0]
+            except IndexError:
+                ipdb.set_trace()
+                print('No file found, return')
+                return
 
-        try:
-            arr = xr.open_dataset(filepath)
-        except OSError:
-            print('Cannot open file, continue! ', filepath)
-            return
-        dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
+            try:
+                arr = xr.open_dataset(filepath)
+            except OSError:
+                print('Cannot open file, continue! ', filepath)
+                return
+            dar = arr[v].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
+            # if len(dar.time) != 24:
+            #     ipdb.set_trace()
+
+        else:
+            try:
+                filepath = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*_'+str(yyf)+str(mmf).zfill(2)+'01'+'*.nc')[0]
+            except IndexError:
+                ipdb.set_trace()
+                print('No file found, return')
+                return
+
+            try:
+                arr = xr.open_dataset(filepath)
+            except OSError:
+                print('Cannot open file, continue! ', filepath)
+                return
+            dar = arr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
+
+            dar = dar.sel(time=(dar['time.year']==yyf)&(dar['time.month']==mmf)&(dar['time.day']==ddf))
+            # if len(dar.time) != 24:
+            #     ipdb.set_trace()
 
         if outv == 'lsRain_noon':
             dum = dar[dar['time.hour'] == h].squeeze()
@@ -135,64 +297,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         del arr
 
-
         dar = filtering(dar, v, outv, pl)
-
-        ddate = dar.time.values.item()
-        dt = datetime.datetime(ddate.year, ddate.month, ddate.day,
-                               ddate.hour, ddate.minute, ddate.second)
-
-        if outv not in ['lwout_noon', 'lsRain_noon', 'lw_out_PBLtop', 'lsRain']:
-            mean_arr = []
-            for dd in [7,6,5,4,3,2,1]:
-                ndate = dt - pd.Timedelta(str(dd)+'days')
-                if ndate.day >30:
-                    dday = 30
-                else:
-                    dday = ndate.day
-                ndatestring = str(ndate.year)+str(ndate.month).zfill(2)+str(dday).zfill(2)
-                try:
-                    nfile = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*_'+ndatestring+'*.nc')[0]
-                except:
-                    continue
-                try:
-                    meanarr = xr.open_dataset(nfile)
-                    mmeanarr = meanarr[v].sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-                except OSError:
-                    print('Couldnt find clim file, continue')
-                    continue
-                mmeanarr = mmeanarr[mmeanarr['time.hour'] == h].squeeze()
-
-                mmeanarr = filtering(mmeanarr, v, outv, pl)
-                mean_arr.append(mmeanarr)
-
-                ndate = dt + pd.Timedelta(str(dd)+'days')
-                if ndate.day >30:
-                    dday = 30
-                else:
-                    dday = ndate.day
-                ndatestring = str(ndate.year)+str(ndate.month).zfill(2)+str(dday).zfill(2)
-                try:
-                    nfile = glob.glob(cp_dir+os.sep+str(v)+os.sep+'*_'+ndatestring+'*.nc')[0]
-                except:
-                    continue
-                try:
-                    meanarr = xr.open_dataset(nfile)
-                    mmeanarr = meanarr[v].sel(longitude=slice(box[0], box[1]), latitude=slice(box[2], box[3]))
-                except OSError:
-                    print('Couldnt find clim file, continue')
-                    continue
-                mmeanarr = mmeanarr[mmeanarr['time.hour'] == h].squeeze()
-
-                mmeanarr = filtering(mmeanarr, v, outv, pl)
-                mean_arr.append(mmeanarr)
-            print('Cases in clim mean:', len(mean_arr))
-
-            if len(mean_arr) < 10:
-                print('Mean smaller 10, return')
-                return
-            fullmean = xr.concat(mean_arr, dim='time').mean('time')
-            dar = dar - fullmean
 
         # regrid to common grid (unstagger wind, bring to landsea mask grid)
         if grid == 'srfc':
@@ -205,21 +310,23 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                 ipdb.set_trace()
 
 
-            da = xr.DataArray(regrid,
-                              coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
-                                      'longitude': pl_dummy.longitude.values, },
-                              dims=['latitude', 'longitude'])
+            try:
+                da = xr.DataArray(regrid,
+                                  coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
+                                          'longitude': pl_dummy.longitude.values, },
+                                  dims=['latitude', 'longitude'])
+            except:
+                ipdb.set_trace()
             da.attrs = dar.attrs
         else:
-
-            da = xr.DataArray(dar.values,
-                              coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
-                                      'longitude': pl_dummy.longitude.values, },
-                               dims=['latitude', 'longitude'])
+            try:
+                da = xr.DataArray(dar.values,
+                                  coords={'time': dar.time, 'latitude': pl_dummy.latitude.values,
+                                          'longitude': pl_dummy.longitude.values, },
+                                   dims=['latitude', 'longitude'])
+            except:
+                ipdb.set_trace()
             da.attrs = dar.attrs
-
-
-        da.values[pos[0], pos[1]] = np.nan  # mask sea
 
         if (v == 'lw_out_PBLtop') & (idx == 0):
 
@@ -240,7 +347,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             u, inv = np.unique(labels, return_inverse=True)
             n = np.bincount(inv)
 
-            goodinds = u[n >= 517]  # 517 == 10000km2. defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
+            goodinds = u[n >= 16]  # 16 == 10000km2 = 25x25. defines minimum MCS size e.g. 350 km2 = 39 pix at 3x3km res (258 pix at 4.4km is 5000km2) 52 pix is 1000km2 for cp4
             if not sum(goodinds) > 0:
                 print('No goodinds!')
                 return
@@ -271,11 +378,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                continue
             (dbox[vout].values)[mask] = np.nan
 
-        # filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
-        # for raw_var in ['lsRain', 'lw_out_PBLtop']:
-        #     filt[raw_var] = dbox[raw_var]
+        filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
+        for raw_var in ['lsRain', 'lw_out_PBLtop']:
+            filt[raw_var] = dbox[raw_var]
 
-        #filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
+        filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
 
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
@@ -284,6 +391,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
         plon = tmin['longitude'].values
         try:
             if plat[0] < MINLAT:
+                print('storm too far south')
                 continue
         except:
             continue
@@ -293,11 +401,12 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             xpos = int(xpos[0])
             ypos = int(ypos[0])
         except TypeError:
+            print('location error')
             continue
 
 
-        distx = 57  # 57 = 250 km at 4.4 res, 500km across
-        disty = 57
+        distx = 10  # 57 = 250 km at 4.4 res, 500km across
+        disty = 10
         try:
             filt = filt.isel(latitude=slice(ypos - disty, ypos + disty + 1),
                              longitude=slice(xpos - distx, xpos + distx + 1))
@@ -305,25 +414,20 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
             continue
 
         if (len(filt.latitude) != disty * 2 + 1) | (len(filt.longitude) != distx * 2 + 1):
-            print(filt)
+            print(filt, 'size incorrect')
             continue
         filt = filt.assign_coords(
             {'longitude': np.arange(distx * -1, distx + 1), 'latitude': np.arange(distx * -1, distx + 1)})
 
-        try:
-            if np.nansum(filt['lsRain'])<=0.1:
-                return
-        except KeyError:
-            if np.nansum(filt['totRain'])<=0.1:
-                return
+        if np.nansum(filt['lsRain'])<=0.1:
+            print('too little rain', filt['lsRain'].max())
+            return
+        if np.nansum(np.isfinite(filt['sh']))<=filt['sh'].size*0.25:
+            print('too many missing')
+            return
         filt.drop_vars(['lsRain_noon', 'lwout_noon'])
         filt.attrs = {'minlat' : plat, 'minlon' : plon}
 
-
-        #if np.nansum(ds_box['lwout_noon'])<=0:
-        #   ipdb.set_trace()
-        #   print('lwout is lt 0', np.nansum(ds_box['lwout_noon']))
-        #   return
 
         savefile = out_dir + os.sep + date.strftime('%Y-%m-%d_%H:%M:%S') + '_' + str(gi) + '_lonXlat_'+str(np.round(plon,1))+'_'+str(np.round(plat,1))+'.nc'
         try:
@@ -333,6 +437,7 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 
         comp = dict(zlib=True, complevel=5)
         encoding = {var: comp for var in ds.data_vars}
+
         filt.to_netcdf(path=savefile, mode='w', encoding=encoding)
         print('Saved ' + savefile)
         print('Saved MCS no.'+str(gi)+ ' as netcdf.')
@@ -341,29 +446,22 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
 ### Inputs:
 ##### Provide hour when you run script!!! as sys.argv[1]
 fdir = str(sys.argv[2])
-if fdir == 'CP4hist':
+if fdir == 'CP25hist':
     ftag = 'historical'
 else:
     ftag = 'future'
 
-#main = cnst.other_drive + 'CP4'
-# main_lmcs = cnst.lmcs_drive + 'CP_models'
-# data_path = main + '/CP4_WestAfrica/'+fdir
-# ancils_path = main + '/CP4_WestAfrica/ANCILS'
-# out_path = main_lmcs + '/MCS_files/MODELS/CP4_box_anom/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_anom_v2'
-# box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
-
-main = '/home/users/cornkle/CP4home/'
-main_lmcs = '/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/'
-data_path = main + '/'+fdir
-ancils_path = '/home/users/cornkle/impala/shared/CP4A/ncfiles/4km/ANCILS/'
-out_path = main_lmcs + 'CP4_box_anom_JASMIN/CP4_'+ftag+'_5000km2_-50_box_anom_v3/'
-box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
+main = cnst.other_drive + 'CP4'
+main_lmcs = cnst.lmcs_drive + 'CP_models'
+data_path = main + '/CP4_WestAfrica/'+fdir
+#ancils_path = main + '/CP4_WestAfrica/ANCILS'
+out_path = main_lmcs + '/MCS_files/MODELS/CP4_box/P25_allHours_'+ftag+'_5000km2_-50_WAf_box_v2'
+box = [-16, 25, 6.5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
 years = np.array(np.arange(1998,2007), dtype=str)
-months = (['07', '08', '09'])
-days = np.array(np.arange(1,32), dtype=str)
+months = (['07','08']) #'06', '07',  '09'
+days = np.array(np.arange(1,31), dtype=str)
 
 tthresh = -50 # chosen temperature threshold, e.g. -50, -60, -70
 h= int(sys.argv[1]) # hour to extract
@@ -377,41 +475,20 @@ srfc_dummy = xr.open_dataset(srfcglob[0])
 
 pl_dummy = pl_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
 srfc_dummy = srfc_dummy.sel(longitude=slice(box[0],box[1]), latitude=slice(box[2],box[3]))
-# load seamask
-landsea_path = glob.glob(ancils_path + os.sep + 'landseamask*.nc')[0]
-landsea = xr.open_dataset(landsea_path, decode_times=False)
-ls = landsea['lsm']
 
-ls = ls.assign_coords(rlon = ls.rlon.values - 360)
-ls_arr = ls.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-# ###########
-# topo_path = glob.glob(ancils_path + os.sep + 'orog_combined*.nc')[0]
-# topo = xr.open_dataset(topo_path, decode_times=False)
-# top = topo['ht']
-#
-# top = top.assign_coords(rlon = top.rlon.values - 360)
-# top_arr = top.sel(rlon=slice(box[0], box[1]), rlat=slice(box[2], box[3]))
-# ##########
-
-pos = np.where(ls_arr[0, 0, :, :] == 0)
-lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)#np.meshgrid(ls_arr.rlon.values, ls_arr.rlat.values)
-
-#plinds, plweights, plshape = u_int.interpolation_weights(pl_dummy.longitude, pl_dummy.latitude, ls_arr.rlon, ls_arr.rlat)
+lons, lats = np.meshgrid(pl_dummy.longitude.values, pl_dummy.latitude.values)
 inds, weights, shape = u_int.interpolation_weights(srfc_dummy.longitude, srfc_dummy.latitude, pl_dummy.longitude, pl_dummy.latitude)
-#regrid = griddata_lin(dar.values, dar.longitude, dar.latitude, ls_arr.rlon, ls_arr.rlat)
-
 
 vars = OrderedDict()   # dictionary which contains info on pressure level and hour extraction for wanted variables
 vars['lw_out_PBLtop'] = ([], h, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')  ### Input in BRIGHTNESS TEMPERATURES!! (degC)
-vars['lsRain'] =  ([], h, (inds,weights,shape), 'lsRain', 'srfc')   # pressure levels, hour
+vars['lsRain'] =  ([], h, (inds,weights,shape), 'totRain', 'srfc')   # pressure levels, hour
 vars['shear'] = ([650, 925], 12, (0, 0, 0), 'u_pl', '') # (plinds, plweights, plshape) should use 925 later
 vars['u_mid'] = ([650], 12, (0, 0, 0), 'u_pl', '')
 vars['u_srfc'] = ([925], 12, (0, 0, 0), 'u_pl', '')
 vars['v_mid'] = ([650], 12, (0, 0, 0), 'v_pl', '')
 vars['v_srfc'] = ([925], 12, (0, 0, 0), 'v_pl', '')
-vars['q_mid'] = ([650], 12, (0, 0, 0), 'q_pl', '')  # INPUT IN T * 100!!
+vars['q_mid'] = ([650], 12, (0, 0, 0), 'q_pl', '')  # INPUT IN T * 100!!might be any better or worse than a smoother!
 vars['t_mid'] = ([650], 12, (0, 0, 0), 't_pl', '')   # INPUT IN T * 100!!
-#vars['t_low'] = ([850], 12, (0, 0, 0), 't_pl', '')
 vars['t_srfc'] = ([925], 12, (0, 0, 0), 't_pl', '')
 vars['q_srfc'] = ([925], 12, (0, 0, 0), 'q_pl', '')
 vars['geoH_srfc'] = ([925], 12, (inds,weights,shape), 'geoH_pl', 'srfc')
@@ -420,7 +497,7 @@ vars['sh'] = ([], 12, (inds,weights,shape), 'sh', 'srfc')
 vars['lh'] = ([], 12, (inds,weights,shape), 'lh', 'srfc')
 vars['t2'] = ([], 12, (inds,weights,shape), 't2', 'srfc')
 vars['q2'] = ([], 12, (inds,weights,shape), 'q2', 'srfc')
-vars['lsRain_noon'] =  ([], 12, (inds,weights,shape), 'lsRain', 'srfc')
+vars['lsRain_noon'] =  ([], 12, (inds,weights,shape), 'totRain', 'srfc')
 vars['lwout_noon'] =  ([], 12, (inds,weights,shape), 'lw_out_PBLtop', 'srfc')
 vars['SM'] = ([], 12, (inds, weights, shape), 'SM', 'srfc')
 
@@ -437,11 +514,5 @@ for d in datelist:
         continue
 
     print('Doing ', d)
-    file_save(data_path, out_path, ancils_path, vars, d, box, tthresh, pos, lons, lats)
-
-# for d in datelist[0:10]:
-#
-#     if (d['time.year']<1998) | (d['time.month']<3) | (d['time.month']>11):
-#         continue
-#     file_save(data_path, out_path, ancils_path, vars, d, box, tthresh)
+    file_save(data_path, out_path, vars, d, box, tthresh)
 
