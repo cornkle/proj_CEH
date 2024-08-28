@@ -77,7 +77,7 @@ for ids in range(len(df_prw)):  #len(df_prw)
     if ds.attrs['source_id'] not in tnames.values:  # only download where ssp858 prw is available
         continue
         
-            
+
 #     if ('EC-Earth3-Veg' in ds.attrs['source_id']) | ('HadGEM3-GC31-MM' in ds.attrs['source_id']):     #CNRM-CM6-1-HR
 #         continue
         

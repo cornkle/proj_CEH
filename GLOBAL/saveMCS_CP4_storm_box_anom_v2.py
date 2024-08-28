@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage.measurements import label
+from scipy.ndimage import label
 import xarray as xr
 import os
 import ipdb
@@ -17,140 +17,6 @@ import sys
 def olr_to_bt(olr):
     sigma = 5.670373e-8
     return ((olr/sigma)**0.25)-273.15
-
-def griddata_lin(data, x, y, new_x, new_y):
-
-    """
-    :param x: current x variables (1 or 2d, definitely 2d if irregular!)
-    :param y: current y variables (1 or 2d, definitely 2d if irregular!)
-    :param new_x: target x vars
-    :param new_y: target y vars
-    :return:  triangulisation lookup table, point weights, 2d shape - inputs for interpolation func
-    """
-
-    if x.ndim == 1:
-        grid_xs, grid_ys = np.meshgrid(x, y)
-    else:
-        grid_xs = x
-        grid_ys = y
-
-    if new_x.ndim == 1:
-        new_xs, new_ys = np.meshgrid(new_x, new_y)
-    else:
-        new_xs = new_x
-        new_ys = new_y
-
-    points = np.array((grid_xs.flatten(), grid_ys.flatten())).T
-    inter = np.array((np.ravel(new_xs), np.ravel(new_ys))).T
-    shape = new_xs.shape
-
-    # Interpolate using delaunay triangularization
-    data = griddata(points, data.flatten(), inter, method='linear')
-    data = data.reshape((shape[0], shape[1]))
-
-    return data
-
-def cut_kernel(array, xpos, ypos, dist_from_point):
-    """
-     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
-     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
-    :param array: 2darray
-    :param xpos: middle x point of kernel
-    :param ypos: middle y point of kernel
-    :param dist_from_point: distance to kernel edge to each side
-    :return: 2d array of the chosen kernel size.
-    """
-
-    if array.ndim != 2:
-        raise IndexError('Cut kernel only allows 2D arrays.')
-
-    kernel = np.zeros((dist_from_point*2+1, dist_from_point*2+1)) * np.nan
-
-    if xpos - dist_from_point >= 0:
-        xmin = 0
-        xmindist = dist_from_point
-    else:
-        xmin = (xpos - dist_from_point) * -1
-        xmindist = dist_from_point + (xpos - dist_from_point)
-
-    if ypos - dist_from_point >= 0:
-        ymin = 0
-        ymindist = dist_from_point
-    else:
-        ymin = (ypos - dist_from_point) * -1
-        ymindist = dist_from_point + (ypos - dist_from_point)
-
-    if xpos + dist_from_point < array.shape[1]:
-        xmax = kernel.shape[1]
-        xmaxdist = dist_from_point + 1
-    else:
-        xmax = dist_from_point - (xpos - array.shape[1])
-        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[1])
-
-    if ypos + dist_from_point < array.shape[0]:
-        ymax = kernel.shape[0]
-        ymaxdist = dist_from_point + 1
-    else:
-        ymax = dist_from_point - (ypos - array.shape[0])
-        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[0])
-
-    cutk = array[ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
-
-
-    kernel[ymin: ymax, xmin:xmax] = cutk
-
-    return kernel
-
-def cut_kernel_3d(array, xpos, ypos, dist_from_point):
-    """
-     This function cuts out a kernel from an existing array and allows the kernel to exceed the edges of the input
-     array. The cut-out area is shifted accordingly within the kernel window with NaNs filled in
-    :param array: 2darray
-    :param xpos: middle x point of kernel
-    :param ypos: middle y point of kernel
-    :param dist_from_point: distance to kernel edge to each side
-    :return: 2d array of the chosen kernel size.
-    """
-
-    if array.ndim != 3:
-        raise IndexError('Cut kernel3d only allows 3D arrays.')
-
-    kernel = np.zeros((array.shape[0], dist_from_point*2+1, dist_from_point*2+1)) * np.nan
-
-    if xpos - dist_from_point >= 0:
-        xmin = 0
-        xmindist = dist_from_point
-    else:
-        xmin = (xpos - dist_from_point) * -1
-        xmindist = dist_from_point + (xpos - dist_from_point)
-
-    if ypos - dist_from_point >= 0:
-        ymin = 0
-        ymindist = dist_from_point
-    else:
-        ymin = (ypos - dist_from_point) * -1
-        ymindist = dist_from_point + (ypos - dist_from_point)
-
-    if xpos + dist_from_point < array.shape[2]:
-        xmax = kernel.shape[2]
-        xmaxdist = dist_from_point + 1
-    else:
-        xmax = dist_from_point - (xpos - array.shape[2])
-        xmaxdist = dist_from_point - (xpos + dist_from_point - array.shape[2])
-
-    if ypos + dist_from_point < array.shape[1]:
-        ymax = kernel.shape[1]
-        ymaxdist = dist_from_point + 1
-    else:
-        ymax = dist_from_point - (ypos - array.shape[1])
-        ymaxdist = dist_from_point - (ypos + dist_from_point - array.shape[1])
-
-    cutk = array[:, ypos - ymindist: ypos + ymaxdist, xpos - xmindist: xpos + xmaxdist]
-
-
-    kernel[:, ymin: ymax, xmin:xmax] = cutk
-
-    return kernel
 
 
 def cut_box(xpos, ypos, arr, dist=None):
@@ -405,11 +271,11 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
                continue
             (dbox[vout].values)[mask] = np.nan
 
-        filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
-        for raw_var in ['lsRain', 'lw_out_PBLtop']:
-            filt[raw_var] = dbox[raw_var]
+        # filt = dbox.where((dbox['lsRain_noon'] < 0.005) & (dbox['lwout_noon'] > -30))
+        # for raw_var in ['lsRain', 'lw_out_PBLtop']:
+        #     filt[raw_var] = dbox[raw_var]
 
-        filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
+        #filt['SM'] = filt['SM'].where(filt['SM'] < 500, other=np.nan)
 
         tmin = filt.where(dbox['lw_out_PBLtop'] == filt['lw_out_PBLtop'].min(), drop=True)
 
@@ -480,11 +346,18 @@ if fdir == 'CP4hist':
 else:
     ftag = 'future'
 
-main = cnst.other_drive + 'CP4'
-main_lmcs = cnst.lmcs_drive + 'CP_models'
-data_path = main + '/CP4_WestAfrica/'+fdir
-ancils_path = main + '/CP4_WestAfrica/ANCILS'
-out_path = main_lmcs + '/MCS_files/MODELS/CP4_box_anom/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_anom_v2'
+#main = cnst.other_drive + 'CP4'
+# main_lmcs = cnst.lmcs_drive + 'CP_models'
+# data_path = main + '/CP4_WestAfrica/'+fdir
+# ancils_path = main + '/CP4_WestAfrica/ANCILS'
+# out_path = main_lmcs + '/MCS_files/MODELS/CP4_box_anom/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_anom_v2'
+# box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
+
+main = '/home/users/cornkle/CP4home/'
+main_lmcs = '/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/'
+data_path = main + '/'+fdir
+ancils_path = '/home/users/cornkle/impala/shared/CP4A/ncfiles/4km/ANCILS/'
+out_path = main_lmcs + 'CP4_box_anom_JASMIN/CP4_'+ftag+'_5000km2_-50_box_anom_v3/'
 box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 9
 
