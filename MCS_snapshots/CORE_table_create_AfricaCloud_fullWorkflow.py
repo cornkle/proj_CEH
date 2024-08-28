@@ -83,11 +83,6 @@ def process_core_image(ds, data_res, t_thresh=0.1, min_mcs_size=9):
     mcs_label, mL = label(ctt.values)
 
     cores = (ds['cores']).squeeze()
-    cores.values[cores<0.1] = 0
-    cores.values[np.isnan(cores)]=0
-    labels, goodinds = label(cores.values)
-    
-
     min_pix_nb = min_mcs_size / data_res ** 2
 
     max_pix_nb = 300000 / data_res ** 2  # this is to capture satellite artefacts that come in large contiguous stripes.
@@ -98,16 +93,11 @@ def process_core_image(ds, data_res, t_thresh=0.1, min_mcs_size=9):
     # plt.pcolormesh(labels)
     # plt.colorbar()
     # plt.show()
-    ipdb.set_trace()
-    for glon, glat in zip(ds.maxlon, ds.maxlat):
-        
-        point = (glon, glat)
-        points = np.array(list(zip(ds['dlon'].values, ds['dlat'].values)))
-        dist_2 = np.sum((points - point) * (points - point), axis=1)
-        pmax_pos = np.argmin(dist_2)
+    for g in goodinds:
 
-        ipdb.set_trace()
-        g = labels[pmax_pos[0],pmax_pos[1]]
+        if g == 0:
+            continue
+
         pos = np.where(labels == g)
         npos = np.where(labels != g)
         datestr = str(int(ctt['time.year'].values)) + '-' + str(int(ctt['time.month'].values)).zfill(2) + '-' + str(int(ctt['time.day'].values)).zfill(2) + '_' + \

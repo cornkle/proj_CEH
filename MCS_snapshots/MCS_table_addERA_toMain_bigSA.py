@@ -27,6 +27,7 @@ def ERA_dictionary(tab):
     vars = [
         
         'tcwv', 'tgrad2m', 'tgrad2m_resid', 'tgrad925', 'tgrad850', 'smgrad', 'efgrad_acc', 'shgrad', 'shgrad_resid', 'lhgrad', 'shgrad_acc', 'lhgrad_acc',
+        'qgrad2m', 'qgrad2m_resid', 'qgrad925', 'qgrad850',
         'q925', 'q650', 'q850', 'era_precip', 'era_precip_acc', 'sm', 'ef_acc', 'sh_acc', 'lh_acc',
         'u925', 'u650',
         'v925', 'v650',
@@ -61,7 +62,7 @@ def add_ERA_regional(lt_mcs_hours):
     mreg = REGION
     for yy in range(2000,2021):
             filename = glob.glob(intab+'base_tables_tir-prcp/'+mreg+'/'+str(yy)+'_MCS_5000km2_*.csv')[0]
-            outfile = filename.replace(mreg, 'ERA5_added_12LT/'+mreg)
+            outfile = filename.replace('base_tables_tir-prcp/'+mreg, 'ERA5_added_12LT/'+mreg)
             outfile = outfile.replace('.csv', '_'+mreg+'_ERA5.csv')
 
             # try:
@@ -220,23 +221,22 @@ def run_ERA5_regional(fi):
         era_day_wi100 = era_wi100_day.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 0.35, elon + 0.35)).mean(['latitude', 'longitude'])
         era_day_accum = era_accum.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 0.35, elon + 0.35)).mean(['latitude', 'longitude'])
 
-        tgrad_lat = era_srfc_day.sel(latitude=slice(elat - 2, elat + 2), longitude=slice(elon - 0.35, elon + 0.35)).mean('longitude').squeeze()
+        tgrad_lat = era_srfc_day.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 2, elon + 2)).mean('latitude').squeeze()
         try:
             tgrad = tgrad_lat.polyfit(dim='latitude', deg=1)
         except:
             tgrad = np.nan
-        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat - 2, elat + 2), longitude=slice(elon - 0.35, elon + 0.35)).mean('longitude').squeeze().size)
+        print('tgradlen', era_srfc_day['t2m'].sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 2, elon + 2)).mean('latitude').squeeze().size)
 	
         if np.isfinite(tgrad):
-            tgrad_pl = era_pl_day['t'].sel(latitude=slice(elat - 2, elat + 2), longitude=slice(elon - 0.35, elon + 0.35)).mean('longitude').squeeze().polyfit(dim='latitude', deg=1)
-        
+            tgrad_pl = era_pl_day.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 2, elon + 2)).mean('latitude').squeeze().polyfit(dim='longitude', deg=1)
 
-            tgrad_lat_accum = era_accum.sel(latitude=slice(elat - 2, elat + 2), longitude=slice(elon - 0.35, elon + 0.35)).mean('longitude').squeeze()
-            tgrad_accum = tgrad_lat_accum.polyfit(dim='latitude', deg=1)
+            tgrad_lat_accum = era_accum.sel(latitude=slice(elat - 0.35, elat + 0.35), longitude=slice(elon - 2, elon + 2)).mean('latitude').squeeze()
+            tgrad_accum = tgrad_lat_accum.polyfit(dim='longitude', deg=1)
 
 
             ef_lat = tgrad_lat_accum['mslhf'] / (tgrad_lat_accum['mslhf'] + tgrad_lat_accum['msshf'])
-            ef_poly = ef_lat.squeeze().polyfit(dim='latitude', deg=1)
+            ef_poly = ef_lat.squeeze().polyfit(dim='longitude', deg=1)
             ef_mean = era_accum['mslhf'].mean() / (era_accum['mslhf'].mean() + era_accum['msshf']).mean()
         else:
             tgrad_pl = np.nan
@@ -291,8 +291,12 @@ def run_ERA5_regional(fi):
         out['lh_acc'].append(float(accum['mslhf'])*-1)
         if np.isfinite(tgrad):
             out['tgrad2m'].append(float(tgrad['t2m_polyfit_coefficients'][0]))
-            out['tgrad925'].append(float(tgrad_pl.sel(level=925)['polyfit_coefficients'][0]))
-            out['tgrad850'].append(float(tgrad_pl.sel(level=850)['polyfit_coefficients'][0]))
+            out['tgrad925'].append(float(tgrad_pl.sel(level=925)['t_polyfit_coefficients'][0]))
+            out['tgrad850'].append(float(tgrad_pl.sel(level=850)['t_polyfit_coefficients'][0]))
+
+            out['qgrad2m'].append(float(tgrad['q2m_polyfit_coefficients'][0]))
+            out['qgrad925'].append(float(tgrad_pl.sel(level=925)['q_polyfit_coefficients'][0]))
+            out['qgrad850'].append(float(tgrad_pl.sel(level=850)['q_polyfit_coefficients'][0]))
         
             out['shgrad_acc'].append(float(tgrad_accum['msshf_polyfit_coefficients'][0]) * -1)
             out['lhgrad_acc'].append(float(tgrad_accum['mslhf_polyfit_coefficients'][0]) * -1)  # era fluxes opposite sign convention
@@ -304,10 +308,15 @@ def run_ERA5_regional(fi):
        
             out['shgrad_resid'].append(float(tgrad_accum['msshf_polyfit_coefficients'][1]))
             out['tgrad2m_resid'].append(float(tgrad['t2m_polyfit_coefficients'][1]))
+            out['qgrad2m_resid'].append(float(tgrad['q2m_polyfit_coefficients'][1]))
         else:
             out['tgrad2m'].append(np.nan)
             out['tgrad925'].append(np.nan)
             out['tgrad850'].append(np.nan)
+
+            out['qgrad2m'].append(np.nan)
+            out['qgrad925'].append(np.nan)
+            out['qgrad850'].append(np.nan)
 
             out['shgrad_acc'].append(np.nan)
             out['lhgrad_acc'].append(np.nan)  # era fluxes opposite sign convention
@@ -319,6 +328,7 @@ def run_ERA5_regional(fi):
 
             out['shgrad_resid'].append(np.nan)
             out['tgrad2m_resid'].append(np.nan)
+            out['qgrad2m_resid'].append(np.nan)
 
 
         u9256 = float(e650['u'] - e925['u'])
