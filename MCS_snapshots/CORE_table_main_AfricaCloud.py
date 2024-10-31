@@ -1,4 +1,4 @@
-from MCS_snapshots import MCS_table_create_01deg
+from MCS_snapshots import CORE_table_create_AfricaCloud
 import xarray as xr
 import ipdb
 import pandas as pd
@@ -42,16 +42,17 @@ def make_table(yy):
     dlon = msg_latlon['lon']  # [100:-100,100:-100]
     dlat = msg_latlon['lat']  # [100:-100,100:-100]
 
-    infiles = sorted(glob.glob(lmcs + str(yy) + '*/*.nc'))
+    infiles = sorted(glob.glob(lmcs + str(yy) + '/*/*.nc'))
     full_year = []
     out_dic = {}
     print('Doing', yy)
+    
     outfile = out + str(yy)+'_'+reg+'_CORE_15mins.csv'
     if os.path.isfile(outfile):
        print(outfile, ' exists, continue')
        return
-
-    for infile in infiles:
+    #ipdb.set_trace()
+    for infile in infiles[15550:15560]:
         print('Doing', infile)
         try:
             da = (xr.open_dataset(infile))
@@ -59,20 +60,21 @@ def make_table(yy):
             print('2d file open error, continue')
             continue
 
-        da['dlat'] = dlat
-        da['dlon'] = dlon
-        da = da.where((dlon>=box[0]) & (dlon<=box[1]) & (dlat>=box[2]) & (dlat<=box[3]), other=0)
+        da['dlat'] = (('lat','lon'),dlat)
+        da['dlon'] = (('lat', 'lon'),dlon)
+        
+        da = da.where((da['dlon']>=box[0]) & (da['dlon']<=box[1]) & (da['dlat']>=box[2]) & (da['dlat']<=box[3]), other=0)
         merge_tab = CORE_table_create_AfricaCloud.process_core_image(da, 3)
         #merge_tab = MCS_table_create_01deg.add_environment_toTable(basic_tab, da,  envvar_take=[], rainvar_name='precipitation')
 
-        merge_tab.pop('cloudMask')
+        merge_tab.pop('coreMask')
         merge_tab.pop('tir')
         if len(merge_tab['date']) ==0:
            continue
 
         full_year.append(merge_tab)
         print('Did' , infile)
-
+    ipdb.set_trace()
     for key in full_year[0].keys():
         out_dic[key] = []
     for single_tab in full_year:
@@ -91,6 +93,6 @@ def make_table(yy):
 #for yy in np.arange(2004,2024):
 #     make_table(reg)
 
-# pool = multiprocessing.Pool(processes=5)
-# res = pool.map(make_table, np.arange(2004,2024))
-# pool.close()
+#pool = multiprocessing.Pool(processes=5)
+#res = pool.map(make_table, np.arange(2004,2024))
+#pool.close()

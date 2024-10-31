@@ -60,7 +60,7 @@ class UM_vars(object):
         'colDryMass': ('30', '403', 'c', '1'),
         'colWetMass': ('30', '404', 'c', '1'),
         'geoH_pl': ('16', '202', 'f', 'gpm'),
-        'PBL_height' : ('00','025', 'c', 'm'),  # 3hourly, pc
+        'pblH' : ('00','025', 'c', 'm'),  # 3hourly, pc
         'Turb_mixH' : ('03', '304', 'c', 'm')   # hourly, pc
     }
 
