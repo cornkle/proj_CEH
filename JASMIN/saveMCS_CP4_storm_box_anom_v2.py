@@ -135,8 +135,10 @@ def file_save(cp_dir, out_dir, vars, datestring, box, tthresh, pos):
         inds = (vars[outv][2])[0]
         weights = (vars[outv][2])[1]
         shape = (vars[outv][2])[2]
-
-        v = (vars[outv])[3]
+        try:
+            v = (vars[outv])[3]
+        except:
+            ipdb.set_trace()
         grid = (vars[outv])[4]
 
         try:

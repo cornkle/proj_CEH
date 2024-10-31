@@ -107,20 +107,22 @@ def write_grads(dist=3, meridional=True):
             direct = 'x'
 
 
+        #
+        # sh = era5f_srfc['sshf'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
+        # sh = sh / -86400
+        # t2 = era5f_srfc['t2m'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
+        # lh = era5f_srfc['slhf'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
+        # lh = lh / -86400
+        #
+        # era_t = era5f_pl['t'].sel(time=era5f_pl['time.month']==mm, level=925).groupby('time.year').mean(['time']).squeeze().load()
+        #
+        # ef = lh / (sh+lh)
 
-        sh = era5f_srfc['sshf'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
-        sh = sh / -86400
-        t2 = era5f_srfc['t2m'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
-        lh = era5f_srfc['slhf'].sel(time=era5f_pl['time.month']==mm).groupby('time.year').mean(['time']).squeeze().load()
-        lh = lh / -86400
+        sm = era5f_srfc['swvl1'].sel(time=era5f_pl['time.month'] == mm).groupby('time.year').mean(['time']).squeeze().load()
 
-        era_t = era5f_pl['t'].sel(time=era5f_pl['time.month']==mm, level=925).groupby('time.year').mean(['time']).squeeze().load()
+        vnames = ['sm']#['sh','t2','lh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
 
-        ef = lh / (sh+lh)
-
-        vnames = ['sh','t2','lh']#, 'lh']#, 't2', 't925'] 'sh' , 'ef'
-
-        for ids, das in enumerate([sh,t2,lh]):#, lh, t2, era_t]):
+        for ids, das in enumerate([sm]):#, lh, t2, era_t]):
             print('Doing var', vnames[ids])
 
             if len(glob.glob(mainpath + 'gradients_new/'+vnames[ids]+'_polyGrad_plusMinus' + str(dist) + 'deg_' + tag + '_' + str(mm).zfill(2) + '.nc')) > 0:
@@ -215,7 +217,7 @@ def write_corr_degradedRes(dist=3, meridional=True):
     else:
         tag = 'zonal'
 
-    vnames = ['t2','sh','lh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
+    vnames = ['sm']#['t2','sh','lh']#, 't2'] #, 'lh', 't2', 't925'] #'sh', 'ef'
 
     for mm in range(1,13):
         try:
@@ -240,7 +242,7 @@ def write_corr_degradedRes(dist=3, meridional=True):
         for ids, das in enumerate(vnames):
 
             for idx, was in enumerate(wnames):  #, era_ul, era_uh, era_vl, era_vh, , era_shear, era_vshear
-                outf = mainpath + 'correlations_new_degraded/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'_degraded_2000-2020.nc'
+                outf = mainpath + 'correlations_new_degraded/'+vnames[ids]+'_versus_'+was[0]+'_plusMinus'+str(dist)+'deg_'+tag+'_'+str(mm).zfill(2)+'_degraded.nc' ##_2000-2020.nc'
                 if os.path.isfile(outf):
                     print('File exists')
                     continue
@@ -253,9 +255,10 @@ def write_corr_degradedRes(dist=3, meridional=True):
 
 
                 grad_da_regrid = xr.DataArray(grad_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
-                grad_da_regrid = grad_da_regrid.sel(year=(grad_da_regrid.year>=2000))
+                #grad_da_regrid = grad_da_regrid.sel(year=(grad_da_regrid.year>=2000))
                 var_da_regrid = xr.DataArray(var_da_regrid, coords=[grad_da['year'], grid_coords['y'], grid_coords['x']], dims=['year', 'latitude', 'longitude'])
-                var_da_regrid = var_da_regrid.sel(year=(var_da_regrid.year>=2000))
+
+                #var_da_regrid = var_da_regrid.sel(year=(var_da_regrid.year>=2000))
                 corr_ds = corr(var_da_regrid, grad_da_regrid, tcoord='year')
 
                 corr_ds.to_netcdf(outf)

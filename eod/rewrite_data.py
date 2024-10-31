@@ -561,7 +561,7 @@ def rewrite_ASCAT(file):
     date = [datetime.datetime(yr, mon, day, hour, 0)]
 
     rrShape = (blat.shape[0], blon.shape[0])
-
+    ipdb.set_trace()
     rr = np.array(np.fromfile(file, dtype=np.uint8()), dtype=float)
     rr.shape = rrShape
     rr = np.flip(rr,axis=0)
