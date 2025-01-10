@@ -8,7 +8,7 @@ from __future__ import division
 
 import numpy as np
 import numpy.fft as fft
-from numpy.lib.polynomial import polyval
+from numpy.polynomial.polynomial import polyval
 from scipy.special import gamma
 from scipy.special.orthogonal import hermitenorm
 

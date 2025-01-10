@@ -3,7 +3,7 @@
 @author: C. Klein
 """
 import numpy as np
-from wavelet import oned as w1d
+from land_wavelet import oned as w1d
 
 
 class wavelet_1d(object):

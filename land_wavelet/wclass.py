@@ -72,11 +72,11 @@ class landwav(object):
         if vmax is not None:
             t[t >= vmin] = 0
 
-
+        self.imean = np.nanmean(t)
         self.invalid = np.isnan(t)
         t[np.isnan(t)] = nanfill
 
-        self.imean = np.mean(t)
+
 
         t = t - self.imean
 
@@ -143,7 +143,7 @@ class landwav(object):
         return coeffs, power, self.scales, self.period
 
 
-    def applyInverseWavelet(self, per_scale=False, anomaly_out=True):
+    def applyInverseWavelet(self, per_scale=False):
         """
         Applies the wavelet functions and handles wavelet coefficient filtering.
         :param ge_thresh: greater-equal threshold for coefficient filtering.
@@ -154,9 +154,6 @@ class landwav(object):
 
         #obj = wav.wavelet(self.res, self.dist, self.nb, start=self.start)
         variable = self.wobj.calc_coeffs_inverse(self.coeffs, per_scale=per_scale)
-
-        if anomaly_out==False:
-            variable = variable + self.imean
 
         return variable, self.scales
 
