@@ -168,6 +168,18 @@ def run_line(bool_img, threshold=None, minLineLength=50, maxLineGap=5):
     merged_lines = hobj.process_lines(lines, bool_img)
     shape = merged_lines.shape
     merged_lines = merged_lines.reshape(shape[0], shape[1] + shape[2])
+
+    new_lines = []
+
+    for line in merged_lines:
+        if (np.sum(line < 6) > 0) | (line[0] > bool_img.shape[1] - 5) | (line[2] > bool_img.shape[1] - 5):
+            continue
+        if (line[1] > bool_img.shape[0] - 5) | (line[3] > bool_img.shape[0] - 5):
+            continue
+        new_lines.append(line)
+
+    merged_lines = np.vstack(new_lines)
+
     return merged_lines
 
 def run_circle(bool_img, min_radius=5, max_radius=0):

@@ -25,7 +25,7 @@ NAMES = {
     'CP4_OBS_VARS': _create_dic(3, 0.5, 12, 10),  # nb =14 also tested
     'P25_VARS': _create_dic(25, 0.5, 25, 8),  # nb =14 also tested
     'organisation' : _create_dic(1, 0.1, 5, 43),  # nb =14 also tested
-    'VIS_05' : _create_dic(0.5,0.25,1.5,18) # MTG vis test
+    'VIS_05' : _create_dic(0.5,0.4,1.5,15) # MTG vis test
 
 }
 
