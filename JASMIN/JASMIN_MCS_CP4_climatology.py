@@ -1,4 +1,4 @@
-import numpy as np
+2006-09-28_18:00:00_32_lonXlat_[-3.3]_[9.4].ncimport numpy as np
 import xarray as xr
 import os
 import ipdb
@@ -153,7 +153,7 @@ else:
     FTAG = 'future'
 
 main = '/home/users/cornkle/linked_CP4/'
-main_lmcs = '/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/'
+main_lmcs = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/'
 data_path = main + '/'+fdir
 out_path = main_lmcs + 'climatology/'+FTAG+'/'
 box = [-19, 30, 4, 26]  # W- E , S - N geographical coordinates box
@@ -165,7 +165,7 @@ days = np.array(np.arange(1,31), dtype=str)
 HOUR= int(sys.argv[1]) # hour to extract
 
 
-vars = ['pblH','sh', 'lh', 't2', 'q2', 'SM', 'u10', 'v10', 't_pl','colWetMass', 'colDryMass', 'lw_out_PBLtop','lsRain','t_pl', 'u_pl', 'v_pl', 'q_pl', 'omega_pl', 'geoH_pl']
+vars = ['sw_net', 'lw_net', 'sw_in','pblH','sh', 'lh', 't2', 'q2', 'SM', 'u10', 'v10','colWetMass', 'colDryMass', 'lw_out_PBLtop','lsRain','t_pl', 'u_pl', 'v_pl', 'q_pl', 'omega_pl', 'geoH_pl']
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))
