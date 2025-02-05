@@ -27,7 +27,7 @@ from numpy import (arange, ceil, concatenate, conjugate, cos, exp, floor,
                    zeros, polyval)
 from numpy.fft import fft2, ifft2, fftfreq
 import pdb
-from pylab import find
+#from pylab import find
 
 
 class Mexican_hat():
