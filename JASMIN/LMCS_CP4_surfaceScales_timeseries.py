@@ -18,8 +18,8 @@ var = mu.create_CP4_filename(ivar)
 
 
 hour = '17'
-hist = sorted(glob.glob('/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/CP4_box_mean_JASMIN/CP4_historical_5000km2_-50_box_mean_v3/*-08-*_'+hour+':*.nc'))
-fut = sorted(glob.glob('/home/users/cornkle/lmcs/cklein/CP_models/MCS_files/CP4_box_mean_JASMIN/CP4_future_5000km2_-50_box_mean_v3/*-08-*_'+hour+':*.nc'))
+hist = sorted(glob.glob('/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/CP4_box_mean_JASMIN/CP4_historical_5000km2_-50_box_mean_v3/*-08-*_'+hour+':*.nc'))
+fut = sorted(glob.glob('/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/CP4_box_mean_JASMIN/CP4_future_5000km2_-50_box_mean_v3/*-08-*_'+hour+':*.nc'))
 
 tags = ['hist', 'future']
 
@@ -115,6 +115,6 @@ for idx, dats in enumerate([hist, fut]):
             strct[tags[idx]].append(cp4_box.values)
             strct_anom[tags[idx]].append(cp4_anom.values)
             
-pkl.dump(strct, open('/home/users/cornkle/lmcs/cklein/CP_models/CP4_timeseries/'+ivar+'_timeseries_-10to+10days_'+hour+'.p','wb'))
-pkl.dump(strct_anom, open('/home/users/cornkle/lmcs/cklein/CP_models/CP4_timeseries/'+ivar+'_anom_timeseries_-10to+10days_'+hour+'.p','wb'))
+pkl.dump(strct, open('/gws/nopw/j04/lmcs/cklein/CP_models/CP4_timeseries/'+ivar+'_timeseries_-10to+10days_'+hour+'.p','wb'))
+pkl.dump(strct_anom, open('/gws/nopw/j04/lmcs/cklein/CP_models/CP4_timeseries/'+ivar+'_anom_timeseries_-10to+10days_'+hour+'.p','wb'))
 print('Saved timeseries files!')

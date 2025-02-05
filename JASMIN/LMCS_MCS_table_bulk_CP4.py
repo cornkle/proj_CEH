@@ -13,6 +13,7 @@ import os
 
 TIMETAG = 'fut'
 ANOMTAG = 'anom'
+MAIN_PATH = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/mean3h_v2'
 
 def dictionary(dummy):
 
@@ -47,22 +48,8 @@ def perSys():
 
     timetag = TIMETAG
     anom = ANOMTAG
-
-
-    if anom == 'anom':
-        a1 = '_anom'
-        a2 = 'anom_'
-    else:
-        a1 = ''
-        a2 = ''
-
-    if timetag == 'hist':
-        ftag = 'historical'
-    else:
-        ftag = 'future'
-
-    pool = multiprocessing.Pool(processes=3)
-    files = glob.glob('/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box'+a1+'/CP4_allHours_'+ftag+'_5000km2_-50_WAf_box_'+a2+'v2/*.nc')
+    main_path = MAIN_PATH
+    files = glob.glob(main_path+'/'+anom+'_'+timetag+'/*.nc')
 
     print('Nb files', len(files))
     # for y in range(1998,2007):
@@ -81,7 +68,7 @@ def perSys():
     # pool.close()
 
     res=[]
-    for f in files:
+    for f in files[0:50]:
         res.append(file_loop(f))
 
     keys = mdic.keys()
@@ -93,7 +80,7 @@ def perSys():
                 continue
 
     df = pd.DataFrame.from_dict(mdic, orient="index")
-    df.to_csv('/home/ck/DIR/cornkle/data/LMCS/MCS_files/CP4_box/'+timetag+'_table_1700_inclStormChar'+a1+'_200km_div.csv')
+    df.to_csv(main_path+'/tables/'+timetag+'_table_'+anom+'_JASMIN_3hmeansVersion.csv')
 
         # pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
         #                    'wb'))
@@ -111,9 +98,9 @@ def file_loop(f):
     outp_noon = ds['lsRain_noon'].values
     outp_noon[outp_noon!=0] = np.nan
 
-    if np.sum(np.isnan(outp_noon[54:62, 54:62])) > 0:
-        print('Noon rainfall, continue')
-        return
+    # if np.sum(np.isnan(outp_noon[54:62, 54:62])) > 0.1:
+    #     print('Noon rainfall, continue')
+    #     return
 
     outu_srfc = ds['u_srfc'].values
     outu_mid = ds['u_mid'].values
@@ -183,14 +170,11 @@ def file_loop(f):
     out['pmax'] = np.nanmean(ua.cut_kernel(outp, maxpos[1], maxpos[0], 1))  # degrade rainfall to 15km
     out['pmax_native'] = np.max(outp[mask])  # rain at 4.4km
     #######
-    if 'CP4_box_anom' in f:
+    if 'anom' in f:
         basefile = os.path.basename(f)
         timetag = TIMETAG
-        if timetag == 'hist':
-            ftag = 'historical'
-        else:
-            ftag = 'future'
-        dpath = '/media/ck/LStorage/global_water/CP_models/MCS_files/MODELS/CP4_box/CP4_allHours_' + ftag + '_5000km2_-50_WAf_box_v2/'
+
+        dpath = MAIN_PATH+'/mean_'+timetag+'/*.nc'
         try:
             dcl = xr.open_dataset(dpath + basefile)
             out['tcwv_cl'] = np.nanmean(ua.cut_kernel(dcl['tcwv'].values, minpos[1], minpos[0], 11))
