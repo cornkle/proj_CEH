@@ -19,13 +19,13 @@ from utils import constants
 
 
 HOD = range(24)  # hours of day
-YRANGE = range(2006,2011)#range(2004, 2014) # 1998, 2014
+YRANGE = range(2004,2015)#range(2004, 2014) # 1998, 2014
 
 
 # BOX=[XL, XR, YL, YU]
 def netcdf():
-    trmm_folder = "/users/global/cornkle/data/OBS/TRMM/trmm_swaths_WA/"
-    box = [-11, 9, 11, 21]  # W, S, E, N
+    trmm_folder = "/users/global/cornkle/shared/data/OBS/TRMM/trmm_swaths_WA/"
+    box = [-19, 4, 25, 25]  # W, S, E, N
     #
     # # make grid
     # # define projection
@@ -125,12 +125,14 @@ def netcdf():
         ds = xr.Dataset({'p': da})
 
 
-        savefile = '/users/global/cornkle/TRMMfiles/' + date[0].strftime('%Y-%m-%d_%H:%M:%S') + '.nc'
+        savefile = '/users/global/cornkle/shared/TRMMfiles/' + date[0].strftime('%Y-%m-%d_%H:%M:%S') + '.nc'
         try:
             os.remove(savefile)
         except OSError:
             pass
-        ds.to_netcdf(path=savefile, mode='w')
+        comp = dict(zlib=True, complevel=5)
+        encoding = {var : comp for var in ds.data_vars}
+        ds.to_netcdf(path=savefile, mode='w', encoding=encoding, format='NETCDF4')
         print('Saved ' + savefile)
 
         cnt = cnt + 1
