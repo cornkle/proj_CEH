@@ -91,7 +91,8 @@ def grid_coordinates_to_geo_coordinates(rows, columns, grid_parameters, ssd):
 
     return lats, lons
 
-product = '/scratch/cmt/fci_domain_testing/window_netcdf/FCIL1HRFI_20250110T085112Z_20250110T085406Z_epct_ebdf00c4_FC.nc'
+file = 'W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-HRFI-FD--CHK-BODY---NC4E_C_EUMT_20241213151035_IDPFI_OPE_20241213150737_20241213150819_N__O_0091_0033.nc'
+product = '/users/global/cornkle/MTG_coords/'+file #'/scratch/cmt/fci_domain_testing/window_netcdf/FCIL1HRFI_20250110T085112Z_20250110T085406Z_epct_ebdf00c4_FC.nc'
 ds = xr.open_dataset(product)
 ssd = '0.5km'
 channel = 'vis_06_hr'
@@ -129,7 +130,7 @@ compression = {"zlib": True, "complevel": 5}
 
 
 # Save the dataset to a NetCDF file
-ds.to_netcdf("/users/global/cornkle/mtg_coords_"+ssd+".nc", format="NETCDF4", engine="netcdf4", encoding={
+ds.to_netcdf("/users/global/cornkle/MTG_coords/mtg_coords_"+ssd+".nc", format="NETCDF4", engine="netcdf4", encoding={
         "latitude": compression,
         "longitude": compression
     })
