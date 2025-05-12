@@ -31,7 +31,7 @@ def dictionary(dummy):
 
     vars = ['hour', 'month', 'year', 'day',
             'lon', 'lat',
-            'tmin', 'pmax', 'thetae_srfc', 'cape_proxy', 'cin_proxy', 'rh', 'div',
+            'tmin', 'pmax', 'pmax_native', 'thetae_srfc', 'cape_proxy', 'cin_proxy', 'rh', 'div',
             'pgt30', 'pgt1', 'isvalid',
             'tgrad', 'SMgrad', 'SHgrad', 'LHgrad', 'tcwv_cl', 'sh_cl', 'lh_cl',
             'area', 'area-70', 'area-80', 'area-60', 'area_1mm', 'area_5mm', 'area_10mm']

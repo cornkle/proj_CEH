@@ -19,88 +19,53 @@ def dictionary(dummy):
 
     dic = {}
     for vn in dummy.data_vars:
+        if vn in ['lw_out_PBLtop','lsRain']:
+                continue
         dic[vn+'_0.25deg'] = []  # 30km
 
     for vn in dummy.data_vars:
+        if vn in ['lw_out_PBLtop','lsRain']:
+                continue
         dic[vn+'_1deg'] = []  # 1deg
 
     for vn in dummy.data_vars:
+        if vn in ['lw_out_PBLtop','lsRain']:
+                continue
         dic[vn+'_2deg'] = []  # 2deg
 
     for vn in dummy.data_vars:
         dic[vn+'_Smean'] = [] # storm mean
 
-    vars = ['hour', 'month', 'year', 'day',
+    vars = ['hour', 'month', 'year', 'day', 'index', 'indx', 'indy',
             'lon', 'lat',
             'tmin', 'pmax', 'thetae_srfc', 'cape_proxy', 'cin_proxy', 'rh', 'div',
             'pgt30', 'pgt1', 'isvalid',
-            'tgrad', 'SMgrad', 'SHgrad', 'LHgrad', 'tcwv_cl', 'sh_cl', 'lh_cl',
+            'tgrad', 'SMgrad', 'SHgrad', 'LHgrad', 'tcwv_cl', 'sh_cl', 'lh_cl', 'lsRain_noon_cl',
             'area', 'area-70', 'area-80', 'area-60', 'area_1mm', 'area_5mm', 'area_10mm']
 
     for v in vars:
         dic[v] = []
     return dic
 
-
-
-
-def perSys():
-
-    timetag = TIMETAG
-    anom = ANOMTAG
-    main_path = MAIN_PATH
-    files = glob.glob(main_path+'/'+anom+'_'+timetag+'/*.nc')
-
-    print('Nb files', len(files))
-    # for y in range(1998,2007):
-    #
-    #     yfiles = []
-    #     for f in files:
-    #         if str(y)+'-' in f:
-    #             yfiles.append(f)
-
-    # pool = multiprocessing.Pool(processes=4)
-    dummy = xr.open_dataset(files[0])
-    #
-    mdic = dictionary(dummy) #defaultdict(list)
-    # print('NB files', len(files))
-    # res = pool.map(file_loop, files)
-    # pool.close()
-
-    res=[]
-    for f in files[0:50]:
-        res.append(file_loop(f))
-
-    keys = mdic.keys()
-    for v in res:
-        for k in keys:
-            try:
-                mdic[k].append(v[k])
-            except TypeError:
-                continue
-
-    df = pd.DataFrame.from_dict(mdic, orient="index")
-    df.to_csv(main_path+'/tables/'+timetag+'_table_'+anom+'_JASMIN_3hmeansVersion.csv')
-
-        # pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
-        #                    'wb'))
-
+  
 
 def file_loop(f):
     print('Doing file: ' + f)
     ds = xr.open_dataset(f)
     out = dictionary(ds)
 
+    bname = os.path.basename(f)
+
+    parts = bname.split("_")
+    index = int(parts[2])  # Third item (position 2 in zero-based index)
+    ilon = float(parts[4].strip("[]"))  # Fifth item, remove brackets
+    ilat = float(parts[5].strip("[]"))  # Sixth item, remove brackets
+
 
 
     outt = ds['lw_out_PBLtop'].values
     outp = ds['lsRain'].values
     outp_noon = ds['lsRain_noon'].values
-    outp_noon[outp_noon!=0] = np.nan
-
-    # if np.sum(np.isnan(outp_noon[54:62, 54:62])) > 0.1:
-    #     print('Noon rainfall, continue')
-    #     return
 
     outu_srfc = ds['u_srfc'].values
     outu_mid = ds['u_mid'].values
@@ -146,10 +111,16 @@ def file_loop(f):
     out['day'] = ds['time.day'].item()
 
 
+    ### for unique identification of MCS files from table
+    out['index'] = index
+    out['indx'] = ilon
+    out['indy'] = ilat
+
+
     t_thresh = -50  # -40C ~ 167 W m-2
 
     mask = (outt<=t_thresh)
-    varmask = (outt<=-10) & (np.isfinite(outp_noon))
+    #varmask = (outt<=-10) & (np.isfinite(outp_noon))
     if np.sum(mask)<=3:
         return
 
@@ -174,14 +145,16 @@ def file_loop(f):
         basefile = os.path.basename(f)
         timetag = TIMETAG
 
-        dpath = MAIN_PATH+'/mean_'+timetag+'/*.nc'
+        dpath = MAIN_PATH+'/mean_'+timetag+'/'
         try:
             dcl = xr.open_dataset(dpath + basefile)
             out['tcwv_cl'] = np.nanmean(ua.cut_kernel(dcl['tcwv'].values, minpos[1], minpos[0], 11))
             out['sh_cl'] = np.nanmean(ua.cut_kernel(dcl['sh'].values, minpos[1], minpos[0], 11))
             out['lh_cl'] = np.nanmean(ua.cut_kernel(dcl['lh'].values, minpos[1], minpos[0], 11))
+            out['lsRain_noon_cl'] = np.nanmean(ua.cut_kernel(dcl['lsRain_noon'].values, minpos[1], minpos[0], 11))
             del dcl
         except:
+            ipdb.set_trace()
             return
             #out['tcwv_cl'] = np.nan
    ########
@@ -193,12 +166,14 @@ def file_loop(f):
         xx = minpos[1]
 
         for vn in ds.data_vars:
-
+            if vn in ['lw_out_PBLtop','lsRain']:
+                continue
             if isinstance(dist, int):
-                cnt = ds[vn].where(varmask).sel(latitude=slice(dist*-1, dist), longitude=slice(dist*-1, dist)).count(['longitude', 'latitude'])
+                cnt = ds[vn].sel(latitude=slice(dist*-1, dist), longitude=slice(dist*-1, dist)).count(['longitude', 'latitude'])
                 if cnt > 0.5 * ((dist*2)**2):
                     data = float(ds[vn].sel(latitude=slice(dist*-1, dist), longitude=slice(dist*-1, dist)).mean(['longitude', 'latitude']).values)  # box of 1deg or 0.25deg
                 else:
+                    #ipdb.set_trace()
                     data = np.nan
             else:
                 data = float(ds[vn].where(mask).mean(['longitude', 'latitude']).values)  # storm mask
@@ -228,3 +203,47 @@ def file_loop(f):
     ds.close()
 
     return out
+###################################################################################
+###################################################################################
+
+
+
+timetag = TIMETAG
+anom = ANOMTAG
+main_path = MAIN_PATH
+files = glob.glob(main_path+'/'+anom+'_'+timetag+'/*.nc')
+
+print('Nb files', len(files))
+# for y in range(1998,2007):
+#
+#     yfiles = []
+#     for f in files:
+#         if str(y)+'-' in f:
+#             yfiles.append(f)
+
+pool = multiprocessing.Pool(processes=4)
+dummy = xr.open_dataset(files[0])
+#
+mdic = dictionary(dummy) #defaultdict(list)
+
+res = pool.map(file_loop, files)
+pool.close()
+
+# res=[]
+# for f in files:
+#     res.append(file_loop(f))
+
+keys = mdic.keys()
+for v in res:
+    for k in keys:
+        try:
+            mdic[k].append(v[k])
+        except TypeError:
+            continue
+
+df = pd.DataFrame.from_dict(mdic, orient="index")
+df.to_csv(main_path+'/tables/'+timetag+'_'+anom+'_table_JASMIN_3hmeansVersion.csv')
+
+    # pkl.dump(mdic, open(cnst.network_data +'data/LMCS/CP4_study_saves/bulk_CP4/bulk_'+tthresh+'_5000km2_CP4means_hourly_SAHEL_15kmprecip_WA_18W-25E_9-25N_-50C_LMCSfiles_17h_hist_'+str(y)+'.p',
+    #                    'wb'))
+
