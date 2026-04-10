@@ -14,7 +14,7 @@ import ipdb
 #### Defines path to original ch9 grads files and years to consider.
 filepath = {
 
-    'panAfrica' : [cnst.other_drive +'nflics/SSA_data/', np.arange(1,13), (2023,2025)]  # 2004, 2022
+    'panAfrica' : ['/prj/Africa_cloud/', np.arange(1,13), (2024,2026)]  # 2004, 2022
 }
 
 dataset = 'panAfrica'

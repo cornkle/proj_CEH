@@ -39,12 +39,13 @@ class ReadMsg(object):
                 mrange = range(months[0],months[0]+1)
 
         try:
-            lpath = glob.glob(msg_folder+'grads/*.npz')[0]
+            lpath = glob.glob(msg_folder+'geoloc/*.npz')[0]
             msg_latlon = np.load(lpath)
             mlon = msg_latlon['lon']
             mlat = msg_latlon['lat']
         except:
             try:
+                #ipdb.set_trace()
                 lpath = glob.glob(msg_folder+'grads/*.gra')[0]
 
                 nx = 2268
@@ -56,7 +57,7 @@ class ReadMsg(object):
                 print('Not a directory or no msg lat/lon found')
                 return
 
-        mpath = msg_folder + '/data/ch9/'
+        mpath = msg_folder + '/ch9/'
 
         try:
             os.path.isdir(mpath)
