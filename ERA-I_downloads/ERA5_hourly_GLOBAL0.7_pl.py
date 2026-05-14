@@ -7,7 +7,7 @@ def download(year, month, day, var,file):
     c.retrieve(
         'reanalysis-era5-pressure-levels',
         {
-            'format':'netcdf',
+            'data_format':'netcdf',
             'product_type':'reanalysis',
             'pressure_level': [
                 '925' , '850', '750','650', '500'
@@ -42,14 +42,14 @@ def download(year, month, day, var,file):
 
 var = [
     'divergence', 'geopotential', 'potential_vorticity',
-     'specific_humidity', 'temperature',
+     'specific_humidity', 'temperature', 'relative_humidity',
     'u_component_of_wind', 'v_component_of_wind', 'vertical_velocity'
 ]
 
 mdays = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 
 for vv in var:
-    for y in range(2000, 2020):
+    for y in range(2020, 2021):
         for m in range(1, 13):
             for d in range(1, mdays[m] + 1):
 
@@ -62,5 +62,7 @@ for vv in var:
                 if os.path.isfile(path + filename):
                     print('File exists, continue!')
                     continue
+
+                print('Doing', y, m)
 
                 download(y, m, d, vv, path + filename)
