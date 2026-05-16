@@ -37,6 +37,7 @@ plots/
 *.tiff
 *.tfw
 *.npz
+*.nc
 
 # XML
 *.xml
