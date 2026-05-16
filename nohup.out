@@ -1,0 +1,36 @@
+[TerminalIPythonApp] WARNING | Config option `deep_reload` not recognized by `TerminalInteractiveShell`.
+Python 3.7.0 (default, Jun 28 2018, 13:15:42) 
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.2.0 -- An enhanced Interactive Python. Type '?' for help.
+/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:624: UserWarning: As of IPython 5.0 `PromptManager` config will have no effect and has been replaced by TerminalInteractiveShell.prompts_class
+  warn('As of IPython 5.0 `PromptManager` config will have no effect'
+
+In [1]: Traceback (most recent call last):
+  File "/users/global/cornkle/miniconda3/bin/ipython", line 11, in <module>
+    sys.exit(start_ipython())
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/__init__.py", line 125, in start_ipython
+    return launch_new_instance(argv=argv, **kwargs)
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/traitlets/config/application.py", line 658, in launch_instance
+    app.start()
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/terminal/ipapp.py", line 356, in start
+    self.shell.mainloop()
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/terminal/interactiveshell.py", line 494, in mainloop
+    self.interact()
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/terminal/interactiveshell.py", line 477, in interact
+    code = self.prompt_for_code()
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/terminal/interactiveshell.py", line 254, in prompt
+    lines = [input(prompt_text)]
+  File "/users/global/cornkle/miniconda3/lib/python3.7/site-packages/IPython/utils/py3compat.py", line 154, in input
+    return builtin_mod.input(prompt)
+OSError: [Errno 9] Bad file descriptor
+
+If you suspect this is an IPython bug, please report it at:
+    https://github.com/ipython/ipython/issues
+or send an email to the mailing list at ipython-dev@python.org
+
+You can print a more detailed traceback right now with "%tb", or use "%debug"
+to interactively debug it.
+
+Extra-detailed tracebacks for bug-reporting purposes can be enabled via:
+    %config Application.verbose_crash=True
+

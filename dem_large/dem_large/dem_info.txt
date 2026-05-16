@@ -1,0 +1,14 @@
+
+
+Projection: Plate Carree aka Geographic or "LatLong"
+Earth ellipsoid: Sphere, radius 6370997 m
+Datum: WGS84
+Extent: 180 West to 180 East, 90 North to 90 South
+Size: 10,800 height samples wide x 5,400 high
+Resolution: 120-arc seconds
+
+Note 1: This DEM at 120-arc second resolution is very detailed. For creating terrain better suited for use with Natural Earth III texture maps, use the DEM downsampled to 150-arc second resolution (8,640 x 4320 height samples) instead.
+
+Note 2: Elevation values are not assigned to the data. From the lowest point on land (Dead Sea) to the highest (Mt. Everest), all elevations are relative to one another on a linear scale.
+
+

@@ -16,7 +16,7 @@ from GLOBAL import glob_util
 REGIONS = glob_util.REGIONS
 
 ERA_ROOT = "/prj/global_water/ERA5_global_0.7/hourly"
-BASE_TABLE_DIR = "/prj/global_water/MCS_5000km2_tables_v2/base_tables_tir-prcp"
+BASE_TABLE_DIR = "/prj/global_water/MCS_5000km2_tables_v3/base_tables_tir-prcp"
 STATIC_ERA_FILE = ("/prj/global_water/ERA5_global_0.7/static/era5_invariant_07deg_COCOON-study_regrid.nc")
 
 
@@ -26,12 +26,12 @@ if TEST_MODE:
     YEARS = [2006]
     TEST_MONTHS = [8]
     TEST_REGIONS = ["GPlains"]
-    TEST_N_STORMS_PER_REGION = 1000
+    TEST_N_STORMS_PER_REGION = 500
     REL_HOURS = np.arange(-6, 4)
     NPROC = 3
 
     OUT_ROOT = (
-        "/prj/global_water/MCS_5000km2_tables_v2/"
+        "/prj/global_water/MCS_5000km2_tables_v3/"
         "ERA5_storm_timeseries_TEST"
     )
 
@@ -43,12 +43,19 @@ else:
     NPROC = 4
 
     OUT_ROOT = (
-        "/prj/global_water/MCS_5000km2_tables_v2/"
+        "/prj/global_water/MCS_5000km2_tables_v3/"
         "ERA5_storm_timeseries"
     )
 
 BOX_RADIUS = 0.35
 LOCAL_STORM_TIME = [12,21]
+
+
+
+OCEAN_REGIONS = ["Atl", "Pcf", "InO"]
+LAND_THRESHOLD = 0.6
+
+ALL_YEARS = range(2000, 2021)
 
 
 # ============================================================
@@ -564,6 +571,8 @@ OUTPUT_VARIABLES = {
 # ERA5 FILE HANDLING
 # ============================================================
 
+
+
 def era_file_path(kind, era_name, edate):
     suffix = "srfc" if kind == "surface" else "pl"
 
@@ -578,7 +587,7 @@ def open_era_input(input_name, edate):
     path = era_file_path(spec["kind"], spec["era_name"], edate)
 
     if not os.path.isfile(path):
-        print("Missing ERA5:", path)
+        print("Missing ERA5, could not find file:", path)
         return None
 
     try:
@@ -596,11 +605,6 @@ def open_era_input(input_name, edate):
 # ============================================================
 # OCEAN MASK
 # ============================================================
-
-
-OCEAN_REGIONS = ["Atl", "Pcf", "InO"]
-
-LAND_THRESHOLD = 0.6
 
 
 def filter_land_ocean_storms(storm_df):
@@ -821,19 +825,47 @@ def calc_vpd_from_dewpoint(t2m_k, d2m_k):
 # STORM TABLE HANDLING
 # ============================================================
 
+
+
 def find_base_table(region, year):
-    pattern = f"{BASE_TABLE_DIR}/{region}/{year}_MCS_5000km2_*.csv"
+
+    pattern = (
+        BASE_TABLE_DIR
+        + f"/{region}/"
+        + f"{year}_MCS_5000km2_-40C_0.1degTIR-IMERG_hourly.parquet"
+    )
+
     files = glob.glob(pattern)
 
     if len(files) == 0:
         return None
 
-    if len(files) > 1:
-        print("Multiple base files found for", region, year, "using first:")
-        for f in files:
-            print(" ", f)
-
     return files[0]
+
+
+
+def region_has_all_base_tables(region, years):
+    missing = []
+
+    for year in years:
+        path = find_base_table(region, year)
+
+        if path is None:
+            missing.append(year)
+
+    if len(missing) > 0:
+        print(region, "missing years:", missing)
+        return False
+
+    print(region, "complete")
+    return True
+READY_REGIONS = [
+    region
+    for region in REGIONS
+    if region_has_all_base_tables(region, ALL_YEARS)
+]
+print("Ready regions:", READY_REGIONS)
+
 
 
 def read_base_table(region, year):
@@ -844,9 +876,9 @@ def read_base_table(region, year):
         print("No base table:", region, year)
         return None
 
-    print("Reading:", path)
+    print("Reading parquet base table:", path)
 
-    df = pd.read_csv(path).reset_index(drop=True)
+    df = pd.read_parquet(path).reset_index(drop=True)
 
     df["region"] = region
 
@@ -895,7 +927,7 @@ def read_base_table(region, year):
     print(
         region,
         year,
-        "local 15-21 LT storm filter:",
+        "local LT storm filter:", LOCAL_STORM_TIME[0] , '-' , LOCAL_STORM_TIME[1],
         before,
         "->",
         after,
@@ -1257,7 +1289,7 @@ def process_year_all_regions(year):
         print("All outputs already exist for year", year)
         return
 
-    print("\nMissing outputs:\n")
+    print("\nMissing outputs that need to be created (only READY REGIONS written):\n")
 
     for m in missing:
         print(m)
@@ -1273,6 +1305,10 @@ def process_year_all_regions(year):
     all_requests = []
 
     for region in needed_regions:
+
+        if region not in READY_REGIONS:
+            print(region, 'Region base table not fully produced (2000-2021), continue')
+            continue
 
         storm_df = read_base_table(region, year)
 
