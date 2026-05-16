@@ -19,10 +19,10 @@ def compute_mean(files):
 def loop(hh):
     
     FTAG = ['fut','hist'] #'hist', 
-    ATAG = ['anom'] #, 'mean'
+    ATAG = ['anom', 'mean'] #, 'mean'
     MONTHS = (['Jul-Sep'])  #7,8,9, 'Jul-Sep'
     SHAPE = ['pl_', ''] #, 'pl_'
-    XY = ['XDIR', 'YDIR']  #'XDIR', 'YDIR', 
+    XY = ['']  #'XDIR', 'YDIR', 
     
     main_lmcs = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/mean3h_v2/'
 
@@ -77,7 +77,7 @@ def loop(hh):
         
 
 ### Inputs:
-HOURS = [19]
+HOURS = [16]
 print('Doing', HOURS)
 
 pool = multiprocessing.Pool(processes=3)

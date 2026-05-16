@@ -7,7 +7,8 @@ __pycache__/
 
 # VS Code local settings
 .vscode/
-shapes
+shapes/
+UPSCALE/
 
 # Vim swap files
 *.swp
