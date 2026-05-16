@@ -2,7 +2,6 @@ import xarray as xr
 import glob
 import os
 import numpy as np
-import pdb
 import datetime
 import sys
 import pickle as pkl

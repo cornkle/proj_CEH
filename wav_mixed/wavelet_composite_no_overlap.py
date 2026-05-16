@@ -10,14 +10,10 @@ import xarray as xr
 from wavelet import util
 from utils import u_arrays as ua
 from scipy import ndimage
-import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
-import matplotlib as mpl
 import multiprocessing
-import pdb
 from collections import OrderedDict
-import matplotlib.cm as cm
 import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)
@@ -30,7 +26,6 @@ def composite():
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:400]
     print('Nb files', len(files))
-    tt = 'WA15'
 
     comp_collect = {}
     precip = {}

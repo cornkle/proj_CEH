@@ -1,6 +1,5 @@
 import numpy as np
-import matplotlib as mpl
-import glob,os,datetime,h5py,sys
+import h5py
 import matplotlib.pyplot as plt
 import mask_data_functions as fns
 

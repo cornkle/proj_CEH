@@ -1,17 +1,9 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
-import ipdb
-import matplotlib.pyplot as plt
-import cartopy
-from utils import u_plot as up
-import cartopy.crs as ccrs
 import os
-import matplotlib as mpl
 import pickle as pkl
 from utils import constants as cnst
 from utils import u_arrays as ua
-from scipy.ndimage.measurements import label
 
 
 def month():
@@ -55,7 +47,6 @@ def month_boxmean():
     #if not os.path.isfile(msg_folder + fname):
     da = None
     da_box = None
-    hov_box = None
     for y in years:
         y = str(y)
         da1 = xr.open_dataset(cnst.GRIDSAT + 'gridsat_WA_-40_1000km2_15-21UTC' + y + '.nc')
@@ -64,9 +55,7 @@ def month_boxmean():
         #da1['tir'].values[da1['tir'].values == 0] = np.nan
 
         da_res = da1.resample(time='m').mean('time')
-        WA_box = [-13,13,4.5,8]
         SAW_box = [15,25,-26,-18] #[20,30,-30,-10]
-        SAE_box = [25,33,-28,-10]
         box = SAW_box
         boxed = da1['tir'].sel(lat=slice(box[2],box[3]), lon=slice(box[0],box[1])).resample(time='m').mean()
 
@@ -99,7 +88,6 @@ def month_mean_hov():
             da1['tir'] = da1['tir'].where((da1['tir'] <= -50) & (da1['tir'] >= -108) )
 
             WA_box = [-12,12,4.5,20]
-            SA_box = [25,33,-28,-10]
             input = WA_box
             hov_boxed = da1['tir'].sel(lat=slice(input[2],input[3]), lon=slice(input[0],input[1])).resample(time='m').min(['lon','time'])
             # hov_boxed = da1['tir'].sel(lat=slice(input[2], input[3]), lon=slice(input[0], input[1])).min(['lon']).resample(
@@ -440,7 +428,6 @@ def storm_count_hov():
 
             val = 0
             storm = np.array([0]*da.shape[1])
-            ar = []
             pixel = 78  # 78 # 78 = 5000km2 # 15000 = 253
             for d in da:
 
@@ -469,7 +456,6 @@ def storm_count_hov():
 
             val = 0
             storm = np.array([0]*da.shape[1])
-            ar = []
             pixel = 78 #78 # 78 = 5000km2 # 15000 = 253
             for d in da:
 
@@ -493,7 +479,6 @@ def storm_count_hov():
 
             val = 0
             storm = np.array([0]*da.shape[1])
-            ar = []
             for d in da:
                 cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -60, minmax_area=[pixel, 25000],
@@ -515,7 +500,6 @@ def storm_count_hov():
 
             val = 0
             storm = np.array([0]*da.shape[1])
-            ar = []
             for d in da:
                 cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -70, minmax_area=[pixel, 25000],
@@ -537,7 +521,6 @@ def storm_count_hov():
 
             val = 0
             storm = np.array([0]*da.shape[1])
-            ar = []
             for d in da:
                 cut = d.sel(lat=slice(5.2, 8), lon=slice(-10, 12))
                 labels, goodinds = ua.blob_define(cut.values, -75, minmax_area=[pixel, 25000],

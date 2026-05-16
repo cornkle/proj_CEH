@@ -7,16 +7,9 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
 import pandas as pd
-from scipy import ndimage
-from CLOVER import era_geop_t3d as era_geop
-from utils import u_gis
-import pickle as pkl
-import statsmodels.stats.proportion as prop
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)

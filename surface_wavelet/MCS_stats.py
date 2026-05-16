@@ -1,8 +1,6 @@
-import numpy as np
 import xarray as xr
 from utils import constants
 import matplotlib.pyplot as plt
-import pdb
 
 
 MCSdom = xr.open_dataarray(constants.MCS_POINTS_DOM)

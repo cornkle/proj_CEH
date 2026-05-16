@@ -1,13 +1,9 @@
 import salem
-from salem.utils import get_demo_file
 import xarray as xr
 import matplotlib.pyplot as plt
-import pdb
 import numpy as np
-from functools import partial
-from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
+from salem import GeoTiff, wgs84
 from scipy.stats.stats import pearsonr
-from utils import u_grid as ug
 import os
 import shapely.geometry as shpg
 

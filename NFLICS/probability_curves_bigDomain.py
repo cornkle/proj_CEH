@@ -1,4 +1,3 @@
-import ipdb
 import numpy as np
 import xarray as xr
 from utils import constants as cnst, u_arrays as ua
@@ -32,7 +31,7 @@ def run():
 
     pool = multiprocessing.Pool(processes=3)
     hours = [10,11]#[0,1,2,3,4,5,6,7,8,9,10,11,12]#[13,14,15,16,17,18,19,20,21,22,23]
-    res = pool.map(read_lsta, hours)
+    pool.map(read_lsta, hours)
     pool.close()
 
 
@@ -270,7 +269,6 @@ def read_lsta(h):
 def test_file(savepath):
 
 
-    h=17
     path = cnst.elements_drive + '/Africa/WestAfrica/NFLICS/tables/prob_dictionary/'
     dic = pkl.load(open(path + savepath, "rb"))
 
@@ -320,8 +318,8 @@ def test_file(savepath):
     (muall, sigmaall) = norm.fit(rinput)
     #
     # # add a 'best fit' line
-    ypoint = norm.pdf(bins, mupoint, sigmapoint)
-    yall = norm.pdf(bins, muall, sigmaall)
+    norm.pdf(bins, mupoint, sigmapoint)
+    norm.pdf(bins, muall, sigmaall)
 
 
     ################ Other curve fit
@@ -344,7 +342,7 @@ def test_file(savepath):
 
     def fit_curve_lm(x,y):
         from lmfit import Model
-        from numpy import exp, linspace, random
+        from numpy import exp
 
         def gaussian(x, amp, cen, wid):
             """1-d gaussian: gaussian(x, amp, cen, wid)"""
@@ -371,8 +369,8 @@ def test_file(savepath):
         corep = norm.pdf(x, mu_core, sigma_core)
         randomp = norm.pdf(x, mu_random, sigma_random)
 
-        corec = norm.cdf(x, mu_core, sigma_core)
-        randomc = norm.cdf(x, mu_random, sigma_random)
+        norm.cdf(x, mu_core, sigma_core)
+        norm.cdf(x, mu_random, sigma_random)
 
         out_pdf = (corep - randomp) / randomp
 
@@ -562,7 +560,7 @@ def calculate_hourly_ptables():
         probf = fit_curve_poly(bin_centre, prob_histo, h)
         factorf = fit_curve_poly(bin_centre, factor_histo, h)
         #insert new x
-        prob_poly = probf(x_new)
+        probf(x_new)
         factor_poly = factorf(x_new)
 
         ax.plot(bin_centre, np.array(factor_histo), marker='o', label='Raw-Histo-based', lw=1, ms=0.5, color='k')

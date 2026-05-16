@@ -2,12 +2,9 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
 import matplotlib.cm as cm
 
-from utils import u_statistics as ug
 
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
@@ -23,7 +20,7 @@ def probability():
     ids = np.array(df['id'])
     scales = np.array(df['scale'])
     scales2 = np.array(df2['scale'])
-    uscales = np.unique(scales)
+    np.unique(scales)
 
     tmin = np.array(df['circle_Tcentre'])
     pmax = np.array(df['circle_max'])
@@ -72,7 +69,7 @@ def probability():
             ffilter = (sc <= usc) & (sc > scaler[ids-1])
             ffilter2 = (sc2 <= usc) & (sc2 > scaler[ids - 1])
 
-            ppf = np.concatenate(pp[ffilter])
+            np.concatenate(pp[ffilter])
             ppf2 = np.concatenate(pp2[ffilter2])
 
             #dic[r].append(np.nansum(ppf[ppf>30])/np.nansum(ppf>=0))

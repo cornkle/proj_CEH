@@ -16,11 +16,13 @@
 #########################
 import matplotlib as mpl
 mpl.use('Agg')
-import glob,os,datetime,h5py,sys
+import os
+import datetime
+import h5py
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import shutil
 from matplotlib.backends.backend_pdf import PdfPages
 
 if len(sys.argv)>1:

@@ -2,17 +2,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst, u_met
-import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
 import shapely.geometry as shpg
-import seaborn
-from metpy import calc
-from metpy.units import units
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -103,8 +95,8 @@ def trend_all():
     da = da.isel(time=(da['time.hour']==12))
     da2 = da2.isel(time=(da2['time.hour']==12))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
 
     press = da2['tcwv']
@@ -373,7 +365,7 @@ def trend_all():
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
         coord = [18, 25, -28, -20]
-        geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
+        shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,41,10))  # levels=np.arange(10,51,10)

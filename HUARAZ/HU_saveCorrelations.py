@@ -4,18 +4,12 @@
 import ipdb
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import pandas as pd
-import cartopy
-import cartopy.crs as ccrs
 from utils import constants as cnst
-from eod import msg
 from utils import u_darrays as uda
 from scipy import stats
-import warnings
 import multiprocessing
 import pandas as pd
-import scipy
 
 
 def corr(a, b, bsingle=None, c_box=None):

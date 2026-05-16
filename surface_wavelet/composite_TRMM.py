@@ -9,7 +9,6 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import pdb
 import pandas as pd
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants
 

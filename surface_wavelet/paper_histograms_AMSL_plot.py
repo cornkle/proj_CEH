@@ -6,13 +6,11 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-import pdb
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
 from utils import constants as cnst
@@ -23,7 +21,7 @@ def diurnal_loop():
 
     pool = multiprocessing.Pool(processes=4)
     h = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7,8,9,10,11,12,13]
-    res = pool.map(plot, h)
+    pool.map(plot, h)
     pool.close()
 
 
@@ -96,7 +94,7 @@ def plot_double(hour):
         key='amsr'
         data = dic[key]
         random = dic['r' + key]
-        cores = dic['cores']
+        dic['cores']
 
         cinput = np.array(data)[id]
         rinput = np.array(random)[id]
@@ -287,7 +285,6 @@ def plot_diurn_double_relative():
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
 
-        lw = 0.5
 
 
         ax.set_xlabel('Hour')

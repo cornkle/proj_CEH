@@ -2,11 +2,8 @@ import numpy as np
 import xarray as xr
 from utils import u_mann_kendall as mk, u_arrays as ua
 from scipy import stats
-import matplotlib.pyplot as plt
 import bottleneck
-import scipy
 import ipdb
-import salem
 
 
 
@@ -324,9 +321,9 @@ def cut_box(arr, xpos=None, ypos=None, dist=None):
 
     if arr.ndim == 3:
         try:
-            levels = arr.level.values
+            arr.level.values
         except AttributeError:
-            levels = arr.pressure.values
+            arr.pressure.values
 
         return xr.DataArray(kernel, dims=['level','y','x'],
                             coords={'level' : arr.level.values})

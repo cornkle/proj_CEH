@@ -9,17 +9,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
-import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import glob
+from utils import constants as cnst
 from scipy import ndimage
-from utils import u_statistics as ustats
-import salem
 from metpy import calc
 from metpy.units import units
 
@@ -588,7 +579,7 @@ def plot_amsr_paper_quatro(h, eh):
     punit = units.Quantity(925, 'hPa')
     tunit = units.Quantity(dic['t']/dic['cnte'], 'K')
     qunit = units.Quantity(dic['q']/dic['cnte'], 'kg/kg')
-    rhunit = units.Quantity(dic['rh'] / dic['cnte'], '')
+    units.Quantity(dic['rh'] / dic['cnte'], '')
     dew = calc.dewpoint_from_specific_humidity(qunit, tunit, punit)
 
     #dew = calc.dewpoint_from_relative_humidity(tunit, rhunit)
@@ -624,7 +615,6 @@ def plot_amsr_paper_quatro(h, eh):
     cbar.ax.set_ylabel(r'%', size=12)
 
 
-    lev = [-0.6, -0.5, -0.4, -0.3, -0.2, 0, 0.2, 0.3, 0.4, 0.5, 0.6]
     # lev = list(np.arange(-2.7,-0.1,0.3)) + list(np.arange(0.3,2.71,0.3))
     t = ndimage.gaussian_filter((dic['t'] - dic['tclim']) / dic['cnte'], 6, mode='nearest')
     t = ndimage.gaussian_filter(dew, 6, mode='nearest')

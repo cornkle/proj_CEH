@@ -2,15 +2,9 @@ import numpy as np
 
 import xarray as xr
 from utils import u_arrays as ua
-from scipy import ndimage
-import matplotlib.pyplot as plt
 import multiprocessing
-import ipdb
 import pickle as pkl
 from collections import defaultdict
-import cartopy.crs as ccrs
-import cartopy
-import pdb
 
 def perSys():
 
@@ -25,8 +19,6 @@ def perSys():
     #res = [item for sublist in res for item in sublist]  # flatten list of lists
 
     #
-    p=[]
-    t=[]
 
     for v in res:
         try:
@@ -83,7 +75,6 @@ def perSys():
 def file_loop(f):
     #print('Doing file: ' + f)
     dic = xr.open_dataset(f)
-    res = []
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
     outpc = dic['pconv'].values

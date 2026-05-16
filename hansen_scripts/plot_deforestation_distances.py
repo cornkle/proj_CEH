@@ -1,4 +1,3 @@
-import matplotlib
 #matplotlib.use('PS')
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
@@ -24,7 +23,6 @@ def plot_distance_from_ocean(percent_threshold=0.):
     fig = plt.figure(figsize=(15, 5)) 
     ax = plt.axes(projection=projection)
     ax.set_extent((-180, 180, -90, 90), crs=projection)
-    contours = [0, 1, 2, 3, 4, 5, 10, 20, 50, 100]
     p = plt.pcolormesh(lon_bounds, lat_bounds, distance, cmap=cm.viridis)
     ax.coastlines(color='black', linewidth=1)
     cax = fig.add_axes([ax.get_position().x0, ax.get_position().y0-0.12, ax.get_position().width, 0.03])
@@ -375,7 +373,6 @@ def plot_west_africa_deforestation():
     lat_bounds = np.hstack((lats - 0.5*0.05, np.array([lats[-1]+0.5*0.05])))
     with Dataset("/users/global/bethar/python/deforestation-coast-distance/data/hansen_0pt05/global_percent_forest_loss_0pt05deg.nc", 'r') as data:
         defn_pc = data.variables['forest_cover_loss'][:]
-    west_africa_box = (-15, 10, 4, 12)
     contours = [1, 10, 20]
     cmap, norm = binned_cmap(contours, 'Reds', extend='both', fix_colours=[(-1, 'white')])
     cmap.set_bad('gray', alpha=0)

@@ -6,16 +6,9 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
-import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
+from utils import constants as cnst
 import glob
 
 import pickle as pkl
@@ -501,7 +494,6 @@ def plot_doug_all_diff(h, eh):
 def plot_doug_all(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -637,7 +629,6 @@ def plot_doug_all(h, eh):
 def plot_doug_CLIM(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_-80_clim"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -912,7 +903,6 @@ def plot_doug_paper(h, eh):
 def plot_doug_small(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 

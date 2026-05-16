@@ -12,13 +12,7 @@ import matplotlib
 import ipdb
 import pandas as pd
 import glob
-import os
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import metpy
+from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
 from metpy import calc
 from metpy.units import units
 
@@ -136,7 +130,6 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False, msg=False, cmorph=False):
 
     smoutlist  = []
     scntlist = []
-    wetflag = 0
     for ids, arr in enumerate(arrlist):
         kernel = ua.cut_kernel(arr,xpos, ypos,dist)
         kernel = kernel - np.nanmean(kernel)
@@ -154,7 +147,7 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False, msg=False, cmorph=False):
 
     vdic = {}
 
-    itd = np.zeros_like(kernel)
+    np.zeros_like(kernel)
 
     for d in era.data_vars:
 
@@ -548,7 +541,7 @@ def file_loop(df):
         lsta_date = storm_date
 
     prev_lsta_date = lsta_date - dayd
-    next_lsta_date = lsta_date + dayd
+    lsta_date + dayd
 
     fdate = str(lsta_date.year) + str(lsta_date.month).zfill(2) + str(lsta_date.day).zfill(2)
     pfdate = str(prev_lsta_date.year) + str(prev_lsta_date.month).zfill(2) + str(prev_lsta_date.day).zfill(2)
@@ -726,7 +719,6 @@ def file_loop(df):
 def plot_doug_all(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_cores_2hOverlap_AMSRE_WET_SMGT2-05"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
     name = "ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"

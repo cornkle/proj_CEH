@@ -2,15 +2,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
-from utils import constants as cnst, u_met
-import salem
-from utils import u_statistics as us, u_darrays as uda
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
+from utils import constants as cnst
 import shapely.geometry as shpg
-import seaborn
 
 
 def calc_trend(data, month, method=None, sig=False, wilks=False):

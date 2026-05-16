@@ -1,7 +1,6 @@
 import xarray as xr
 import glob
 import os
-import itertools
 from JASMIN import constants as cnst, MetUM_variables as mv
 import numpy as np
 import pdb
@@ -12,11 +11,9 @@ def run(orig_names=False):
     outpath = '/home/users/cornkle/runscript/out_central'
 
     cloud_box = [6.5+360,18+360, -6.5, 5]
-    temp_box = [0+360,30+360, -15, 15]
+    [0+360,30+360, -15, 15]
     months = [5,10] # March-May
     years = [1997,1998,1999,2000,2001,2002,2003,2004,2005,2006] # 2003
-    pickhours = [0,3,6,9,12,15,18,21]
-    picklevels = [600,700,750,800,850,900,925,950]
     dic = {
        #'lsRain' : ([temp_box], ['keep'], [], []),
        #'totRain' : ([temp_box], ['keep'], [], []),
@@ -39,7 +36,7 @@ def run(orig_names=False):
 
     for k in keys:
 
-        info = cnst.VARDIC[k]
+        cnst.VARDIC[k]
         dinfo = dic[k]
         var = mv.create_CP4_filename(k)
 

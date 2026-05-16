@@ -34,13 +34,12 @@ def minmax():
     f = plt.figure()
 
 
-    siz = 3
 
-    ax = f.add_subplot(1, 2, 1)
+    f.add_subplot(1, 2, 1)
     plt.scatter(temp, ptemp)
     plt.title('temp', fontsize=9)
 
-    ax = f.add_subplot(1, 2, 2)
+    f.add_subplot(1, 2, 2)
     plt.scatter(grad, pgrad)
     plt.title('grad', fontsize=9)
 

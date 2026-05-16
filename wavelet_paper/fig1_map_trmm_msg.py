@@ -1,12 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 import salem
-import pdb
 from utils import u_grid
 from scipy.interpolate import griddata
 import xarray as xr
-from numpy import ma
 from scipy.ndimage.measurements import label
 
 
@@ -32,7 +29,7 @@ def create_map_data():
     flags = np.resize(flags, (y,x))
     lon=lons/100.
     lat=lats/100.
-    rainr=rainrs/10.
+    rainrs/10.
     lonmin, lonmax=np.amin(lon),np.amax(lon)
     latmin, latmax=np.amin(lat),np.amax(lat)
     lonx=lon[0,:]

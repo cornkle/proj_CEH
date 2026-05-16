@@ -1,16 +1,12 @@
 import numpy as np
 import xarray as xr
 from utils import u_arrays as ua, u_darrays as uda
-import matplotlib.pyplot as plt
 import multiprocessing
 import pickle as pkl
-from collections import defaultdict
 from utils import constants as cnst
 
 import os
-import pdb
 import glob
-import ipdb
 import pandas as pd
 
 def dictionary():
@@ -91,7 +87,6 @@ def file_loop(f):
     edate = pd.Timestamp(dic.time.values)
 
     out = dictionary()
-    res = []
     outt = dic['tc_lag0'].values
     outp = dic['p'].values
 

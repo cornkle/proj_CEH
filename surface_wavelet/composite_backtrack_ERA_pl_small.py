@@ -11,11 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
+from utils import u_met, u_parallelise, u_arrays, constants as cnst, u_darrays
 
 import pickle as pkl
 
@@ -186,7 +182,7 @@ def get_previous_hours(date, ehour, refhour):
     vwind_srfc = cmm['v'] - pl_clim['v']
     uwind_srfc = cmm['u'] - pl_clim['u']
 
-    wwind_srfc = cmm['w'] - pl_clim['w']
+    cmm['w'] - pl_clim['w']
     div = cmm['d'].sel(level=925).squeeze()
 
     theta_e_diff = u_met.theta_e(925, cmm['t'].sel(level=925).squeeze().values - 273.15,
@@ -488,7 +484,6 @@ def file_loop(fi):
 def plot_doug(h, eh):
 
     dic = {}
-    dic2 = {}
 
     def coll(dic, h, eh, year):
         print(h)

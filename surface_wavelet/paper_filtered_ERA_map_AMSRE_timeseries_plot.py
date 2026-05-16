@@ -6,14 +6,12 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
-import pandas as pd
 import glob
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from matplotlib import pyplot, lines
+from utils import constants as cnst
+from matplotlib import lines
 from scipy import ndimage
 import matplotlib.patches as patches
 
@@ -530,7 +528,6 @@ def plot_timeseries_coarse_lon():
     filedry = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_NEWTRACKING_AMSRE_DRY20_"
 
     file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_2hOverlap_AMSRE_SMALL_MCSfilter_minusMean_smallDomain_"  # ERA5_cores_2hOverlap_AMSRE_SMALL_AMSL_new"
-    file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_NEWTRACKING_AMSRE_ALL20_"
     # file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_DRY_SM0LT3-1LT1.5_noMeteosatFilter_AMSRE"
     # file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_SM0GT0.01-1GT0.01_noMeteosatFilter_AMSRE"
     #####file = "figs/LSTA/corrected_LSTA/new/ERA5/core_txt/ERA5_cores_WET_TAG_noMeteosatFilter_AMSRE"
@@ -996,7 +993,6 @@ def plot_instability_measures_plot_tsorig():
 
     f = plt.figure(figsize=(12,9), dpi=300)
 
-    titles = ['theta-e', 'disentangle', 'CAPE', 'CIN']
 
     drydiff = dicloop(fs[0])
     wetdiff = dicloop(fs[1])
@@ -1007,7 +1003,6 @@ def plot_instability_measures_plot_tsorig():
 
     x=-9
     width = 9
-    x1 = -33
 
     dayx = -11
     dayx1 = -35
@@ -1415,7 +1410,6 @@ def plot_instability_measures_plot_noclim():
 
     f = plt.figure(figsize=(13,10), dpi=300)
 
-    titles = ['theta-e', 'disentangle', 'CAPE', 'CIN']
 
     drydiff = dicloop(fs[0])
     wetdiff = dicloop(fs[1])

@@ -2,15 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 from wavelet import util
-import pdb
-import matplotlib
-import pandas as pd
 import time
-import matplotlib.gridspec as gridspec
-from scipy.interpolate import griddata
-import numpy.ma as ma
-from utils import u_plot, u_met, constants, u_arrays
-import salem as sm
+from utils import u_plot
 
 #nice example 25.06.2006
 
@@ -43,7 +36,7 @@ def run_waveletDry():
     lsta_raw = lsta.copy()
 
 
-    points = np.where(np.isfinite(lsta_raw.values))
+    np.where(np.isfinite(lsta_raw.values))
     inter1 = np.where(np.isnan(lsta_raw.values))
 
     # lsta_raw.values[inter1[0], inter1[1]] = 90
@@ -78,7 +71,7 @@ def run_waveletDry():
 
 def wav_checkDry():
 
-    start_time = time.time()
+    time.time()
 
     # smfile = '/users/global/cornkle/data/OBS/AMSRE/day_aqua/amsre_monthly_anomaly.nc'
     # sm = xr.open_dataset(smfile)
@@ -101,9 +94,8 @@ def wav_checkDry():
 
     wll, scales, power, lsta, inter, cells, lsta_raw = run_waveletDry()
 
-    daystring = str(DATE['year'])+'-'+str(DATE['month']).zfill(2)+'-'+str(DATE['day']).zfill(2)
+    str(DATE['year'])+'-'+str(DATE['month']).zfill(2)+'-'+str(DATE['day']).zfill(2)
 
-    wllmean0=wll
 
     ppower_small = np.sum(power[0:4,:,:], axis=0)
     ppower_mid = np.sum(power[4:7, :, :], axis=0)

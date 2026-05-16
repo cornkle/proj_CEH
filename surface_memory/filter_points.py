@@ -10,12 +10,10 @@ import xarray as xr
 
 import matplotlib
 import multiprocessing
-import ipdb
 import pandas as pd
-from utils import u_arrays, constants as cnst, u_met
+from utils import constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua, u_darrays as uda
-import salem
+from utils import u_arrays as ua
 import matplotlib.pyplot as plt
 
 
@@ -135,9 +133,9 @@ def file_loop(fi):
     ref = int(fi['time.hour'].values)
     #ipdb.set_trace()
     if ref >= 14:
-        eh= 12-ref
+        12-ref
     else:
-        eh = 12-(ref+24)
+        12-(ref+24)
 
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)  ###5km grid
@@ -163,7 +161,6 @@ def file_loop(fi):
     ypos_3k = []
     storm_id = []
     topo = []
-    core_size = []
     dtime = []
 
 

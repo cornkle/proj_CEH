@@ -23,11 +23,8 @@ REFERENCES
         wavelet analysis and its application to meteorological data
 """
 
-from numpy import (arange, ceil, concatenate, conjugate, cos, exp, floor, 
-                   isnan, log, log2, meshgrid, ones, pi, prod, real, sqrt,
-                   zeros, polyval)
+from numpy import (ceil, exp, log2, meshgrid, pi, sqrt, zeros)
 from numpy.fft import ifft2, fftfreq, fft2
-import numpy as np
 
 class Mexican_hat():
     """Implements the Mexican hat wavelet class."""

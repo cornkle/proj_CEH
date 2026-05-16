@@ -1,7 +1,5 @@
 
 import numpy as np
-import xarray as xr
-from scipy import stats
 import math
 from math import radians, cos, sin, asin, sqrt
 

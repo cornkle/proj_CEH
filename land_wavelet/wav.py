@@ -4,7 +4,6 @@
 """
 import numpy as np
 from land_wavelet import twod as w2d
-import ipdb
 
 
 class wavelet(object):

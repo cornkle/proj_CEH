@@ -7,7 +7,6 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import ipdb
@@ -15,7 +14,6 @@ import pandas as pd
 from wavelet import util as wutil
 from utils import u_arrays, constants as cnst, u_met
 from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
 import pickle as pkl
 from utils import u_arrays as ua
 import collections

@@ -2,9 +2,6 @@ import numpy as np
 import xarray as xr
 from utils import u_arrays as ua
 import multiprocessing
-import ipdb
-import pickle as pkl
-from utils import constants as cnst
 from metpy import calc
 from metpy.units import units
 import glob
@@ -115,9 +112,9 @@ def file_loop(f):
         print('Noon rainfall, continue')
         return
 
-    outu_srfc = ds['u_srfc'].values
-    outu_mid = ds['u_mid'].values
-    outshear = ds['shear'].values
+    ds['u_srfc'].values
+    ds['u_mid'].values
+    ds['shear'].values
     outq = ds['q_srfc'].values
     tmid = ds['t_mid'].values
     tsrfc = ds['t_srfc'].values
@@ -205,8 +202,8 @@ def file_loop(f):
 
         dist = boxes[0]
         tag = boxes[1]
-        yy = minpos[0]
-        xx = minpos[1]
+        minpos[0]
+        minpos[1]
 
         for vn in ds.data_vars:
 

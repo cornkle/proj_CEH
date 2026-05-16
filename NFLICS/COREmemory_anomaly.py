@@ -7,13 +7,8 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
-import pdb
-import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
-import ipdb
-import pickle as pkl
+from utils import constants as cnst
 import glob
 
 
@@ -24,7 +19,7 @@ matplotlib.rc('ytick', labelsize=10)
 def monthly_mean():
     #pool = multiprocessing.Pool(processes=8)
 
-    path = cnst.network_data + 'figs/NFLICS/LSTA_stats_study/'
+    cnst.network_data + 'figs/NFLICS/LSTA_stats_study/'
 
     for y in range(2004,2016):
 

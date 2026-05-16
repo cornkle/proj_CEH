@@ -1,6 +1,5 @@
 import glob
 import os
-import ipdb
 
 path = '/users/global/cornkle/shared/data/OBS/AMSRE/aqua/raw_night_AMSR2'
 

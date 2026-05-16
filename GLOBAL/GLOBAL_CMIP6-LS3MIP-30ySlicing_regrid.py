@@ -1,10 +1,7 @@
-import numpy as np
 import xarray as xr
-from utils import constants as cnst, u_grid, u_interpolate as u_int
+from utils import constants as cnst
 import os
-import salem
 import glob
-import ipdb
 
 cmip_models = ['MPI-ESM1-2-LR', 'CESM2', 'IPSL-CM6A-LR', 'CNRM-CM6-1', 'EC-Earth3']#, 'EC-Earth3']
 experiments = {'amip-lfmip-rmLC_hist' : (1980,2007), 'amip-lfmip-rmLC_fut' : (2080,2101), 'historical' : (1980,2007), 'ssp585': (2080,2101), 'amip-lfmip-pdLC_hist' : (1980,2007), 'amip-lfmip-pdLC_fut' : (2080,2101)}

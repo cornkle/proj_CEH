@@ -3,7 +3,6 @@
 
 import multiprocessing
 import glob
-from eod import rewrite_data
 import ipdb
 import os
 import xarray as xr
@@ -58,7 +57,7 @@ def saveYearly_parallel():
 
     pool = multiprocessing.Pool(processes=4)
 
-    res = pool.map(loop, years)
+    pool.map(loop, years)
     pool.close()
 
 

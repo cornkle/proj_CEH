@@ -5,9 +5,8 @@ import matplotlib
 from utils import u_arrays as ua
 import matplotlib.gridspec as gridspec
 from scipy import ndimage
-import pdb
 from wavelet import util
-from utils import u_plot, u_normalise
+from utils import u_plot
 
 
 
@@ -33,27 +32,27 @@ def ellipse_simple():
     print('Scales', wav['scales'])
 
 
-    f = plt.figure()
+    plt.figure()
     plt.imshow(ellipse)
 
 
-    f = plt.figure()
+    plt.figure()
     plt.imshow(wll[0,:,:])
 
 
     print('Small scale max', np.max(np.abs(wll[0,:,:])))
 
-    f = plt.figure()
+    plt.figure()
     plt.imshow(wll[1, :, :])
     print('Mid scale max', np.max(np.abs(wll[1, :, :])))
 
 
-    f = plt.figure()
+    plt.figure()
     plt.imshow(wll[2, :, :])
     print('Large scale max', np.max(np.abs(wll[2, :, :])))
 
 
-    f = plt.figure()
+    plt.figure()
 
     plt.contourf(np.arange(wll.shape[1]),wav['scales'],wll[:,60,:])
     plt.colorbar()
@@ -87,7 +86,7 @@ def ellipse():
     for nb in range(wav[lab].shape[0]):
 
         orig = float(wav['scales'][nb])
-        scale = int(np.round(orig))
+        int(np.round(orig))
 
         print(np.round(orig))
 
@@ -137,7 +136,7 @@ def ellipse():
     ax1 = plt.subplot2grid((3,1),(0,0),rowspan=2)
     ax3 = plt.subplot2grid((3,1),(2,0))
     #
-    lev = np.arange(-90,-39,4)
+    np.arange(-90,-39,4)
     mt = ax1.contourf(np.arange(wll.shape[2])*3,np.arange(wll.shape[1])*3,ellipse, cmap='Greys')
     ax1.plot(np.arange(wll.shape[2])*3, [posi*3]*len(np.arange(wll.shape[2])*3), linestyle = '--', linewidth=2, color = 'black')
     ax1.invert_yaxis()
@@ -149,7 +148,7 @@ def ellipse():
     maxs = np.mean(maxs[:,posi-1:posi+2, :], 1) # -1, +2
     #ax3.contour(np.arange(wll.shape[2])*5, arr,maxs, cmap='Greys_r')
 
-    ppos = np.where(maxs)
+    np.where(maxs)
 
     #for p1, p2 in zip(ppos[1], ppos[0]):
     #    ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arr[p2], xerr=arr[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
@@ -288,7 +287,7 @@ def circle():
     maxs = np.mean(maxs[:,posi-1:posi+2, :], 1) # -1, +2
     #ax3.contour(np.arange(wll.shape[2])*5, arr,maxs, cmap='Greys_r')
 
-    ppos = np.where(maxs)
+    np.where(maxs)
 
     #for p1, p2 in zip(ppos[1], ppos[0]):
     #    ax3.errorbar((np.arange(wll.shape[2])*5)[p1], arr[p2], xerr=arr[p2]/2, fmt='o', ecolor='white', color='white', capthick=3, ms=3, elinewidth=0.7)
@@ -369,7 +368,7 @@ def circle_negative():
     wll = wav['coeffs']
     arr = np.round(wav['scales'])
     print('AVAIL WAVELET SCALES: ', arr)
-    maxs = np.zeros_like(wll)
+    np.zeros_like(wll)
     yl = []
     xl = []
 
@@ -439,14 +438,14 @@ def circle_negative():
     # plt.show()
 
     f = plt.figure(figsize=(9,15))
-    ax = f.add_subplot(311)
+    f.add_subplot(311)
     plt.imshow(ellipse)
     plt.hlines(50,0,100)
     plt.colorbar()
     print(xl, yl)
     plt.plot(xl, yl, 'ro')
 
-    ax = f.add_subplot(312)
+    f.add_subplot(312)
     plt.plot(ellipse[50, :], label='signal')
     plt.text(21,-1.5,'10km')
     plt.text(41, 1, '20km')
@@ -455,7 +454,7 @@ def circle_negative():
     plt.hlines(0, 0, 100, linestyle='dotted')
     plt.legend()
 
-    ax = f.add_subplot(313)
+    f.add_subplot(313)
     #plt.plot(ellipse[50, :], label='signal')
     x = 1
     a = wav['coeffs'][x,50,:]/(np.std(wav['coeffs'][x,50,:]))

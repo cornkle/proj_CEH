@@ -12,10 +12,9 @@ import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from utils import u_arrays, constants as cnst, u_met
+from utils import u_arrays, constants as cnst
 import pickle as pkl
 from utils import u_arrays as ua, u_darrays as uda
-import salem
 
 
 matplotlib.rc('xtick', labelsize=10)

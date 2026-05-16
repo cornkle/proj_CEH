@@ -2,19 +2,15 @@
 
 
 import salem
-import pyproj
 import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage.measurements import label
 import datetime as dt
-from eod import msg, trmm, tm_utils, trmm_clover
+from eod import msg
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
 import glob
 from utils import u_grid, constants as cnst
-import pdb
 import multiprocessing
 
 HOD = range(24)  # hours of day
@@ -24,7 +20,7 @@ HOD = range(24)  # hours of day
 def multi():
     pool = multiprocessing.Pool(processes=5)
 
-    res = pool.map(saveMCS_WA15, range(2004,2019))
+    pool.map(saveMCS_WA15, range(2004,2019))
 
 
 
@@ -32,7 +28,7 @@ def saveMCS_WA15(YRANGE):
     trmm_folder = cnst.DATA + 'data/OBS/IMERG_HQ_precip'
     msg_folder = cnst.DATA + 'data/OBS/MSG_WA30' #meteosat_WA30'
     msg_folder2 = cnst.DATA + 'data/OBS/MSG_MAMON'
-    msg_folder3 = cnst.DATA + 'data/OBS/tropWA'
+    cnst.DATA + 'data/OBS/tropWA'
 
     mJJAS = msg.ReadMsg(msg_folder)
     mMAMON = msg.ReadMsg(msg_folder2)
@@ -231,7 +227,6 @@ def saveMCS_WA15(YRANGE):
                         os.remove(savefile)
                     except OSError:
                         print('OSError, no dir?')
-                        pass
                     da.to_netcdf(path=savefile, mode='w')
                     print('Saved ' + savefile)
 

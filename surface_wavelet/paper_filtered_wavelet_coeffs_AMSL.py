@@ -7,21 +7,13 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from wavelet import util as wutil
-from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
+from utils import u_arrays, constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua
-import os
 import collections
-import warnings
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -257,7 +249,7 @@ def file_loop(df):
     print('Doing ' + 'lsta_daily_' + fdate + '.nc')
 
     lsta_da = lstal['LSTA'].squeeze()
-    slot_da = lstal['NbSlot'].squeeze().values
+    lstal['NbSlot'].squeeze().values
 
     # if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.01:
     #     print('Not enough valid')

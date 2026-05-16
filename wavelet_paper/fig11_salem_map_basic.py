@@ -4,7 +4,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
-import pdb
 
 fpath = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'
 file = fpath + 'blob_map_90km_sum_18UTC.nc'

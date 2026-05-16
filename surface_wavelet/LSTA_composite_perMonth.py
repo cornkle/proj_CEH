@@ -12,7 +12,6 @@ import matplotlib
 import pdb
 import pandas as pd
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
-import ipdb
 import pickle as pkl
 
 
@@ -201,7 +200,7 @@ def file_loop(fi):
     lsta_da = lsta['LSTA'].squeeze()  # should be LSTA
     #### remove mean from LSTA_NEW
 
-    slot_da = lsta['NbSlot'].squeeze()
+    lsta['NbSlot'].squeeze()
     # lsta_da.values[slot_da.values>15] = np.nan # just to test cases with clouds
     if (np.sum(np.isfinite(lsta_da)) / lsta_da.size) < 0.05:
         print('Not enough valid')
@@ -262,7 +261,7 @@ def file_loop(fi):
     #     rkernel2_list.append(rkernel2)
     #     rkernel3_list.append(rkernel3)
     #     rcnt_list.append(rcnt)
-    mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
+    xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]

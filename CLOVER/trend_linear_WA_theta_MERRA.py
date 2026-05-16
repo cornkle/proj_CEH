@@ -2,17 +2,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
-from utils import constants as cnst, u_met
-import salem
+from utils import constants as cnst
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
-import shapely.geometry as shpg
-import seaborn
-from metpy import calc
-from metpy.units import units
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -92,9 +83,6 @@ def trend_all():
     # da = u_darrays.flip_lat(da)
     da = da.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
     da2 = da2.sel(lon=slice(box[0], box[1]), lat=slice(box[2], box[3]))
-    low_press = 950
-    up_press = 650
-    mid_press = 700
 
     q = da['QV'].sel(lev=925)
     theta_e = da['RH'].sel(lev=600)*100#da2['cape']
@@ -120,7 +108,7 @@ def trend_all():
         if type(m)==int:
             m = [m]
 
-        mmstr = mstr[ids]
+        mstr[ids]
 
         sig = False
 

@@ -11,11 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
 from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
 import glob
 
 import pickle as pkl
@@ -26,7 +22,7 @@ matplotlib.rc('ytick', labelsize=10)
 
 
 def diurnal_loop():
-    afternoon = list(range(14,24))
+    list(range(14,24))
     night = list(range(0,8))
     all = night #afternoon + night
 
@@ -152,7 +148,7 @@ def cut_kernel(xpos, ypos, arr, dist, probs=False, probs2=False, probs3=False, l
 
     kmean = kernel - np.nanmean(kernel)
     ycirc100e, xcirc100e = ua.draw_circle(dist+51, dist+1, 17)  # at - 150km, draw 50km radius circle
-    e100 = np.nanmean(kmean[ycirc100e,xcirc100e])
+    np.nanmean(kmean[ycirc100e,xcirc100e])
 
     # if e100 >= -3.5:   ### random LSTA p10
     #     return
@@ -1087,7 +1083,6 @@ def plot_doug_all_diff(h, eh):
 def plot_doug_all(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -1256,7 +1251,6 @@ def plot_doug_all(h, eh):
 def plot_doug_CLIM(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_-80_clim"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -1531,7 +1525,6 @@ def plot_doug_paper(h, eh):
 def plot_doug_small(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_LSTA_500w04_15k_"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 

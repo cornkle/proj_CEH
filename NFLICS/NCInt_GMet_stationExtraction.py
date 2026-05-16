@@ -1,13 +1,10 @@
 import numpy as np
 import xarray as xr
 import glob
-from wavelet import util
 import os
 from utils import constants as cnst, u_arrays as ua
 import pandas as pd
-import ipdb
 
-import matplotlib.pyplot as plt
 
 
 stations = pd.read_csv(cnst.ext_drive+'/nflics/stations/GMet_stations_lon_lat.csv', index_col='SHORT_STN_NAME')

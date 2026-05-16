@@ -2,8 +2,6 @@ import salem
 import pyproj
 import numpy as np
 from scipy.interpolate import griddata
-import ipdb
-import scipy.spatial.qhull as qhull
 import xarray as xr
 
 

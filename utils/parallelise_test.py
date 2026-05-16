@@ -1,6 +1,5 @@
 import multiprocessing
 import numpy as np
-import ipdb
 
 def mp():
     pool = multiprocessing.get_context('spawn').Pool(processes=2)

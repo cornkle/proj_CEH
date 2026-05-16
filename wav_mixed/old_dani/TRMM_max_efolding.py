@@ -3,9 +3,7 @@
 import numpy as np
 #import matplotlib.pyplot as plt
 from netCDF4 import Dataset
-from wavelet import twod as w2d
 import os
-from scipy import ndimage
 
 def locate(pattern, root_path):
     # pattern: a pattern specifying the end of file (file type you are looking for, eg.  ".nc")

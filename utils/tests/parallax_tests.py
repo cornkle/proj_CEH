@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import pdb
 import matplotlib.pyplot as plt
 from utils import u_gis as ug
 def parallax_corr_msg(slon, slat, plon, plat, height):
@@ -76,7 +75,7 @@ def own_test(slon, slat, plon, plat, height):
     point_both = 180 - beta_both - sat_angle_both
     offset_both = deg - point_both
 
-    offkm_both =  offset_both * (2 * math.pi / 360) * er
+    offset_both * (2 * math.pi / 360) * er
 
 
     ### to km
@@ -169,18 +168,18 @@ def para_check():
 
 
 
-    f = plt.figure()
+    plt.figure()
     plt.plot(x, valslon)
     plt.plot(x,np.array(ylon), color='red')
     plt.title('lons')
 
-    f = plt.figure()
+    plt.figure()
     plt.plot(x, np.array(valslon)/(er*circ))
     plt.plot(x,np.array(ylon)/(er*circ), color='red')
     plt.title('lons')
 
 
-    f = plt.figure()
+    plt.figure()
     plt.plot(x, valslat)
     plt.plot(x, ylat, color='red')
     plt.title('lats')

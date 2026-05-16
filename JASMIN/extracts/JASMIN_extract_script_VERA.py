@@ -5,10 +5,6 @@ import itertools
 import salem
 import numpy as np
 import pdb
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy
-from utils import u_interpolate
 from utils import constants_lappi as cnst
 
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'

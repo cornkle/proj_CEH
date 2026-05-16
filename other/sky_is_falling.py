@@ -1,6 +1,5 @@
 import pyproj
 import matplotlib
-import matplotlib.pyplot as plt
 
 print(pyproj.__version__)
 print(matplotlib.__version__)

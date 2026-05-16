@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from COCOON import shear_scaling_plots_core_v2 as core
 
 TERCILE_BINS = [

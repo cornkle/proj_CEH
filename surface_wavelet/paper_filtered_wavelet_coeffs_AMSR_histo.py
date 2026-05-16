@@ -17,13 +17,8 @@ import pickle as pkl
 import collections
 from utils import u_statistics as u_stat
 from statsmodels.stats.proportion import proportion_confint
-import salem
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-from scipy.stats import norm
-from scipy.stats import ttest_ind
-import statsmodels.stats as stats
 
 plt.style.use('seaborn-ticks')
 
@@ -407,7 +402,6 @@ def plot_diurn_double_relative():
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
 
-        lw = 0.5
 
 
         ax.set_xlabel('Hour')
@@ -563,7 +557,6 @@ def plot_diurn_double_relative_double():
         ax.set_xticks(np.arange(0, len(rrange)))
         ax.set_xticklabels(rrange)
 
-        lw = 0.5
 
 
         ax.set_xlabel('Hour')
@@ -624,8 +617,7 @@ def plot_diurn_double_relative_double():
     # Make a plot with major ticks that are multiples of 20 and minor ticks that
     # are multiples of 5.  Label major ticks with '%d' formatting but don't label
     # minor ticks.
-    from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                                   AutoMinorLocator)
+    from matplotlib.ticker import (MultipleLocator, FormatStrFormatter)
     ax1.xaxis.set_major_locator(MultipleLocator(5))
     ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
 

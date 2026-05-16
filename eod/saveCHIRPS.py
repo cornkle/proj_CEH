@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-import multiprocessing
 import glob
-from eod import rewrite_data
-import pdb
-import os
 import xarray as xr
-import salem
 from utils import constants as cnst
-from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
+from salem import GeoTiff
 import numpy as np
-from affine import Affine
-import ipdb
 import pandas as pd
 
 def saveNetcdf():

@@ -14,9 +14,6 @@ import pandas as pd
 import datetime as dt
 import os
 import pickle as pkl
-import ipdb
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 from eod import tm_utils
 
 HOD = range(24)  # hours of day
@@ -299,7 +296,7 @@ def ll_toMSG(lons, lats, cfac=CFAC, lfac=LFAC, coff=COFF, loff=LOFF):
     rows = np.empty_like(lats)
 
     # Check for visibility, whether the point is visible from the satellite.
-    dotprod = np.array([r1 * re * np.cos(c_lat) * np.cos(lons_r - sub_lon) - r2 * r2 - r3 * r3 * (r_eq / r_pol) ** 2.])
+    np.array([r1 * re * np.cos(c_lat) * np.cos(lons_r - sub_lon) - r2 * r2 - r3 * r3 * (r_eq / r_pol) ** 2.])
 
     #    t=np.where(dotprod > 0., True, False)
     #
@@ -374,7 +371,7 @@ def compare_TRMMmsg_indices(hod=HOD, yrange=YRANGE):
               'tpixel_stratNZ': []}
 
     mll = ll_toMSG(mlon, mlat)
-    mxy = tm_utils.unique_of_pair(mll['x'], mll['y'])
+    tm_utils.unique_of_pair(mll['x'], mll['y'])
 
     cnt = 0
     datess = []

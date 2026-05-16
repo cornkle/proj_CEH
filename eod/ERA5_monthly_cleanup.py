@@ -1,6 +1,5 @@
 import glob
 import xarray as xr
-import ipdb
 from utils import constants as cnst
 
 def synop_day():

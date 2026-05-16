@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import glob
-import ipdb
 import iris
 
 years = np.arange(1997,2007)

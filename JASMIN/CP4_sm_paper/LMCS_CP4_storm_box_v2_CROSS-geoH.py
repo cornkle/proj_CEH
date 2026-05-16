@@ -4,14 +4,11 @@ import xarray as xr
 import os
 import ipdb
 import glob
-from scipy.interpolate import griddata
 import pandas as pd
 import ipdb
 import itertools
 import datetime
 from collections import OrderedDict
-from utils import constants as cnst, u_darrays as uda, u_interpolate as u_int
-import matplotlib.pyplot as plt
 import sys
 from JASMIN import MetUM_variables as mu
 
@@ -108,17 +105,16 @@ def file_save(cp_dir, out_dir, vars, datestring, box, tthresh):
     for idx, outv in enumerate(keys):
 
         print('Variable ', outv)
-        vv = outv
 
         h = (vars[outv])[1]
         pl = (vars[outv])[0]
 
-        inds = (vars[outv][2])[0]
-        weights = (vars[outv][2])[1]
-        shape = (vars[outv][2])[2]
+        (vars[outv][2])[0]
+        (vars[outv][2])[1]
+        (vars[outv][2])[2]
 
         v = (vars[outv])[3]
-        grid = (vars[outv])[4]
+        (vars[outv])[4]
 
         orig_v = mu.create_CP4_filename(v)
 

@@ -6,10 +6,7 @@ Created on Thu Aug  4 10:20:36 2016
 """
 
 import numpy as np
-import xarray as xr
-from utils import u_arrays as ua
 import matplotlib.pyplot as plt
-from scipy import ndimage
 import pickle as pkl
 from scipy.stats import pearsonr
     
@@ -20,7 +17,6 @@ def plotShit_label_noW():
     
     strg=['0', '1', '2', '3', 'x']
     f = plt.figure()
-    k=361
     cnt=0
     for strr in strg:    
     

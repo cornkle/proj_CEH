@@ -1,12 +1,6 @@
 import xarray as xr
-import pandas as pd
-import numpy as np
-import datetime
-import multiprocessing
 import glob
 import os
-from utils import constants as cnst
-import pdb
 
 def run():
 
@@ -21,7 +15,6 @@ def run():
            ds = ds.sel(latitude=slice(-36,39), longitude=slice(-18+360,52+360))                    # [-18+360, 52+360, -36,39]
         except:
            ds = ds.sel(rlat=slice(-36,39), rlon=slice(-18+360,52+360))
-        ff = ip 
         fbase = os.path.basename(ip)
         fname = fbase
         if os.path.isfile(out+fname):

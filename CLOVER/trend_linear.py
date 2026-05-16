@@ -2,12 +2,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst
-import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
 import pickle as pkl
 
 
@@ -90,8 +86,8 @@ def trend_all():
     da3 = xr.open_dataset(mcs)
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
     q = da['q'].sel(level=slice(800,850)).mean('level')
 

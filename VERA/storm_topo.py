@@ -2,8 +2,6 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
-import numpy as np
-import pdb
 from utils import u_arrays as ua
 
 

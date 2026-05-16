@@ -1,11 +1,8 @@
 import numpy as np
 import xarray as xr
-from wavelet import util
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib
-import matplotlib.cm as cm
-import matplotlib.gridspec as gridspec
 from utils import u_arrays as ua
 
 
@@ -23,7 +20,7 @@ def run(fi):
     outp = dic['p'].values
     outpc = dic['pconv'].values
 
-    outplot = outp.copy()
+    outp.copy()
 
     outt[np.isnan(outt)] = 150
     outt[outt >= -40] = 150
@@ -58,7 +55,7 @@ def run(fi):
     if (clon > 28) or (clon < -17.2) or (clat < 4.1):
         return
 
-    figure = np.zeros_like(outt)
+    np.zeros_like(outt)
     outt[np.isnan(outt)] = perc
     o1 = outt.copy()
     o2 = o1.copy()

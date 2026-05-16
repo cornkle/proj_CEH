@@ -3,7 +3,6 @@
 
 import numpy as np
 from wavelet import util
-from eod import msg, mfg
 import xarray as xr
 import os
 from wav_mixed import powerBlob_utils
@@ -11,8 +10,6 @@ import multiprocessing
 from utils import u_grid, u_interpolate as u_int
 import datetime as dt
 from utils import constants as cnst
-import pickle as pkl
-import ipdb
 import glob
 
 
@@ -47,7 +44,7 @@ def run():
             for f in files:
                 passit.append((gridd,f))
 
-            res = pool.map(file_loop, passit)
+            pool.map(file_loop, passit)
             #
             # for f in passit:
             #   file_loop(f)

@@ -12,10 +12,12 @@
 #########################
 import matplotlib as mpl
 mpl.use('Agg')
-import glob,os,datetime,h5py,sys
+import os
+import datetime
+import h5py
+import sys
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import mask_data_functions as fns
 
 if len(sys.argv)>1:
@@ -79,7 +81,6 @@ data_all=np.array(data_all) #all the masked data for the year in question
 #calculate the mean, standard deviation
 #write each file to fout.
 
-from matplotlib.backends.backend_pdf import PdfPages
 #pp = PdfPages(outdir+"MeanStdev_"+outstart+"_"+time+"-"+time_m1+'.pdf')
 
 #for i_mask in len(dates_all)

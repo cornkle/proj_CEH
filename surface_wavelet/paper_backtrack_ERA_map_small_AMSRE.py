@@ -11,12 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
 from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import glob
 
 import pickle as pkl
 
@@ -622,7 +617,6 @@ def file_loop(fi):
 def plot_AMSR_all(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_AMSRE_500w04_15k_p90"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -801,7 +795,6 @@ def plot_AMSR_all(h, eh):
 def plot_AMSR_small(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -916,7 +909,6 @@ def plot_AMSR_small(h, eh):
 def plot_AMSR_itd(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean" #ERA5_composite_cores_AMSRE_500w04_15k_minusMean"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 
@@ -1047,7 +1039,6 @@ def plot_AMSR_itd(h, eh):
 def plot_AMSR_itd_small(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_composite_cores_AMSRE_500w04_15k_minusMean" #ERA5_composite_cores_AMSRE_500w04_15k_minusMean"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 

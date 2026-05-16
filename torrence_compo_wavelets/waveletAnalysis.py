@@ -3,7 +3,6 @@ from waveletFunctions import wavelet, wave_signif
 import matplotlib.pylab as plt
 from matplotlib.gridspec import GridSpec
 import matplotlib.ticker as ticker
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __author__ = 'Evgeniya Predybaylo'
 

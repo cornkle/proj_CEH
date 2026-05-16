@@ -3,7 +3,6 @@
 
 import numpy as np
 import xarray as xr
-import ipdb
 import os
 from utils import u_grid, u_interpolate as u_int
 import glob
@@ -94,7 +93,7 @@ def multi(directory):
         passit.append((f, interp['inds'], interp['weights'], interp['shape'], interp['grid']))
 
     pool = multiprocessing.Pool(processes=3)
-    res = pool.map(_loop, passit)
+    pool.map(_loop, passit)
 
     # res=[]
     # for l in passit:

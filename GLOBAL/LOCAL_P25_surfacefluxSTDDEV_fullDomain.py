@@ -1,16 +1,11 @@
 import xarray as xr
 import glob
 import os
-import numpy as np
-import ipdb
-import datetime
 import sys
 import pickle as pkl
 import sys
 #sys.path.append('/home/users/cornkle/pythonWorkspace/')
-from land_wavelet import wclass
 from utils import constants as cnst
-import matplotlib.pyplot as plt
 
 var = sys.argv[1]
 hour = '12'

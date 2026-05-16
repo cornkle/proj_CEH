@@ -2,13 +2,8 @@
 
 
 import numpy as np
-import datetime as dt
 import xarray as xr
-import os
-import ipdb
-import matplotlib.pyplot as plt
-from utils import u_grid, u_arrays as ua
-import ipdb
+from utils import u_arrays as ua
 import pandas as pd
 from utils import constants as cnst, u_met
 import multiprocessing
@@ -30,7 +25,6 @@ def dictionary():
 def perSys():
 
     pool = multiprocessing.Pool(processes=6)
-    tthresh = '-50'
 
     files = glob.glob(cnst.CP4_PATH + 'CLOVER/CP4hist/lw_out_PBLtop/*.nc')
 

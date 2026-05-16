@@ -5,7 +5,6 @@ import numpy as np
 from saveCore_standalone_NFLICS import util
 import xarray as xr
 from saveCore_standalone_NFLICS import powerBlob_utils
-import datetime as dt
 
 
 def wavelet_analysis(meteosat_data, longitudes, latitudes, date, savefile, data_resolution=5):

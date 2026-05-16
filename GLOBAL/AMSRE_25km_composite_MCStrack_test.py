@@ -9,12 +9,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import pdb
 import pandas as pd
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
-import ipdb
 import pickle as pkl
-import glob
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -103,7 +100,7 @@ def file_loop(fi):
     date = pd.to_datetime(
         str(fi['year'].values) + str(fi['month'].values).zfill(2) + str(fi['day'].values).zfill(2))
 
-    dayd = pd.Timedelta('1 days')
+    pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 

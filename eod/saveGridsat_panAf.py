@@ -4,7 +4,6 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
 import os
 import xarray as xr
 import numpy as np
@@ -16,7 +15,7 @@ def saveNetcdf():
     files = glob.glob(msg_folder+'/*/*/irwin_cdr_*18.gra')
 
     #res = pool.map(rewrite_data.rewriteGridsat_toNetcdf, files)
-    res = pool.map(rewrite_data.rewriteGridsat_extract18Z, files)
+    pool.map(rewrite_data.rewriteGridsat_extract18Z, files)
 
 
 def saveYearly():
@@ -58,4 +57,4 @@ def saveColdClimatology():
 
 
     for y in years:
-        da = xr.open_dataset(msg_folder+'gridsat_WA_'+str(y)+'.nc')
+        xr.open_dataset(msg_folder+'gridsat_WA_'+str(y)+'.nc')

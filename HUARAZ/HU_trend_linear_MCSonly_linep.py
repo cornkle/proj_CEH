@@ -1,16 +1,9 @@
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from utils import u_darrays
-import ipdb
-from utils import constants as cnst, u_met
+from utils import constants as cnst
 import salem
-from utils import u_statistics as us
 from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
-import shapely.geometry as shpg
-import seaborn
 import pandas as pd
 
 
@@ -41,8 +34,6 @@ def trend_all():
     months= [1,2,3,4,5,6,7,8,9,10,11,12]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
 
-    dicm = {}
-    dicmean = {}
 
 
 
@@ -53,7 +44,7 @@ def trend_all():
     #sdf = salem.transform_geopandas(sdf, to_crs=salem.wgs84)
 
     for ids, m in enumerate(months):
-        method = 'mk'
+        pass
 
         if type(m)==int:
             m = [m]
@@ -62,7 +53,6 @@ def trend_all():
 
         eens = ensmonth.loc['1985':'2019']
 
-        sig = True
 
         da = da3[(da3['time.month'] == m[0]) & (da3['time.year'] >= 1985) & (
                 da3['time.year'] <= 2019)]
@@ -82,7 +72,7 @@ def trend_all():
         #ipdb.set_trace()
 
 
-        dslope = sslope*10
+        sslope*10
         cdslope = cslope*10
 
         if len(m) == 1:
@@ -93,7 +83,7 @@ def trend_all():
 
         ax = f.add_subplot(3,4,ids+1)
 
-        x = np.arange(0, len(ch['time.year']))
+        np.arange(0, len(ch['time.year']))
 
         ax.plot(ch['time.year'], ch, marker='o', markersize=3, label='Trend: '+str(np.round(cdslope,2))+ 'mm / month decade | '+ 'p='+str(np.round(cpval,2)), color='blue')
         ax.plot(ch['time.year'], cint + cslope * np.arange(0, len(ch['time.year'])), linestyle='dashed', color='blue')

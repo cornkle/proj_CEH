@@ -1,17 +1,11 @@
 import numpy as np
 import xarray as xr
-from utils import u_arrays as ua, u_darrays as uda
-import matplotlib.pyplot as plt
+from utils import u_arrays as ua
 import multiprocessing
 import pickle as pkl
-from collections import defaultdict
-from utils import constants as cnst, u_met
 
 
-import pdb
 import glob
-import ipdb
-import pandas as pd
 
 def dictionary():
 
@@ -29,7 +23,6 @@ def dictionary():
 def perSys():
 
     pool = multiprocessing.Pool(processes=3)
-    tthresh = '-50'
     files = glob.glob('/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/MCS/WA/UM-5km/*.nc')
     #ipdb.set_trace()
 

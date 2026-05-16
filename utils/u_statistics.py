@@ -5,8 +5,6 @@ import scipy.stats as stats
 import statsmodels.api as sm
 import pandas as pd
 from sklearn import linear_model
-from utils import u_statistics as ustat
-from shapely.geometry import Polygon, MultiPolygon
 
 class MidPointNorm(Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):

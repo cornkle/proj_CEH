@@ -1,11 +1,8 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
-import pdb
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
-import salem
 from utils import u_plot as up, u_mann_kendall as mk, constants as cnst
 from utils import u_darrays
 from scipy import stats
@@ -542,8 +539,8 @@ def tgrad_shear_trend():
 
     for m in months:
 
-        tsouthlice = slice(Tgrad_lat[m-1]-1.25, Tgrad_lat[m-1]-0.25)
-        tnorthslice = slice(Tgrad_lat[m-1]+0.25, Tgrad_lat[m-1]+1.25)
+        slice(Tgrad_lat[m-1]-1.25, Tgrad_lat[m-1]-0.25)
+        slice(Tgrad_lat[m-1]+0.25, Tgrad_lat[m-1]+1.25)
 
         tsouth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(5,8))
         tnorth = dam.sel(longitude=slice(Tlons[0], Tlons[1]), latitude=slice(11,18))
@@ -565,7 +562,7 @@ def tgrad_shear_trend():
         u600_peryear = uhigh.groupby('time.year').mean('longitude').min('latitude')#.mean() # ('latitude').min()
 
         qlow_peryear = qlow.groupby('time.year').mean('longitude').max('latitude')#.mean() # ('latitude').min()
-        qmid_peryear = qmid.groupby('time.year').mean('longitude').max('latitude')
+        qmid.groupby('time.year').mean('longitude').max('latitude')
 
 
         tgrad = ((north_peryear-south_peryear)[4::])

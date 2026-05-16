@@ -1,16 +1,12 @@
 import numpy as np
 import xarray as xr
 from utils import u_arrays as ua, u_darrays as uda
-import matplotlib.pyplot as plt
 import multiprocessing
 import pickle as pkl
-from collections import defaultdict
 from utils import constants as cnst, u_met
 
 
-import pdb
 import glob
-import ipdb
 import pandas as pd
 
 def read_write_dic():
@@ -179,7 +175,6 @@ def file_loop(f):
     #     print('Era missing')
     #     return
 
-    res = []
 
     try:
         era_day = era_pl_day.sel(latitude=elat, longitude=elon , method='nearest', tolerance=0.7) # take point of minimum T

@@ -1,16 +1,7 @@
-import xarray as xr
-import geopandas as gpd
-import pandas as pd
-import numpy as np
 import salem
-import matplotlib.pyplot as plt
-import pandas as pd
-import datetime
-from netCDF4 import num2date
 import multiprocessing
 import glob
 import os
-from utils import constants as cnst
 import salem
 
 
@@ -23,7 +14,7 @@ def run():
     files = glob.glob(in_path)
     print('start loop')
 
-    res = pool.map(loop, files)
+    pool.map(loop, files)
 
 
 

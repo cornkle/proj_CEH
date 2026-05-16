@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from scipy.ndimage.measurements import label
-import ipdb
 import numpy as np
 from shapely.geometry import Polygon
 from skimage import measure

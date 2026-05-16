@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-import multiprocessing
 import glob
-from eod import rewrite_data
-import pdb
 import os
 import xarray as xr
 from utils import constants as cnst
 import numpy as np
 import pandas as pd
 import datetime
-from scipy.interpolate import griddata
-import ipdb
 
 
 
@@ -330,7 +325,7 @@ def writeAnomaly():
     for f in files:
         print('Doing', f)
 
-        basename = os.path.basename(f)
+        os.path.basename(f)
 
         day = xr.open_dataset(f)
         climpath = cnst.lmcs_drive+'MODIS_LST/'+tag+'/clim_v61/'

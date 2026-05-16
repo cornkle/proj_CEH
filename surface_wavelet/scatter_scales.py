@@ -15,7 +15,6 @@ import pandas as pd
 from utils import u_plot
 from utils import constants
 import pickle as pkl
-import statsmodels.stats.proportion as prop
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -28,14 +27,12 @@ def plot():
     cmap = u_plot.discrete_cmap(24, base_cmap='jet')
 
     f = plt.figure()
-    ax = plt.subplot(111)
+    plt.subplot(111)
 
     chourly = []
     shourly = []
     smhourly = []
     cmhourly = []
-    sstd = []
-    cstd = []
     hh = []
     for h in range(0,24,1):
         c = np.mean(dic['cell'][(dic['hour']==h) & (dic['cell']>=15)  & (dic['surface'] > 9)]) #& (dic['surface'] < 130)
@@ -61,16 +58,16 @@ def plot():
         clouds.append(c)
         hhh.append(h)
     f = plt.figure(figsize=(4,10))
-    ax = plt.subplot(311)
+    plt.subplot(311)
     plt.scatter(hh, chourly, c=hhh, cmap=cmap, edgecolors='k', s=50)
     plt.xlabel('Time of day')
     plt.ylabel('Average cloud core scale (km)')
-    ax = plt.subplot(312)
+    plt.subplot(312)
     mpl = plt.scatter(shourly, chourly, c=hh, cmap=cmap, edgecolors='k', s=50)
     plt.xlabel('Average surface scale (km)')
     plt.ylabel('Average cloud core scale (km)')
     plt.title('Warm features', fontsize=10)
-    ax = plt.subplot(313)
+    plt.subplot(313)
     mpl = plt.scatter(smhourly, cmhourly, c=hh, cmap=cmap, edgecolors='k', s=50)
     plt.xlabel('Average surface scale (km)')
     plt.ylabel('Average cloud core scale (km)')
@@ -190,7 +187,7 @@ def file_loop(fi):
     lsta_da.values[ttopo.values >= 450] = np.nan
     lsta_da.values[gradsum > 30] = np.nan
 
-    scale_list = lsta_da.values.flatten()
+    lsta_da.values.flatten()
 
     # plt.figure()
     # plt.imshow(lsta_day2[0,:,:])

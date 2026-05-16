@@ -6,19 +6,11 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import multiprocessing
-import ipdb
-import pandas as pd
-from wavelet import util as wutil
-from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
+from utils import constants as cnst
 import pickle as pkl
 from matplotlib.gridspec import GridSpec
-import collections
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -68,7 +60,7 @@ def plot(hour):
 
 
     keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
+    (dic['SN-pos'][0]).shape[0]
 
 
     l=0
@@ -168,8 +160,8 @@ def plot_diurnal():
             dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + name + ".p", "rb"))
 
             scales = dic['scales']
-            nbcores = dic['nbcores']
-            nbrcores = dic['nbrcores']
+            dic['nbcores']
+            dic['nbrcores']
             del dic['scales']
             del dic['nbcores']
             del dic['nbrcores']
@@ -180,7 +172,7 @@ def plot_diurnal():
             print(scales)
             print('Scale', scales[spos])
 
-            keys = list(dic.keys())
+            list(dic.keys())
 
 
             # for l in keys:
@@ -235,28 +227,27 @@ def plot_map_AMSRE(hour):
 
     scales = dic['scales']
     nbcores = dic['nbcores']
-    nbrcores = dic['nbrcores']
+    dic['nbrcores']
     del dic['scales']
     del dic['nbcores']
     del dic['nbrcores']
 
 
-    keys = list(dic.keys())
+    list(dic.keys())
     cnt = (dic['SN-pos'][0]).shape[0]
 
-    l=0
     dist=100
     pos = np.array([2,4,6,8])#np.array([1,4,6,10])
     print(scales[pos])
     #ipdb.set_trace()
     kernel = (dic['kernel'])[0] / dic['cnt'][0]
-    random = (dic['kernel'])[1] / dic['cnt'][1]
+    (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['cnt'][0][0,:,:]
 
     cnt = dic['cnt'][0][0,:,:]
 
-    mask = (dic['kernel'])[2]
-    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    (dic['kernel'])[2]
+    ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=200
     levels = np.array(list(np.arange(-0.5, 0, 0.05)) + list(np.arange(0.05, 0.51, 0.05)))
 
@@ -328,29 +319,28 @@ def plot_map(hour):
 
     scales = dic['scales']
     nbcores = dic['nbcores']
-    nbrcores = dic['nbrcores']
+    dic['nbrcores']
     del dic['scales']
     del dic['nbcores']
     del dic['nbrcores']
 
 
-    keys = list(dic.keys())
+    list(dic.keys())
     cnt = (dic['SN-pos'][0]).shape[0]
 
-    l=0
 
     pos = np.array([2,4,6,8])#np.array([1,4,6,10])
     print(scales[pos])
     #ipdb.set_trace()
     kernel = (dic['kernel'])[0] / dic['cnt'][0]
-    random = (dic['kernel'])[1] / dic['cnt'][1]
+    (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['lsta'][1]
-    mask = (dic['kernel'])[2]
+    (dic['kernel'])[2]
 
     cnt = dic['cnt'][0][0, :, :]
-    slots = dic['slots'][0]
+    dic['slots'][0]
 
-    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
     levels = list(np.arange(-0.15, 0, 0.01)) + list(np.arange(0.01, 0.16, 0.01))
     llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))
@@ -436,13 +426,12 @@ def plot_map_full(hour, amsre=False):
     del dic['nbcores']
     del dic['nbrcores']
 
-    keys = list(dic.keys())
+    list(dic.keys())
 
     #ipdb.set_trace()
-    keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
+    list(dic.keys())
+    (dic['SN-pos'][0]).shape[0]
 
-    l=0
     dist=100
     print('scales', scales)
     pos = np.array([2,4,6,8])
@@ -452,8 +441,8 @@ def plot_map_full(hour, amsre=False):
     kernel = (dic['kernel'])[0] / dic['cnt'][0]
     random = (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['lsta'][1]#dic['lsta'][1]#[0,:,:]
-    mask = (dic['kernel'])[2]
-    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    (dic['kernel'])[2]
+    ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
 
     f = plt.figure(figsize=(13, 6))
@@ -523,15 +512,15 @@ def plot_gewex2():
         dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + name + ".p", "rb"))
 
         scales = dic['scales']
-        nbcores = dic['nbcores']
-        nbrcores = dic['nbrcores']
+        dic['nbcores']
+        dic['nbrcores']
         del dic['scales']
         del dic['nbcores']
         del dic['nbrcores']
         del dic['kernel']
 
         keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
+        (dic['SN-pos'][0]).shape[0]
 
         # ipdb.set_trace()
 
@@ -646,14 +635,14 @@ def paper_plot():
 
     scales = dic['scales']
     nbcores = dic['nbcores']
-    nbrcores = dic['nbrcores']
+    dic['nbrcores']
     del dic['scales']
     del dic['nbcores']
     del dic['nbrcores']
 
 
     keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
+    (dic['SN-pos'][0]).shape[0]
 
     l=0
     dist=100
@@ -661,10 +650,10 @@ def paper_plot():
     print(scales[pos])
     #ipdb.set_trace()
     kernel = (dic['kernel'])[0] / dic['cnt'][0]
-    random = (dic['kernel'])[1] / dic['cnt'][1]
+    (dic['kernel'])[1] / dic['cnt'][1]
     lsta = (dic['lsta'])[0] / dic['cnt'][0][0,:,:]
-    mask = (dic['kernel'])[2]
-    extent = ((dic['lsta'][0]).shape[1] - 1) / 2
+    (dic['kernel'])[2]
+    ((dic['lsta'][0]).shape[1] - 1) / 2
     dist=100
 
     f = plt.figure(figsize=(13,13))
@@ -726,14 +715,14 @@ def paper_plot():
 
         scales = dic['scales']
         nbcores = dic['nbcores']
-        nbrcores = dic['nbrcores']
+        dic['nbrcores']
         del dic['scales']
         del dic['nbcores']
         del dic['nbrcores']
         del dic['kernel']
 
         keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
+        (dic['SN-pos'][0]).shape[0]
 
         # ipdb.set_trace()
 

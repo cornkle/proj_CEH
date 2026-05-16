@@ -4,10 +4,8 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
 import os
 import xarray as xr
-import salem
 from utils import constants
 import numpy as np
 
@@ -22,7 +20,7 @@ def saveNetcdf():
         files = glob.glob( outfolder + '/' +'*.gra')
 
         for f in files:
-            ds = rewrite_data.rewrite_CMORPH(f)
+            rewrite_data.rewrite_CMORPH(f)
 
     #res = pool.map(rewrite_data.rewrite_AMSRE, files)
 

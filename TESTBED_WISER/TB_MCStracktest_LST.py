@@ -9,22 +9,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
 import pandas as pd
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy
-import matplotlib.pylab as pylab
 import glob
-import os
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays as uda
-from scipy.interpolate import griddata
-import multiprocessing
-import metpy
-from metpy import calc
-from metpy.units import units
+from utils import u_parallelise, u_arrays as ua, constants as cnst, u_darrays as uda
 
 import pickle as pkl
 
@@ -68,7 +55,7 @@ def composite(rawhour):
     h = h_checker(h)
     h2 = h_checker(h+1)
     h1 = h_checker(h-1)
-    h3 = h_checker(h-3)
+    h_checker(h-3)
 
     print('Hour: ', h, h1, h2)
 
@@ -166,7 +153,7 @@ def file_loop(fi):
 
     date = fi['date'][0]
 
-    hour = fi['hour']
+    fi['hour']
     print('Doing day: ', date)
 
 
@@ -189,7 +176,7 @@ def file_loop(fi):
 
     box = (MREGIONS[REGION])[0]
 
-    dayd = pd.Timedelta('1 days')
+    pd.Timedelta('1 days')
 
     # if (date.hour) <= 16:
     #     print('Nighttime')

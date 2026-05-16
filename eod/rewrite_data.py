@@ -16,7 +16,6 @@ from utils import u_time as ut, u_interpolate as uint, constants as cnst, u_darr
 from utils import u_grid
 import xarray as xr
 import ipdb
-from scipy.ndimage.measurements import label
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from utils import u_grid, u_interpolate as u_int
@@ -372,7 +371,6 @@ def rewriteLSTA_toNetcdf(file, interp, write=None):
     rrShape = (blat.shape[0],blat.shape[1])
 
     rr = np.fromfile(file, dtype=np.float32())#dtype='>f')
-    addVar = False
 
     latmin = np.min(blat)
     latmax = np.max(blat)
@@ -769,7 +767,7 @@ def rewrite_AMSR2_10km(file):
 
         ds_new[var] = da
     #ipdb.set_trace()
-    masks = np.isfinite(ds_new['ts']) & np.isfinite(ds_new['ts'])
+    np.isfinite(ds_new['ts']) & np.isfinite(ds_new['ts'])
     for var in varlist:
         ds_new[var] = ds_new[var].where(np.isfinite(ds_new['ts']))
     try:
@@ -1055,7 +1053,6 @@ def rewrite_NFLICS_LSTA_onCores_interpolate():
             lsw[inter1] = griddata(points, np.ravel(lsw[points]), inter1, method='nearest')  # linear
         except ValueError:
             print('Value Error')
-            pass
 
         lsw[np.isnan(lsw)] = -99
 
@@ -1117,7 +1114,7 @@ def MSGpix2geo(column, row, domain):
     # define parameters needed
     ITwoToSixteen = 2 ** 16
     RTwoToSixteen = float(ITwoToSixteen)
-    RRTwoToSixteen = 1.0 / RTwoToSixteen
+    1.0 / RTwoToSixteen
     PI = 3.14159265359
 
     # These values taken from EUMETSAT document CGMS03 "LRIT/HRIT Global Specification".

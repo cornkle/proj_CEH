@@ -386,7 +386,7 @@ def readMCS_getWavelet_label():
                 ys.extend(ypks)
                 xs.extend(xpks)
                 
-            radius = [2, 6, 12]*5     
+            [2, 6, 12]*5     
            
             z = wav['z'] 
             y = wav['y']  
@@ -503,7 +503,7 @@ def relatePintensities():
     nl_resh=nl.reshape(25,25)
     y = np.argmax(nl_resh, axis=0)  #temperature for P, index for getting the right T if you decide on a size for P
     x = np.argmax(nl_resh, axis=1) # precipitation for T, index for getting the right P if you decide on a size for T
-    rise=range(25)
+    range(25)
      
     PforT=arr[np.array(x)] # p for T
     TforP=arr[np.array(y)] # T for p 
@@ -702,7 +702,6 @@ def plotShit_label():
     
     strg=['0', '1', '2', '3', 'x']
     f = plt.figure()
-    k=361
     cnt=0
     for strr in strg:    
     
@@ -780,11 +779,11 @@ def plotShit_label():
     
 def prodNC():
     wavelet = pkl.load( open ('/users/global/cornkle/MCSfiles/save/MCS_wavelet_allyears_perc.p', 'rb'))
-    t0=np.array(wavelet['torig0_min'])*(-1)
+    np.array(wavelet['torig0_min'])*(-1)
     t1=np.array(wavelet['torig1_min'])*(-1)
-    t2=np.array(wavelet['torig2_min'])*(-1)
-    t3=np.array(wavelet['torig3_min'])*(-1)
-    tx=np.array(wavelet['torigx_min'])*(-1)
+    np.array(wavelet['torig2_min'])*(-1)
+    np.array(wavelet['torig3_min'])*(-1)
+    np.array(wavelet['torigx_min'])*(-1)
     p=np.array(wavelet['porig_max'])
     
     da = xr.Dataset({'p' :  p,  't' : t1 })

@@ -1,5 +1,4 @@
 
-import os
 import seaborn as sns
 import pickle as pkl
 pal = sns.color_palette('Blues')
@@ -7,7 +6,6 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 import numpy as np
 import matplotlib.pyplot as plt
-import pdb
 from scipy import stats
 import matplotlib.cm as cm
 

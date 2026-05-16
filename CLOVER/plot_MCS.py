@@ -1,9 +1,7 @@
 import xarray as xr
 import glob
 import matplotlib.pyplot as plt
-import cartopy
 import cartopy.crs as ccrs
-from utils import u_met
 import numpy as np
 from utils import constants as cnst
 

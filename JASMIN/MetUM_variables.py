@@ -2,7 +2,6 @@ import glob
 import os
 import subprocess
 from JASMIN.constants import VARDIC
-import numpy as np
 
 
 # c - hourly

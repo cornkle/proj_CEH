@@ -4,7 +4,6 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
 import os
 import xarray as xr
 from utils import constants as cnst
@@ -12,15 +11,12 @@ import numpy as np
 import pandas as pd
 import datetime
 #from scipy.interpolate import griddata
-import ipdb
 
 def saveNetcdf(day=True):
 
     if day:
-        daystring = '_A_'
         dstring = 'day'
     else:
-        daystring = '_D_'
         dstring = 'night'
 
 
@@ -34,7 +30,7 @@ def saveNetcdf(day=True):
     # for f in files:
     #     ds = rewrite_data.rewrite_AMSR2_10km(f)
 
-    res = pool.map(rewrite_data.rewrite_AMSR2_10km, files)
+    pool.map(rewrite_data.rewrite_AMSR2_10km, files)
 
 
 

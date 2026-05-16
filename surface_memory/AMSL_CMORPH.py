@@ -7,21 +7,13 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from wavelet import util as wutil
-from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
+from utils import u_arrays, constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua
-import os
 import collections
-import warnings
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -314,7 +306,7 @@ def get_previous_hours_CMORPH(date, daykey):
 def file_loop(df):
 
     date = df['date'].iloc[0]
-    hour = df['hour'].iloc[0]
+    df['hour'].iloc[0]
     print('Doing day: ', date)
 
     daykey = df['daykey'].iloc[0]
@@ -429,7 +421,6 @@ def file_loop(df):
 
     ###############################Blob loop
     cores = 0
-    ERAq = 0
 
     for dids, dit in df.iterrows():
 

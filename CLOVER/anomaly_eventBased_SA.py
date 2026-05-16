@@ -2,13 +2,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst
-import salem
-from utils import u_statistics as us
 from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
 import shapely.geometry as shpg
 
 
@@ -32,8 +27,8 @@ def corr_box():
     da3 = xr.open_dataset(mcs)
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2], box[3]))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
 
     q = da['q'].sel(level=slice(800)).mean('level')
@@ -139,7 +134,6 @@ def corr_box():
 
         # pthresh = us.fdr_threshold(qcorr['pval'].values[np.isfinite(qcorr['pval'].values)], alpha=0.05)
         # print(pthresh)
-        pthresh = 0.05
         #cloud['slope'].values[cloud['pval'].values > pthresh] = np.nan
         #qcorr['r'].values[qcorr['pval'].values > pthresh] = 0
 

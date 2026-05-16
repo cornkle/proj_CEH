@@ -2,17 +2,11 @@
 
 
 import numpy as np
-import datetime as dt
 import xarray as xr
-import os
-import ipdb
-import matplotlib.pyplot as plt
-from utils import u_grid, u_arrays as ua, u_darrays as uda, u_arrays as ua
-import ipdb
+from utils import u_arrays as ua, u_arrays as ua
 import pandas as pd
 from utils import constants as cnst
 import multiprocessing
-import glob
 import pickle as pkl
 
 
@@ -166,11 +160,9 @@ def get_ERA5(inputs):
         #         xxx = 0
         #         yy = slice(posy-xx,posy+xx)
         #         xx = slice(posx-xx,posx+xx)
-        yy = posy
         xx = posx
 
         xxx = posxx
-        yyy = posyy
 
         try:
            # ipdb.set_trace()

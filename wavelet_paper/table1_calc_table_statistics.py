@@ -1,7 +1,6 @@
 import pickle as pkl
 import numpy as np
 import matplotlib.pyplot as plt
-import pdb
 
 
 dic = pkl.load( open ('/users/global/cornkle/papers/wavelet/saves/bulk_40big_zR.p', 'rb'))

@@ -3,10 +3,8 @@ from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
 from utils import constants
-import metpy
 from metpy import calc
 from metpy.units import units
-import ipdb
 
 Lv = 2.501e6 # heat of vapourisation
 Cp = 1005 # heat capacity of dry air at static pressure

@@ -7,20 +7,11 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy
-import matplotlib.pylab as pylab
-import glob
 import os
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
+from utils import constants as cnst, u_darrays
 import multiprocessing
 from GLOBAL import glob_util
 #import metpy
@@ -28,7 +19,6 @@ from GLOBAL import glob_util
 #from metpy.units import units
 
 
-import pickle as pkl
 
 
 matplotlib.rc('xtick', labelsize=10)

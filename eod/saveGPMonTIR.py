@@ -1,23 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-import salem
-import pyproj
 import numpy as np
-from scipy.interpolate import griddata
-from scipy.ndimage.measurements import label
 import datetime as dt
-from eod import msg, trmm, tm_utils, trmm_clover
+from eod import msg
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
 import glob
-from utils import u_grid, constants as cnst
-import ipdb
+from utils import constants as cnst
 import multiprocessing
 from utils import u_arrays as ua
-from utils import u_grid, u_interpolate as u_int
+from utils import u_interpolate as u_int
 
 HOD = range(24)  # hours of day
 #YRANGE = range(2004, 2015)
@@ -26,7 +19,7 @@ HOD = range(24)  # hours of day
 def multi():
     pool = multiprocessing.Pool(processes=5)
 
-    res = pool.map(saveMCS_WA15, np.arange(2005,2010))
+    pool.map(saveMCS_WA15, np.arange(2005,2010))
 
 
 
@@ -37,7 +30,6 @@ def saveMCS_WA15(year):
 
     mJJAS = msg.ReadMsg(msg_folder)
     mMAMON = msg.ReadMsg(msg_folder2)
-    cnt = 0
     _y = year
 
     for ids, _m in enumerate(np.arange(3,12)):
@@ -180,7 +172,6 @@ def saveMCS_WA15(year):
             os.remove(savefile)
         except OSError:
             print('OSError, no dir?')
-            pass
 
         ds.to_netcdf(path=savefile, mode='w')
         print('Saved ' + savefile)

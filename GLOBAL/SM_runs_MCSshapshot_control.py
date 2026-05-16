@@ -1,15 +1,12 @@
 from ben_notebook_functions import *
 import warnings
 warnings.filterwarnings("ignore")
-import cartopy.geodesic as cgeo
 import pandas as pd
 import glob
 import xarray as xr
-import matplotlib.pyplot as plt
 import datetime
 import ipdb
 from scipy.ndimage.measurements import label
-from MCS_snapshots import MCS_table_main_model_LMCSruns as MCS_table_main
 import multiprocessing
 
 

@@ -3,18 +3,15 @@
 
 import numpy as np
 from wavelet import util
-from eod import msg, mfg
+from eod import msg
 import xarray as xr
 import os
 from utils import u_grid
-from scipy.interpolate import griddata
 from scipy import ndimage
 from utils import u_arrays as ua
 import multiprocessing
 from utils import u_grid, u_interpolate as u_int
 import datetime as dt
-import matplotlib.pyplot as plt
-import pdb
 from scipy.ndimage.measurements import label
 from utils import constants as cnst
 import pickle as pkl
@@ -116,7 +113,7 @@ def file_loop(passit):
 
     m = passit[1]
     file = passit[2]
-    tag = passit[3]
+    passit[3]
 
 
     # if tag == 'mfg':

@@ -1,9 +1,6 @@
-import seaborn as sns
-import pickle as pkl
 import glob
 import xarray as xr
 import numpy as np
-import pdb
 files = glob.glob('/users/global/cornkle/data/CP4/CLOVER/MCS_-60_1000km2/*.nc' )
 
 

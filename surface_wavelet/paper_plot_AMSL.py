@@ -6,10 +6,9 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-from utils import u_arrays, constants as cnst, u_met
+from utils import constants as cnst
 import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)
@@ -123,8 +122,8 @@ def plot_amsr_lsta_only(hour):
 
     cores = dic['cores']
 
-    lcnt = dic['lsta'][1]
-    acnt = dic['amsr'][1]
+    dic['lsta'][1]
+    dic['amsr'][1]
 
     dist=200
     # llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))#*12000
@@ -183,12 +182,7 @@ def plot_amsr_lsta_trio(hour):
 
     labels = ['Day-1', 'Day0', 'Day+1']
 
-    left = 0.01
-    bottom = 0.1
-    width = 0.3
-    height=0.8
 
-    spot = [[]]
 
     for ids, ll in enumerate(['day-1', 'day0', 'day+1']):
 
@@ -202,10 +196,10 @@ def plot_amsr_lsta_trio(hour):
 
         amsr = ndimage.gaussian_filter(amsr, 6, mode='nearest')
 
-        cores = dic['cores']
+        dic['cores']
 
-        lcnt = dic['lsta'][1]
-        acnt = dic['amsr'][1]
+        dic['lsta'][1]
+        dic['amsr'][1]
 
         dist = 200
         llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))#*12000
@@ -268,12 +262,7 @@ def plot_amsr_lsta_six(hour):
 
     labels = ['Night-1', 'Day-1', 'Night0', 'Day0', 'Night+1', 'Day+1']
 
-    left = 0.01
-    bottom = 0.1
-    width = 0.3
-    height=0.8
 
-    spot = [[]]
 
     for ids, ll in enumerate(['night-1', 'day-1', 'night0', 'day0', 'night+1', 'day+1']):
 
@@ -292,10 +281,10 @@ def plot_amsr_lsta_six(hour):
 
         amsr = ndimage.gaussian_filter(amsr, 6, mode='nearest')
 
-        cores = dic['cores']
+        dic['cores']
 
-        lcnt = dic['lsta'][1]
-        acnt = dic['amsr'][1]
+        dic['lsta'][1]
+        dic['amsr'][1]
 
         dist = 200
         llevels = np.array(list(np.arange(-0.8, 0, 0.1)) + list(np.arange(0.1, 0.81, 0.1)))#*12000
@@ -353,8 +342,6 @@ def plot_amsr_lsta_six(hour):
 def plot_amsr_dry_wet(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    key = '2hOverlap'
-    daykey = 'day+1'
     # dic1 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_WET_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     # dic2 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_WET_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     # dic3 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
@@ -375,11 +362,11 @@ def plot_amsr_dry_wet(hour):
     import matplotlib
 
     cmap = matplotlib.cm.get_cmap('viridis')
-    rgba = cmap(0.5)
+    cmap(0.5)
 
     names = ['DRY - day0', 'DRY - day+1', 'WET - day0', 'WET - day+1']
 
-    pick = [dic4, '',dic2]
+    [dic4, '',dic2]
 
     f = plt.figure(figsize=(8.5, 6), dpi=300)
     for ids, dic in enumerate([dic3,dic4,dic1,dic2]):
@@ -391,7 +378,7 @@ def plot_amsr_dry_wet(hour):
         cmorph = ndimage.gaussian_filter(cmorph, 6, mode='nearest')
         amsr = ndimage.gaussian_filter(amsr, 4, mode='nearest')
 
-        msg = (dic['msg'])[0] / dic['msg'][1]
+        (dic['msg'])[0] / dic['msg'][1]
         cores = dic['cores']
 
         print('NUMBER OF CORES', cores)
@@ -411,11 +398,11 @@ def plot_amsr_dry_wet(hour):
         if ids == 3:
             lev = np.arange(10, 71, 20)
             #lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.5)]
+            [cmap(0.05), cmap(0.5)]
         else:
             lev = np.arange(10, 71, 20)
             #lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.6), cmap(0.99)]
+            [cmap(0.05), cmap(0.6), cmap(0.99)]
 
         cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100*1.2,
                     linewidths=1.2, linestyles=['solid'], levels=lev, colors='k')
@@ -477,8 +464,6 @@ def plot_amsr_dry_wet(hour):
 def plot_amsr_day3_six(hour):
 
     path = cnst.network_data + 'figs/LSTA/corrected_LSTA/new/wavelet_coefficients/'
-    key = '2hOverlap'
-    daykey = 'day+1'
     # dic1 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_WET_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     # dic2 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day+1_ALLS_minusMean_CMORPH_WET_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
     # dic3 = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+"UTC_15000_2dAMSL_day0_ALLS_minusMean_CMORPH_DRY_old_2hOverlap.p", "rb")) #UTC_15000_ALL_-60_5slotSmall
@@ -502,7 +487,7 @@ def plot_amsr_day3_six(hour):
     import matplotlib
 
     cmap = matplotlib.cm.get_cmap('viridis')
-    rgba = cmap(0.5)
+    cmap(0.5)
 
     names = ['DRY - day0', 'DRY - day+1', 'DRY - day+2', 'DRY - day+3', 'DRY - day+4', 'DRY - day+5']
 
@@ -521,7 +506,7 @@ def plot_amsr_day3_six(hour):
         # if ids >=4:
         #     ipdb.set_trace()
 
-        msg = (dic['msg'])[0] / dic['msg'][1]
+        (dic['msg'])[0] / dic['msg'][1]
         cores = dic['cores']
 
         print('NUMBER OF CORES', cores)
@@ -541,11 +526,11 @@ def plot_amsr_day3_six(hour):
         if ids == 3:
             lev = [5,10,15,25,50,75]#np.arange(5, 71, 10)
             #lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.5)]
+            [cmap(0.05), cmap(0.5)]
         else:
             lev = [5,10,15,25,50,75]#np.arange(5, 71, 10)
             #lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.6), cmap(0.99)]
+            [cmap(0.05), cmap(0.6), cmap(0.99)]
 
         cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3, cmorph*100*1.2,
                     linewidths=1.2, linestyles=['solid'], levels=lev, colors='k')
@@ -626,7 +611,7 @@ def plot_amsr_dry_wet_trio(hour):
 
     names = ['DRY - day0, 0130UTC','DRY - day0, 1330UTC', 'DRY - day+1, 1330UTC', 'WET - day0, 0130UTC', 'WET - day0, 1330UTC', 'WET - day+1, 1330UTC']
 
-    pick = ['',dic5, '','',dic2]
+    ['',dic5, '','',dic2]
 
     f = plt.figure(figsize=(12, 6), dpi=300)
     for ids, dic in enumerate([dic3,dic4,dic5,dic0,dic1,dic2]):
@@ -638,7 +623,7 @@ def plot_amsr_dry_wet_trio(hour):
         cmorph = ndimage.gaussian_filter(cmorph, 8, mode='nearest')
         amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
 
-        msg = (dic['msg'])[0] / dic['msg'][1]
+        (dic['msg'])[0] / dic['msg'][1]
         cores = dic['cores']
 
         print('NUMBER OF CORES', cores)
@@ -648,7 +633,7 @@ def plot_amsr_dry_wet_trio(hour):
 
         # alevels = [-5,-4,-3,-2,-1.5,-1,-0.5,-0.25,0.25,0.5,1,1.5,2,3,4]
 
-        cmap = matplotlib.cm.get_cmap('RdBu')
+        matplotlib.cm.get_cmap('RdBu')
 
         vals_low = list(np.linspace(-0.01, 0.5,9))#+list([0.5])
         vals_high = (((np.linspace(0, 0.5,9)-1)[::-1])*-1)[1:-1]#(np.arange(0,0.5,0.05)+0.5+0.05)[0:-2]
@@ -778,7 +763,7 @@ def plot_amsr_dry_wet_paper(hour):
         cmorph = ndimage.gaussian_filter(cmorph, 8, mode='nearest')
         amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
 
-        msg = (dic['msg'])[0] / dic['msg'][1]
+        (dic['msg'])[0] / dic['msg'][1]
         cores = dic['cores']
 
         print('NUMBER OF CORES', cores)

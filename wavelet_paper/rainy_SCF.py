@@ -2,18 +2,13 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import pdb
 import matplotlib.cm as cm
 
-from utils import u_statistics as ug
 
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
-import sys
-from wavelet_paper import fig9_latitude_var as lv
 
 
 fpath = '/users/global/cornkle/papers/wavelet/figs/paper/'

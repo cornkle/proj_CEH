@@ -3,14 +3,10 @@ import os
 from utils import u_arrays as uarr
 import pandas as pd
 import xarray as xr
-from utils import u_time as ut
 from utils import u_lists as ul
-import datetime
 # import glob
 import itertools
-import ipdb
 import glob
-import matplotlib.pyplot as plt
 
 
 """
@@ -50,7 +46,7 @@ class ReadMfg(object):
 
         for yr, mo in itertools.product(yrange, mrange):  # rain_f4 files only available for 6 to 10
 
-            filepath = os.path.join(mpath, str(yr), str(mo).zfill(2))
+            os.path.join(mpath, str(yr), str(mo).zfill(2))
             try:
                 files = glob.glob(mpath + os.sep + str(yr) + str(mo).zfill(2) + '*')
 

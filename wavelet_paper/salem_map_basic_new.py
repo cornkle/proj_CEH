@@ -1,10 +1,7 @@
 import salem
 import xarray as xr
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import numpy as np
-import pdb
 
 path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'
 file2 = path+'blob_map_35km_-75_sum_16-19UTC.nc'

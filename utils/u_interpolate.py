@@ -3,8 +3,6 @@ import scipy.spatial.qhull as qhull
 import numpy as np
 from scipy.interpolate import griddata
 import salem
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import pause
 from utils import u_grid
 import pyproj
 

@@ -11,10 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
-from scipy.interpolate import griddata
+from utils import u_parallelise, u_arrays, constants
 
 import pickle as pkl
 
@@ -100,7 +97,7 @@ def get_previous_hours(date):
 
 
     t1 = edate
-    t2 = edate + pd.Timedelta('3 hours')
+    edate + pd.Timedelta('3 hours')
 
     file = constants.ERA5
 

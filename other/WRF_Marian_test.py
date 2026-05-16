@@ -1,5 +1,3 @@
-import glob
-import ipdb
 import os
 import salem
 import sys

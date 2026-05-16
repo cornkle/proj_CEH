@@ -2,17 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 from wavelet import util
-import pdb
-from scipy import ndimage
-from utils import u_arrays as ua, constants
 import pandas as pd
 import time
-import matplotlib.gridspec as gridspec
-from scipy.interpolate import griddata
-from utils import u_grid
 from utils import u_plot
-import matplotlib
-import salem as sm
 
 #nice example 25.06.2006
 
@@ -38,7 +30,7 @@ def run_waveletDry():
 
     lsta_raw = lsta.copy()
 
-    points = np.where(np.isfinite(lsta.values))
+    np.where(np.isfinite(lsta.values))
     inter1 = np.where(np.isnan(lsta.values))
 
     # lsta.values[inter1] = griddata(points, np.ravel((lsta.values)[points]), inter1, method='linear')
@@ -71,7 +63,7 @@ def run_waveletDry():
 
 def wav_checkDry():
 
-    start_time = time.time()
+    time.time()
 
     # smfile = '/users/global/cornkle/data/OBS/AMSRE/day_aqua/amsre_monthly_anomaly.nc'
     # sm = xr.open_dataset(smfile)
@@ -94,7 +86,7 @@ def wav_checkDry():
     latmin, latmax = (np.min(lsta['lat']), np.max(lsta['lat']))
     lonmin, lonmax = (np.min(lsta['lon']), np.max(lsta['lon']))
 
-    daystring = str(DATE['year'])+'-'+str(DATE['month']).zfill(2)+'-'+str(DATE['day']).zfill(2)
+    str(DATE['year'])+'-'+str(DATE['month']).zfill(2)+'-'+str(DATE['day']).zfill(2)
 
     wllmean0=wll
 

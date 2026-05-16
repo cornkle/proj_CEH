@@ -16,9 +16,8 @@
 def run():
     df = pd.read_pickle('/users/global/cornkle/C_paper/wavelet/saves/pandas/3dmax_gt15000_15km.pkl')
 
-    scales = df['scale'].unique()
+    df['scale'].unique()
     print(np.percentile(df['scale'], np.arange(10, 100, 10)))
-    scales = [15, 18, 19, 21, 22, 25, 30, 36, 48, 67, 202]
     print(np.max(df['tmin']), np.min(df['tmin']))
     print(len(df['tmin']))
 

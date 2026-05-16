@@ -1,9 +1,6 @@
 import xarray as xr
 import glob
 import os
-import itertools
-from JASMIN import constants as cnst, MetUM_variables as mv
-import numpy as np
 import pdb
 
 def cut_box():

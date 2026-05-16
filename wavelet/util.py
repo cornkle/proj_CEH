@@ -8,9 +8,6 @@ import numpy as np
 #from wavelet import twod as w2d
 from scipy import ndimage
 from wavelet import wav, wav1d
-import pdb
-import matplotlib.pyplot as plt
-import ipdb
 
 def read_dic(dic):
     dt = dic['dx']
@@ -392,7 +389,7 @@ def LSTA_bothSigns(t, dx=None, dist=None, start=None, nb=None, dataset=None, dom
                 scal_dry = dom_get(parr_dry, tpoint, obj.scales)
                 scal_wet = dom_get(parr_wet, tpoint, obj.scales)
 
-                scal_pos = np.argmin([np.abs(scal_dry), np.abs(scal_wet)])
+                np.argmin([np.abs(scal_dry), np.abs(scal_wet)])
                 scal_arr = scal_dry # [scal_dry,scal_wet][scal_pos]
 
                 dom_scale[i, j] = scal_arr

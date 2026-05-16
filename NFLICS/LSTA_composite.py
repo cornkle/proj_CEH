@@ -9,9 +9,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
+from utils import u_arrays, constants as cnst
 import ipdb
 import pickle as pkl
 import glob
@@ -189,7 +188,7 @@ def file_loop(fi):
         print('No blobs found')
         return
 
-    probs_msg = get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
+    get_previous_hours_msg(date, fi.attrs['eh'], fi.attrs['refhour'])
 
     dist = 60
 

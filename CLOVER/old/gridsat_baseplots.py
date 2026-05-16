@@ -1,13 +1,9 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
-import ipdb
 import matplotlib.pyplot as plt
-import cartopy
 from utils import u_plot as up
 import cartopy.crs as ccrs
 import os
-import matplotlib as mpl
 from utils import constants as cnst
 from scipy.ndimage.measurements import label
 
@@ -83,7 +79,6 @@ def climatology_month():
 
 
 def month():
-    y1 = 1982
     y2 =2017#2017
     years = list(range(1983,1985)) #+ list(range(2004,2014))
 
@@ -122,7 +117,6 @@ def month():
 
 
 def month_count():
-    y1 = 1982
     y2 = 2017  # 2017
     years = list(range(1983, 2003)) + list(range(2004,2014))
 

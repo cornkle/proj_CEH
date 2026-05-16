@@ -9,8 +9,7 @@ import pandas as pd
 import ipdb
 import itertools
 from collections import OrderedDict
-from utils import constants as cnst, u_met, u_interpolate as u_int,u_darrays as uda, u_lists
-import matplotlib.pyplot as plt
+from utils import constants as cnst, u_interpolate as u_int, u_darrays as uda, u_lists
 
 def olr_to_bt(olr):
     sigma = 5.670373e-8

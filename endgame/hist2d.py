@@ -1,36 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy
-import matplotlib.pylab as pylab
-import cartopy.feature as cfeature
 
-import scipy.stats as stats
-import xarray as xr
 import ipdb
-import glob
-import itertools
-import numpy.ma as ma
-from utils import u_statistics as u_stat
-from scipy.stats import gaussian_kde
-import pickle as pkl
-from utils import u_plot as uplot
-import pandas as pd
-from scipy.stats import gaussian_kde, linregress
-import matplotlib.cm as cm
-from utils import u_met
-import seaborn
-import metpy
-from metpy import calc
-from metpy.units import units
 
-from numpy.polynomial import polynomial as P
 
 ##for regridding, install xesmf:
 # conda install esmpy
 # pip install xesmf
-from utils import constants as cnst
 
 
 def create_2dhist(xvar, yvar, xbins, ybins, vardic, varpick):

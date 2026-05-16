@@ -22,9 +22,8 @@ REFERENCES
 __version__ = '$Revision: 1 $'
 # $Source$
 
-from numpy import (arange, ceil, concatenate, conjugate, cos, exp, floor, 
-                   isnan, log, log2, meshgrid, ones, pi, prod, real, sqrt,
-                   zeros, polyval)
+from numpy import (arange, ceil, exp, log2, meshgrid, pi, sqrt, 
+                   zeros)
 from numpy.fft import ifft2, fftfreq, fft2
 
 

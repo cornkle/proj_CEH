@@ -10,7 +10,6 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
 import pandas as pd
 from utils import constants as cnst, u_plot as uplot
 import numpy.ma as ma
@@ -78,7 +77,7 @@ def plot():
             unrange = (db[i,j] / np.nansum(db[i,:])) - low
             filler[i,j] = unrange
 
-    mask = np.zeros_like(db)
+    np.zeros_like(db)
     #mask[filler>(np.abs(dic['blob'][:,3:-3]- dic['scale'][:,3:-3])+0.004)] = 1
     #
     # mask = mask[:,-3:3]
@@ -86,7 +85,6 @@ def plot():
 
     #data[np.where(data > 0)] += 1
     data[np.where(np.abs(data)<8)]=0
-    levels=[-40,-30,-20,-10,-5,5,10,20,30,40]
     f = plt.figure(figsize=(7,5))
     ax = plt.subplot(111)
 
@@ -155,7 +153,6 @@ def plot_colormesh():
 
     #data[np.where(data > 0)] += 1
     data[np.where(np.abs(data*100)<8)]=0
-    levels=[-40,-30,-20,-10,-5,5,10,20,30,40]
     f = plt.figure(figsize=(7,5))
     ax = plt.subplot(111)
 
@@ -192,7 +189,7 @@ def plot_colormesh():
 
     plt.tight_layout()
     f.subplots_adjust(right=0.81)
-    cax = f.add_axes([0.89, 0.15, 0.02, 0.75])
+    f.add_axes([0.89, 0.15, 0.02, 0.75])
     # cbar = f.colorbar(pmap, cax)
     # cbar.ax.tick_params(labelsize=11)
     # cbar.set_label('Difference in surface-scale frequency (%)', fontsize=11)
@@ -206,7 +203,6 @@ def composite(h):
 
 
     file = constants.MCS_POINTS_DOM
-    hour = h
 
 
     msg = xr.open_dataarray(file)
@@ -232,7 +228,6 @@ def composite(h):
     blobs = []
     scales = []
     sign = []
-    signt = []
 
 
     for r in res:

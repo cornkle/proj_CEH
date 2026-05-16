@@ -1,5 +1,4 @@
 import numpy as np
-import scipy
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 import matplotlib.pyplot as plt

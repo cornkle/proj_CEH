@@ -2,10 +2,7 @@ import numpy as np
 from wavelet import util
 import xarray as xr
 import matplotlib.pyplot  as plt
-import pdb
-from scipy import ndimage
 from utils import u_arrays as ua
-import multiprocessing
 
 
 def read_grads(file):
@@ -91,7 +88,7 @@ def save():
     files = ua.locate(".nc", '/users/global/cornkle/data/Amazon')
    # files = files[6:7]
 
-    years = len(files)
+    len(files)
     yy = np.arange(1984, 2009, 4)
 
     scale_id = 7
@@ -100,7 +97,7 @@ def save():
     vlist = []
 
     for i, f in enumerate(files):
-        y = yy[i]
+        yy[i]
 
         print('Doing ' +f)
 

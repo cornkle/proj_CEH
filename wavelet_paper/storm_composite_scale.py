@@ -2,16 +2,11 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import ipdb
-import matplotlib.cm as cm
 
-from utils import u_statistics as ug
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import statsmodels.stats.weightstats as stats
-import pickle as pkl
 path = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
 path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
 path = 'D://data/wavelet/saves/pandas/'

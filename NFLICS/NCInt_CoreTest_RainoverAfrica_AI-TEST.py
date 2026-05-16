@@ -1,12 +1,10 @@
 import xarray as xr
-from saveCore_standalone_NFLICS import run_powerBlobs, powerBlob_utils as utils, util as wavelet
+from saveCore_standalone_NFLICS import powerBlob_utils as utils, util as wavelet
 import matplotlib.pyplot as plt
 import pandas as pd
 from utils import constants as cnst, u_grid, u_interpolate as u_int
 import glob
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy
 import numpy as np
 import os
 

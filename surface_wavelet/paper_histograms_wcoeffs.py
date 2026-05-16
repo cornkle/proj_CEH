@@ -6,23 +6,20 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-import pdb
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
 from utils import constants as cnst
-import ipdb
 
 def diurnal_loop():
 
     pool = multiprocessing.Pool(processes=1)
     h = [15,16,17,18,19,20,21,22,23,0,1,2,3,4,5]
-    res = pool.map(composite, h)
+    pool.map(composite, h)
     pool.close()
 
 
@@ -34,11 +31,9 @@ def composite(hour):
 
     print('Doing with hour ', hour)
 
-    all = []
-    point = []
 
     scales = dic['scales']
-    nbcores = dic['nbcores']
+    dic['nbcores']
 
     del dic['scales']
     del dic['nbcores']
@@ -129,8 +124,8 @@ def plot(hour):
     c30 = np.array(dic['30kmCore'])
     r30 = np.array(dic['30kmRand'])
 
-    w100 = np.array(dic['100kmSouthCore'])
-    wr100 = np.array(dic['100kmSouthRand'])
+    np.array(dic['100kmSouthCore'])
+    np.array(dic['100kmSouthRand'])
 
     d100 = np.array(dic['100kmEastCore'])
     dr100 = np.array(dic['100kmEastRand'])
@@ -140,7 +135,7 @@ def plot(hour):
 
 
     f = plt.figure()
-    ax = f.add_subplot(121)
+    f.add_subplot(121)
 
     nball, bins,v = plt.hist(cinput, bins=np.arange(-7,7,0.25), normed=True, edgecolor='k', color=None, alpha=0.3)
     nbpoint, bins, v = plt.hist(rinput, bins=np.arange(-7,7,0.25), normed=True, edgecolor='k', color=None, alpha=0.3)

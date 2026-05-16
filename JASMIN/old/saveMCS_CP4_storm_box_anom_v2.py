@@ -10,8 +10,7 @@ import ipdb
 import itertools
 import datetime
 from collections import OrderedDict
-from utils import constants as cnst, u_darrays as uda, u_interpolate as u_int
-import matplotlib.pyplot as plt
+from utils import u_interpolate as u_int
 import sys
 from JASMIN import MetUM_variables as mu
 
@@ -127,7 +126,6 @@ def file_save(cp_dir, out_dir, vars, datestring, box, tthresh, pos):
     for idx, outv in enumerate(keys):
 
         print('Variable ', outv)
-        vv = outv
 
         h = (vars[outv])[1]
         pl = (vars[outv])[0]

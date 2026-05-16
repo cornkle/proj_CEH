@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import multiprocessing
 import glob
-from eod import rewrite_data
-import ipdb
 import os
 import xarray as xr
 import numpy as np
@@ -12,7 +9,6 @@ from utils import u_darrays as uda
 from utils import constants as cnst
 import pandas as pd
 import time
-import datetime
 
 
 def saveCHIRPS():
@@ -45,10 +41,10 @@ def saveCHIRPS_SA():
 
 
     #chirpsm = xr.open_dataset(cnst.elements_drive + 'SouthAmerica/CHIRPS/chirps-v2.0.monthly.nc')
-    path = cnst.elements_drive + 'SouthAmerica/CHIRPS/Global_Daily/'
+    cnst.elements_drive + 'SouthAmerica/CHIRPS/Global_Daily/'
 
     date = '2016-01-13'
-    dt = pd.to_datetime(date)
+    pd.to_datetime(date)
     era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/v850_15UTC_1981-2019_peru_big.nc')
 
     u200 = era5['v'].isel(time=0).squeeze().load()
@@ -96,7 +92,7 @@ def saveGRIDSAT():
 
         if ids ==0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].sel( level=250, time=(era5['time.hour']==15)).squeeze().load()
@@ -127,7 +123,7 @@ def saveGPM():
 
         if ids ==0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].isel(time=0).sel(level=250).squeeze().load()
@@ -162,7 +158,7 @@ def saveSM():
 
         if ids ==0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/qr_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].isel(time=0).sel(level=250).squeeze().load()
@@ -197,7 +193,7 @@ def saveVOD():
 
         if ids ==0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].isel(time=0).sel(level=250).squeeze().load()
@@ -248,7 +244,7 @@ def saveNDVI():
 
         if ids ==0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].isel(time=0).sel(level=250).squeeze().load()
@@ -280,14 +276,14 @@ def saveNDVI_onCHIRPSbox():
 
         if ids == 0:
             date = '2016-01-13'
-            dt = pd.to_datetime(date)
+            pd.to_datetime(date)
             era5 = xr.open_dataset('/media/ck/Elements/SouthAmerica/ERA5/hourly/uv_15UTC/uv_15UTC_1985_peru.nc')
 
             u200 = era5['u'].isel(time=0).sel(longitude=slice(chirpsbox[0], chirpsbox[1]),
                                  latitude=slice(chirpsbox[3], chirpsbox[2]), level=250).squeeze().load()
             u200 = uda.flip_lat(u200)
 
-            chirps = chirpsall.squeeze()
+            chirpsall.squeeze()
             ch_on_e, lut = u200.salem.lookup_transform(chirpsall, return_lut=True)
         else:
             ch_on_e = u200.salem.lookup_transform(chirpsall, lut=lut)

@@ -1,10 +1,6 @@
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from utils import u_darrays
-from utils import u_plot as up
-import pdb
-import salem
 
 
 def slp():
@@ -280,7 +276,7 @@ def itcz_trend():
     itcz = v.copy()
     #iszero = itcz.where(np.abs(itcz.values) < 0.2)
 
-    ws = np.sqrt(u ** 2 + v ** 2)
+    np.sqrt(u ** 2 + v ** 2)
 
     years = np.unique(u['time.year'].values)
 

@@ -1,10 +1,6 @@
 from eod import msg
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
-import xarray as xr
 import unittest
-import datetime as dt
-import pandas as pd
 
 test_dir = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/eod/tests/test_files/msg'
 test_write = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/eod/tests/test_write'

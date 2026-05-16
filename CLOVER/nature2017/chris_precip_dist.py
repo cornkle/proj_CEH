@@ -7,14 +7,8 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-from wavelet import util
 from utils import u_arrays as ua
-from scipy import ndimage
-import matplotlib.pyplot as plt
-from eod import tm_utils
 import multiprocessing
-import ipdb
-import pandas as pd
 import pickle as pkl
 
 
@@ -75,7 +69,7 @@ def file_loop(f):
     outt = dic['tc_lag0'].values
     outp = dic['p'].values  #*0+1   ## ATTENTION CHANGED RAINFALL
 
-    tmean = np.nanmean(outt)
+    np.nanmean(outt)
 
     outp[np.isnan(outt)]=np.nan
 

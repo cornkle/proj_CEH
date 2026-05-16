@@ -1,10 +1,5 @@
 from land_wavelet import constants, wav, wav1d
 import numpy as np
-from scipy.ndimage.measurements import label
-from scipy import ndimage
-import xarray as xr
-import ipdb
-import os
 
 class landwav(object):
 

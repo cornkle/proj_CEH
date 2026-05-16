@@ -1,9 +1,8 @@
 
 import numpy as np
-from salem import get_demo_file, open_xr_dataset, GeoTiff, wgs84
+from salem import GeoTiff, wgs84
 from utils import u_met
 from utils import u_gis
-import pdb
 import math
 from math import radians, cos, sin, asin, sqrt
 

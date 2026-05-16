@@ -14,8 +14,6 @@ import itertools
 import xarray as xr
 import pandas as pd
 import pandas as pd
-import datetime as dt
-import pdb
 
 HOD = list(range(24))
 YRANGE = range(2004, 2015)

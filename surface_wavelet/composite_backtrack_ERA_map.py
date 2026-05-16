@@ -11,10 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
+from utils import u_parallelise, u_arrays, constants as cnst
 
 import pickle as pkl
 

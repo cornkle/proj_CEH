@@ -1,6 +1,5 @@
 import cdsapi
 import os
-import multiprocessing
 
 def download(year, month, day, file):
     c = cdsapi.Client()

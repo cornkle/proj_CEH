@@ -10,17 +10,14 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import ipdb
 import pandas as pd
 from wavelet import util
 from utils import u_arrays, constants, u_met
 from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
 import pickle as pkl
 import collections
 import glob
 from utils import constants as cnst
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -136,8 +133,8 @@ def plot(hour):
 
 
     scales = dic['scales']
-    sn_mask = dic['SN-dw_mask']
-    we_mask = dic['WE-dw_mask']
+    dic['SN-dw_mask']
+    dic['WE-dw_mask']
     del dic['scales']
     del dic['SN-dw_mask']
     del dic['WE-dw_mask']
@@ -354,7 +351,7 @@ def file_loop(fi):
         return None
 
     wav_input = lsta_da.values - np.nanmean(lsta_da.values)
-    points = np.where(np.isfinite(wav_input))
+    np.where(np.isfinite(wav_input))
     inter1 = np.where(np.isnan(wav_input))
     # interpolate over sea from land points
     wav_input[inter1] = 0  #halfway between minus and plus rather than interpolate
@@ -564,7 +561,7 @@ def plot_gewex():
         del dic['WE-dw_mask']
 
         keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
+        (dic['SN-pos'][0]).shape[0]
         print(scales)
 
         l = 0
@@ -578,10 +575,10 @@ def plot_gewex():
         werandom = (dic[keys[l + 1]])[1] #  -(dic[keys[l+3]])[1]
         wemask = (dic[keys[l + 1]])[2] #  -(dic[keys[l+3]])[2]
 
-        snmask_r = ~snmask
-        wemask_r = ~wemask
-        we_mask_r = ~we_mask
-        sn_mask_r = ~sn_mask
+        ~snmask
+        ~wemask
+        ~we_mask
+        ~sn_mask
         l = 2
         dist = 100
 
@@ -674,7 +671,7 @@ def plot_gewex2():
         del dic['WE-dw_mask']
 
         keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
+        (dic['SN-pos'][0]).shape[0]
 
 
         l = 0
@@ -688,10 +685,10 @@ def plot_gewex2():
         werandom = (dic[keys[l + 1]])[1]  # -(dic[keys[l+3]])[1]
         wemask = (dic[keys[l + 1]])[2]  # -(dic[keys[l+3]])[2]
 
-        snmask_r = ~snmask
-        wemask_r = ~wemask
-        we_mask_r = ~we_mask
-        sn_mask_r = ~sn_mask
+        ~snmask
+        ~wemask
+        ~we_mask
+        ~sn_mask
         l = 2
         dist = 100
 

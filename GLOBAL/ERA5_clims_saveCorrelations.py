@@ -1,22 +1,11 @@
 # -*- coding: utf-8 -*-
-import ipdb
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-import pandas as pd
-import cartopy
-import cartopy.crs as ccrs
 from utils import constants as cnst
-from eod import msg
 from utils import u_darrays
 from scipy import stats
-import warnings
-import multiprocessing
-import pandas as pd
-import scipy
 import glob
 import os
-import salem
 
 def calc_grad(da, tcoord='time', dim='y', dist=1.5):
     out = da.copy(deep=True) * np.nan

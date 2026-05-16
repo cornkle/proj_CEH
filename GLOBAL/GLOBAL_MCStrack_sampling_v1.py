@@ -8,7 +8,6 @@ Created on Thu Aug  4 10:15:40 2016
 import numpy as np
 import xarray as xr
 import multiprocessing
-import ipdb
 import glob
 import pandas as pd
 import os
@@ -21,7 +20,7 @@ mregions = glob_util.MREGIONS
 def multi():
     pool = multiprocessing.Pool(processes=5)
     yy = range(2000,2021)
-    res = pool.map(run, yy)
+    pool.map(run, yy)
     pool.close()
 
 

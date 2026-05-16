@@ -1,16 +1,10 @@
-import salem
-import pyproj
 import numpy as np
-from scipy.interpolate import griddata
 import datetime as dt
 from eod import trmm_clover, msg
 import xarray as xr
-import pandas as pd
-import os
-from eod.old import msg_old
 import glob
 import pdb
-from utils import constants, u_arrays as ua
+from utils import u_arrays as ua
 HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)#2015)
 

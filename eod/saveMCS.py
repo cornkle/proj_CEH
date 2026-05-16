@@ -2,18 +2,14 @@
 
 
 import salem
-import pyproj
 import numpy as np
 from scipy.interpolate import griddata
 from scipy.ndimage.measurements import label
 import datetime as dt
-from eod import msg, trmm, tm_utils, trmm_clover
+from eod import msg, tm_utils, trmm_clover
 import xarray as xr
 import os
-import ipdb
-import matplotlib.pyplot as plt
 from utils import u_grid, constants as cnst
-import pdb
 
 HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)
@@ -227,7 +223,6 @@ def saveMCS_WA15():
                 os.remove(savefile)
             except OSError:
                 print('OSError, no dir?')
-                pass
             da.to_netcdf(path=savefile, mode='w')
             print('Saved ' + savefile)
 

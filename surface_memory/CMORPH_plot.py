@@ -6,20 +6,11 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy import ndimage
-from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
+from utils import constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua
-import os
-import collections
-import warnings
-import ipdb
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -53,11 +44,11 @@ def plot_amsr(hour):
     import matplotlib
 
     cmap = matplotlib.cm.get_cmap('viridis')
-    rgba = cmap(0.5)
+    cmap(0.5)
 
     names = ['DRY - day0', 'DRY - day+1', 'DRY - day+2', 'DRY - day+3', 'DRY - day+4', 'DRY - day+5']
 
-    pick = [dic4, '', dic2]
+    [dic4, '', dic2]
 
     f = plt.figure(figsize=(8.5, 7), dpi=300)
     for ids, dic in enumerate([dic1, dic2, dic3, dic4, dic5, dic6]):
@@ -99,11 +90,11 @@ def plot_amsr(hour):
         if ids == 3:
             lev = [2, 4, 8, 10, 15, 25, 50, 75]  # np.arange(5, 71, 10)
             # lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.5)]
+            [cmap(0.05), cmap(0.5)]
         else:
             lev = [2, 4, 8, 10, 15, 25, 50, 75]  # np.arange(5, 71, 10)
             # lev = np.arange(10, 71, 5)
-            colors = [cmap(0.05), cmap(0.6), cmap(0.99)]
+            [cmap(0.05), cmap(0.6), cmap(0.99)]
         #
         # cs = plt.contour((np.arange(0, 2 * dist + 1) - dist) * 3, (np.arange(0, 2 * dist + 1) - dist) * 3,
         #                  cmorph * 100 ,

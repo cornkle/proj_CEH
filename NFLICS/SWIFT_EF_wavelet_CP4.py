@@ -3,8 +3,6 @@ import xarray as xr
 import glob
 from wavelet import util
 import os
-from utils import u_grid, u_interpolate as u_int, constants as cnst
-import ipdb
 
 
 #dummy = xr.open_dataset(glob.glob('/prj/vera/cores_bigDomain/*.nc')[0])

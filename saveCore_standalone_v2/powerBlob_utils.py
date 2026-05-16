@@ -47,7 +47,7 @@ def filter_img(inarr, data_resolution):
 
     outt[outt >= t_thresh_cut] = 150
 
-    grad = np.gradient(outt)
+    np.gradient(outt)
     outt[outt == 150] = np.nan
 
     nogood = np.isnan(outt)  # filters edge maxima later, no maxima in -40 edge area by definition!
@@ -177,7 +177,7 @@ def find_dominant_power(wav, t, no_good, area, data_resolution):
 
         orig = float(wav['scales'][nb])
 
-        scale = int(np.round(orig))
+        int(np.round(orig))
 
         print(np.round(orig))
 

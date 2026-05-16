@@ -1,12 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
-import pdb
-from utils import u_arrays as ua, constants
+from utils import constants
 import pandas as pd
-import time
 from utils import u_plot
-import salem
 
 #nice example 25.06.2006
 

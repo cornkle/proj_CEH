@@ -20,10 +20,12 @@
 #Create SRA 02/10/2019
 #########################
 
-import glob,os,datetime,h5py,sys
+import os
+import datetime
+import h5py
+import sys
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 if len(sys.argv)>1:
     nt_back=int(sys.argv[1])

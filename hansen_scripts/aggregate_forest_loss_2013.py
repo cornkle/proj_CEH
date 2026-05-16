@@ -31,7 +31,6 @@ Bethan L. Harris, UK Centre for Ecology & Hydrology, 15th April 2021.
 
 import os, rasterio, sys
 import numpy as np
-from tqdm import tqdm
 from netCDF4 import Dataset
 from datetime import datetime
 from multiprocessing import Pool
@@ -50,8 +49,8 @@ def get_data(filename):
 
     with rasterio.open(filename) as dataset:
         data = dataset.read(1)
-        width = dataset.width
-        height = dataset.height
+        dataset.width
+        dataset.height
         lon_west, _ = dataset.transform * (0, 0)
         _, lat_south = dataset.transform * (dataset.width, dataset.height)
     return lon_west, lat_south, data

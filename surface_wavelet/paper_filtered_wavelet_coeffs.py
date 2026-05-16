@@ -7,7 +7,6 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import ipdb
@@ -15,13 +14,9 @@ import pandas as pd
 from wavelet import util as wutil
 from utils import u_arrays, constants as cnst, u_met
 from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
 import pickle as pkl
-from utils import u_arrays as ua
-import os
 import collections
 import warnings
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -404,7 +399,6 @@ def file_loop(df):
         except TypeError:
             print('Kernel error')
             continue
-        dist=100
 
         # if np.nansum(msg_kernel[dist-30:dist+30,dist-30:dist+67])>=2:   # filter out cases with MCSs at 12 [dist-50:dist+50,dist-30:dist+100]
         #     print('Meteosat MCS continue')

@@ -23,9 +23,7 @@ def olr_to_bt(olr):
 def saveMCS():
 
     ffiles = '/home/ck/DIR/cornkle/data/DYAMOND/UM-5km/SAm/'
-    vars = ['rlut', 'pr']
 
-    metum_res = 5
 
     fnames = glob.glob(ffiles+'/rlut/*.nc')
 

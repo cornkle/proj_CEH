@@ -9,18 +9,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
 import pandas as pd
-import glob
-import os
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import metpy
-from metpy import calc
-from metpy.units import units
+from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
 
 import pickle as pkl
 
@@ -242,7 +232,7 @@ def file_loop(df):
         lsta_date = storm_date
 
     prev_lsta_date = lsta_date - dayd
-    next_lsta_date = lsta_date + dayd
+    lsta_date + dayd
 
     fdate = str(lsta_date.year) + str(lsta_date.month).zfill(2) + str(lsta_date.day).zfill(2)
     pfdate = str(prev_lsta_date.year) + str(prev_lsta_date.month).zfill(2) + str(prev_lsta_date.day).zfill(2)
@@ -263,7 +253,6 @@ def file_loop(df):
 
     smlist = []
 
-    smcnt = []
     dist = 22 # (22*27 = 594)
 
     for sid , sp in enumerate(smpath):
@@ -362,7 +351,6 @@ def file_loop(df):
 
 
 def plot_big_SN(h, eh):
-    hour = h
     dic = {}
 
     name = "ERA5_pressureLevels_SN_2hOverlap_AMSRE_SMALL_"
@@ -388,7 +376,7 @@ def plot_big_SN(h, eh):
     levels = [300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 825, 850, 875, 900, 925, 950, 975]
     #ipdb.set_trace()
     f = plt.figure(figsize=(15, 8))
-    ax = f.add_subplot(231)
+    f.add_subplot(231)
     plt.contourf(np.arange(-22, 23) * 27, levels, (dic['u']) / dic['cnte'], cmap='RdBu_r',
                  levels=np.arange(-12, 2.1, 1), extend='both')  # -(rkernel2_sum / rcnt_sum)
     plt.colorbar(label='m s-1')
@@ -400,7 +388,7 @@ def plot_big_SN(h, eh):
 
     plt.ylim(975,400)
 
-    ax1 = f.add_subplot(232)
+    f.add_subplot(232)
     plt.contourf(np.arange(-22, 23) * 27, levels, ((dic['v']-dic['vclim']) / dic['cnte']), extend='both', cmap='RdBu_r',
                  levels=np.arange(-1.6, 1.7, 0.2))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='m s-1')
@@ -411,7 +399,7 @@ def plot_big_SN(h, eh):
     plt.ylabel('Pressure level (hPa)')
     plt.ylim(975, 400)
 
-    ax1 = f.add_subplot(233)
+    f.add_subplot(233)
     plt.contourf(np.arange(-22, 23) * 27, levels, ((dic['q']-dic['qclim']) * 1000 / dic['cnte']), extend='both', cmap='RdBu',
                  levels=np.arange(-1, 1.1, 0.1))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='g kg-1')
@@ -422,7 +410,7 @@ def plot_big_SN(h, eh):
     plt.ylabel('Pressure level (hPa)')
     plt.ylim(975, 400)
 
-    ax1 = f.add_subplot(234)
+    f.add_subplot(234)
     plt.contourf(np.arange(-22, 23) * 27, levels, (dic['div']/ dic['cnte']), extend='both', cmap='RdBu_r', levels=np.arange(-0.005, 0.0051, 0.001))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
     plt.gca().invert_yaxis()
@@ -432,7 +420,7 @@ def plot_big_SN(h, eh):
     plt.ylabel('Pressure level (hPa)')
     plt.ylim(975, 400)
 
-    ax1 = f.add_subplot(235)
+    f.add_subplot(235)
     theta = dic['theta']-dic['theta_clim']
     plt.contourf(np.arange(-22, 23) * 27, levels, (theta / dic['cnte']), extend='both', cmap='RdBu_r',
                  vmin=-0.4,
@@ -445,7 +433,7 @@ def plot_big_SN(h, eh):
     plt.ylabel('Pressure level (hPa)')
     plt.ylim(975, 400)
 
-    ax1 = f.add_subplot(236)
+    f.add_subplot(236)
     theta = dic['z']-dic['zclim']
     plt.contourf(np.arange(-22, 23) * 27, levels, (theta / dic['cnte']), extend='both', cmap='RdBu_r', levels=np.linspace(-1,1,10))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
@@ -468,7 +456,6 @@ def plot_big_SN(h, eh):
 
 
 def plot_big_WE(h, eh):
-    hour = h
     dic = {}
 
     name = "ERA5_pressureLevels_WE_2hOverlap_AMSRE_SMALL_"
@@ -494,7 +481,7 @@ def plot_big_WE(h, eh):
     levels = [300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 825, 850, 875, 900, 925, 950, 975]
     #ipdb.set_trace()
     f = plt.figure(figsize=(15, 8))
-    ax = f.add_subplot(231)
+    f.add_subplot(231)
     plt.contourf(np.arange(-22, 23) * 27, levels, (dic['u']) / dic['cnte'], cmap='RdBu_r',
                  levels=np.arange(-12, 2.1, 1), extend='both')  # -(rkernel2_sum / rcnt_sum)
     plt.colorbar(label='m s-1')
@@ -504,7 +491,7 @@ def plot_big_WE(h, eh):
     plt.xlabel('West-East extent')
     plt.ylabel('Pressure level (hPa)')
 
-    ax1 = f.add_subplot(232)
+    f.add_subplot(232)
     plt.contourf(np.arange(-22, 23) * 27, levels, ((dic['v']-dic['vclim']) / dic['cnte']), extend='both', cmap='RdBu_r',
                  levels=np.arange(-1.6, 1.7, 0.2))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='m s-1')
@@ -514,7 +501,7 @@ def plot_big_WE(h, eh):
     plt.xlabel('West-East extent')
     plt.ylabel('Pressure level (hPa)')
 
-    ax1 = f.add_subplot(233)
+    f.add_subplot(233)
     plt.contourf(np.arange(-22, 23) * 27, levels, ((dic['q']-dic['qclim']) * 1000 / dic['cnte']), extend='both', cmap='RdBu',
                  levels=np.arange(-1, 1.1, 0.1))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='g kg-1')
@@ -524,7 +511,7 @@ def plot_big_WE(h, eh):
     plt.xlabel('West-East extent')
     plt.ylabel('Pressure level (hPa)')
 
-    ax1 = f.add_subplot(234)
+    f.add_subplot(234)
     plt.contourf(np.arange(-22, 23) * 27, levels, (dic['div']/ dic['cnte']), extend='both', cmap='RdBu_r', levels=np.arange(-0.005, 0.0051, 0.001))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')
     plt.gca().invert_yaxis()
@@ -533,7 +520,7 @@ def plot_big_WE(h, eh):
     plt.xlabel('West-East extent')
     plt.ylabel('Pressure level (hPa)')
 
-    ax1 = f.add_subplot(235)
+    f.add_subplot(235)
     theta = dic['theta']-dic['theta_clim']
     plt.contourf(np.arange(-22, 23) * 27, levels, (theta / dic['cnte']), extend='both', cmap='RdBu_r',
                  vmin=-0.4,
@@ -545,7 +532,7 @@ def plot_big_WE(h, eh):
     plt.xlabel('West-East extent')
     plt.ylabel('Pressure level (hPa)')
 
-    ax1 = f.add_subplot(236)
+    f.add_subplot(236)
     theta = dic['z']-dic['zclim']
     plt.contourf(np.arange(-22, 23) * 27, levels, (theta / dic['cnte']), extend='both', cmap='RdBu_r', levels=np.linspace(-5,5,10))  # #, levels=np.arange(1,5, 0.5), levels=np.arange(10,70,5)
     plt.colorbar(label='K')

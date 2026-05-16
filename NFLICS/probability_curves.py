@@ -1,11 +1,9 @@
-import ipdb
 import numpy as np
 import xarray as xr
 from utils import constants as cnst, u_arrays as ua
 import pandas as pd
 import multiprocessing
 import pickle as pkl
-import glob
 
 
 
@@ -51,7 +49,7 @@ def run():
 
     pool = multiprocessing.Pool(processes=4)
     hours = [15,16,17,18,19,20,21,22,23]#,0,1,2,3,4,5,6,7,8,9,10,11,12,13]
-    res = pool.map(read_lsta, hours)
+    pool.map(read_lsta, hours)
     pool.close()
 
 
@@ -193,8 +191,6 @@ def read_lsta(h):
 
             ##### random
 
-            y = ypos
-            x = xpos
 
             # rdist = 50
             # randy50 = [y - rdist, y - rdist, y - rdist, y, y, y + rdist, y + rdist, y + rdist]

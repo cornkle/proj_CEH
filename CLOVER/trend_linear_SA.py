@@ -2,15 +2,10 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst, u_met
-import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
 import pickle as pkl
 import shapely.geometry as shpg
-import seaborn
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -81,7 +76,6 @@ def trend_all():
     srfc = cnst.ERA_MONTHLY_SRFC_SYNOP
     pl = cnst.ERA_MONTHLY_PL_SYNOP
     storm_mean = 'aggs/gridsat_WA_-65_monthly_count_-40base_15-21UTC_1000km2.nc'
-    storm_extreme = 'aggs/gridsat_WA_-70_monthly_count_5000km2.nc'
     mcs = cnst.GRIDSAT + storm_mean
 
     fpath = cnst.network_data + 'figs/CLOVER/months/SA/'
@@ -97,8 +91,8 @@ def trend_all():
     da3 = xr.open_dataset(mcs)
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
 
     press = da2['sp']
@@ -271,7 +265,7 @@ def trend_all():
         ti_da[ti_da==0] = np.nan
         map.set_data(ti_da)  #
         coord = [18, 25, -28, -20]
-        geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
+        shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,41,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)

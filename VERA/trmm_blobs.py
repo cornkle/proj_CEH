@@ -1,5 +1,4 @@
 import xarray as xr
-import matplotlib.pyplot as plt
 import numpy as np
 from utils import u_arrays as ua
 from collections import OrderedDict
@@ -7,7 +6,6 @@ import pandas as pd
 import multiprocessing
 import pickle as pkl
 from scipy.ndimage.measurements import label
-import pdb
 
 def run():
     files = ua.locate(".nc", '/users/global/cornkle/VERA')

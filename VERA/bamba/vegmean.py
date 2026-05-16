@@ -12,7 +12,6 @@ import cartopy.crs as ccrs
 import glob
 import xarray as xr
 import pdb
-import numpy.ma as ma
 
 
 #from netCDF4 import Dataset

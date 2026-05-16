@@ -1,9 +1,6 @@
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-import pdb
-import pandas as pd
-import statsmodels.api as sm
 
 
 #attention, strong trends make everything correlate!!

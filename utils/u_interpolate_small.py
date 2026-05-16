@@ -1,8 +1,6 @@
 import pdb
 import scipy.spatial.qhull as qhull
 import numpy as np
-from scipy.interpolate import griddata
-import pyproj
 
 
 def _interp_weights(xyz, uvw, d=None):

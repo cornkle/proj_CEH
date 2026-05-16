@@ -2,15 +2,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst, u_met
-import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
 import shapely.geometry as shpg
-import seaborn
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -98,8 +92,8 @@ def trend_all():
     da3 = xr.open_dataarray(mcs)*100
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2],box[3]))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
 
     press = da2['tcwv']
@@ -107,7 +101,6 @@ def trend_all():
     #press.values = press.values#*1000
     low_press = 925
     up_press = 650
-    mid_press = 700
 
     q = da['q'].sel(level=slice(low_press-20, low_press)).mean('level')
     q = q[q['time.hour']==12]
@@ -136,7 +129,7 @@ def trend_all():
     shear_u = u600-u800 #u600-
     shear_v = v600-v800 # v600-
 
-    ws_shear = u_met.u_v_to_ws_wd(shear_u.values, shear_v.values)
+    u_met.u_v_to_ws_wd(shear_u.values, shear_v.values)
 
     ws_600 = t2d.copy(deep=True)
     ws_600.name = 'ws'
@@ -305,7 +298,7 @@ def trend_all():
         ti_da.values[ti_da.values==0] = np.nan
         map.set_data(ti_da)  #
         coord = [18, 25, -28, -20]
-        geom = shpg.box(coord[0], coord[2], coord[1], coord[3])
+        shpg.box(coord[0], coord[2], coord[1], coord[3])
         #map.set_geometry(geom, zorder=99, color='darkorange', linewidth=3, linestyle='--', alpha=0.3)
 
         map.set_plot_params(cmap='viridis', extend='both', levels=np.arange(10,51,10))  # levels=np.arange(20,101,20)  #np.arange(20,101,20)

@@ -4,14 +4,7 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-import pdb
-import os
-import xarray as xr
 from utils import constants as cnst
-import numpy as np
-import pandas as pd
-from scipy.interpolate import griddata
-import ipdb
 
 def saveNetcdf(day=True):
 
@@ -30,6 +23,6 @@ def saveNetcdf(day=True):
     print('start loop')
 
     for f in files:
-        ds = rewrite_data.rewrite_AMSR2(f)
+        rewrite_data.rewrite_AMSR2(f)
 
     #res = pool.map(rewrite_data.rewrite_AMSR2, files)

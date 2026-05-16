@@ -1,6 +1,5 @@
 from MCS_snapshots import MCS_table_create_model_LMCSruns as MCS_table_create
 import xarray as xr
-import ipdb
 import pandas as pd
 import numpy as np
 from JASMIN import MetUM_variables as mu
@@ -39,7 +38,6 @@ def make_table():
     :return:
     """
     cp4_h = '/home/users/cornkle/linked_CP4/hist/'
-    cp4_f = '/home/users/cornkle/linked_CP4/fut/'
     var = 'lw_out_PBLtop'
     #local = '/media/ck/LStorage/global_water/other/CP4/CP4_WestAfrica/CP4hist/'
     orig_var = mu.create_CP4_filename(var)

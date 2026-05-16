@@ -6,9 +6,7 @@ import datetime as dt
 from eod import msg, trmm, tm_utils
 import xarray as xr
 import os
-import matplotlib.pyplot as plt
 from utils import u_grid
-import pdb
 
 HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)

@@ -28,7 +28,7 @@ def old():
 
 def new():
     lv = 2.26 * 1e6  # energy of evaporation in J / kg of water
-    seconds_day = (60 * 60 * 24)
+    (60 * 60 * 24)
     seconds_per_hour = 60*60
     storm_acc_rain = 8  # mm / storm on average or kg / m2
     wetted_area = 25000 * 1e6  # storm area in square metres   12 m/s over 24 hours

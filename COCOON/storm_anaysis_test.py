@@ -6,10 +6,7 @@ Run directly: python demo_plots.py
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from scipy import stats
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import warnings

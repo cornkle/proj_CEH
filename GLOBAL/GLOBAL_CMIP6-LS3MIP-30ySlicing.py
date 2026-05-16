@@ -2,7 +2,6 @@ import numpy as np
 import xarray as xr
 from utils import constants as cnst
 import os
-import sys
 
 
 cmip_models = ['MPI-ESM1-2-LR', 'CESM2', 'IPSL-CM6A-LR', 'CNRM-CM6-1', 'EC-Earth3']

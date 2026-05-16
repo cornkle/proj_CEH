@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from skimage.draw import disk
-import ipdb
 from land_wavelet import wclass
 
 

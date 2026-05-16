@@ -2,15 +2,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
-import ipdb
 from utils import constants as cnst, u_met
-import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
-import shapely.geometry as shpg
-import seaborn
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -143,8 +136,8 @@ def trend_all():
 
 
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
     #ipdb.set_trace()
 
@@ -172,7 +165,7 @@ def trend_all():
     theta_low = u_met.theta_e(low_press,tlow, qlow)
     theta_high = u_met.theta_e(mid_press, tmid, qmid)
 
-    theta_e = theta_low - theta_high
+    theta_low - theta_high
 
     u600 = da['u'].sel(level=up_press)#.where(mid_z)
     v600 = da['v'].sel(level=up_press)#.where(mid_z)

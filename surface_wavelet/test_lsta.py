@@ -5,16 +5,9 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
-import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-import matplotlib
-import multiprocessing
-import pdb
-import pandas as pd
-import salem
 from utils import constants
-from scipy import ndimage
 ####these functions create plots of the average of the LSTAs and all blobs over the time period
 ####AVERAGE PLOTS!
 
@@ -33,14 +26,14 @@ def lsta():
     # t = msg.values
     # count = msgf['NbSlot'].values
     # mean = np.nansum(t * count, axis=0)/ np.nansum(count, axis=0)
-    f = plt.figure()
+    plt.figure()
     dat.plot.contourf(cmap='RdBu_r',  extend='both', vmin=-0.05, vmax=0.05) #vmin=-1, vmax=1,
 
     # f = plt.figure()
     # plt.contourf(mean, cmap='RdBu_r', vmin=-1, vmax=1)
 
     dat = dat.mean(dim='lon')
-    f = plt.figure()
+    plt.figure()
     dat.plot()
     plt.show()
 
@@ -59,7 +52,7 @@ def blobs():
 
     map = msg.salem.get_map(cmap='viridis')
     top = xr.open_dataarray(fpath)
-    f = plt.figure()
+    plt.figure()
     z = map.set_topography(top, relief_factor=1.4)
     map.set_contour(z, levels=(200,400,600,800), cmap='Reds' )
 
@@ -67,5 +60,5 @@ def blobs():
     map.visualize(title='Blobs and topo')
 
     msg = msg.sum(dim='lon')
-    f = plt.figure()
+    plt.figure()
     msg.plot()

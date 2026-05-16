@@ -12,7 +12,6 @@ import matplotlib
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-import pdb
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
 from utils import constants as cnst
@@ -21,7 +20,7 @@ def diurnal_loop():
 
     pool = multiprocessing.Pool(processes=8)
     h = np.arange(0,24)
-    res = pool.map(composite, h)
+    pool.map(composite, h)
     pool.close()
 
 def cut_kernel(zpos, ypos, xpos, da):
@@ -110,7 +109,7 @@ def plot():
 
 
     f = plt.figure()
-    ax = f.add_subplot(121)
+    f.add_subplot(121)
 
     nball, bins,v = plt.hist(all, bins=np.arange(-10,10,1), normed=True, edgecolor='k', color=None, alpha=0.3)
     nbpoint, bins, v = plt.hist(point, bins=np.arange(-10,10,1), normed=True, edgecolor='k', color=None, alpha=0.3)

@@ -3,7 +3,6 @@ import xarray as xr
 from wavelet import util
 import os
 import itertools
-import pdb
 
 
 def run_netcdf():

@@ -1,16 +1,9 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
-import ipdb
 import matplotlib.pyplot as plt
-import cartopy
-from utils import u_plot as up, u_darrays as uda
 import cartopy.crs as ccrs
 import os
-import matplotlib as mpl
 from utils import constants as cnst
-from scipy.ndimage.measurements import label
-import salem
 from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 
@@ -103,7 +96,6 @@ def climatology_month_mf(h):
 
     msg_folder = cnst.GRIDSAT_PERU
     fname='aggs/gridsat_WA_-40C_climatology_mean_mf_'+htag+'_coarse.nc'
-    cnt = 1
     if not os.path.isfile(msg_folder + fname):
         da = xr.open_mfdataset(msg_folder+'gridsat_WA_-40_5000km2_13-19UTC*.nc')
         da = da.sel(time=((da['time.hour'] == 21)&(da['time.year'] >= 1985)&(da['time.year'] <= 1993)))
@@ -212,7 +204,6 @@ def climatology_month_mf_count(h):
 
     msg_folder = cnst.GRIDSAT_PERU
     fname='aggs/gridsat_WA_-40C_climatology_mean_mf_'+htag+'_count.nc'
-    cnt = 1
     if not os.path.isfile(msg_folder + fname):
         da = xr.open_mfdataset(msg_folder+'gridsat_WA_-40_5000km2_13-19UTC*.nc')
         da = da.sel(time=((da['time.hour'] == 21)&(da['time.year'] >= 1985)&(da['time.year'] <= 1993)))
@@ -266,7 +257,6 @@ def climatology_month_mf_count(h):
 
     msg_folder = cnst.GRIDSAT_PERU
     fname='aggs/gridsat_WA_-40C_climatology_mean_mf_'+htag+'_count.nc'
-    cnt = 1
     if not os.path.isfile(msg_folder + fname):
         da = xr.open_mfdataset(msg_folder+'gridsat_WA_-40_5000km2_13-19UTC*.nc')
         da = da.sel(time=((da['time.hour'] == 21)&(da['time.year'] >= 1985)&(da['time.year'] <= 1993)))

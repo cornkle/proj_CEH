@@ -11,17 +11,11 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays as ua, constants as cnst, u_grid, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
-import metpy
+from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
 from metpy import calc
 from metpy.units import units
 
 import pickle as pkl
-import os
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -74,7 +68,6 @@ def composite(h, eh):
 
         chunks = [msgy.ix[msgy.index[ci:ci + cc]] for ci, cc in zip(chunk_ind, chunk_count)] # daily chunks
 
-        res = []
         # for m in chunks[0:30]:
         #     out = file_loop(m)
         #     res.append(out)
@@ -596,7 +589,6 @@ def file_loop(df):
 def plot_doug(h, eh):
 
     dic = {}
-    dic2 = {}
 
     name = "ERA5_cores_propagation2_noERAfilter_LSTA"#"ERA5_composite_cores_AMSRE_w1_15k_minusMean"
 

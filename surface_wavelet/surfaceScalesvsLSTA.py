@@ -10,13 +10,8 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
 import pandas as pd
-from scipy import ndimage
-from CLOVER import era_geop_t3d as era_geop
-from utils import u_gis
 import pickle as pkl
-import statsmodels.stats.proportion as prop
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -67,7 +62,7 @@ def plot():
 
 
     scalei = scale[np.isfinite(scale) & np.isfinite(temp)]
-    blobi = blob[np.isfinite(scale) & np.isfinite(temp)]
+    blob[np.isfinite(scale) & np.isfinite(temp)]
     tempi = temp[np.isfinite(scale) & np.isfinite(temp)]
 
 
@@ -79,7 +74,7 @@ def plot():
 
     X,Y = np.meshgrid(xbins, ybins)
 
-    f = plt.figure()
+    plt.figure()
 
     plt.pcolormesh(X,Y,H, cmap='viridis')
     plt.colorbar()

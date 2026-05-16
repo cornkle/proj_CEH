@@ -1,9 +1,7 @@
 import xarray as xr
 import glob
 import os
-import itertools
 from JASMIN import constants as cnst, MetUM_variables as mv
-import numpy as np
 import pdb
 from JASMIN import constants
 
@@ -20,8 +18,8 @@ def run(orig_names=False):
 
     for k in keys:
 
-        info = cnst.VARDIC[k]
-        dinfo = dic[k]
+        cnst.VARDIC[k]
+        dic[k]
         var = mv.create_CP4_filename(k)
 
         if not orig_names:

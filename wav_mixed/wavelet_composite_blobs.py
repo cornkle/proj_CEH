@@ -10,15 +10,12 @@ import xarray as xr
 from wavelet import util
 from utils import u_arrays as ua
 from scipy import ndimage
-import scipy.ndimage.filters as filters
 import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
 import multiprocessing
-import pdb
 from collections import OrderedDict
 from scipy.ndimage.measurements import label
-import pandas as pd
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -30,7 +27,6 @@ def composite():
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:100]
     print('Nb files', len(files))
-    tt = 'WA15'
 
     comp_collect = {}
     precip = {}
@@ -143,7 +139,7 @@ def file_loop(fi):
     lon_max = np.max(dic.lon.values)
 
     bulk_tmean = np.nanmean(outt)
-    lat = dic['lat'].values
+    dic['lat'].values
     bulk_tmin_p = np.min(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_tmean_p = np.mean(outt[(np.isfinite(outp)) & (np.isfinite(outt))])
     bulk_pmean = np.max(outp[(np.isfinite(outp)) & (np.isfinite(outt))])
@@ -171,7 +167,7 @@ def file_loop(fi):
     #(3, 3 ,len(wav['scales'])-1)
     arr = np.array(wav['scales'], dtype=str)
 
-    scale_ind = range(arr.size)
+    range(arr.size)
 
     wlperc = wav['t'].copy()
     figure = np.zeros_like(outt)

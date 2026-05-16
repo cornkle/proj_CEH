@@ -4,15 +4,11 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 import pdb
 import matplotlib.cm as cm
-import xarray as xr
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
-from matplotlib.colors import from_levels_and_colors
-from matplotlib import colors
-from utils import constants as cnst
 import ipdb
 
 
@@ -29,7 +25,7 @@ def scale_T_p():
     udscale = np.unique(scales_all)
     udscale = np.sort(udscale)
 
-    psum = dic['circle_g30']
+    dic['circle_g30']
     pnz = dic['circle_nz']
     p = dic['circle_p']
     tmin = np.array(dic['circle_Tcentre'])
@@ -83,7 +79,7 @@ def scatter_sc_t():
     udscale = np.unique(scales_all)
     udscale = np.sort(udscale)
 
-    psum = dic['circle_g30']
+    dic['circle_g30']
     pnz = dic['circle_nz']
     p = dic['circle_p']
     tmin = np.array(dic['circle_Tcentre'])
@@ -190,8 +186,7 @@ def probability(precip=None,thresh=None):
     outrange = [ 35,  90,  180]
 
     fig = plt.figure(figsize=(15, 5), dpi=400)
-    cc = 0.8
-    width = 0.7 * (bins[1] - bins[0])
+    0.7 * (bins[1] - bins[0])
 
     center = (bins[:-1] + bins[1:]) / 2
 
@@ -261,7 +256,6 @@ def probability(precip=None,thresh=None):
 
 def plot():
     fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
-    path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
  #   path = 'D://data/wavelet/saves/pandas/'
  #   fpath = 'D://data/wavelet/saves/pandas/'
 
@@ -323,7 +317,6 @@ def plot():
     ax2.minorticks_on()
 
     fsiz = 14
-    x = 0.02
     plt.annotate('a)', xy=(0.08, 0.87), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
     plt.annotate('b)', xy=(0.57, 0.87), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),

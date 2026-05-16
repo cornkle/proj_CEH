@@ -1,13 +1,8 @@
-import iris
 import xarray as xr
 import pandas as pd
 import glob
-import os
-import datetime
 import glob
 import matplotlib.pyplot as plt
-import iris.plot as iplt
-import iris.quickplot as qplt
 import numpy as np
 import cartopy.crs as ccrs
 import scipy.stats as stats

@@ -10,7 +10,6 @@ datapath = '/users/global/cornkle/w2018_bamba/mini_forest/pb2014040*.nc'
 
 def t_map_plot(datapath=datapath, outpath=outpath):
 
-    outf = outpath
     ds = xr.open_mfdataset(datapath, concat_dim='TH1')
 
     ds = ds.sel(grid_latitude_t=slice(5, 6.6), grid_longitude_t=slice(-10, -5.6), TH1='2014-04-06T10:00:00',
@@ -50,7 +49,6 @@ def t_map_plot(datapath=datapath, outpath=outpath):
 
 def atmo_map_plot(datapath=datapath, outpath=outpath):
 
-    outf = outpath
     ds = xr.open_mfdataset(datapath, concat_dim='TH1')
 
     ds = ds.sel(grid_latitude_t=slice(5, 6.6), grid_longitude_t=slice(-10, -5.6), TH1='2014-04-06T15:00:00',
@@ -192,7 +190,6 @@ def cross_t(datapath=datapath, outpath=outpath):
 
 def timeseries(datapath=datapath, outpath=outpath):
 
-    outf = outpath
     ds = xr.open_mfdataset(datapath, concat_dim='TH1')
 
     # gap1 5.44-5.67

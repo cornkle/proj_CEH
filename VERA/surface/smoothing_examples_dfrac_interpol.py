@@ -1,8 +1,7 @@
 
 import numpy as np
-from scipy.ndimage import gaussian_filter, uniform_filter
+from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 from netCDF4 import Dataset
 from scipy.interpolate import griddata
 

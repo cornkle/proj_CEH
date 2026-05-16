@@ -11,11 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
-from scipy.interpolate import griddata
+from utils import u_met, u_parallelise, u_gis, u_arrays, constants
 from utils import constants as cnst
-import ipdb
 import pickle as pkl
 
 
@@ -225,7 +222,6 @@ def file_loop(fi):
 
 
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
-    counter = 0
     for y, x in zip(pos[0], pos[1]):
 
         lat = fi['lat'][y]

@@ -7,9 +7,7 @@ import os
 import ccores.cores as cores
 import datetime
 import multiprocessing
-from utils import constants as cnst
 from eod import msg_panAfrica
-import ipdb
 
 #### Defines path to original ch9 grads files and years to consider.
 filepath = {

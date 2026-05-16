@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 HOD=range(24)   # hours of day
 CFAC=-781648343
@@ -58,7 +57,7 @@ def ll_toMSG(lons, lats, cfac=CFAC, lfac=LFAC, coff=COFF, loff=LOFF):
     rows = np.empty_like(lats)
 
     # Check for visibility, whether the point is visible from the satellite.
-    dotprod = np.array([r1 * re * np.cos(c_lat) * np.cos(lons_r - sub_lon) - r2 * r2 - r3 * r3 * (r_eq / r_pol) ** 2.])
+    np.array([r1 * re * np.cos(c_lat) * np.cos(lons_r - sub_lon) - r2 * r2 - r3 * r3 * (r_eq / r_pol) ** 2.])
 
     cols = np.arctan(-r2 / r1)
     rows = np.arcsin(-r3 / rn)

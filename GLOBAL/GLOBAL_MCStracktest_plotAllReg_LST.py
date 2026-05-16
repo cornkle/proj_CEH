@@ -6,10 +6,8 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import ipdb
 from utils import constants as cnst
 import matplotlib.patches as patches
 import pickle as pkl

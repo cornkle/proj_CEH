@@ -10,7 +10,6 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
-import pdb
 import pandas as pd
 from utils import constants as cnst
 import pickle as pkl
@@ -72,7 +71,7 @@ def plot():
     mask[filler>np.abs(data)] = 1
     data[np.where(mask)] = 0
 
-    f = plt.figure()
+    plt.figure()
     ax = plt.subplot(111)
     pmap = ax.pcolormesh(data*100, vmin=-2, vmax=2, cmap='RdBu_r')
     ax.set_xticks(np.arange(dic['blob'].shape[1])+1, minor=False)
@@ -102,7 +101,6 @@ def composite(h):
 
 
     file = constants.MCS_POINTS_DOM
-    hour = h
 
 
     msg = xr.open_dataarray(file)
@@ -126,7 +124,6 @@ def composite(h):
     blobs = []
     scales = []
     sign = []
-    signt = []
 
 
     for r in res:
@@ -224,7 +221,7 @@ def file_loop(fi):
         return
 
     temp_da = temp_da['LSTA']
-    temp = temp_da.values
+    temp_da.values
 
     # lsta = lsta.where(np.abs(temp) > 0.2)
     # temp_da = temp_da.where(np.abs(temp) > 0.2)

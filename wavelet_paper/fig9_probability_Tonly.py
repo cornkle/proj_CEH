@@ -2,17 +2,12 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import pdb
-import matplotlib.cm as cm
 
-from utils import u_statistics as ug
 
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
-import sys
 from wavelet_paper import fig9_latitude_var as lv
 
 def comp_t():
@@ -24,14 +19,14 @@ def comp_t():
 
     ids = np.array(dic['id'])
     scales = np.array(dic['scale'])
-    clat = np.array(dic['clat'])
-    hour = np.array(dic['hour'])
-    hour2 = np.array(dic2['hour'])
+    np.array(dic['clat'])
+    np.array(dic['hour'])
+    np.array(dic2['hour'])
 
     uids, uinds = np.unique(dic['id'], return_index=True)
     uids2, uinds2 = np.unique(dic2['id'], return_index=True)
 
-    udscale = np.unique(scales)
+    np.unique(scales)
     pbulk_g30 = np.nansum(np.array(dic['bulk_g30'])[uinds])
     pbulk_g302 = np.nansum(np.array(dic2['bulk_g30'])[uinds2])
 
@@ -86,8 +81,7 @@ def comp_t():
 
 
     fig = plt.figure(figsize=(15, 10), dpi=400)
-    cc = 0.8
-    width = 0.7 * (bins[1] - bins[0])
+    0.7 * (bins[1] - bins[0])
 
     center = (bins[:-1] + bins[1:]) / 2
 
@@ -140,8 +134,6 @@ def comp_t():
     ax2.set_title('Number of valid pixels')
     # ax2.set_ylim(0,160)
 
-    b1 = []
-    b2 = []
     # for id, b in enumerate(bins):
     #
     #     if id == 0:
@@ -165,9 +157,7 @@ def comp_t():
     ax3.plot(center, H1,  linewidth=1.5,  marker='o')
     ax3.plot(center, H12,  linewidth=1.5,  marker='o', color='r')
     ax3.set_title('Number of rainfall pixel >30mm')
-    tmean = []
     tmin = []
-    tcmean = []
     for iid in uids:
         pos = np.where(ids == iid)
 

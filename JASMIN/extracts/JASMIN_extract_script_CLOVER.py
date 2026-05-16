@@ -1,7 +1,6 @@
 import xarray as xr
 import glob
 import os
-import itertools
 from JASMIN import constants as cnst, MetUM_variables as mv
 import numpy as np
 import pdb
@@ -11,10 +10,10 @@ def run(orig_names=False):
     fpath = '/home/users/cornkle/runscript/fut_in'
     outpath = '/home/users/cornkle/runscript/fut_out'
 
-    local_box = [-18+360,14+360, 3.5, 14]
+    [-18+360,14+360, 3.5, 14]
     temp_box = [-18+360,35+360, 3.5, 30]
     #hq_box = [-18+360,-10+360, 12, 17]
-    hq_box = [-18+360,25+360, 3.5, 20]
+    [-18+360,25+360, 3.5, 20]
     months = [8,8] # March-May 6,9
 
     dic = {
@@ -47,7 +46,7 @@ def run(orig_names=False):
 
     for k in keys:
 
-        info = cnst.VARDIC[k]
+        cnst.VARDIC[k]
         dinfo = dic[k]
         var = mv.create_CP4_filename(k)
 

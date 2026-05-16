@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 from utils import u_darrays
 import ipdb
 from utils import constants as cnst, u_met
-import salem
-from utils import u_statistics as us
 from scipy import stats
-import numpy.ma as ma
 import pickle as pkl
 import shapely.geometry as shpg
 
@@ -39,8 +36,8 @@ def corr_box():
     da3 = xr.open_dataset(mcs)
     da3 = da3.sel(lon=slice(box[0], box[1]), lat=slice(box[2], box[3]))
 
-    lons = da.longitude
-    lats = da.latitude
+    da.longitude
+    da.latitude
 
     press = da2['sp']
     press = press[press['time.hour'] == 12]
@@ -96,7 +93,7 @@ def corr_box():
 
     def array_juggling(data, month, hour=None):
 
-        m = month
+        pass
 
         if hour is not None:
             if len(month) > 1:

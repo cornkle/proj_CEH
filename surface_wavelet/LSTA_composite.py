@@ -9,10 +9,8 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import pdb
 import pandas as pd
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
-import ipdb
 import pickle as pkl
 
 
@@ -220,7 +218,6 @@ def file_loop(fi):
     mcs_hour = xr.open_dataarray(cnst.MCS_HOUR_DAILY)
     mcsimage = xr.open_dataarray(cnst.MCS_15K)
     mcsimage = mcsimage.sel(time=fi.time, lat=slice(10.2,19), lon=slice(-9.9,9.9))
-    counter = 0
 
     labels, goodinds = u_arrays.blob_define(mcsimage.values, -50, minmax_area=[600, 50000], max_area=None)
 

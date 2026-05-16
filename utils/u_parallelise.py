@@ -1,6 +1,5 @@
 import multiprocessing
 import numpy as np
-import ipdb
 
 
 def multi_test():

@@ -7,7 +7,6 @@ from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as plt
 import pdb
-import itertools
 from utils import u_plot as uplot
 import scipy.stats as stats
 import numpy.ma as ma

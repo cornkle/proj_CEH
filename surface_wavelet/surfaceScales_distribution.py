@@ -9,13 +9,7 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import multiprocessing
 import pdb
-import pandas as pd
-from scipy import ndimage
-from CLOVER import era_geop_t3d as era_geop
-from utils import u_gis
-import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -37,7 +31,7 @@ def file_loop():
     lsta_checks = lsta_checks.where(lsta.time==lsta_checks.time)
 
     bins = np.arange(-20,20,2)
-    f=plt.figure()
+    plt.figure()
     plt.hist(lsta_checks.values[np.isfinite(lsta_checks.values)], bins=bins, edgecolor='k')
 
     bins = np.arange(-140, 141, 10)
@@ -53,7 +47,7 @@ def file_loop():
         ll.append(lmean)
 
     pdb.set_trace()
-    f = plt.figure()
+    plt.figure()
     plt.scatter(bins[1::], ll)
 
 

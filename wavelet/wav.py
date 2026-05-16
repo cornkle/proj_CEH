@@ -4,8 +4,6 @@
 """
 import numpy as np
 from wavelet import twod as w2d
-import ipdb
-import matplotlib.pyplot as plt
 
 class wavelet(object):
 

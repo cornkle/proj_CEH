@@ -1,21 +1,13 @@
-import pandas as pd
 import numpy as np
 import xarray as xr
 import pdb
 import matplotlib.pyplot as plt
-import cartopy
-from utils import u_plot as up, u_darrays
-import cartopy.crs as ccrs
+from utils import u_darrays
 import os
-import matplotlib as mpl
-import pickle as pkl
 from utils import constants as cnst, u_darrays, u_grid, u_plot
-from scipy.ndimage.measurements import label
-import ipdb
 
 
 def month():
-    y1 = 1982
     y2 =2017#2017
     years = list(range(1983,1985)) #+ list(range(2004,2014))
 
@@ -108,7 +100,7 @@ def test_rainfall():
     mapp = plt.imshow(trend[10,:,:], origin='lower', vmin=0, vmax=20)
 
     mtrend = trend.max(['latitude', 'longitude'])
-    mmtrend = trendmean.max(['latitude', 'longitude'])
+    trendmean.max(['latitude', 'longitude'])
 
 
     plt.plot(trend['time.year'], mtrend)
@@ -116,7 +108,6 @@ def test_rainfall():
 
 def trend_rainfall():
     ts = xr.open_dataset(cnst.CHIRPS + "/global/chirps-v2.0.monthly.nc")
-    WA = [-15,15,4,10]
     SA = [5,55,-40,0]
     mean_years = ts.sel(longitude=slice(SA[0], SA[1]), latitude=slice(SA[2], SA[3]))
 

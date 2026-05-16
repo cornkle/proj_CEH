@@ -4,7 +4,6 @@ import numpy as np
 import kpywavelet as kpy
 import matplotlib.pyplot as plt
 import xarray as xr
-import ipdb
 
 da = xr.open_dataset('/home/ck/DIR/mymachine/cores_fromMeteosat/cores/coresPower_MSG_-40_700km2_-50points_dominant_2012_04.nc')
 datat = da['tir'].values[10,:,:]/100.

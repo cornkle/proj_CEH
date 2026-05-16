@@ -2,22 +2,17 @@ import seaborn as sns
 pal = sns.color_palette('Blues')
 sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
-import pdb
-import matplotlib.cm as cm
 
-from utils import u_statistics as ug
 
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import statsmodels.stats.proportion as stats
-import sys
 import scipy.stats as ss
 
 
 def comp_lat():
-    fpath = '/users/global/cornkle/C_paper/wavelet/figs/paper/'
+    pass
   #  fpath = 'D://data/wavelet/saves/pandas/'
   #  path = 'D://data/wavelet/saves/pandas/'
     path = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
@@ -26,17 +21,17 @@ def comp_lat():
 
     thresh = 8
 
-    hour = np.array(dic['hour'])
-    hour2 = np.array(dic2['hour'])
+    np.array(dic['hour'])
+    np.array(dic2['hour'])
 
-    scales = np.array(dic['scale'])
+    np.array(dic['scale'])
     psum = np.array(dic['circle_p'])#[(hour>17) & (hour<=23)] #[(hour>15) & (hour<23)]
-    psumm = np.array(dic['circle_pc'])
+    np.array(dic['circle_pc'])
     tmin = np.array(dic['circle_t'])#[(hour>17) & (hour<=23)]
     lat = np.array(dic['clat'])#[(hour>17) & (hour<=23)]
     lon = np.array(dic['clon'])
 
-    pmean = np.array(dic['bulk_pmean'])
+    np.array(dic['bulk_pmean'])
 
     # psum = np.array(dic['circle_p'])[(hour>17) & (hour<=23)] #[(hour>15) & (hour<23)]
     # tmin = np.array(dic['circle_t'])[(hour>17) & (hour<=23)]
@@ -49,7 +44,7 @@ def comp_lat():
     lat2 = np.array(dic2['clat'])[(scales2<=35) ]
     lon2 = np.array(dic2['clon'])[(scales2 <= 35)]
 
-    lat22 = np.array(dic2['clat'])
+    np.array(dic2['clat'])
 
     bins = np.arange(5, 19, 1)  # compute probability per temperature range (1degC)
     print(bins)

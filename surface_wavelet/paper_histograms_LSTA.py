@@ -7,14 +7,11 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
-import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_darrays
+from utils import u_parallelise, u_arrays, constants as cnst
 import ipdb
 import pickle as pkl
-import itertools
 
 
 matplotlib.rc('xtick', labelsize=10)

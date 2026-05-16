@@ -1,6 +1,6 @@
 from eod import trmm
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import assert_array_equal
 import unittest
 
 test_dir = '/users/global/cornkle/data/pythonWorkspace/proj_CEH/eod/tests/test_files/trmm'
@@ -39,7 +39,6 @@ class TestTrmmRead(unittest.TestCase):
 
         # both testfiles have enough rainfall in swath at 0.5 mm threshold and given box
         area=[-15, 5, 15, 20]
-        min_rain_swath = 2000
         min_rain_box = 500
         min_tpixel = 2500
         rain_thresh = 0.5

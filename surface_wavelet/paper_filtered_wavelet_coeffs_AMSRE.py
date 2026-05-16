@@ -15,14 +15,10 @@ import pandas as pd
 from wavelet import util as wutil
 from utils import u_arrays, constants as cnst, u_met
 from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
 import pickle as pkl
-from utils import u_arrays as ua
-import os
 from scipy import ndimage
 import collections
 import warnings
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -545,7 +541,7 @@ def plot(hour):
 
 
     keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
+    (dic['SN-pos'][0]).shape[0]
 
 
     l=0
@@ -628,8 +624,8 @@ def plot_single(hour):
     dic = pkl.load(open(path+"/coeffs_nans_stdkernel_USE_"+str(hour)+name+".p", "rb"))
 
     scales = dic['scales']
-    nbcores = dic['nbcores']
-    nbrcores = dic['nbrcores']
+    dic['nbcores']
+    dic['nbrcores']
     del dic['scales']
     del dic['nbcores']
     del dic['nbrcores']
@@ -637,7 +633,7 @@ def plot_single(hour):
 
 
     keys = list(dic.keys())
-    cnt = (dic['SN-pos'][0]).shape[0]
+    (dic['SN-pos'][0]).shape[0]
     levels = np.linspace(-0.4, 0.4, 20)
 
     l=0
@@ -689,15 +685,15 @@ def plot_trio():
         dic = pkl.load(open(path + "/coeffs_nans_stdkernel_USE_" + str(h) + name + ".p", "rb"))
 
         scales = dic['scales']
-        nbcores = dic['nbcores']
-        nbrcores = dic['nbrcores']
+        dic['nbcores']
+        dic['nbrcores']
         del dic['scales']
         del dic['nbcores']
         del dic['nbrcores']
         del dic['kernel']
 
         keys = list(dic.keys())
-        cnt = (dic['SN-pos'][0]).shape[0]
+        (dic['SN-pos'][0]).shape[0]
         levels = np.linspace(-0.4, 0.4, 20)
 
         l = 0

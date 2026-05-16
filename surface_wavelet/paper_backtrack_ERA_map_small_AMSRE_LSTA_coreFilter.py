@@ -7,20 +7,13 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
-from utils import u_met, u_parallelise, u_arrays as ua, constants as cnst, u_darrays
-from scipy.interpolate import griddata
+from utils import u_arrays as ua, constants as cnst, u_darrays
 import multiprocessing
-import os
-import glob
 
 import pickle as pkl
-from wavelet import util as wutil
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -175,7 +168,6 @@ def cut_kernel(xpos, ypos, arrlist, dist, era=False):
 def cut_kernel_lsta(xpos, ypos, arr, nbslot=False):
 
     dist = 200
-    isgood = 1
 
     kernel = ua.cut_kernel(arr,xpos, ypos,dist)
     kernel = kernel #- np.nanmean(kernel)
@@ -190,7 +182,6 @@ def cut_kernel_lsta(xpos, ypos, arr, nbslot=False):
         nbsl = ua.cut_kernel(nbslot, xpos, ypos, dist)
         if np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>2) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67])) <=0.5:
             print('TOO FEW SLOTS!')
-            isgood = 0
 
     outmean = np.nanmean(kernel[dist - 10:dist + 10, dist:dist + 67])
     slot2frac = np.sum(nbsl[dist-10:dist+10,dist-10:dist+67]>2) / np.sum(np.isfinite(nbsl[dist-10:dist+10,dist-10:dist+67]))
@@ -228,7 +219,7 @@ def file_loop(df):
 
     #
     grad = np.gradient(ttopo.values)
-    gradsum = abs(grad[0])+abs(grad[1])
+    abs(grad[0])+abs(grad[1])
 
     smpath = [cnst.AMSRE_ANO_DAY + 'sma_' + fdate + '.nc',
               cnst.AMSRE_ANO_NIGHT + 'sma_' + fdate + '.nc',

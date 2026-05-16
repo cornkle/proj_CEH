@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-from eod import msg, mfg
+from eod import mfg
 from utils import u_grid, u_interpolate as u_int
 from utils import constants as cnst
-import matplotlib.pyplot as plt
 import xarray as xr
-import pickle
 
 
 m = mfg.ReadMfg(cnst.network_data +'/data/OBS/MFG_JJAS/', y1=1992, y2=1993, months=[6,7])

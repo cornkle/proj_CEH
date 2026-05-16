@@ -4,14 +4,12 @@ import xarray as xr
 import os
 import ipdb
 import glob
-from scipy.interpolate import griddata
 import pandas as pd
 import ipdb
 import itertools
 import datetime
 from collections import OrderedDict
-from utils import constants as cnst, u_darrays as uda, u_interpolate as u_int
-import matplotlib.pyplot as plt
+from utils import u_interpolate as u_int
 import sys
 
 def olr_to_bt(olr):
@@ -99,7 +97,6 @@ def file_save(cp_dir, out_dir, ancils_dir, vars, datestring, box, tthresh, pos, 
     for idx, outv in enumerate(keys):
 
         print('Variable ', outv)
-        vv = outv
 
         h = (vars[outv])[1]
         pl = (vars[outv])[0]

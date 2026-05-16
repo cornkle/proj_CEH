@@ -14,14 +14,10 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib
 from eod import tm_utils
-import matplotlib as mpl
 import multiprocessing
-import pdb
 from collections import OrderedDict
-import matplotlib.cm as cm
 import pickle as pkl
 
-from utils import u_gis
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -33,7 +29,6 @@ def composite():
     out = '/users/global/cornkle/C_paper/wavelet/saves/pandas/'
     #files = files[0:1500]
     print('Nb files', len(files))
-    tt = 'WA15'
 
     comp_collect = {}
     precip = {}
@@ -104,8 +99,8 @@ def file_loop(fi):
     outp = dic['p'].values
     outpc = dic['pconv'].values
 
-    lon = dic['lon'].values
-    lat = dic['lat'].values
+    dic['lon'].values
+    dic['lat'].values
 
     outt[np.isnan(outt)] = 150
     outt[outt >= -40] = 150
@@ -235,7 +230,7 @@ def file_loop(fi):
             continue
 
         circle_Tcenter = outt[y, x]
-        t_para = np.nanmean(outt[ycircf[pos], xcircf[pos]])
+        np.nanmean(outt[ycircf[pos], xcircf[pos]])
 
 
         # if sc < 90:
@@ -253,7 +248,7 @@ def file_loop(fi):
             ppos = np.where(outp >= 30)
 
             outt[np.isnan(outt)] = -40
-            f = plt.figure()
+            plt.figure()
             # plt.imshow(outp, cmap='jet', origin='lower')
             # f = plt.figure()
             # plt.imshow(outt, cmap='jet', origin='lower')

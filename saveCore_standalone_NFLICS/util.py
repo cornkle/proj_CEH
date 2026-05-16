@@ -6,7 +6,6 @@ Created on Thu Jun  2 14:08:18 2016
 """
 import numpy as np
 from saveCore_standalone_NFLICS import wav
-import ipdb
 
 
 def read_dic(dic):

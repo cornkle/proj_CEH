@@ -6,14 +6,9 @@ Created on Thu Aug  4 10:15:40 2016
 """
 
 import numpy as np
-import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import pdb
-import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
-import salem
-from scipy.interpolate import griddata
 
 import pickle as pkl
 

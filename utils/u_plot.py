@@ -4,16 +4,12 @@ Created on Tue Mar 15 17:27:16 2016
 @author: cornkle
 """
 
-import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
 import numpy as np
 import os
-import salem
-import pdb
 from matplotlib.colors import BoundaryNorm
-from matplotlib.ticker import MaxNLocator
 from matplotlib import colors
 
 
@@ -116,8 +112,8 @@ def discrete_cmap(N, base_cmap=None):
     # The following works for string, None, or a colormap instance:discrete_cmap_norm(levels, cmap)
 
     base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
+    base(np.linspace(0, 1, N))
+    base.name + str(N)
 
     #return base.from_list(cmap_name, color_list, N)
     return plt.cm.get_cmap(base_cmap, N)
@@ -199,7 +195,7 @@ def cursor_hover_values():
         x, y = event.xdata, event.ydata
 
         # Get the data value at the mouse position
-        val = array_2d[int(y + 0.5), int(x + 0.5)]
+        array_2d[int(y + 0.5), int(x + 0.5)]
 
     cursor = mplcursors.cursor(im, hover=True)
     cursor.connect('add', on_move)

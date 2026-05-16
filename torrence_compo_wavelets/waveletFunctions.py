@@ -269,7 +269,7 @@ def wave_signif(Y, dt, scale, sigtest=0, lag1=0.0, siglvl=0.95,
     dof=None, mother='MORLET', param=None, gws=None):
     n1 = len(np.atleast_1d(Y))
     J1 = len(scale) - 1
-    s0 = np.min(scale)
+    np.min(scale)
     dj = np.log2(scale[1] / scale[0])
 
     if n1 == 1:

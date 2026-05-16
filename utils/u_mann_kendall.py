@@ -5,7 +5,6 @@
 
 import numpy as np
 from scipy.special import ndtri, ndtr
-import sys
 
 def test(t, x, eps=None, alpha=None, Ha=None):
     """

@@ -3,8 +3,6 @@ import numpy as np
 import xarray as xr
 import pdb
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy
 import multiprocessing
 
 
@@ -118,8 +116,8 @@ def y_loop():
 
 def find_start_end(diff):
 
-    dstart= np.argmin(diff)
-    dend=np.argmax(diff)
+    np.argmin(diff)
+    np.argmax(diff)
 
 
 
@@ -142,8 +140,6 @@ def tamsat(y):
 
     data = data['rfe']
 
-    tstart=[]
-    tend = []
 
     # for yy in np.arange(data.shape[0]):
     #     for xx in np.arange(data.shape[1]):

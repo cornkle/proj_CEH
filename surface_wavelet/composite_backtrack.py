@@ -11,9 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants, u_grid
-import salem
-from scipy.interpolate import griddata
+from utils import u_parallelise, u_gis, u_arrays, constants
 
 import pickle as pkl
 
@@ -191,7 +189,7 @@ def file_loop(fi):
     pcnt_list = []
     prkernel_list = []
 
-    xfi = fi.shape[1]
+    fi.shape[1]
 
     # randx = np.random.randint(0,xfi,100)
     #

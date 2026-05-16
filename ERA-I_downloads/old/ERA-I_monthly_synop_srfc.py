@@ -1,6 +1,5 @@
 from ecmwfapi import ECMWFDataServer
 import numpy as np
-import pdb
 y = np.arange(1979,2018,1)
 stri = ''
 

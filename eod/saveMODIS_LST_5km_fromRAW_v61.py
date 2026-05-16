@@ -2,15 +2,10 @@
 
 
 import os
-import re
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 from pyhdf.SD import SD, SDC
-import cartopy.crs as ccrs
 import xarray as xr
-import ipdb
 import datetime
 import glob
 import os
@@ -28,7 +23,7 @@ def run():
         multi_list.append((ff,['LST_Day','Day_view_angle','QC_Day'], True))
     pool = multiprocessing.Pool(processes=5)
     #ipdb.set_trace()
-    res = pool.starmap(read_modis_monthly, multi_list)
+    pool.starmap(read_modis_monthly, multi_list)
 
 
 def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
@@ -103,7 +98,7 @@ def read_modis_monthly(FILE_NAME, dnames, save):  # dnames=None, save=False):
         # Read attributes.
         attrs = data2D.attributes(full=1)
         lna = attrs["long_name"]
-        long_name = lna[0]
+        lna[0]
         vra = attrs["valid_range"]
         valid_range = vra[0]
         try:

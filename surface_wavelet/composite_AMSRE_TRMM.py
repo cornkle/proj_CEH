@@ -9,13 +9,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import multiprocessing
-import pdb
 import pandas as pd
-from scipy import ndimage
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants
 import pickle as pkl
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -190,7 +186,7 @@ def file_loop(fi):
     lsta_da = lsta['SM'].squeeze()
 
     topo = xr.open_dataset(constants.LSTA_TOPO)
-    ttopo = topo['h']
+    topo['h']
     #ttopo = lsta_da.salem.lookup_transform(ttopo)
 
     # try:

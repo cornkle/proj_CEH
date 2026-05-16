@@ -36,7 +36,7 @@ def run_scales():
 
     arr40 = np.zeros((scales.size - 1, hours.size))
     arr70 = np.zeros((scales.size - 1, hours.size))
-    arr2 = np.zeros((scales.size - 1, hours.size))
+    np.zeros((scales.size - 1, hours.size))
     print(center)
     print(hours)
 
@@ -79,7 +79,7 @@ def run_scales():
 
     f = plt.figure(figsize=(15, 10), dpi=300)
 
-    ax = f.add_subplot(221)
+    f.add_subplot(221)
     plt.contourf(center, scales[0:-1] + 25, (arr40), cmap='viridis')
     plt.title('Normalised diurnal cycle of number of power maxima  < -40degC')
     plt.xlabel('Hours of day')
@@ -88,7 +88,7 @@ def run_scales():
     plt.minorticks_on()
     plt.colorbar(label='%')
 
-    ax = f.add_subplot(222)
+    f.add_subplot(222)
     plt.contourf(center, scales[0:-1] + 25, (arr70), cmap='viridis')
     plt.title('Normalised diurnal cycle of power maxima  < -70degC')
     plt.xlabel('Hours of day')
@@ -97,7 +97,7 @@ def run_scales():
     plt.minorticks_on()
     plt.colorbar(label='%')
 
-    ax = f.add_subplot(223)
+    f.add_subplot(223)
     plt.contourf(center, scales[0:-1] + 25, (arr40 - mean40), cmap='RdBu',
                  levels=np.arange(-3, 3.5, 0.5), extend='both')
     plt.title('Deviation from mean diurnal cycle < -40degC')
@@ -108,7 +108,7 @@ def run_scales():
     plt.colorbar(label='%')
     #  plt.contourf(center, scales[0:-1] + 25, std40, hatches=['..'], colors='none', levels=[0.5, 1.5])
 
-    ax = f.add_subplot(224)
+    f.add_subplot(224)
     plt.contourf(center, scales[0:-1] + 25, (arr70 - mean70), cmap='RdBu', levels=np.arange(-3, 3.5, 0.5),
                  extend='both')
     plt.title('Deviation from mean diurnal cycle < -70degC')
@@ -122,7 +122,7 @@ def run_scales():
     # plt.savefig('/users/global/cornkle/C_paper/wavelet/figs/diurnal/scale_contour.png')
 
     f = plt.figure()
-    ax = f.add_subplot(111)
+    f.add_subplot(111)
     plt.contourf(center, scales[0:-1] + 25, (arr70) * 100, cmap='viridis')  # , levels=np.arange(-80,81,0.5))
     plt.colorbar()
 
@@ -134,12 +134,12 @@ def run_scales():
     #
     f = plt.figure()
     norm = ug.MidPointNorm(midpoint=0)
-    ax = f.add_subplot(111)
+    f.add_subplot(111)
     plt.imshow(arr70 - mean70, cmap='RdBu', norm=norm)
     plt.colorbar()
 
     f = plt.figure()
-    ax = f.add_subplot(111)
+    f.add_subplot(111)
     plt.plot(hours, arr70[6, :], color='b', label='100-125km')
     plt.plot(hours, arr70[0, :], color='r', label='25-30km')
     # plt.plot(hour, stddev70, color='y', label='standarddev')
@@ -148,7 +148,7 @@ def run_scales():
     plt.legend()
 
     f = plt.figure()
-    ax = f.add_subplot(111)
+    f.add_subplot(111)
     plt.plot(scales[0:-1] + 25, stddev40, color='b', label='-40')
     plt.plot(scales[0:-1] + 25, stddev70, color='r', label='-70')
     plt.legend()
@@ -190,18 +190,18 @@ def run_tmin():
 
     stddev40 = np.std(arr40, axis=1)
 
-    std40 = np.transpose(np.abs(arr40 - mean40).T > stddev40 * 2)
+    np.transpose(np.abs(arr40 - mean40).T > stddev40 * 2)
 
     f = plt.figure()  # figsize=(15, 10), dpi=300)
 
-    ax = f.add_subplot(121)
+    f.add_subplot(121)
     plt.contourf(center, scales[0:-1] + 25, (arr40), cmap='RdBu_r', levels=np.arange(-5, 6, 0.5), extend='both')
     plt.title('Normalised diurnal cycle of Tmin at power maxima')
     plt.xlabel('Hours of day')
     plt.ylabel('Scales (km)')
     plt.colorbar(label='K')
 
-    ax = f.add_subplot(122)
+    f.add_subplot(122)
     plt.contourf(center, scales[0:-1] + 25, (arr40 - mean40), cmap='RdBu_r', extend='both',
                  levels=np.arange(-5, 6, 0.5))
     plt.title('Deviation from mean diurnal cycle')
@@ -211,7 +211,7 @@ def run_tmin():
     #  plt.contourf(center, scales[0:-1] + 25, std40, hatches=['..'], colors='none', levels=[0.5, 1.5])
 
     f = plt.figure()
-    ax = f.add_subplot(111)
+    f.add_subplot(111)
     plt.plot(hour, arr40[6, :], color='b', label='100-125km')
     plt.plot(hour, arr40[0, :], color='r', label='25-30km')
     # plt.plot(hour, stddev70, color='y', label='standarddev')
@@ -240,7 +240,7 @@ def run_pcp():
     area = np.array(df['id'])
     p = np.array(df['circle_p'])
 
-    arr40 = np.zeros((scales.size - 1, len(hours)))
+    np.zeros((scales.size - 1, len(hours)))
     arr70 = np.zeros((scales.size - 1, len(hours)))
     valarr = np.zeros((scales.size - 1, len(hours)))
     stdarr = np.zeros((scales.size - 1, len(hours)))
@@ -295,11 +295,11 @@ def run_pcp():
     # mean70_2 = np.mean(arr70, axis=0)
     mean70 = np.array(mmean) / np.sum(mmean)
 
-    number = np.array(nb) / np.sum(nb)
+    np.array(nb) / np.sum(nb)
 
     f = plt.figure(figsize=(12, 7), dpi=300)
 
-    ax = f.add_subplot(221)
+    f.add_subplot(221)
     plt.contourf(center, middle, (arr70) * 100, cmap='viridis', levels=np.arange(0, 15, 0.5))
     #  plt.title('Normalised diurnal cycle of rainfall')
     plt.xlabel('Hours of day')
@@ -308,7 +308,7 @@ def run_pcp():
     plt.minorticks_on()
     plt.colorbar(label='Fraction (%)')
 
-    ax = f.add_subplot(222)
+    f.add_subplot(222)
     plt.contourf(center, middle, (arr70 - mean70) * 100, cmap='RdBu', levels=np.arange(-2, 2.1, 0.4),
                  extend='both')  # / (arr70)
     # plt.title('Deviation from mean fraction')
@@ -321,7 +321,7 @@ def run_pcp():
 
 
 
-    ax = f.add_subplot(223)
+    f.add_subplot(223)
 
     plt.plot(center, np.sum(arr70c[0:2, :], axis=0) / np.sum(valarr[0:2, :], axis=0) + 0.5, color='black',
              label='25-30km', marker='o', linestyle=':')
@@ -339,7 +339,7 @@ def run_pcp():
     # plt.plot(center, np.sum(arr70c[2:5, :], axis=0) , color='y', label='30-60km')
     # plt.plot(center, np.sum(arr70c[5:7, :], axis=0) , color='r', label='60-150km')
 
-    ax = f.add_subplot(224)
+    f.add_subplot(224)
     plt.plot(center, np.sum(valarr[0:2, :], axis=0) / 1000, color='black', label='15-30km', marker='o', linestyle=':')
     plt.plot(center, np.sum(valarr[2:5, :], axis=0) / 1000, color='black', label='30-60km', marker='o', linestyle='--')
     plt.plot(center, np.sum(valarr[5:9, :], axis=0) / 1000, color='black', label='60-150km', marker='o')
@@ -358,7 +358,6 @@ def run_pcp():
     print(np.sum(np.sum(valarr[2:5, :], axis=0)))
     print(np.sum(np.sum(valarr[5:9, :], axis=0)))
     fsiz = 15
-    x = 0.02
     plt.annotate('a)', xy=(0.03, 0.97), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
     plt.annotate('b)', xy=(0.52, 0.97), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
@@ -416,7 +415,7 @@ def run_pcp_T():
     scenter = scales[0:-1] + ((scales[1::] - scales[0:-1]) / 2)
     print(scales)
 
-    arr40 = np.zeros((scales.size - 1, len(hours)))
+    np.zeros((scales.size - 1, len(hours)))
     arr70 = np.zeros((scales.size - 1, len(hours)))
     arr70o = np.zeros((scales.size - 1, len(hours)))
     valarr = np.zeros((scales.size - 1, len(hours)))
@@ -508,15 +507,15 @@ def run_pcp_T():
 
     #mean70_2 = np.mean(arr70, axis=0)
     mean70 = np.array(mmean) / np.sum(mmean)
-    mean70o = np.array(mmean_orig) / np.sum(mmean_orig)
+    np.array(mmean_orig) / np.sum(mmean_orig)
 
 
-    number = np.array(nb)/np.sum(nb)
+    np.array(nb)/np.sum(nb)
 
     f = plt.figure(figsize=(12, 7), dpi=300)
 
 
-    ax = f.add_subplot(221)
+    f.add_subplot(221)
 
     plt.contourf(center,middle, (arr70)*100 , cmap='viridis', levels=np.arange(0, 15, 0.5))
   #  plt.title('Normalised diurnal cycle of rainfall')
@@ -527,7 +526,7 @@ def run_pcp_T():
     plt.colorbar(label='Fraction (%)')
 
 
-    ax = f.add_subplot(222)
+    f.add_subplot(222)
     plt.contourf(center,middle,  ( arr70- mean70) * 100   , cmap='RdBu', levels=np.arange(-2, 2.1, 0.4),
                  extend='both') # / (arr70)
    # plt.title('Deviation from mean fraction')
@@ -540,7 +539,7 @@ def run_pcp_T():
 
 
 
-    ax = f.add_subplot(224)
+    f.add_subplot(224)
     pdb.set_trace()
 
     plt.plot(center, np.sum(arr70c[0:2, :], axis=0)/np.sum(valarr[0:2, :], axis=0)+0.5, color='black', label='15-35km', marker='o', linestyle=':')
@@ -556,7 +555,7 @@ def run_pcp_T():
     # plt.plot(center, np.sum(arr70c[2:5, :], axis=0) , color='y', label='30-60km')
     # plt.plot(center, np.sum(arr70c[5:7, :], axis=0) , color='r', label='60-150km')
 
-    ax = f.add_subplot(223)
+    f.add_subplot(223)
     un = np.sum(valarr[0:2, :], axis=0)/1000
     deux = np.sum(valarr[2:6, :], axis=0)/1000
     trois =   np.sum(valarr[6:9, :], axis=0)/1000
@@ -595,7 +594,6 @@ def run_pcp_T():
     print(np.sum(np.sum(valarr[2:6, :], axis=0)))
     print(np.sum(np.sum(valarr[6:9, :], axis=0)))
     fsiz = 15
-    x = 0.02
     plt.annotate('a)', xy=(0.03, 0.965), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),
                  textcoords='offset points')
     plt.annotate('b)', xy=(0.52, 0.965), xytext=(0, 4), size=fsiz, xycoords=('figure fraction', 'figure fraction'),

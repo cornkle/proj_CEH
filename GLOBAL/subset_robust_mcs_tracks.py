@@ -1,4 +1,3 @@
-import sys
 import os
 import numpy as np
 import xarray as xr
@@ -73,7 +72,7 @@ def main(reg):
 
     # Call function
     for infile in glob.glob(inpath+'*.nc'):
-        status = subset_file(infile, outdir, lon_box, lat_box)
+        subset_file(infile, outdir, lon_box, lat_box)
 
 
 

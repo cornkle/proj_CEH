@@ -1,6 +1,4 @@
 from ecmwfapi import ECMWFDataServer
-import xarray as xr
-import numpy as np
 
 file = "/localscratch/wllf030/cornkle/ERA-I/daily_2004-2014_pl.nc"
 server = ECMWFDataServer()

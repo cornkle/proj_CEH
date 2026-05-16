@@ -9,14 +9,9 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
-import multiprocessing
-import ipdb
 import glob
 import pandas as pd
-from scipy import ndimage
 from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst
-import pickle as pkl
-import salem
 
 
 matplotlib.rc('xtick', labelsize=10)
@@ -58,7 +53,6 @@ def composite(h):
     #ipdb.set_trace()
     dic = u_parallelise.run_arrays(4,file_loop,msg,['ano', 'regional', 'cnt', 'rano', 'rregional', 'rcnt'])
 
-    res = []
     #ipdb.set_trace()
     # for m in msg[300:450]:
     #
@@ -188,7 +182,7 @@ def file_loop(fi):
     date = pd.to_datetime(
         str(fi['time.year'].values) + str(fi['time.month'].values).zfill(2) + str(fi['time.day'].values).zfill(2))
 
-    dayd = pd.Timedelta('1 days')
+    pd.Timedelta('1 days')
     if fi['time.hour'].values.size != 1:
         'hour array too big, problem!'
 

@@ -2,13 +2,10 @@ import numpy as np
 import pickle as pkl
 import datetime as dt
 from eod import trmm, msg, tm_utils
-import ipdb
 from collections import defaultdict
-import matplotlib.pyplot as plt
 from utils import u_arrays as ua
 
 
-import cartopy.crs as ccrs
 
 
 
@@ -24,7 +21,7 @@ def tm_overlap_blobs():
     tObj = trmm.ReadWA(trmm_folder, area=AREA, yrange=YRANGE)
     mObj = msg.ReadMsg(msg_folder)
 
-    files = tObj.fpaths
+    tObj.fpaths
     dates = tObj.dates
 
     mdic = defaultdict(list)
@@ -34,7 +31,7 @@ def tm_overlap_blobs():
     mlat = mObj.lat
 
     mll = tm_utils.ll_toMSG(mlon, mlat)
-    mxy = ua.unique_of_pair(mll['x'], mll['y'])
+    ua.unique_of_pair(mll['x'], mll['y'])
 
     cnt = 0
     datess = []

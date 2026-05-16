@@ -11,11 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import pandas as pd
-from collections import OrderedDict
-import salem
 from utils import u_met, u_parallelise, u_arrays, constants as cnst, u_darrays
-from scipy.interpolate import griddata
-import multiprocessing
 import glob
 
 import pickle as pkl
@@ -813,7 +809,6 @@ def plot_doug_timeseries():
 def plot_doug_all(h, eh):
 
     dic = {}
-    dic2 = {}
 
     def coll(dic, h, eh, year):
         print(h)
@@ -953,7 +948,6 @@ def plot_doug_all(h, eh):
 def plot_doug(h, eh):
 
     dic = {}
-    dic2 = {}
 
     def coll(dic, h, eh, year):
         print(h)

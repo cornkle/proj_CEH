@@ -1,7 +1,6 @@
 import datetime as dt
 from eod import trmm_clover
 import pickle as pkl
-import pdb
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
@@ -95,4 +94,3 @@ def get_extreme():
     #regridded: ~ 31mm at >0.1
     #not regridded: ~ 43mm at > 1mm
 
-    pass

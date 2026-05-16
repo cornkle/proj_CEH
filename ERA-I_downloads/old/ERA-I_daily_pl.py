@@ -1,6 +1,4 @@
 from ecmwfapi import ECMWFDataServer
-import xarray as xr
-import numpy as np
 
 
 def loop(y):

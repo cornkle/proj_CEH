@@ -12,17 +12,11 @@ import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from wavelet import util as wutil
-from utils import u_arrays, constants as cnst, u_met
-from scipy.stats import ttest_ind as ttest
-from scipy.interpolate import griddata
+from utils import u_arrays, constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua, u_darrays
-import os
+from utils import u_darrays
 import collections
-import warnings
 from scipy import ndimage
-import salem
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
@@ -401,12 +395,7 @@ def plot_amsr_ERA_trio(hour):
 
     labels = ['Day-1', 'Day0', 'Day+1']
 
-    left = 0.01
-    bottom = 0.1
-    width = 0.3
-    height=0.8
 
-    spot = [[]]
 
     for ids, ll in enumerate(['day-1', 'day0', 'day+1']):
 
@@ -429,10 +418,10 @@ def plot_amsr_ERA_trio(hour):
         amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
         lsta = ndimage.gaussian_filter(lsta, 8, mode='nearest')
 
-        cores = dic['cores']
+        dic['cores']
 
-        lcnt = dic['lsta'][1]
-        acnt = dic['amsr'][1]
+        dic['lsta'][1]
+        dic['amsr'][1]
 
         dist = 200
         llevels = np.array(list(np.arange(-1.5, 0, 0.25)) + list(np.arange(0.25, 1.6, 0.25)))#*12000
@@ -519,12 +508,7 @@ def plot_amsr_ERA_duo(hour):
 
     labels = ['Day0', 'Day+1']
 
-    left = 0.01
-    bottom = 0.1
-    width = 0.3
-    height = 0.8
 
-    spot = [[]]
 
     for ids, ll in enumerate(['day0', 'day+1']):
 
@@ -545,10 +529,10 @@ def plot_amsr_ERA_duo(hour):
         amsr = ndimage.gaussian_filter(amsr, 8, mode='nearest')
         lsta = ndimage.gaussian_filter(lsta, 10, mode='nearest')
 
-        cores = dic['cores']
+        dic['cores']
 
-        lcnt = dic['lsta'][1]
-        acnt = dic['amsr'][1]
+        dic['lsta'][1]
+        dic['amsr'][1]
 
         dist = 200
         llevels = np.array(list(np.arange(-1.5, 0, 0.25)) + list(np.arange(0.25, 1.6, 0.25)))  # *12000

@@ -3,14 +3,9 @@ import xarray as xr
 import matplotlib.pyplot as plt
 from utils import u_darrays
 import ipdb
-from utils import constants as cnst, u_met
+from utils import constants as cnst
 import salem
 from utils import u_statistics as us
-from scipy import stats
-import numpy.ma as ma
-import pickle as pkl
-import shapely.geometry as shpg
-import seaborn
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):
@@ -104,8 +99,6 @@ def trend_all():
     ipdb.set_trace()
     months= [1,2,3,4,5,6,7,8,9,10,11,12]#[3,4,5,6,9,10,11]#,4,5,6,9,10,11#,4,5,6,9,10,11,(3,5), (9,11)]#, 10,5,9]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]#[(12,2)]#[1,2,3,4,5,6,7,8,9,10,11,12]# #,2,3,11,12]
 
-    dicm = {}
-    dicmean = {}
 
 
     f = plt.figure(figsize=(14, 9), dpi=300)
