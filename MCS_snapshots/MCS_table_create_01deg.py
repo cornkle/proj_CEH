@@ -1,25 +1,86 @@
 import numpy as np
-import xarray as xr
 import pandas as pd
-import multiprocessing
-import glob
-import pickle as pkl
 from scipy.ndimage.measurements import label
-from GLOBAL import glob_util
-from utils import u_darrays, constants as cnst
-import datetime
 import ipdb
+import numpy as np
+from shapely.geometry import Polygon
+from skimage import measure
 
 
 def dictionary():
     dic = {}
-    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', '70area', '60area', '50area',
+    vars = ['date', 'month', 'hour', 'minute', 'year', 'day', 'area', 'area70', 'area60', 'area50',
             'minlon', 'minlat', 'maxlon', 'maxlat', 'clon', 'clat', 'tminlon', 'tminlat',
-            'tmin', 'tmean', 'tp1', 'tp99', 'stormID', 'cloudMask', 'tir']
+            'tmin', 'tmean', 'tp1', 'tp99', 'stormID', 'cloudMask', 'tir',
+            'shape_complexity', 'major_axis_km', 'minor_axis_km', 'aspect_ratio']
 
     for v in vars:
         dic[v] = []
     return dic
+
+def mask_to_projected_polygon(mask, lat, lon, transformer):
+    """
+    Convert a boolean storm mask to a projected shapely polygon.
+    lat/lon are 1D arrays corresponding to mask rows/columns.
+    """
+    contours = measure.find_contours(mask.astype(float), level=0.5)
+
+    polygons = []
+
+    for contour in contours:
+        rows = contour[:, 0]
+        cols = contour[:, 1]
+
+        contour_lat = np.interp(rows, np.arange(len(lat)), lat)
+        contour_lon = np.interp(cols, np.arange(len(lon)), lon)
+
+        x, y = transformer.transform(contour_lon, contour_lat)
+
+        poly = Polygon(zip(x, y))
+
+        if poly.is_valid and poly.area > 0:
+            polygons.append(poly)
+
+    if len(polygons) == 0:
+        return None
+
+    # usually one outer polygon; if there are several contours, use the largest
+    return max(polygons, key=lambda p: p.area)
+
+
+def shape_complexity_index(poly):
+    """
+    1 - polygon area / convex hull area.
+    Higher = more ragged/concave/irregular.
+    """
+    if poly is None or poly.is_empty:
+        return np.nan
+
+    hull_area = poly.convex_hull.area
+
+    if hull_area == 0:
+        return np.nan
+
+    return 1 - poly.area / hull_area
+
+
+def major_minor_axis_lengths(poly):
+    """
+    Major/minor axis estimate from minimum rotated rectangle.
+    Returns metres.
+    """
+    if poly is None or poly.is_empty:
+        return np.nan, np.nan
+
+    rect = poly.minimum_rotated_rectangle
+    coords = np.asarray(rect.exterior.coords)
+
+    side_lengths = np.sqrt(np.sum(np.diff(coords, axis=0)**2, axis=1))
+
+    major = np.max(side_lengths)
+    minor = np.min(side_lengths)
+
+    return major, minor
 
 
 def mcs_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
@@ -37,7 +98,8 @@ def mcs_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
 
     labels, numL = label(array)
 
-    u, inv = np.unique(labels, return_inverse=True)
+    u, inv = np.unique(labels.flatten(), return_inverse=True)
+    
     n = np.bincount(inv)
 
     goodinds = u[u != 0]
@@ -66,7 +128,7 @@ def mcs_define(array, thresh, min_area=None, max_area=None, minmax_area=None):
     return labels, goodinds
 
 
-def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
+def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000, area_grid_km2=None, transformer=None):
     """
     This function cuts out MCSs. By default, an MCS is defined as contiguous brightness temperature area at <=-50 degC over >= 5000km2.
     :param ctt: brightness temperature image (in degC)
@@ -90,17 +152,11 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
         if g == 0:
             continue
 
+        ##storm area
+        storm_mask = labels == g
+
         pos = np.where(labels == g)
         npos = np.where(labels != g)
-        datestr = str(int(ctt['time.year'].values)) + '-' + str(int(ctt['time.month'].values)).zfill(2) + '-' + str(int(ctt['time.day'].values)).zfill(2) + '_' + \
-                  str(int(ctt['time.hour'].values)).zfill(2) + ':' + str(int(ctt['time.minute'].values)).zfill(2)
-
-        dic['date'].append(datestr)
-        dic['month'].append(int(ctt['time.month']))
-        dic['hour'].append(int(ctt['time.hour']))
-        dic['year'].append(int(ctt['time.year']))
-        dic['day'].append(int(ctt['time.day']))
-        dic['minute'].append(int(ctt['time.minute']))
 
         storm = ctt.copy()
         storm.values[npos] = np.nan
@@ -111,17 +167,67 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
         latmax = np.nanmax(ctt.lat.values[pos[0]])
         lonmin = np.nanmin(ctt.lon.values[pos[1]])
         lonmax = np.nanmax(ctt.lon.values[pos[1]])
-        dic['area'].append(np.sum(np.isfinite(storm.values)) * data_res ** 2)
-        dic['70area'].append(np.sum(storm.values <= -70) * data_res ** 2)
-        dic['60area'].append(np.sum(storm.values <= -60) * data_res ** 2)
-        dic['50area'].append(np.sum(storm.values <= -50) * data_res ** 2)
+
+        tmin = np.nanmin(storm)
+        
+        if tmin > float(-50):
+            continue
+
+        ## storm shape
+
+        if transformer is not None:
+            try:
+                poly = mask_to_projected_polygon(
+                    storm_mask,
+                    ctt.lat.values,
+                    ctt.lon.values,
+                    transformer)
+            except:
+                print('Storm shape error, continue')
+                continue
+
+            sci = shape_complexity_index(poly)
+            major_m, minor_m = major_minor_axis_lengths(poly)
+
+            dic["shape_complexity"].append(sci)
+            dic["major_axis_km"].append(major_m / 1000)
+            dic["minor_axis_km"].append(minor_m / 1000)
+            dic["aspect_ratio"].append(major_m / minor_m if minor_m > 0 else np.nan)
+        else:
+            dic["shape_complexity"].append(np.nan)
+            dic["major_axis_km"].append(np.nan)
+            dic["minor_axis_km"].append(np.nan)
+            dic["aspect_ratio"].append(np.nan)
+
+
+        area = np.nansum(area_grid_km2[storm_mask])
+        area70 = np.nansum(area_grid_km2[storm.values <= -70])
+        area60 = np.nansum(area_grid_km2[storm.values <= -60])
+        area50 = np.nansum(area_grid_km2[storm.values <= -50])
+
+        dic['area'].append(area)
+        dic['area70'].append(area70)
+        dic['area60'].append(area60)
+        dic['area50'].append(area50)
+            
+
+        datestr = str(int(ctt['time.year'].values)) + '-' + str(int(ctt['time.month'].values)).zfill(2) + '-' + str(int(ctt['time.day'].values)).zfill(2) + '_' + \
+                  str(int(ctt['time.hour'].values)).zfill(2) + ':' + str(int(ctt['time.minute'].values)).zfill(2)
+
+        dic['date'].append(datestr)
+        dic['month'].append(int(ctt['time.month']))
+        dic['hour'].append(int(ctt['time.hour']))
+        dic['year'].append(int(ctt['time.year']))
+        dic['day'].append(int(ctt['time.day']))
+        dic['minute'].append(int(ctt['time.minute']))
+
         dic['minlon'].append(lonmin)
         dic['minlat'].append(latmin)
         dic['maxlon'].append(lonmax)
         dic['maxlat'].append(latmax)
         dic['clon'].append(lonmin + (lonmax - lonmin) / 2)
         dic['clat'].append(latmin + (latmax - latmin) / 2)
-        dic['tmin'].append(np.nanmin(storm))
+        dic['tmin'].append(tmin)
         dic['tminlat'].append(float(ctt.lat[tpos_2d[0]].values))
         dic['tminlon'].append(float(ctt.lon[tpos_2d[1]].values))
         dic['tmean'].append(float(np.nanmean(storm)))
@@ -136,7 +242,7 @@ def process_tir_image(ds, data_res, t_thresh=-40, min_mcs_size=5000):
     return dic
 
 
-def add_environment_toTable(tab, in_ds, envvar_take=[], tabvar_skip=[], rainvar_name=None, env_tformat="%Y-%m-%d %H:%M:%S", env_hour=12):
+def add_environment_toTable(tab, in_ds, data_res, envvar_take=[], tabvar_skip=[], rainvar_name=None, env_tformat="%Y-%m-%d %H:%M:%S", env_hour=12, area_grid_km2=None):
     """
     NEEDS TO BE IN SAME FILE (as in Zhe Fengs TIR/PRECIP files)
     This function saves rainfall and MCS environment variables. Rainfall is saved as mean across contiguous MCS area and max. rainfall at ~15km resolution (0.15deg)
@@ -160,7 +266,7 @@ def add_environment_toTable(tab, in_ds, envvar_take=[], tabvar_skip=[], rainvar_
         dic[k] = tab[k]
 
     ds = in_ds
-    envdates = pd.to_datetime(ds.time.dt.floor('T'), format=env_tformat)
+    envdates = pd.to_datetime(ds.time.dt.floor('min'), format=env_tformat)
     ###### sample variables
     for tlat, tlon, date, mask, tir in zip(dic['tminlat'], dic['tminlon'], dic['date'], dic['cloudMask'], dic['tir']):
 
@@ -175,15 +281,28 @@ def add_environment_toTable(tab, in_ds, envvar_take=[], tabvar_skip=[], rainvar_
             pmax_lon = rain.lon[ppos_2d[1]]
             pmax_lat = rain.lat[ppos_2d[0]]
             pmax = rain.sel(lon=slice(pmax_lon - 0.075, pmax_lon + 0.075), lat=slice(pmax_lat - 0.075, pmax_lat + 0.075))
-            #  ipdb.set_trace()
+
             pmax = pmax.mean().values
             if (rainvar_name + '_mean') not in dic.keys():
-                for tag in ['_mean', '_max', '_p95', '_p99']:
+                for tag in ['_mean', '_max', '_p95', '_p99', '_area1mm', '_area3mm', '_area10mm']:
                     dic[rainvar_name + tag] = []
             dic[rainvar_name + '_mean'].append(float(rain.mean().values))  # full cloud mean
             dic[rainvar_name + '_max'].append(float(pmax))  # ~0.15deg rain max
             dic[rainvar_name + '_p95'].append(float(rain.quantile(0.95).values))
             dic[rainvar_name + '_p99'].append(float(rain.quantile(0.99).values))
+
+            if area_grid_km2 is None:
+                parea = np.sum(rain.values >=1) * data_res ** 2
+                strati = np.sum(rain.values >=3) * data_res ** 2
+                conv = np.sum(rain.values >=10) * data_res ** 2
+            else:
+                parea = np.sum(area_grid_km2[rain.values >=1]) 
+                strati = np.sum(area_grid_km2[rain.values >=3]) 
+                conv = np.sum(area_grid_km2[rain.values >=10]) 
+
+            dic[rainvar_name + '_area1mm'].append(parea)
+            dic[rainvar_name + '_area3mm'].append(strati)
+            dic[rainvar_name + '_area10mm'].append(conv)
 
         ## save mean environments at ~0.7deg centred on location of minimum storm temperature
         if len(envvar_take) > 0:

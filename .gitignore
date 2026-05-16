@@ -1,0 +1,49 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code local settings
+.vscode/
+shapes
+
+# Vim swap files
+*.swp
+*.swo
+*.swn
+.*.swp
+.*.swo
+.*.swn
+
+# Python/Jupyter cache
+__pycache__/
+.ipynb_checkpoints/
+*.py[cod]
+
+# Figures and outputs
+figures/
+plots/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+*.gra
+*.csv
+*.tif
+*.tiff
+*.tfw
+*.npz
+
+# XML
+*.xml
+
+# Logs / temp
+*.log
+*.tmp
+
+# OS junk
+.DS_Store
+Thumbs.db

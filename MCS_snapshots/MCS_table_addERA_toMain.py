@@ -161,8 +161,7 @@ def run_ERA5_regional(fi):
     edate = glob_util.LT_to_UTC_date(etime_local, REGION)
     print(REGION, 'MCS_utc_time:', fi['date'][0], 'MCS_lt_time', dat, 'ERA_sampling_utc', edate)
     eregion = REGION
-    if REGION == 'SA_big':
-       eregion = 'SAf'
+
     try:
         era_pl = xr.open_dataset(
             inpath + 'pressure_levels/' + eregion + '/ERA5_' + str(edate.year) + '_' + str(edate.month).zfill(

@@ -9,21 +9,35 @@ from GLOBAL import glob_util
 import datetime
 import numpy as np
 import multiprocessing
+import pyproj
 
 
-MREGIONS = {
- 'GPlains' : [[-100,-90,32,47], 'nam', -6, (1,7), (5,9), (1,12)], # # 18
- 'china' : [[105,115,25,40], 'asia', 8 , (1,7), (5,9), (1,12)], # 4
- 'india' : [[70,90, 5,30], 'asia', 5, (1,7), (5,9), (1,12)], # 7
- 'WAf' : [[-18,25,4,25], 'spac', 0, (1,7), (5,9), (1,12)], # last is hourly offset to UCT # 12    # [-18,25,4,25]
- 'australia' : [[120,140,-23, -11], 'asia', 9, (11,3), (11,3), (1,12)], # 3
- 'SAf' : [[20,35, -35,-15], 'spac', 2, (9,12), (11,3), (11,3)], # 10
- 'sub_SA' : [[-68,-47, -40, -20.5], 'spac', -4, (11,3), (11,3), (1,12)] , # 16
- 'Africa' : [[-18, 52, -36,39], 'spac', 2, (9,12), (11,3), (11,3)],
- 'SA_big' : [[9.5, 52, -36,-5.5], 'spac', 2, (9,12), (11,3), (11,3)],
-}
+REGIONS = glob_util.REGIONS
 
-#EAf [26,52.5,-5.6, 15.5]
+def pixel_area_latlon_km2(lat, lon):
+    """
+    Approximate pixel area for regular lat/lon grid.
+    lat, lon are 1D arrays in degrees.
+    Returns 2D area array in km2.
+    """
+    R = 6371.0  # km
+
+    dlat = np.abs(np.gradient(lat))
+    dlon = np.abs(np.gradient(lon))
+
+    lat_rad = np.deg2rad(lat)
+    dlat_rad = np.deg2rad(dlat)
+    dlon_rad = np.deg2rad(dlon)
+
+    area = (
+        R**2
+        * dlat_rad[:, None]
+        * dlon_rad[None, :]
+        * np.cos(lat_rad[:, None])
+    )
+
+    return area
+
 
 def make_table(reg):
     """
@@ -31,14 +45,16 @@ def make_table(reg):
     :return:
     """
     lmcs = cnst.lmcs_drive + '/MCS_Feng/global_v2/2d_fields/'
-    out = cnst.lmcs_drive + '/MCS_5000km2_tables/'+reg+'/'
-    box = MREGIONS[reg][0] 
+    out = cnst.lmcs_drive + '/MCS_5000km2_tables_v2/'+reg+'/'
+    box = REGIONS[reg][0] 
 
-    for yy in range(2000,2021):
+    for yy in range(2000,2021): # 2021
         infiles = sorted(glob.glob(lmcs + str(yy) + '*/*.nc'))
         full_year = []
         out_dic = {}
         print('Doing', yy)
+
+        os.makedirs(out, exist_ok=True)
         outfile = out + str(yy)+'_MCS_5000km2_-40C_0.1degTIR-IMERG_hourly.csv'
         if os.path.isfile(outfile):
            print(outfile, ' exists, continue') 
@@ -52,9 +68,17 @@ def make_table(reg):
                 print('2d file open error, continue')
                 continue
             da = da.sel(lon=slice(box[0],box[1]), lat=slice(box[2], box[3])) 
-            basic_tab = MCS_table_create_01deg.process_tir_image(da, 10)
-            merge_tab = MCS_table_create_01deg.add_environment_toTable(basic_tab, da,  envvar_take=[], rainvar_name='precipitation')
-            
+
+            area_grid_km2 = pixel_area_latlon_km2(da.lat.values, da.lon.values)
+
+            transformer = pyproj.Transformer.from_crs(
+                "EPSG:4326",
+                "EPSG:6933",   # equal-area, metres
+                always_xy=True)
+
+            basic_tab = MCS_table_create_01deg.process_tir_image(da, 10, t_thresh=-40, min_mcs_size=5000, area_grid_km2=area_grid_km2, transformer=transformer)
+            merge_tab = MCS_table_create_01deg.add_environment_toTable(basic_tab, da,  10, envvar_take=[], rainvar_name='precipitation', area_grid_km2=area_grid_km2)
+
             merge_tab.pop('cloudMask')
             merge_tab.pop('tir')
             if len(merge_tab['date']) ==0:
@@ -68,7 +92,7 @@ def make_table(reg):
         for single_tab in full_year:
             for key in single_tab.keys():
                 out_dic[key].extend(single_tab[key])
-                
+        
         pd_out = pd.DataFrame.from_dict(out_dic)
         pd_out.to_csv(outfile)
         del out_dic
@@ -78,9 +102,10 @@ def make_table(reg):
         del da
 
 
-#for reg in MREGIONS.keys():
+# for reg in REGIONS.keys():
+#     print('Doing region', reg)
 #     make_table(reg)
 
-# pool = multiprocessing.Pool(processes=5)
-# res = pool.map(make_table, list(MREGIONS.keys()))
-# pool.close()
+if __name__ == "__main__":
+    with multiprocessing.Pool(processes=4) as pool:
+        res = pool.map(make_table, list(REGIONS.keys()))

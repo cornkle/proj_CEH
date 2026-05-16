@@ -6,6 +6,7 @@ import statsmodels.api as sm
 import pandas as pd
 from sklearn import linear_model
 from utils import u_statistics as ustat
+from shapely.geometry import Polygon, MultiPolygon
 
 class MidPointNorm(Normalize):
     def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
@@ -51,6 +52,24 @@ class MidPointNorm(Normalize):
             result = result[0]
         return result
 
+
+def shape_complexity_index(geom):
+    """
+    Shape Complexity Index:
+    SCI = 1 - area / convex_hull_area
+
+    Works for shapely Polygon or MultiPolygon.
+    """
+    if geom.is_empty:
+        return float("nan")
+
+    area = geom.area
+    hull_area = geom.convex_hull.area
+
+    if hull_area == 0:
+        return float("nan")
+
+    return 1 - area / hull_area
 
 
 def histo_frequency(data, **kwargs):
