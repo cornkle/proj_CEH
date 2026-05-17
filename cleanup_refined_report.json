@@ -1,0 +1,3986 @@
+{
+  "standalone": {
+    "CLOVER/nature2017/chris_precip_dist.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 118,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "CLOVER/nature2017/tm_blob_chris.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 294,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "COCOON/storm_anaysis_test.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 341,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "COCOON/storm_shear_analysis.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": true,
+      "lines": 371,
+      "reasons": [
+        "main_block",
+        "cli_args"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_LMCS_pl_w500.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 79,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/GLOBAL_CMIP6-LS3MIP-30ySlicing.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 65,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 120,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 88,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 59,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 59,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 93,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_timeseries.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 92,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 61,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_P25_surfaceScales_fullDomain_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 115,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 48,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "GLOBAL/subset_robust_mcs_tracks.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 101,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_climatology-3hourMean.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 178,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_climatology.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 178,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_anom_v2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 489,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_CROSS-geoH.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 390,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_CROSS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 529,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_surfaceScales_timeseries.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 119,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 120,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 88,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 59,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 59,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 93,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_timeseries.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 92,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 61,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_P25_surfaceScales_fullDomain_2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 115,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 48,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "MCS_snapshots/COCOON_table_addERA_toMain.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 1437,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "MCS_snapshots/COCOON_table_main_01deg.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 184,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "MCS_snapshots/MCS_table_main_01deg.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 110,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "MCS_snapshots/MCS_table_main_model.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 109,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "NFLICS/bigDomain_composite_wavelet.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 764,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "dry_spells/dry_spell.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 275,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "hansen_scripts/aggregate_forest_loss_2013.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 267,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "other/WRF_Marian_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": true,
+      "lines": 56,
+      "reasons": [
+        "cli_args"
+      ]
+    },
+    "surface_memory/AMSL_CMORPH.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 514,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_memory/filter_points.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 246,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/MCS_point_filters.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 415,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/composite_wavelet.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 762,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/histogram_powers.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 676,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 501,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMERA.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 592,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 359,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 496,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH2.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 448,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_histo.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 378,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSRE.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 733,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSRE_coarse.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 470,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSR_histo.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 713,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_point_filters_core.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 246,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/paper_wavelet_coeffs.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 473,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/scatter_scales.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 257,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/surfaceScales_diurnal.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 318,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/surfaceScales_diurnal_noT.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 436,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/surfaceScales_powerValues.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 163,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "surface_wavelet/surfaceScalesvsLSTA.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 244,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "utils/u_rotgrid.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 221,
+      "reasons": [
+        "main_block",
+        "shebang"
+      ]
+    },
+    "wav_mixed/wavelet_composite_blobs.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 396,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wav_mixed/wavelet_composite_no_overlap_parallax.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 329,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wav_mixed/wavelet_composite_no_overlap_parallax_dominant.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 341,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_paper/fig1_map_trmm_msg.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 174,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_paper/fig8_scatter_prob_scale_T.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 334,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_paper/fig9_probability_Tonly.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 258,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_paper/fig_4_6_wavelet_example.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 269,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_paper/plot_prob_scale_T.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 114,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_tests/test_area_circle.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 60,
+      "reasons": [
+        "main_block"
+      ]
+    },
+    "wavelet_tests/test_dilation.py": {
+      "has_exec": false,
+      "has_main": true,
+      "has_cli": false,
+      "lines": 93,
+      "reasons": [
+        "main_block"
+      ]
+    }
+  },
+  "potential_libs": {
+    "CLOVER/anomaly_eventBased_SA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 220,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/area_check.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 18,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/chirps_postproc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 144,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-10scatter.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 136,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-10scatter_cp4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 136,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-10scatter_density.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 129,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-60scatter_OBS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 220,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-60scatter_OBS_tir.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 266,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-60scatter_density_rain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 183,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-60scatter_density_shear.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 180,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_-60scatter_density_shear2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 419,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_CP25.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 178,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 171,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_CP4_monthly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 197,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_ERA5.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 246,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_ERA5_fullYear_SOMS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 256,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_MCS_bulk_ERA5_monthly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 292,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_pmax_tmin.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 252,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/clov_scatter_2d_Tmin_PCP_DACCIWA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 249,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/era_tgrad.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 629,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/era_wind.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 532,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/gridsat_postproc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 606,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/gridsat_surface.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 252,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/gridsat_surface_daynight.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 212,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/nature2017/chris_paper_station_rev_merge.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 268,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/nature2017/chris_paper_station_revised.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 310,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/nature2017/mcs_energy.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 46,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/plot_MCS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 58,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/saveMCS_CP4_box.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 257,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/saveMCS_CP4_storm.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 466,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/saveMCS_CP4_storm_CP25.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 507,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/saveMCS_CP4_storm_old.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 447,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/tmin_per_month.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 97,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_correlation.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 195,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_correlation_SA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 280,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_correlation_WA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 298,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 245,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_CHIRPSonly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 158,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_GPMonly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 146,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_GPMonly_global.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 63,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_SA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 287,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_SA_temp.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 287,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_WA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 320,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_WA_SH.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 329,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_WA_theta.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 404,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trend_linear_WA_theta_MERRA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 181,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "CLOVER/trmm_statistics.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 97,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "COCOON/interaction_analysis.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 103,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "COCOON/organisation_wavelet_tests.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 220,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "DYAMOND/DYAMOND_model_vars.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 28,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "DYAMOND/DY_MCS_bulk_UM5k.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 114,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "DYAMOND/extract_MetUM_domain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 36,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "DYAMOND/saveUM5k_MCS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 199,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "DYAMOND/saveUM5k_MCS_summer.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 205,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "EDW/EDW_avg_ancil.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 45,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "EDW/EDW_avg_var.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 39,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5-Land_hourly_LMCS_SM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 77,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_daily_GLOBAL_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 48,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_daily_GLOBAL_srfc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 69,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_srfc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 72,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_static.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 23,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_LMCS_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 79,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_LMCS_srfc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 82,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_LMCS_srfc_100mWind.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 76,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_pl_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 66,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_small.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 51,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_small_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 74,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_small_SouthAmerica_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 88,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_srfc_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 65,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_hourly_static_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 24,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 48,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_srfc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_static.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 26,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_pl_WA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 44,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synopHour_GLOBAL0.7_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 69,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synopHour_GLOBAL0.7_srfc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 68,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synop_SouthAfrica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synop_pl_SouthAfrica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 47,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synop_pl_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 47,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synop_srfc_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_monthly_synop_static_SouthAmerica.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 24,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/ERA5_static_regridder.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 208,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ERA-I_downloads/test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 19,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/AMSR2_25km_composite_MCStrack.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 424,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/AMSRE_25km_composite_MCStrack_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 382,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/ERA5_clims_saveCorrelations.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 259,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_CMIP6-LS3MIP-30ySlicing_regrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 46,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCS-ERA5-GeographicComposite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 296,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStrack_sampling_v1.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 191,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStrack_sampling_v2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 190,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStrack_table_bulk_ERA5_v1.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 367,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStrack_table_bulk_ERA5_v2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 383,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_AMSR2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 587,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_AMSR2_ERA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 601,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_ASCAT.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 426,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_LST.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 474,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 172,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg_LST.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 177,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg_sameDay.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 196,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 163,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 146,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/LOCAL_MCS_table_bulk_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 244,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/LSTA_composite_MCStrack_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 472,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/SM_runs_MCSshapshot_control.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 316,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/SM_runs_MCSshapshot_day1.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 309,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/SM_runs_MCSshapshot_day2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 302,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "GLOBAL/SM_runs_ben_notebook_functions.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 389,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "H2X/HW_table_create.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 224,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_gridsat_baseplots.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 304,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_gridsat_postproc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 564,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveCHIRPS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 70,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveCorrelations.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 727,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveGPM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 45,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveGridsat.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 260,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveWRF.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 79,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_saveonERA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 481,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_tab_production.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 443,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 337,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_CHIRPSonly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 177,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_GPMonly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 174,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_MCSonly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 174,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_MCSonly_linep.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 112,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_NDVI.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 143,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_smallMap.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 330,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "HUARAZ/HU_trend_linear_smallerMap.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 309,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CMIP6_SM_download.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 303,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_averaging.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 90,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 163,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 146,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/CP4_sm_paper/LOCAL_MCS_table_bulk_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 244,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/LMCS_MCS_table_bulk_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 248,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER_daily.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 134,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER_full.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 76,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_DRYLINES.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 49,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_EDW_ancil.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 134,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_EDW_trends.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_SA_DRY.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_VERA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 311,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/extracts/JASMIN_extract_script_cloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 139,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/rewrite_t_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 22,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/rewrite_var_compress.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 25,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/rewrite_var_pp.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 41,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "JASMIN/saveCP4_daily.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 20,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/CORE_table_create_AfricaCloud_fullWorkflow.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 209,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/CORE_table_main_AfricaCloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 96,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/MCS_table_addERA_toMain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 364,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/MCS_table_addERA_toMain_bigSA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 375,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/MCS_table_addLSTA_toMain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 321,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "MCS_snapshots/MCS_table_main_model_LMCSruns.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 89,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/AMSR2_10km_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 437,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/AMSRE_25km_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 476,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/COREmemory_anomaly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 73,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/COREmemory_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 392,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/LSTA_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 389,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_ANACIM_2dfield_extraction_AfCloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 88,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_ANACIM_stationExtraction_regrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 101,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_CoreTest_RainoverAfrica_AI-TEST.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 160,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_GMet_2dfield_extraction.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 66,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_GMet_2dfield_extraction_AfCloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 83,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_GMet_stationExtraction.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 70,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_GMet_stationExtraction_AfCloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 118,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NCInt_GMet_stationExtraction_regrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 99,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/NFLICS_composite_AMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 360,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/SWIFT_EF_wavelet_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 51,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/SWIFT_LSTA_wavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 42,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/SWIFT_LSTA_wavelet_onBigDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 78,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/composite_AMSRE_10kmSurfaceWaveletCode.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 366,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/core_table.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 127,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/probability_curves.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 288,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "NFLICS/probability_curves_bigDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 610,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "SWIFT/code/Quick_plot_example.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 106,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "TESTBED_WISER/MTG_map_geotiff_regrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 64,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "TESTBED_WISER/MTG_vis_geotiff_readOnly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 46,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "TESTBED_WISER/TB_MCStracktest_ASCAT.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 426,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "TESTBED_WISER/TB_MCStracktest_LST.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 433,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/BETHAN_LSTAtrend_wavelet_global.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 57,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/LSTAtrend_wavelet_decomposition.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 8,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/VERA_HANSEN_TREEFRAC.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 65,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "VERA/bamba/ANCILS_extract_script.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 35,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/bamba/test_plots.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 302,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/bamba/test_regrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 11,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/bamba/vegmean.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 60,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "VERA/bamba/vera_extract_script2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 143,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/bamba/vera_extract_script3d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 120,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/extreme_fraction_fromtotal.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 30,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/julia_paper_calc.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 24,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/std_map.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 35,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/storm_topo.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 48,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/surface/mk_dfrac.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 243,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/surface/smoothing_examples_dfrac_interpol.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 70,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/trmm_blobs.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 110,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/trmm_histogram.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 104,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/trmm_scatter_area.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 158,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "VERA/trmm_scatter_diurn.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 112,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "dry_spells/drySpell_simple.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 25,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "endgame/cp4_tcw_shear_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 474,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/ERA5_monthly_cleanup.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 33,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/MCS_bulk.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 129,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/countTRMM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 115,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/modis_lst_sum.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 54,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveAMSR2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 29,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveAMSR2_10km.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 276,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveAMSR2_25km.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 232,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveAMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 182,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveASCAT.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 178,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveCHIRPS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveCMORPH.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 74,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveCP4_aggregations.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 91,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveCSI_ESA_SM_25km.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 199,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveERA_ano.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 351,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveGPMonBigDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 148,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveGPMonTIR.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 181,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveGridsat.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 111,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveGridsat_panAf.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 60,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveLST.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 120,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveLSTA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 194,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveLSTA_MCSfiles.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 191,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveLSTA_failedAno.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 38,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 232,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_GPM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 236,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_GPM_fullYear.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 248,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_getERA5vars.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 232,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_getERA5vars2D.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 233,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_getERA5vars_15UTC.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 182,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_getERA5vars_crossSect.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 199,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_only.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 95,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMCS_only_CP4.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 108,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMODIS_LSTA_5km.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 360,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMODIS_LSTA_5km_v61.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 358,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMODIS_LST_5km_fromRAW_v6.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 159,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMODIS_LST_5km_fromRAW_v61.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 161,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveMeteosat_coordinates.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 24,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "eod/saveTRMM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 251,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "hackathon2025/MCS_table_create_model_kscale.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 193,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "hackathon2025/MCS_table_main_model_kscale.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 89,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "hansen_scripts/distance_from_ocean.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 149,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "hansen_scripts/merge_tiles.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 109,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "hansen_scripts/plot_deforestation_distances.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 512,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_T_vs_wavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 269,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 388,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_EGU19.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 365,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_absFreq.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 371,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_gridsat.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 182,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_only.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 183,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_scatter.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 355,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_deforestation_timeseries.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 32,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_lake_volta.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 200,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_tai_park.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 255,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "ileaps/salem_map_tai_park_ChrisAdjust.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 262,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "india/TRMM_MSG_matchup.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 198,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "india/read_msg.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 67,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "land_wavelet/wav1d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 135,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "notebooks/untitled.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/WRF_Marian_test_loop.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 74,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/fabi_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 18,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/plot_landsea_mask.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 56,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/sky_is_falling.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 18,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/test_kouakou.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 86,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/test_maximage.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 43,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/trend_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 66,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "other/trmm_msg_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 33,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "saveCore_standalone_v2/run_real_time.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 67,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_bigDomain.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 205,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_grads_daily.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 215,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_nowcast.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 169,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "saveCore_standalone_v4_panAfrica/run_powerBlobs_grads_AfricaCloud.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 122,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_memory/CMORPH_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 135,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/LSTA_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 411,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/LSTA_composite_perMonth.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 486,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/MCS_stats.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 36,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_AMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 362,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_AMSRE_TRMM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 335,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_TRMM.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 380,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 448,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_CMORPH.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 424,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_ERA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 290,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_ERA_map.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 679,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_ERA_map_shiftClim.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1213,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_ERA_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 558,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_backtrack_ERA_pl_small.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 749,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/composite_utils.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 96,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/fig01.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 170,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/fig01_prep.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 95,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_ERA_AMSR_LSTA_paper_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 886,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_backtrack_ERA_map_small.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1604,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1170,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE_LSTA_coreFilter.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 370,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE_coreFilter.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 279,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_AMSRE_timeseries_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1661,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1573,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_instability.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1482,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_mini.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1659,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_pl.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 550,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_filtered_ERA_map_small_LSTA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 907,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_AMSL_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 321,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_AMSRE.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 322,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_AMSRE_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 865,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_LSTA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 285,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_LSTA_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 344,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_histograms_wcoeffs.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 268,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_plot_AMSL.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 821,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_plot_ERA_map_small.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 982,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/paper_wavelet_coeffs_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 819,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/plot_backtrack.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 99,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/save_dominantLSTA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 58,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/surfaceScales_Powerdistribution.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 75,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/surfaceScales_distribution.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 54,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/test_image_dominantLSTA.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 120,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/test_image_dominant_GEWEX.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 239,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/test_image_dominant_scale.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 162,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/test_lsta.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 65,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "surface_wavelet/test_temperature_centrepoint.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 29,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "torrence_compo_wavelets/waveletAnalysis.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 143,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/parallelise_test.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 14,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/rewrite_string.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 15,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/u_mtg.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/u_normalise.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 12,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/u_parallax.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 131,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/u_rename.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 15,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/u_storms.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 59,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "utils/unrotate.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 55,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/old_dani/Conni_read.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 79,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/TRMM4Conni.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 33,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/TRMM_max_efolding.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 93,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/TRMM_max_efolding_read_plot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 93,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/VERA_wav2Dpeaks_2Dplot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 510,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/VERA_wav2d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 132,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_dani/get2dWavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/old_dani/read_latlon.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 17,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wav_mixed/old_wavelet_tests/MCS_locmm.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 99,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/old_wavelet_tests/diurnal_test2.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 1140,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/old_wavelet_tests/readMCS_getWavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 793,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/old_wavelet_tests/readMCS_locMinMax.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 68,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_MCS.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 133,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_centreMass.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 202,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_dominantWavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 280,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_dominantWavelet_MFG.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 304,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_dominantWavelet_MSG.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 307,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_dominantWavelet_MSG_avgRegrid.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 312,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_minT.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 150,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_powerBlobs.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 245,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_powerBlobs_fromNetcdf.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 81,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_powerBlobs_fromNetcdf_PORCELAIN.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 185,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_powerBlobs_sandbox.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 250,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wav_mixed/saveCore_powerBlobs_stitchTest.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 29,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet/wav1d.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 131,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/blob_trend.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 69,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/extreme_fraction.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 62,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig10_diurnal_scales.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 610,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig11_salem_map_basic.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 220,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig2_-10scatter.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 137,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig3_pmax_tmin.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 252,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig5_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 176,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/fig7_t_distribution.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 152,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/histogram_scales.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 83,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/p_t_curve.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 50,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/rainy_SCF.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 93,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/salem_map.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 231,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/salem_map_basic_absOnly.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 183,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/salem_map_basic_new.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 75,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/scatter_p30_nbval.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 78,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/storm_composite.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 109,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/storm_composite_scale.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 106,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_paper/table1_calc_table_statistics.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 163,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_tests/2dGaussian.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 44,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wavelet_tests/2dGaussian_newroutine.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 48,
+      "reasons": [
+        "shebang"
+      ]
+    },
+    "wavelet_tests/test_perfect_feature.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 476,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_tests/test_wavelet.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 74,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    },
+    "wavelet_tests/test_wavelet_map_overplot.py": {
+      "has_exec": false,
+      "has_main": false,
+      "has_cli": false,
+      "lines": 74,
+      "reasons": [
+        "no_exec_pattern"
+      ]
+    }
+  }
+}

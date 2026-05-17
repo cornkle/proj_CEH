@@ -1,0 +1,825 @@
+{
+  "py_count": 596,
+  "nb_count": 445,
+  "similar_groups": [
+    {
+      "norm": "util",
+      "pairs": [
+        {
+          "a": "saveCore_standalone_NFLICS/util.py",
+          "b": "saveCore_standalone_v2/util.py",
+          "ratio": 0.943,
+          "size_a": 2201,
+          "size_b": 2406
+        }
+      ]
+    },
+    {
+      "norm": "oned",
+      "pairs": [
+        {
+          "a": "wavelet/oned.py",
+          "b": "land_wavelet/oned.py",
+          "ratio": 1.0,
+          "size_a": 7832,
+          "size_b": 7832
+        }
+      ]
+    },
+    {
+      "norm": "twod",
+      "pairs": [
+        {
+          "a": "wavelet/twod.py",
+          "b": "saveCore_standalone_NFLICS/twod.py",
+          "ratio": 0.865,
+          "size_a": 5705,
+          "size_b": 4351
+        },
+        {
+          "a": "wavelet/twod.py",
+          "b": "saveCore_standalone_v2/twod.py",
+          "ratio": 0.865,
+          "size_a": 5705,
+          "size_b": 4351
+        },
+        {
+          "a": "saveCore_standalone_NFLICS/twod.py",
+          "b": "saveCore_standalone_v2/twod.py",
+          "ratio": 1.0,
+          "size_a": 4351,
+          "size_b": 4351
+        }
+      ]
+    },
+    {
+      "norm": "wav",
+      "pairs": [
+        {
+          "a": "wavelet/wav.py",
+          "b": "saveCore_standalone_NFLICS/wav.py",
+          "ratio": 0.917,
+          "size_a": 3805,
+          "size_b": 3375
+        },
+        {
+          "a": "wavelet/wav.py",
+          "b": "saveCore_standalone_v2/wav.py",
+          "ratio": 0.913,
+          "size_a": 3805,
+          "size_b": 3390
+        },
+        {
+          "a": "wavelet/wav.py",
+          "b": "land_wavelet/wav.py",
+          "ratio": 0.833,
+          "size_a": 3805,
+          "size_b": 4676
+        },
+        {
+          "a": "saveCore_standalone_NFLICS/wav.py",
+          "b": "saveCore_standalone_v2/wav.py",
+          "ratio": 0.996,
+          "size_a": 3375,
+          "size_b": 3390
+        }
+      ]
+    },
+    {
+      "norm": "wavd",
+      "pairs": [
+        {
+          "a": "wavelet/wav1d.py",
+          "b": "land_wavelet/wav1d.py",
+          "ratio": 0.988,
+          "size_a": 5360,
+          "size_b": 5485
+        }
+      ]
+    },
+    {
+      "norm": "saveamsrkm",
+      "pairs": [
+        {
+          "a": "eod/saveAMSR2_10km.py",
+          "b": "eod/saveAMSR2_25km.py",
+          "ratio": 0.822,
+          "size_a": 9790,
+          "size_b": 7897
+        }
+      ]
+    },
+    {
+      "norm": "savemodislstkmfromrawv",
+      "pairs": [
+        {
+          "a": "eod/saveMODIS_LST_5km_fromRAW_v6.py",
+          "b": "eod/saveMODIS_LST_5km_fromRAW_v61.py",
+          "ratio": 0.938,
+          "size_a": 4570,
+          "size_b": 4789
+        }
+      ]
+    },
+    {
+      "norm": "paperfilteredwaveletcoeffsamslcmoprh",
+      "pairs": [
+        {
+          "a": "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH2.py",
+          "b": "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH.py",
+          "ratio": 0.841,
+          "size_a": 12413,
+          "size_b": 14320
+        }
+      ]
+    },
+    {
+      "norm": "powerblobutils",
+      "pairs": [
+        {
+          "a": "wav_mixed/powerBlob_utils.py",
+          "b": "saveCore_standalone_NFLICS/powerBlob_utils.py",
+          "ratio": 0.898,
+          "size_a": 3578,
+          "size_b": 4156
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesstormfilesonlydy",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py",
+          "ratio": 1.0,
+          "size_a": 2391,
+          "size_b": 2391
+        }
+      ]
+    },
+    {
+      "norm": "smrunsmcsshapshotday",
+      "pairs": [
+        {
+          "a": "GLOBAL/SM_runs_MCSshapshot_day2.py",
+          "b": "GLOBAL/SM_runs_MCSshapshot_day1.py",
+          "ratio": 0.985,
+          "size_a": 10016,
+          "size_b": 10289
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesstormfilesonlydobs",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py",
+          "ratio": 1.0,
+          "size_a": 5867,
+          "size_b": 5867
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesstormfilesonlydobsclover",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py",
+          "ratio": 1.0,
+          "size_a": 6538,
+          "size_b": 6538
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesstormfilesonlyd",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py",
+          "ratio": 1.0,
+          "size_a": 4164,
+          "size_b": 4164
+        }
+      ]
+    },
+    {
+      "norm": "localpsurfacescalesfulldomaind",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_P25_surfaceScales_fullDomain_2d.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_P25_surfaceScales_fullDomain_2d.py",
+          "ratio": 1.0,
+          "size_a": 4130,
+          "size_b": 4130
+        }
+      ]
+    },
+    {
+      "norm": "localpsurfacefluxstddevfulldomain",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py",
+          "ratio": 1.0,
+          "size_a": 1617,
+          "size_b": 1617
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalestimeseries",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_timeseries.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_timeseries.py",
+          "ratio": 1.0,
+          "size_a": 3335,
+          "size_b": 3335
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesstormfilesonlydx",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py",
+          "ratio": 1.0,
+          "size_a": 2392,
+          "size_b": 2392
+        }
+      ]
+    },
+    {
+      "norm": "globalmcstracksamplingv",
+      "pairs": [
+        {
+          "a": "GLOBAL/GLOBAL_MCStrack_sampling_v1.py",
+          "b": "GLOBAL/GLOBAL_MCStrack_sampling_v2.py",
+          "ratio": 0.978,
+          "size_a": 6916,
+          "size_b": 6821
+        }
+      ]
+    },
+    {
+      "norm": "localmcstablebulkcp",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_MCS_table_bulk_CP4.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_MCS_table_bulk_CP4.py",
+          "ratio": 1.0,
+          "size_a": 7967,
+          "size_b": 7967
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesfulldomaindobs",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py",
+          "ratio": 1.0,
+          "size_a": 2992,
+          "size_b": 2992
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacescalesfulldomaind",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d.py",
+          "ratio": 1.0,
+          "size_a": 4430,
+          "size_b": 4430
+        }
+      ]
+    },
+    {
+      "norm": "localcpsurfacefluxstddevfulldomain",
+      "pairs": [
+        {
+          "a": "GLOBAL/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py",
+          "b": "JASMIN/CP4_sm_paper/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py",
+          "ratio": 1.0,
+          "size_a": 2291,
+          "size_b": 2291
+        }
+      ]
+    },
+    {
+      "norm": "aggregateforestloss",
+      "pairs": [
+        {
+          "a": "hansen_scripts/aggregate_forest_loss_2013.py",
+          "b": "hansen_scripts/aggregate_forest_loss.py",
+          "ratio": 0.984,
+          "size_a": 12968,
+          "size_b": 13095
+        }
+      ]
+    },
+    {
+      "norm": "savemcspstormboxanomv",
+      "pairs": [
+        {
+          "a": "GLOBAL/old/saveMCS_P25_storm_box_anom_v2.py",
+          "b": "JASMIN/old/saveMCS_P25_storm_box_anom_v2.py",
+          "ratio": 0.994,
+          "size_a": 19644,
+          "size_b": 19844
+        }
+      ]
+    },
+    {
+      "norm": "savemcspstormboxmeanv",
+      "pairs": [
+        {
+          "a": "GLOBAL/old/saveMCS_P25_storm_box_mean_v2.py",
+          "b": "JASMIN/old/saveMCS_P25_storm_box_mean_v2.py",
+          "ratio": 0.994,
+          "size_a": 17976,
+          "size_b": 18176
+        }
+      ]
+    },
+    {
+      "norm": "savemcscpstormboxmeanv",
+      "pairs": [
+        {
+          "a": "GLOBAL/old/saveMCS_CP4_storm_box_mean_v2.py",
+          "b": "JASMIN/old/saveMCS_CP4_storm_box_mean_v2.py",
+          "ratio": 0.994,
+          "size_a": 17920,
+          "size_b": 18119
+        }
+      ]
+    }
+  ],
+  "possibly_unused": [
+    "wavelet/wav1d.py",
+    "eod/MCS_bulk.py",
+    "eod/saveGridsat.py",
+    "eod/modis_lst_sum.py",
+    "eod/saveAMSRE.py",
+    "eod/saveCHIRPS.py",
+    "eod/saveGridsat_panAf.py",
+    "eod/saveLST.py",
+    "eod/saveLSTA.py",
+    "eod/saveERA_ano.py",
+    "eod/saveLSTA_failedAno.py",
+    "eod/saveMeteosat_coordinates.py",
+    "eod/saveMCS_getERA5vars.py",
+    "eod/saveAMSR2.py",
+    "eod/saveMCS_getERA5vars_15UTC.py",
+    "eod/saveMCS_getERA5vars_crossSect.py",
+    "eod/saveCMORPH.py",
+    "eod/saveMCS_only.py",
+    "eod/saveMCS_only_CP4.py",
+    "eod/countTRMM.py",
+    "eod/saveMCS.py",
+    "eod/saveMCS_GPM.py",
+    "eod/ERA5_monthly_cleanup.py",
+    "eod/saveMCS_getERA5vars2D.py",
+    "eod/saveLSTA_MCSfiles.py",
+    "eod/saveCP4_aggregations.py",
+    "eod/saveGPMonTIR.py",
+    "eod/saveGPMonBigDomain.py",
+    "eod/saveAMSR2_10km.py",
+    "eod/saveAMSR2_25km.py",
+    "eod/saveCSI_ESA_SM_25km.py",
+    "eod/saveMODIS_LSTA_5km.py",
+    "eod/saveMODIS_LST_5km_fromRAW_v6.py",
+    "eod/saveMODIS_LST_5km_fromRAW_v61.py",
+    "eod/saveMODIS_LSTA_5km_v61.py",
+    "eod/saveASCAT.py",
+    "eod/saveMCS_GPM_fullYear.py",
+    "eod/saveTRMM.py",
+    "wavelet_tests/test_area_circle.py",
+    "wavelet_tests/test_perfect_feature.py",
+    "wavelet_tests/test_dilation.py",
+    "wavelet_tests/test_wavelet.py",
+    "wavelet_tests/2dGaussian.py",
+    "wavelet_tests/2dGaussian_newroutine.py",
+    "wavelet_tests/test_wavelet_map_overplot.py",
+    "notebooks/untitled.py",
+    "utils/u_rotgrid.py",
+    "utils/unrotate.py",
+    "utils/u_normalise.py",
+    "utils/u_rename.py",
+    "utils/u_storms.py",
+    "utils/rewrite_string.py",
+    "utils/u_parallax.py",
+    "utils/parallelise_test.py",
+    "utils/u_mtg.py",
+    "ileaps/salem_map_deforestation.py",
+    "ileaps/salem_map_deforestation_gridsat.py",
+    "ileaps/salem_map_deforestation_scatter.py",
+    "ileaps/salem_map_lake_volta.py",
+    "ileaps/salem_map_tai_park.py",
+    "ileaps/salem_map_deforestation_only.py",
+    "ileaps/salem_map_T_vs_wavelet.py",
+    "ileaps/salem_map_tai_park_ChrisAdjust.py",
+    "ileaps/salem_map_deforestation_EGU19.py",
+    "ileaps/salem_map_deforestation_absFreq.py",
+    "ileaps/salem_map_deforestation_timeseries.py",
+    "wavelet_paper/histogram_scales.py",
+    "wavelet_paper/scatter_p30_nbval.py",
+    "wavelet_paper/fig5_composite.py",
+    "wavelet_paper/fig3_pmax_tmin.py",
+    "wavelet_paper/fig1_map_trmm_msg.py",
+    "wavelet_paper/fig7_t_distribution.py",
+    "wavelet_paper/fig11_salem_map_basic.py",
+    "wavelet_paper/fig2_-10scatter.py",
+    "wavelet_paper/extreme_fraction.py",
+    "wavelet_paper/fig8_scatter_prob_scale_T.py",
+    "wavelet_paper/fig10_diurnal_scales.py",
+    "wavelet_paper/rainy_SCF.py",
+    "wavelet_paper/storm_composite.py",
+    "wavelet_paper/salem_map.py",
+    "wavelet_paper/storm_composite_scale.py",
+    "wavelet_paper/fig_4_6_wavelet_example.py",
+    "wavelet_paper/blob_trend.py",
+    "wavelet_paper/p_t_curve.py",
+    "wavelet_paper/salem_map_basic_new.py",
+    "wavelet_paper/salem_map_basic_absOnly.py",
+    "wavelet_paper/plot_prob_scale_T.py",
+    "wavelet_paper/fig9_probability_Tonly.py",
+    "wavelet_paper/table1_calc_table_statistics.py",
+    "dry_spells/dry_spell.py",
+    "dry_spells/drySpell_simple.py",
+    "other/fabi_test.py",
+    "other/sky_is_falling.py",
+    "other/plot_landsea_mask.py",
+    "other/trmm_msg_plot.py",
+    "other/test_maximage.py",
+    "other/trend_test.py",
+    "other/test_kouakou.py",
+    "other/WRF_Marian_test.py",
+    "other/WRF_Marian_test_loop.py",
+    "VERA/trmm_histogram.py",
+    "VERA/trmm_blobs.py",
+    "VERA/trmm_scatter_diurn.py",
+    "VERA/trmm_scatter_area.py",
+    "VERA/std_map.py",
+    "VERA/storm_topo.py",
+    "VERA/julia_paper_calc.py",
+    "VERA/extreme_fraction_fromtotal.py",
+    "VERA/VERA_HANSEN_TREEFRAC.py",
+    "VERA/LSTAtrend_wavelet_decomposition.py",
+    "VERA/BETHAN_LSTAtrend_wavelet_global.py",
+    "NFLICS/core_table.py",
+    "NFLICS/probability_curves.py",
+    "NFLICS/SWIFT_LSTA_wavelet.py",
+    "NFLICS/COREmemory_anomaly.py",
+    "NFLICS/COREmemory_composite.py",
+    "NFLICS/LSTA_composite.py",
+    "NFLICS/probability_curves_bigDomain.py",
+    "NFLICS/SWIFT_LSTA_wavelet_onBigDomain.py",
+    "NFLICS/bigDomain_composite_wavelet.py",
+    "NFLICS/AMSR2_10km_composite.py",
+    "NFLICS/AMSRE_25km_composite.py",
+    "NFLICS/NFLICS_composite_AMSRE.py",
+    "NFLICS/composite_AMSRE_10kmSurfaceWaveletCode.py",
+    "NFLICS/SWIFT_EF_wavelet_CP4.py",
+    "NFLICS/NCInt_GMet_stationExtraction.py",
+    "NFLICS/NCInt_GMet_stationExtraction_regrid.py",
+    "NFLICS/NCInt_ANACIM_stationExtraction_regrid.py",
+    "NFLICS/NCInt_GMet_2dfield_extraction.py",
+    "NFLICS/NCInt_CoreTest_RainoverAfrica_AI-TEST.py",
+    "NFLICS/NCInt_GMet_2dfield_extraction_AfCloud.py",
+    "NFLICS/NCInt_GMet_stationExtraction_AfCloud.py",
+    "NFLICS/NCInt_ANACIM_2dfield_extraction_AfCloud.py",
+    "surface_memory/AMSL_CMORPH.py",
+    "surface_memory/CMORPH_plot.py",
+    "surface_memory/filter_points.py",
+    "HUARAZ/HU_gridsat_baseplots.py",
+    "HUARAZ/HU_gridsat_postproc.py",
+    "HUARAZ/HU_saveCorrelations.py",
+    "HUARAZ/HU_saveGPM.py",
+    "HUARAZ/HU_saveGridsat.py",
+    "HUARAZ/HU_saveonERA.py",
+    "HUARAZ/HU_tab_production.py",
+    "HUARAZ/HU_trend_linear.py",
+    "HUARAZ/HU_trend_linear_CHIRPSonly.py",
+    "HUARAZ/HU_trend_linear_GPMonly.py",
+    "HUARAZ/HU_trend_linear_MCSonly.py",
+    "HUARAZ/HU_trend_linear_MCSonly_linep.py",
+    "HUARAZ/HU_trend_linear_smallMap.py",
+    "HUARAZ/HU_trend_linear_smallerMap.py",
+    "HUARAZ/HU_trend_linear_NDVI.py",
+    "HUARAZ/HU_saveCHIRPS.py",
+    "HUARAZ/HU_saveWRF.py",
+    "surface_wavelet/test_image_dominant_scale.py",
+    "surface_wavelet/paper_histograms_AMSL_plot.py",
+    "surface_wavelet/paper_plot_ERA_map_small.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMERA.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH2.py",
+    "surface_wavelet/paper_filtered_ERA_map_AMSRE_timeseries_plot.py",
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_instability.py",
+    "surface_wavelet/fig01.py",
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_mini.py",
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE_pl.py",
+    "surface_wavelet/fig01_prep.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_CMOPRH.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSL_histo.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSRE_coarse.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSR_histo.py",
+    "surface_wavelet/save_dominantLSTA.py",
+    "surface_wavelet/test_image_dominantLSTA.py",
+    "surface_wavelet/surfaceScales_diurnal.py",
+    "surface_wavelet/surfaceScalesvsLSTA.py",
+    "surface_wavelet/surfaceScales_diurnal_noT.py",
+    "surface_wavelet/surfaceScales_powerValues.py",
+    "surface_wavelet/paper_wavelet_coeffs_plot.py",
+    "surface_wavelet/paper_histograms_AMSRE_plot.py",
+    "surface_wavelet/composite_AMSRE.py",
+    "surface_wavelet/composite_TRMM.py",
+    "surface_wavelet/composite_backtrack_ERA.py",
+    "surface_wavelet/composite_backtrack_CMORPH.py",
+    "surface_wavelet/composite_backtrack_ERA_map_shiftClim.py",
+    "surface_wavelet/paper_ERA_AMSR_LSTA_paper_plot.py",
+    "surface_wavelet/paper_plot_AMSL.py",
+    "surface_wavelet/composite_backtrack.py",
+    "surface_wavelet/test_image_dominant_GEWEX.py",
+    "surface_wavelet/MCS_stats.py",
+    "surface_wavelet/plot_backtrack.py",
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE_coreFilter.py",
+    "surface_wavelet/paper_histograms_LSTA.py",
+    "surface_wavelet/surfaceScales_distribution.py",
+    "surface_wavelet/composite_backtrack_ERA_pl.py",
+    "surface_wavelet/composite_utils.py",
+    "surface_wavelet/test_lsta.py",
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE.py",
+    "surface_wavelet/surfaceScales_Powerdistribution.py",
+    "surface_wavelet/scatter_scales.py",
+    "surface_wavelet/paper_point_filters_core.py",
+    "surface_wavelet/paper_filtered_ERA_map_small_LSTA.py",
+    "surface_wavelet/composite_AMSRE_TRMM.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs.py",
+    "surface_wavelet/paper_filtered_wavelet_coeffs_AMSRE.py",
+    "surface_wavelet/paper_backtrack_ERA_map_small_AMSRE_LSTA_coreFilter.py",
+    "surface_wavelet/test_temperature_centrepoint.py",
+    "surface_wavelet/paper_histograms_LSTA_plot.py",
+    "surface_wavelet/paper_histograms_wcoeffs.py",
+    "surface_wavelet/paper_wavelet_coeffs.py",
+    "surface_wavelet/composite_backtrack_ERA_map.py",
+    "surface_wavelet/composite_wavelet.py",
+    "surface_wavelet/paper_backtrack_ERA_map_small.py",
+    "surface_wavelet/LSTA_composite.py",
+    "surface_wavelet/LSTA_composite_perMonth.py",
+    "surface_wavelet/histogram_powers.py",
+    "surface_wavelet/MCS_point_filters.py",
+    "surface_wavelet/paper_histograms_AMSRE.py",
+    "surface_wavelet/composite_backtrack_ERA_pl_small.py",
+    "surface_wavelet/paper_filtered_ERA_map_small_AMSRE.py",
+    "ERA-I_downloads/test.py",
+    "ERA-I_downloads/ERA5_hourly_small.py",
+    "ERA-I_downloads/ERA5_monthly_pl_WA.py",
+    "ERA-I_downloads/ERA5_monthly_synop_SouthAfrica.py",
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_pl.py",
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_srfc.py",
+    "ERA-I_downloads/ERA5_monthly_synop_pl_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_hourly_pl_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_hourly_srfc_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_hourly_static_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_monthly_synop_srfc_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_monthly_synop_static_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_hourly_small_SouthAmerica.py",
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_pl.py",
+    "ERA-I_downloads/ERA5_hourly_LMCS_pl.py",
+    "ERA-I_downloads/ERA5_monthly_GLOBAL0.7_static.py",
+    "ERA-I_downloads/ERA5_hourly_LMCS_srfc.py",
+    "ERA-I_downloads/ERA5_monthly_synop_pl_SouthAfrica.py",
+    "ERA-I_downloads/ERA5_hourly_small_SouthAmerica_pl.py",
+    "ERA-I_downloads/ERA5_daily_GLOBAL_pl.py",
+    "ERA-I_downloads/ERA5_daily_GLOBAL_srfc.py",
+    "ERA-I_downloads/ERA5_hourly_LMCS_srfc_100mWind.py",
+    "ERA-I_downloads/ERA5_monthly_synopHour_GLOBAL0.7_pl.py",
+    "ERA-I_downloads/ERA5_hourly_LMCS_pl_w500.py",
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_srfc.py",
+    "ERA-I_downloads/ERA5_monthly_synopHour_GLOBAL0.7_srfc.py",
+    "ERA-I_downloads/ERA5-Land_hourly_LMCS_SM.py",
+    "ERA-I_downloads/ERA5_hourly_GLOBAL0.7_static.py",
+    "ERA-I_downloads/ERA5_static_regridder.py",
+    "india/TRMM_MSG_matchup.py",
+    "india/read_msg.py",
+    "JASMIN/saveCP4_daily.py",
+    "JASMIN/rewrite_t_pl.py",
+    "JASMIN/rewrite_var_compress.py",
+    "JASMIN/rewrite_var_pp.py",
+    "JASMIN/LMCS_MCS_table_bulk_CP4.py",
+    "wav_mixed/saveCore_dominantWavelet.py",
+    "wav_mixed/saveCore_MCS.py",
+    "wav_mixed/saveCore_centreMass.py",
+    "wav_mixed/saveCore_powerBlobs_sandbox.py",
+    "wav_mixed/wavelet_composite_no_overlap_parallax_dominant.py",
+    "wav_mixed/wavelet_composite_blobs.py",
+    "wav_mixed/wavelet_composite_no_overlap_parallax.py",
+    "wav_mixed/saveCore_minT.py",
+    "wav_mixed/saveCore_dominantWavelet_MFG.py",
+    "wav_mixed/saveCore_dominantWavelet_MSG.py",
+    "wav_mixed/saveCore_dominantWavelet_MSG_avgRegrid.py",
+    "wav_mixed/saveCore_powerBlobs_fromNetcdf_PORCELAIN.py",
+    "wav_mixed/saveCore_powerBlobs_fromNetcdf.py",
+    "wav_mixed/saveCore_powerBlobs.py",
+    "wav_mixed/saveCore_powerBlobs_stitchTest.py",
+    "CLOVER/era_tgrad.py",
+    "CLOVER/gridsat_surface.py",
+    "CLOVER/gridsat_surface_daynight.py",
+    "CLOVER/era_wind.py",
+    "CLOVER/saveMCS_CP4_storm_CP25.py",
+    "CLOVER/trend_linear_WA_theta.py",
+    "CLOVER/trmm_statistics.py",
+    "CLOVER/clov_-10scatter_density.py",
+    "CLOVER/clov_pmax_tmin.py",
+    "CLOVER/gridsat_postproc.py",
+    "CLOVER/trend_linear.py",
+    "CLOVER/trend_linear_SA.py",
+    "CLOVER/clov_MCS_bulk_CP4.py",
+    "CLOVER/clov_-10scatter_cp4.py",
+    "CLOVER/saveMCS_CP4_storm.py",
+    "CLOVER/plot_MCS.py",
+    "CLOVER/saveMCS_CP4_box.py",
+    "CLOVER/trend_correlation_SA.py",
+    "CLOVER/anomaly_eventBased_SA.py",
+    "CLOVER/clov_-60scatter_density_shear.py",
+    "CLOVER/clov_-60scatter_density_shear2d.py",
+    "CLOVER/clov_-60scatter_density_rain.py",
+    "CLOVER/tmin_per_month.py",
+    "CLOVER/trend_correlation.py",
+    "CLOVER/area_check.py",
+    "CLOVER/clov_-10scatter.py",
+    "CLOVER/clov_MCS_bulk_CP25.py",
+    "CLOVER/clov_MCS_bulk_ERA5.py",
+    "CLOVER/clov_-60scatter_OBS.py",
+    "CLOVER/clov_scatter_2d_Tmin_PCP_DACCIWA.py",
+    "CLOVER/chirps_postproc.py",
+    "CLOVER/trend_correlation_WA.py",
+    "CLOVER/trend_linear_WA.py",
+    "CLOVER/trend_linear_SA_temp.py",
+    "CLOVER/clov_-60scatter_OBS_tir.py",
+    "CLOVER/saveMCS_CP4_storm_old.py",
+    "CLOVER/clov_MCS_bulk_ERA5_monthly.py",
+    "CLOVER/clov_MCS_bulk_CP4_monthly.py",
+    "CLOVER/trend_linear_WA_SH.py",
+    "CLOVER/trend_linear_WA_theta_MERRA.py",
+    "CLOVER/trend_linear_CHIRPSonly.py",
+    "CLOVER/trend_linear_GPMonly.py",
+    "CLOVER/trend_linear_GPMonly_global.py",
+    "CLOVER/clov_MCS_bulk_ERA5_fullYear_SOMS.py",
+    "torrence_compo_wavelets/waveletAnalysis.py",
+    "endgame/cp4_tcw_shear_test.py",
+    "saveCore_standalone_v2/run_real_time.py",
+    "DYAMOND/extract_MetUM_domain.py",
+    "DYAMOND/DYAMOND_model_vars.py",
+    "DYAMOND/DY_MCS_bulk_UM5k.py",
+    "DYAMOND/saveUM5k_MCS.py",
+    "DYAMOND/saveUM5k_MCS_summer.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py",
+    "GLOBAL/AMSRE_25km_composite_MCStrack_test.py",
+    "GLOBAL/subset_robust_mcs_tracks.py",
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg.py",
+    "GLOBAL/SM_runs_MCSshapshot_day2.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py",
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg_LST.py",
+    "GLOBAL/GLOBAL_MCStracktest_ASCAT.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py",
+    "GLOBAL/ERA5_clims_saveCorrelations.py",
+    "GLOBAL/GLOBAL_MCS-ERA5-GeographicComposite.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py",
+    "GLOBAL/GLOBAL_MCStracktest_AMSR2_ERA.py",
+    "GLOBAL/SM_runs_MCSshapshot_day1.py",
+    "GLOBAL/LOCAL_P25_surfaceScales_fullDomain_2d.py",
+    "GLOBAL/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_timeseries.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py",
+    "GLOBAL/GLOBAL_MCStrack_sampling_v1.py",
+    "GLOBAL/SM_runs_ben_notebook_functions.py",
+    "GLOBAL/GLOBAL_CMIP6-LS3MIP-30ySlicing_regrid.py",
+    "GLOBAL/AMSR2_25km_composite_MCStrack.py",
+    "GLOBAL/SM_runs_MCSshapshot_control.py",
+    "GLOBAL/GLOBAL_MCStrack_table_bulk_ERA5_v2.py",
+    "GLOBAL/LSTA_composite_MCStrack_test.py",
+    "GLOBAL/GLOBAL_MCStracktest_AMSR2.py",
+    "GLOBAL/LOCAL_MCS_table_bulk_CP4.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py",
+    "GLOBAL/GLOBAL_MCStracktest_LST.py",
+    "GLOBAL/LOCAL_CP4_surfaceScales_fullDomain_2d.py",
+    "GLOBAL/GLOBAL_MCStrack_table_bulk_ERA5_v1.py",
+    "GLOBAL/GLOBAL_CMIP6-LS3MIP-30ySlicing.py",
+    "GLOBAL/GLOBAL_MCStrack_sampling_v2.py",
+    "GLOBAL/GLOBAL_MCStracktest_plotAllReg_sameDay.py",
+    "GLOBAL/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py",
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_nowcast.py",
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_bigDomain.py",
+    "saveCore_standalone_v3_bigDomain/run_powerBlobs_grads_daily.py",
+    "MCS_snapshots/MCS_table_main_01deg.py",
+    "MCS_snapshots/MCS_table_addLSTA_toMain.py",
+    "MCS_snapshots/MCS_table_addERA_toMain_bigSA.py",
+    "MCS_snapshots/MCS_table_addERA_toMain.py",
+    "MCS_snapshots/MCS_table_main_model_LMCSruns.py",
+    "MCS_snapshots/MCS_table_main_model.py",
+    "MCS_snapshots/CORE_table_create_AfricaCloud_fullWorkflow.py",
+    "MCS_snapshots/COCOON_table_main_01deg.py",
+    "MCS_snapshots/COCOON_table_addERA_toMain.py",
+    "MCS_snapshots/CORE_table_main_AfricaCloud.py",
+    "saveCore_standalone_v4_panAfrica/run_powerBlobs_grads_AfricaCloud.py",
+    "EDW/EDW_avg_var.py",
+    "EDW/EDW_avg_ancil.py",
+    "land_wavelet/wav1d.py",
+    "H2X/HW_table_create.py",
+    "TESTBED_WISER/TB_MCStracktest_ASCAT.py",
+    "TESTBED_WISER/TB_MCStracktest_LST.py",
+    "TESTBED_WISER/MTG_map_geotiff_regrid.py",
+    "TESTBED_WISER/MTG_vis_geotiff_readOnly.py",
+    "COCOON/organisation_wavelet_tests.py",
+    "COCOON/storm_anaysis_test.py",
+    "COCOON/interaction_analysis.py",
+    "COCOON/storm_shear_analysis.py",
+    "hansen_scripts/aggregate_forest_loss_2013.py",
+    "hansen_scripts/merge_tiles.py",
+    "hansen_scripts/distance_from_ocean.py",
+    "hansen_scripts/plot_deforestation_distances.py",
+    "hackathon2025/MCS_table_create_model_kscale.py",
+    "hackathon2025/MCS_table_main_model_kscale.py",
+    "SWIFT/code/Quick_plot_example.py",
+    "CLOVER/nature2017/chris_paper_station_rev_merge.py",
+    "CLOVER/nature2017/chris_paper_station_revised.py",
+    "CLOVER/nature2017/chris_precip_dist.py",
+    "CLOVER/nature2017/tm_blob_chris.py",
+    "CLOVER/nature2017/mcs_energy.py",
+    "wav_mixed/old_dani/get2dWavelet.py",
+    "wav_mixed/old_dani/read_latlon.py",
+    "wav_mixed/old_dani/VERA_wav2d.py",
+    "wav_mixed/old_dani/VERA_wav2Dpeaks_2Dplot.py",
+    "wav_mixed/old_dani/Conni_read.py",
+    "wav_mixed/old_dani/TRMM4Conni.py",
+    "wav_mixed/old_dani/TRMM_max_efolding_read_plot.py",
+    "wav_mixed/old_dani/TRMM_max_efolding.py",
+    "wav_mixed/old_wavelet_tests/MCS_locmm.py",
+    "wav_mixed/old_wavelet_tests/diurnal_test2.py",
+    "wav_mixed/old_wavelet_tests/readMCS_locMinMax.py",
+    "wav_mixed/old_wavelet_tests/readMCS_getWavelet.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_CROSS-geoH.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_y.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_anom_v2.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d_OBS-CLOVER.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_2d.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_CROSS.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_climatology-3hourMean.py",
+    "JASMIN/CP4_sm_paper/LMCS_CMIP6_SM_download.py",
+    "JASMIN/CP4_sm_paper/LOCAL_P25_surfaceScales_fullDomain_2d.py",
+    "JASMIN/CP4_sm_paper/LOCAL_P25_surfacefluxSTDDEV_fullDomain.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_timeseries.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_stormFilesOnly_1d_x.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_climatology.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_surfaceScales_timeseries.py",
+    "JASMIN/CP4_sm_paper/LOCAL_MCS_table_bulk_CP4.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d_OBS.py",
+    "JASMIN/CP4_sm_paper/LMCS_CP4_storm_box_v2_averaging.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfaceScales_fullDomain_2d.py",
+    "JASMIN/CP4_sm_paper/LOCAL_CP4_surfacefluxSTDDEV_fullDomain.py",
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER.py",
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER_full.py",
+    "JASMIN/extracts/JASMIN_extract_script_VERA.py",
+    "JASMIN/extracts/JASMIN_extract_script_cloud.py",
+    "JASMIN/extracts/JASMIN_extract_script_EDW_ancil.py",
+    "JASMIN/extracts/JASMIN_extract_script_DRYLINES.py",
+    "JASMIN/extracts/JASMIN_extract_script_EDW_trends.py",
+    "JASMIN/extracts/JASMIN_extract_script_SA_DRY.py",
+    "JASMIN/extracts/JASMIN_extract_script_CLOVER_daily.py",
+    "VERA/surface/mk_dfrac.py",
+    "VERA/surface/smoothing_examples_dfrac_interpol.py",
+    "VERA/bamba/ANCILS_extract_script.py",
+    "VERA/bamba/test_plots.py",
+    "VERA/bamba/vera_extract_script2d.py",
+    "VERA/bamba/vera_extract_script3d.py",
+    "VERA/bamba/test_regrid.py",
+    "VERA/bamba/vegmean.py"
+  ],
+  "notebooks_flagged": [
+    {
+      "path": "notebooks/Untitled.ipynb",
+      "code_cells": 2,
+      "md_cells": 0,
+      "todo": 0,
+      "empty_code_cells": 2
+    },
+    {
+      "path": "notebooks/UK_timeInCountry.ipynb",
+      "code_cells": 2,
+      "md_cells": 0,
+      "todo": 0,
+      "empty_code_cells": 0
+    }
+  ]
+}

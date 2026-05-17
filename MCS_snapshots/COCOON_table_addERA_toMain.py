@@ -20,10 +20,10 @@ BASE_TABLE_DIR = "/prj/global_water/MCS_5000km2_tables_v3/base_tables_tir-prcp"
 STATIC_ERA_FILE = ("/prj/global_water/ERA5_global_0.7/static/era5_invariant_07deg_COCOON-study_regrid.nc")
 
 
-TEST_MODE = True
+TEST_MODE = False
 
 if TEST_MODE:
-    YEARS = [2006]
+    YEARS = [2008]
     TEST_MONTHS = [8]
     TEST_REGIONS = ["GPlains"]
     TEST_N_STORMS_PER_REGION = 500
