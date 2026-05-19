@@ -15,3 +15,4 @@ datasets:
   era5_hourly_pressure: "{network_data}/data/ERA5_WAf/hourly/pressure_levels"
   cp4_root: "{network_data}/data/CP4"
   lmcs_tables: "{lmcs}/tables"
+  mcs_5000km2_tables_v2: "{network_data}/MCS_5000km2_tables_v2/ERA5_storm_timeseries_TEST"
