@@ -48,4 +48,7 @@ plots/
 
 # OS junk
 .DS_Store
+
+# Machine-specific config (local paths, credentials, etc)
+configs/paths.local.yml
 Thumbs.db

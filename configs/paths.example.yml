@@ -1,0 +1,17 @@
+# Example paths configuration
+# Copy this to configs/paths.local.yml and fill in your actual paths
+# Do NOT commit paths.local.yml — it will be added to .gitignore
+
+machine: example
+
+roots:
+  scratch: /path/to/scratch
+  network_data: /path/to/network_data
+  lmcs: /path/to/lmcs
+  other: /path/to/other
+
+datasets:
+  era5_hourly_surface: "{network_data}/data/ERA5_WAf/hourly/surface"
+  era5_hourly_pressure: "{network_data}/data/ERA5_WAf/hourly/pressure_levels"
+  cp4_root: "{network_data}/data/CP4"
+  lmcs_tables: "{lmcs}/tables"
