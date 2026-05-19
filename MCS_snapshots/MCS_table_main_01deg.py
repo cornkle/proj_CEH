@@ -4,7 +4,7 @@ import pandas as pd
 import glob
 import os
 from utils import constants as cnst
-from GLOBAL import glob_util
+from LMCS import glob_util
 import numpy as np
 import multiprocessing
 import pyproj

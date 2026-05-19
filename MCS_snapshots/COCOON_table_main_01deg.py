@@ -11,7 +11,7 @@ import xarray as xr
 import pyproj
 
 from utils import constants as cnst
-from GLOBAL import glob_util
+from LMCS import glob_util
 
 
 REGIONS = glob_util.REGIONS

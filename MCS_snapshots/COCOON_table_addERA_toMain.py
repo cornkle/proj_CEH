@@ -7,7 +7,7 @@ import xarray as xr
 import multiprocessing as mp
 
 from utils import u_darrays
-from GLOBAL import glob_util
+from LMCS import glob_util
 
 # ============================================================
 # CONFIG
