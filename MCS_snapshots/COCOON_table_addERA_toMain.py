@@ -5,19 +5,21 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import multiprocessing as mp
+from shared.paths import load_paths
+from shared.utils import u_darrays
+from shared.LMCS import glob_util
 
-from utils import u_darrays
-from LMCS import glob_util
 
 # ============================================================
 # CONFIG
 # ============================================================
 
 REGIONS = glob_util.REGIONS
+paths = load_paths()
 
-ERA_ROOT = "/prj/global_water/ERA5_global_0.7/hourly"
-BASE_TABLE_DIR = "/prj/global_water/MCS_5000km2_tables_v3/base_tables_tir-prcp"
-STATIC_ERA_FILE = ("/prj/global_water/ERA5_global_0.7/static/era5_invariant_07deg_COCOON-study_regrid.nc")
+ERA_ROOT = paths.roots["main_data"] + "/ERA5_global_0.7/hourly"
+BASE_TABLE_DIR = paths.datasets["base_tables_tir-prcp"]
+STATIC_ERA_FILE = (paths.roots["main_data"] + "/ERA5_global_0.7/static/era5_invariant_07deg_COCOON-study_regrid.nc")
 
 
 TEST_MODE = False
@@ -31,8 +33,7 @@ if TEST_MODE:
     NPROC = 3
 
     OUT_ROOT = (
-        "/prj/global_water/MCS_5000km2_tables_v3/"
-        "ERA5_storm_timeseries_TEST"
+        paths.datasets["obs_mcs_5000km2_tables_ERA_Test"]
     )
 
 else:
@@ -43,8 +44,7 @@ else:
     NPROC = 4
 
     OUT_ROOT = (
-        "/prj/global_water/MCS_5000km2_tables_v3/"
-        "ERA5_storm_timeseries"
+        paths.datasets["obs_mcs_5000km2_tables_ERA"]
     )
 
 BOX_RADIUS = 0.35
@@ -383,28 +383,28 @@ OUTPUT_VARIABLES = {
         "type": "direct",
         "inputs": ["cape"],
     },
-    "era_prcp": {
-        "type": "direct",
-        "inputs": ["mtpr"],
-    },
-    "era_ice": {
-        "type": "direct",
-        "inputs": ["tciw"],
-    },
-    "qdiv_flux": {
-        "type": "direct",
-        "inputs": ["qdiv_flux"],
-    },
+    # "era_prcp": {
+    #     "type": "direct",
+    #     "inputs": ["mtpr"],
+    # },
+    # "era_ice": {
+    #     "type": "direct",
+    #     "inputs": ["tciw"],
+    # },
+    # "qdiv_flux": {
+    #     "type": "direct",
+    #     "inputs": ["qdiv_flux"],
+    # },
 
-    "div850": {
-        "type": "direct",
-        "inputs": ["d850"],
-    },
+    # "div850": {
+    #     "type": "direct",
+    #     "inputs": ["d850"],
+    # },
     
-    "p_srfc": {
-        "type": "direct",
-        "inputs": ["sp"],
-    },
+    # "p_srfc": {
+    #     "type": "direct",
+    #     "inputs": ["sp"],
+    # },
 
     "cin": {
         "type": "direct",
@@ -495,6 +495,23 @@ OUTPUT_VARIABLES = {
         "type": "direct",
         "inputs": ["t500"],
     },
+
+    
+    "u650": {
+        "type": "direct",
+        "inputs": ["u650"],
+    },
+
+    
+    # "u925": {
+    #     "type": "direct",
+    #     "inputs": ["u925"],
+    # },
+
+    #     "u100": {
+    #     "type": "direct",
+    #     "inputs": ["u100"],
+    # },
 
     "w850": {
         "type": "direct",
@@ -592,6 +609,10 @@ def open_era_input(input_name, edate):
 
     try:
         ds = xr.open_dataset(path)
+        if 'valid_time' in ds.dims:
+            ds = ds.rename({'valid_time': 'time'})
+        elif 'valid_time' in ds.coords:
+            ds = ds.rename({'valid_time': 'time'})
         ds = u_darrays.flip_lat(ds)
         ds = ds.sel(time=edate, method="nearest")
         return ds
@@ -824,6 +845,33 @@ def calc_vpd_from_dewpoint(t2m_k, d2m_k):
 # ============================================================
 # STORM TABLE HANDLING
 # ============================================================
+
+def output_valid(varname, region, year):
+
+    outfile = variable_output_file(varname, region, year)
+
+    if not os.path.isfile(outfile):
+        return False
+
+    try:
+        df = pd.read_parquet(outfile)
+
+        if len(df) == 0:
+            print("Empty:", outfile)
+            return False
+
+        frac_nan = df["value"].isna().mean()
+
+        if frac_nan == 1:
+            print("All NaN:", outfile)
+            return False
+
+        return True
+
+    except Exception as e:
+        print("Could not read:", outfile)
+        print(e)
+        return False
 
 
 
@@ -1278,7 +1326,7 @@ def process_year_all_regions(year):
 
         for region in region_names:
 
-            if not output_exists(varname, region, year):
+            if not output_valid(varname, region, year):
 
                 missing.append((varname, region))
 

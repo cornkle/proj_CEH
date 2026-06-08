@@ -1,7 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 
 # path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'

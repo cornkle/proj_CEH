@@ -5,6 +5,7 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants as cnst
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ matplotlib.rc('ytick', labelsize=10)
 import ipdb
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
-from utils import constants as cnst, u_arrays as ua
+from shared.utils import u_arrays as ua
 import glob
 from wavelet import util as wutil
 

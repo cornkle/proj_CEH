@@ -7,8 +7,8 @@ import ipdb
 import os
 import xarray as xr
 import numpy as np
-from utils import u_arrays as ua
-from utils import constants as cnst
+from shared.utils import u_arrays as ua
+from shared.utils import constants as cnst
 import pandas as pd
 
 

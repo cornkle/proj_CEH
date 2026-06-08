@@ -5,7 +5,7 @@ import glob
 import os
 import xarray as xr
 import numpy as np
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 
 def saveMonthlyClim():

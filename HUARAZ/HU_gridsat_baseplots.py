@@ -3,7 +3,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import os
-from utils import constants as cnst
+from shared.utils import constants as cnst
 from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 

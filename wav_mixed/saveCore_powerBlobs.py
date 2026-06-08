@@ -8,9 +8,9 @@ import xarray as xr
 import os
 from wav_mixed import powerBlob_utils
 import multiprocessing
-from utils import u_grid, u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 import datetime as dt
-from utils import constants as cnst
+from shared.utils import constants as cnst, u_grid
 import pickle as pkl
 
 filepath = {

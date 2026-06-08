@@ -5,7 +5,7 @@ sns.set_context("paper", font_scale=1.5)
 sns.set_style("ticks")
 import pdb
 
-from utils import u_statistics as ug
+from shared.utils import u_stats as ug
 
 import pickle as pkl
 import numpy as np

@@ -1,6 +1,6 @@
 import cdsapi
 import os
-from utils import constants as cnst
+from shared.utils import constants as cnst
 def download(year, month, day, box,file):
     c = cdsapi.Client()
 

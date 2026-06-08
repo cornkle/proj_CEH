@@ -1,9 +1,9 @@
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from utils import u_darrays
-from utils import constants as cnst
-from utils import u_statistics as us
+from shared.utils import u_darrays
+from shared.utils import constants as cnst
+from shared.utils import u_stats as us
 
 
 def calc_trend(data, month, hour=None, method=None, sig=False, wilks=False):

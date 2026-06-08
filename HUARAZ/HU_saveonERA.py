@@ -5,8 +5,8 @@ import glob
 import os
 import xarray as xr
 import numpy as np
-from utils import u_darrays as uda
-from utils import constants as cnst
+from shared.utils import u_darrays as uda
+from shared.utils import constants as cnst
 import pandas as pd
 import time
 

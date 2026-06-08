@@ -1,0 +1,279 @@
+import numpy as np
+from numpy import ma
+from matplotlib.colors import Normalize
+import scipy.stats as stats
+import statsmodels.api as sm
+import pandas as pd
+from sklearn import linear_model
+
+class MidPointNorm(Normalize):
+    def __init__(self, midpoint=0, vmin=None, vmax=None, clip=False):
+        Normalize.__init__(self,vmin, vmax, clip)
+        self.midpoint = midpoint
+
+    def __call__(self, value, clip=None):
+        if clip is None:
+            clip = self.clip
+
+        result, is_scalar = self.process_value(value)
+
+        self.autoscale_None(result)
+        vmin, vmax, midpoint = self.vmin, self.vmax, self.midpoint
+
+        if not (vmin < midpoint < vmax):
+            raise ValueError("midpoint must be between maxvalue and minvalue.")
+        elif vmin == vmax:
+            result.fill(0) # Or should it be all masked? Or 0.5?
+        elif vmin > vmax:
+            raise ValueError("maxvalue must be bigger than minvalue")
+        else:
+            vmin = float(vmin)
+            vmax = float(vmax)
+            if clip:
+                mask = ma.getmask(result)
+                result = ma.array(np.clip(result.filled(vmax), vmin, vmax),
+                                  mask=mask)
+
+            # ma division is very slow; we can take a shortcut
+            resdat = result.data
+
+            #First scale to -1 to 1 range, than to from 0 to 1.
+            resdat -= midpoint
+            resdat[resdat>0] /= abs(vmax - midpoint)
+            resdat[resdat<0] /= abs(vmin - midpoint)
+
+            resdat /= 2.
+            resdat += 0.5
+            result = ma.array(resdat, mask=result.mask, copy=False)
+
+        if is_scalar:
+            result = result[0]
+        return result
+
+
+def shape_complexity_index(geom):
+    """
+    Shape Complexity Index:
+    SCI = 1 - area / convex_hull_area
+
+    Works for shapely Polygon or MultiPolygon.
+    """
+    if geom.is_empty:
+        return float("nan")
+
+    area = geom.area
+    hull_area = geom.convex_hull.area
+
+    if hull_area == 0:
+        return float("nan")
+
+    return 1 - area / hull_area
+
+
+def histo_frequency(data, **kwargs):
+    weights = np.ones_like(data) / float(len(data)) *100
+    hist, h = np.histogram(data, weights=weights, **kwargs)
+    count, h = np.histogram(data, **kwargs)
+    return hist, count, h
+
+
+def linear_trend(x):
+    pf = np.polyfit(np.arange(len(x)), x, 1)
+    return pf
+
+
+def fdr_threshold(pvalues, alpha=0.05):
+    """Computes the FDR threshod after Wilks (2016)."""
+    p = np.sort(np.asarray(pvalues).flatten())
+    n = len(p)
+
+    return np.max(np.where(p <= (np.arange(1, n+1) / n * alpha), p, 0))
+
+
+
+def cor(x, y):
+    """It is annoying that np.corrcoef returns a matrix, this returns a float."""
+
+    return np.corrcoef(x, y)[0, 1]
+
+
+def pcor(x, y, c):
+    """Partial correlation (r2) of x and y when the effect of C is removed.
+
+    Couldn't find a routine to do exactly this in statsmodels, so I
+    rolled my own. (F. Maussion)
+
+    y and x are the variables from which we want to compute the correlation,
+    when the effect of the controlling variables in C is removed.
+
+    The residuals after regressing X/Y on Ci are the parts of X/Y that
+    cannot be predicted by Ci. The partial correlation coefficient between
+    Y and X adjusted for Ci is the correlation between these two sets of
+    residuals.
+
+    Returns
+    -------
+    tuple (r2, pvalue)
+
+    """
+
+    # Degrees of freedom
+    if len(c.shape) == 1:
+        df = len(x) - 2 - 1
+    else:
+        df = len(x) - 2 - c.shape[1]
+
+    # Dont forget the constant
+    _c = sm.add_constant(c)
+    fity = sm.OLS(y, _c).fit()
+    fitx = sm.OLS(x, _c).fit()
+
+    r = cor(fitx.resid, fity.resid)
+    t = r / np.sqrt((1. - r ** 2) / df)
+    p_e = stats.t.sf(np.abs(t), df) * 2  # error probability (two tailed)
+
+    return r, p_e
+
+
+def multi_partial_correlation(input_df):
+    """
+    Returns the sample linear partial correlation coefficients between pairs of variables,
+    controlling for all other remaining variables
+
+    Parameters
+    ----------
+    input_df : array-like, shape (n, p)
+        Array with the different variables. Each column is taken as a variable.
+
+    Returns
+    -------
+    P : array-like, shape (p, p)
+        P[i, j] contains the partial correlation of input_df[:, i] and input_df[:, j]
+        controlling for all other remaining variables.
+    """
+    partial_corr_matrix = np.zeros((input_df.shape[1], input_df.shape[1]));
+    for i, column1 in enumerate(input_df):
+        for j, column2 in enumerate(input_df):
+            control_variables = np.delete(np.arange(input_df.shape[1]), [i, j]);
+            if i==j:
+                partial_corr_matrix[i, j] = 1;
+                continue
+            data_control_variable = input_df.iloc[:, control_variables]
+            data_column1 = input_df[column1].values
+            data_column2 = input_df[column2].values
+            fit1 = linear_model.LinearRegression(fit_intercept=True)
+            fit2 = linear_model.LinearRegression(fit_intercept=True)
+            fit1.fit(data_control_variable, data_column1)
+            fit2.fit(data_control_variable, data_column2)
+            residual1 = data_column1 - (np.dot(data_control_variable, fit1.coef_) + fit1.intercept_)
+            residual2 = data_column2 - (np.dot(data_control_variable, fit2.coef_) + fit2.intercept_)
+            partial_corr_matrix[i,j] = stats.pearsonr(residual1, residual2)[0]
+    return pd.DataFrame(partial_corr_matrix, columns = input_df.columns, index = input_df.columns)
+
+
+def welch_t_test(mu1, s1, N1, mu2, s2, N2):
+    """http://en.wikipedia.org/wiki/Welch%27s_t_test"""
+
+    mu1 = np.asarray(mu1)
+    mu2 = np.asarray(mu2)
+    s1 = np.asarray(s1)
+    s2 = np.asarray(s2)
+
+    if not np.allclose(mu1.shape, mu2.shape):
+        raise ValueError('mu1 and mu2 should have the same shape')
+
+    if not np.allclose(s1.shape, s2.shape):
+        raise ValueError('s2 and s2 should have the same shape')
+
+    if not mu1.shape:
+        # Construct arrays to make calculations more succint.
+        N_i = np.array([N1, N2])
+        dof_i = N_i - 1
+        v_i = np.array([s1, s2]) ** 2
+        # Calculate t-stat, degrees of freedom, use scipy to find p-value.
+        t = (mu1 - mu2) / np.sqrt(np.sum(v_i / N_i))
+        dof = (np.sum(v_i / N_i) ** 2) / np.sum((v_i ** 2) / ((N_i ** 2) * dof_i))
+        p = stats.distributions.t.sf(np.abs(t), dof) * 2
+        return t, p
+    else:
+        ps = []
+        ts = []
+        for _mu1, _mu2, _s1, _s2 in zip(mu1.flatten(), mu2.flatten(), s1.flatten(), s2.flatten()):
+            t, p = welch_t_test(_mu1, _mu2, N1, _s1, _s2, N2)
+            ps.append(p)
+            ts.append(t)
+        return np.asarray(ts).reshape(mu1.shape), np.asarray(ps).reshape(mu1.shape)
+
+# # Generating data in our minion world
+# test_sample = 10000;
+# Math_score = np.random.randint(100,600, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Eng_score = np.random.randint(100,600, size=test_sample) - 10 * Math_score + 20 * np.random.random(size=test_sample)
+# Phys_score = Math_score * 5 - Eng_score + np.random.randint(100,600, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Econ_score = np.random.randint(100,200, size=test_sample) + 20 * np.random.random(size=test_sample)
+# Hist_score = Econ_score + 100 * np.random.random(size=test_sample)
+#
+# minions_df = pd.DataFrame(np.vstack((Math_score, Eng_score, Phys_score, Econ_score, Hist_score)).T,
+#                           columns=['Math', 'Eng', 'Phys', 'Econ', 'Hist'])
+#
+# calculate_partial_correlation(minions_df)
+
+import numpy as np
+from scipy import stats
+
+
+def ols_slope_2d(x, Y, min_bin_n=50, axis=1):
+    """
+    OLS regression of each 1D slice of Y against x, with 95% CI and p-value.
+
+    Parameters
+    ----------
+    x : (n,) array
+        Independent variable (e.g. shear bin centres).
+    Y : (m, n) or (n, m) array
+        Dependent variable (e.g. mean rainfall).
+    min_bin_n : int
+        Minimum number of finite pairs required; returns NaN row if not met.
+    axis : {0, 1}
+        Axis along which x varies (i.e. the axis you regress *over*).
+        axis=1 → each row    of Y is one regression  → output shape (m,)
+        axis=0 → each column of Y is one regression  → output shape (n,)
+
+    Returns
+    -------
+    slopes, cis, ps : each 1D array of shape equal to the *other* axis length.
+    """
+    Y = np.asarray(Y, dtype=float)
+    x = np.asarray(x, dtype=float)
+
+    # Normalise: always iterate over rows, regressing along columns (axis=1).
+    # If the user wants axis=0, transpose so columns become rows.
+    if axis == 0:
+        Y = Y.T          # (n, m) → (m, n);  rows now vary along x
+    elif axis != 1:
+        raise ValueError(f"axis must be 0 or 1, got {axis}")
+
+    # Y is now (n_regressions, n_x)
+    if Y.shape[1] != x.shape[0]:
+        raise ValueError(
+            f"x length ({x.shape[0]}) must match Y along the regression axis "
+            f"({Y.shape[1]} after any transpose)."
+        )
+
+    slopes, cis, ps = [], [], []
+
+    for row in Y:
+        mask = np.isfinite(x) & np.isfinite(row)
+        if mask.sum() < min_bin_n:
+            slopes.append(np.nan)
+            cis.append(np.nan)
+            ps.append(np.nan)
+        else:
+            res = stats.linregress(x[mask], row[mask])
+            df  = mask.sum() - 2
+            ci  = stats.t.ppf(0.975, df=df) * res.stderr
+            slopes.append(res.slope)
+            cis.append(ci)
+            ps.append(res.pvalue)
+
+    return np.array(slopes), np.array(cis), np.array(ps)
+

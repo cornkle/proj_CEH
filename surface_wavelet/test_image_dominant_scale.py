@@ -4,7 +4,7 @@ import xarray as xr
 from wavelet import util
 import pandas as pd
 import time
-from utils import u_plot
+from ceh.utils import u_plot
 
 #nice example 25.06.2006
 

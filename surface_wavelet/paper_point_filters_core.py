@@ -11,9 +11,9 @@ import xarray as xr
 import matplotlib
 import multiprocessing
 import pandas as pd
-from utils import constants as cnst
+from ceh.utils import constants as cnst
 import pickle as pkl
-from utils import u_arrays as ua
+from ceh.utils import u_arrays as ua
 import matplotlib.pyplot as plt
 
 

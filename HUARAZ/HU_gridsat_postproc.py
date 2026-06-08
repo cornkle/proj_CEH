@@ -2,8 +2,8 @@ import numpy as np
 import xarray as xr
 import os
 import pickle as pkl
-from utils import constants as cnst
-from utils import u_arrays as ua
+from shared.utils import constants as cnst
+from shared.utils import u_arrays as ua
 
 
 def month():

@@ -7,10 +7,10 @@ from eod import msg
 import xarray as xr
 import os
 import glob
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import multiprocessing
-from utils import u_arrays as ua
-from utils import u_interpolate as u_int
+from shared.utils import u_arrays as ua
+from shared.utils import u_interpolate as u_int
 
 HOD = range(24)  # hours of day
 #YRANGE = range(2004, 2015)

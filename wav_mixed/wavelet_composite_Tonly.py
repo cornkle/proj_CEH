@@ -8,7 +8,7 @@ Created on Thu Aug  4 10:15:40 2016
 import numpy as np
 import xarray as xr
 from wavelet import util
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 from scipy import ndimage
 import scipy.ndimage.filters as filters
 import matplotlib.pyplot as plt
@@ -22,8 +22,8 @@ import pandas as pd
 import pickle as pkl
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
-from CLOVER import era_geop_t3d as era_geop
-from utils import u_gis
+from projects.CLOVER import era_geop_t3d as era_geop
+from shared.utils import u_gis
 
 def composite():
     pool = multiprocessing.Pool(processes=7)

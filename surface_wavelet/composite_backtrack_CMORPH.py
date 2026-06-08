@@ -5,14 +5,15 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants, u_arrays, u_gis, u_met
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants
-from utils import constants as cnst
+from shared.utils import u_parallelise
+from shared.utils import constants as cnst
 import pickle as pkl
 
 

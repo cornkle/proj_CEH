@@ -5,11 +5,11 @@ import numpy as np
 from eod import msg
 import xarray as xr
 import os
-from utils import u_grid, u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 import multiprocessing
 import datetime as dt
 from scipy.ndimage.measurements import label
-from utils import constants as cnst
+from shared.utils import constants as cnst, u_grid
 
 
 def run():

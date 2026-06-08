@@ -5,6 +5,7 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from ceh.utils import constants as cnst
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -12,10 +13,10 @@ import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from utils import u_arrays, constants as cnst
+from ceh.utils import u_arrays
 import pickle as pkl
 import collections
-from utils import u_statistics as u_stat
+from ceh.utils import u_stats as u_stat
 from statsmodels.stats.proportion import proportion_confint
 import numpy as np
 import matplotlib.pyplot as plt

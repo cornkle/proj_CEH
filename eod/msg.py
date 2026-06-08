@@ -1,9 +1,9 @@
 import numpy as np
 import os
-from utils import u_arrays as uarr
+from shared.utils import u_arrays as uarr
 import pandas as pd
 import xarray as xr
-from utils import u_lists as ul
+from shared.utils import u_lists as ul
 # import glob
 import itertools
 

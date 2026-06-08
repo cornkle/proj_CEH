@@ -1,5 +1,5 @@
 import xarray as xr
-from utils import constants
+from shared.utils import constants
 import matplotlib.pyplot as plt
 
 

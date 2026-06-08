@@ -11,7 +11,7 @@ import glob
 import os
 import pandas as pd
 import multiprocessing
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 
 

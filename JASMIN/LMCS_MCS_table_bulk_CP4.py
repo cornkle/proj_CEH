@@ -1,6 +1,6 @@
 import numpy as np
 import xarray as xr
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 import multiprocessing
 import ipdb
 from metpy import calc

@@ -3,8 +3,8 @@ import xarray as xr
 import pandas as pd
 import glob
 import os
-from utils import constants as cnst
-from LMCS import glob_util
+from shared.utils import constants as cnst
+from shared.LMCS import glob_util
 import numpy as np
 import multiprocessing
 import pyproj

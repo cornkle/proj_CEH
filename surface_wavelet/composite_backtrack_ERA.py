@@ -5,13 +5,14 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants, u_arrays
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import pdb
 import pandas as pd
-from utils import u_parallelise, u_arrays, constants
+from shared.utils import u_parallelise
 
 import pickle as pkl
 

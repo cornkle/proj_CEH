@@ -7,7 +7,7 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import matplotlib
-from utils import constants as cnst
+from shared.utils import constants as cnst
 from scipy import ndimage
 
 

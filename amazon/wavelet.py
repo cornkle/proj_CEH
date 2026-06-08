@@ -2,7 +2,7 @@ import numpy as np
 from wavelet import util
 import xarray as xr
 import matplotlib.pyplot  as plt
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 
 def read_grads(file):

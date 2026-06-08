@@ -10,7 +10,7 @@ from matplotlib import patches
 from matplotlib import lines
 import shapely.geometry as shpg
 from matplotlib.patches import Polygon
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 
 # path = '/localscratch/wllf030/cornkle/obs_data/blob_maps_MSG/'

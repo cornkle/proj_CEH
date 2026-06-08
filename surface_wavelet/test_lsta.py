@@ -7,7 +7,7 @@ Created on Thu Aug  4 10:15:40 2016
 
 import xarray as xr
 import matplotlib.pyplot as plt
-from utils import constants
+from ceh.utils import constants
 ####these functions create plots of the average of the LSTAs and all blobs over the time period
 ####AVERAGE PLOTS!
 

@@ -4,7 +4,7 @@
 import multiprocessing
 import glob
 from eod import rewrite_data
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 def saveNetcdf(day=True):
 

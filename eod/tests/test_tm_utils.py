@@ -2,7 +2,7 @@ from eod import tm_utils, trmm
 import numpy as np
 from numpy.testing import assert_array_equal
 import unittest
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 class TestTMUtils(unittest.TestCase):
 

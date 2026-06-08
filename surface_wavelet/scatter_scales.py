@@ -12,8 +12,8 @@ import matplotlib
 import multiprocessing
 import pdb
 import pandas as pd
-from utils import u_plot
-from utils import constants
+from ceh.utils import u_plot
+from ceh.utils import constants
 import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)

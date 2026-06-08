@@ -1,12 +1,13 @@
+from shared.utils import constants as cnst
 import numpy as np
 import xarray as xr
-from utils import constants as cnst, u_arrays as ua
+from shared.utils import u_arrays as ua
 import pandas as pd
 import multiprocessing
 import pickle as pkl
 import glob
 from scipy.stats import norm
-from utils import u_statistics as u_stat
+from shared.utils import u_stats as u_stat
 import matplotlib.pyplot as plt
 
 

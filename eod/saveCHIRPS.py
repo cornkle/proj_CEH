@@ -3,7 +3,7 @@
 
 import glob
 import xarray as xr
-from utils import constants as cnst
+from shared.utils import constants as cnst
 from salem import GeoTiff
 import numpy as np
 import pandas as pd

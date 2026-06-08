@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 import glob
-from utils import constants as cnst
+from shared.utils import constants as cnst
 from matplotlib import lines
 from scipy import ndimage
 import matplotlib.patches as patches

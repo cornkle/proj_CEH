@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+from shared.utils import constants as cnst
 import salem
 import numpy as np
 from scipy.interpolate import griddata
@@ -9,7 +10,7 @@ import datetime as dt
 from eod import msg, tm_utils, trmm_clover
 import xarray as xr
 import os
-from utils import u_grid, constants as cnst
+from shared.utils import u_grid
 
 HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)

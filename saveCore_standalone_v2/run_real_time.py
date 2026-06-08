@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
+from shared.utils import u_grid
 import numpy as np
 from saveCore_standalone_v2 import util
 import xarray as xr
 from saveCore_standalone_v2 import util, run_powerBlobs
-from utils import u_grid, u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 import glob
 import os
 import pandas as pd

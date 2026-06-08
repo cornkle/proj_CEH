@@ -1,5 +1,5 @@
 import cdsapi
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 # @ct.application(title='Download data')
 # @ct.output.download()

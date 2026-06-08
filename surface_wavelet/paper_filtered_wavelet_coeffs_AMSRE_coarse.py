@@ -5,13 +5,14 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from ceh.utils import constants as cnst, u_arrays
 import numpy as np
 import xarray as xr
 import matplotlib
 import multiprocessing
 import pandas as pd
 from wavelet import util as wutil
-from utils import u_arrays, constants as cnst, u_met
+from ceh.utils import u_met
 from scipy.stats import ttest_ind as ttest
 import pickle as pkl
 import collections

@@ -4,7 +4,7 @@ from eod import trmm_clover, msg
 import xarray as xr
 import glob
 import pdb
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 HOD = range(24)  # hours of day
 YRANGE = range(2004, 2015)#2015)
 

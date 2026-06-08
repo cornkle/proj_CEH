@@ -14,7 +14,7 @@ matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 import multiprocessing
 from statsmodels.stats.proportion import proportion_confint
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 def diurnal_loop():
 

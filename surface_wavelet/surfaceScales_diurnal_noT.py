@@ -5,13 +5,14 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from ceh.utils import constants as cnst
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import pandas as pd
-from utils import constants as cnst, u_plot as uplot
+from ceh.utils import u_plot as uplot
 import numpy.ma as ma
 import pickle as pkl
 import statsmodels.stats.proportion as prop

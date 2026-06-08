@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)

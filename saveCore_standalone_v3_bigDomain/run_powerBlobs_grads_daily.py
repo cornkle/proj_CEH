@@ -4,11 +4,11 @@
 import numpy as np
 import xarray as xr
 import os
-from utils import u_grid, u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 import ccores.cores as cores
 import datetime
 import multiprocessing
-from utils import constants as cnst
+from shared.utils import constants as cnst, u_grid
 from eod import msg_bigDomain as msg
 
 

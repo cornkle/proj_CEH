@@ -6,7 +6,7 @@ import glob
 from eod import rewrite_data
 import os
 import xarray as xr
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import numpy as np
 import pandas as pd
 import datetime

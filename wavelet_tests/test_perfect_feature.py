@@ -2,11 +2,11 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 import matplotlib.gridspec as gridspec
 from scipy import ndimage
 from wavelet import util
-from utils import u_plot
+from shared.utils import u_plot
 
 
 

@@ -1,5 +1,5 @@
 import numpy as np
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 import math
 import matplotlib.pyplot as plt
 import pandas as pd

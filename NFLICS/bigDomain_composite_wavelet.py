@@ -5,6 +5,7 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants, u_arrays
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -12,12 +13,12 @@ import matplotlib
 import multiprocessing
 import pandas as pd
 from wavelet import util
-from utils import u_arrays, constants, u_met
+from shared.utils import u_met
 from scipy.stats import ttest_ind as ttest
 import pickle as pkl
 import collections
 import glob
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)

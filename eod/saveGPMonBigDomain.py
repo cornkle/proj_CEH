@@ -7,10 +7,10 @@ import xarray as xr
 import os
 import ipdb
 import glob
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import ipdb
 import multiprocessing
-from utils import u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 
 HOD = range(24)  # hours of day
 #YRANGE = range(2004, 2015)

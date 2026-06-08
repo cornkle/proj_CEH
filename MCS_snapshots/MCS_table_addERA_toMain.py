@@ -3,12 +3,12 @@ import ipdb
 import pandas as pd
 import glob
 import os
-from utils import constants as cnst
-from LMCS import glob_util
+from shared.utils import constants as cnst
+from shared.LMCS import glob_util
 import datetime
 import numpy as np
 import multiprocessing
-from utils import u_darrays
+from shared.utils import u_darrays
 
 
 MREGIONS = {

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import salem
-from utils import u_grid
+from shared.utils import u_grid
 from scipy.interpolate import griddata
 import xarray as xr
 from scipy.ndimage.measurements import label

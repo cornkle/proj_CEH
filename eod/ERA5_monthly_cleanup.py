@@ -1,6 +1,6 @@
 import glob
 import xarray as xr
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 def synop_day():
     files = glob.glob('/prj/AMMA2050/ERA5/monthly/synoptic/surface/*.nc')

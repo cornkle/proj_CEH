@@ -4,7 +4,7 @@ import glob
 import os
 
 
-from utils import u_interpolate as uint
+from shared.utils import u_interpolate as uint
 
 
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'

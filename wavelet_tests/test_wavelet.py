@@ -2,7 +2,7 @@ import pdb
 
 import numpy as np
 
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 from wav_mixed import wavelet_composite_no_overlap as wcno
 from wav_mixed import wavelet_composite_Tonly as wct
 

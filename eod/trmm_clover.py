@@ -7,9 +7,9 @@ Created on Wed Sep 14 13:50:12 2016
 
 import numpy as np
 import os
-from utils import u_arrays as uarr
-from utils import u_time as ut
-from utils import u_lists as ul
+from shared.utils import u_arrays as uarr
+from shared.utils import u_time as ut
+from shared.utils import u_lists as ul
 import itertools
 import xarray as xr
 import pandas as pd

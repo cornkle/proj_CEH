@@ -5,6 +5,7 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants as cnst, u_arrays as ua
 import numpy as np
 import xarray as xr
 
@@ -12,9 +13,9 @@ import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from utils import u_arrays, constants as cnst
+from shared.utils import u_arrays
 import pickle as pkl
-from utils import u_arrays as ua, u_darrays as uda
+from shared.utils import u_darrays as uda
 
 
 matplotlib.rc('xtick', labelsize=10)

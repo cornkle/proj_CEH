@@ -2,7 +2,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 
 

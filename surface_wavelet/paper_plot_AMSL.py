@@ -8,7 +8,7 @@ Created on Thu Aug  4 10:15:40 2016
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from utils import constants as cnst
+from ceh.utils import constants as cnst
 import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)

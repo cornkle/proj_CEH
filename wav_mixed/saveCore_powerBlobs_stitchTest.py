@@ -2,8 +2,8 @@
 
 
 from eod import mfg
-from utils import u_grid, u_interpolate as u_int
-from utils import constants as cnst
+from shared.utils import u_interpolate as u_int
+from shared.utils import constants as cnst, u_grid
 import xarray as xr
 
 

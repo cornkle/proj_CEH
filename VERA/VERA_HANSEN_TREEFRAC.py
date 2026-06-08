@@ -6,7 +6,7 @@
 
 import numpy as np
 import xarray as xr
-from utils import u_grid
+from shared.utils import u_grid
 
 file = '/prj/vera/semval/hansen_forest_2018_0.05deg/Hansen_GFC_2000-2017-v1.5_treecover_WAfrica_250m_ncecat.nc'
 

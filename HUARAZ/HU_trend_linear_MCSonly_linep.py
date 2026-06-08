@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import salem
 from scipy import stats
 import pandas as pd

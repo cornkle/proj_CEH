@@ -1,6 +1,6 @@
 import xarray as xr
 import numpy as np
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 import pickle as pkl
 
 

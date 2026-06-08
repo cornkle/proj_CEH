@@ -5,7 +5,7 @@ import itertools
 import salem
 import numpy as np
 import pdb
-from utils import constants_lappi as cnst
+from shared.utils import constants_lappi as cnst
 
 #veg = '/users/global/cornkle/w2018_bamba/qrparm.cci.4km.nc'
 

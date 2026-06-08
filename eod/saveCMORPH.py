@@ -6,7 +6,7 @@ import glob
 from eod import rewrite_data
 import os
 import xarray as xr
-from utils import constants
+from shared.utils import constants
 import numpy as np
 
 def saveNetcdf():

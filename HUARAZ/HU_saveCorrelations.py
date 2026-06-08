@@ -5,8 +5,8 @@ import ipdb
 import numpy as np
 import xarray as xr
 import pandas as pd
-from utils import constants as cnst
-from utils import u_darrays as uda
+from shared.utils import constants as cnst
+from shared.utils import u_darrays as uda
 from scipy import stats
 import multiprocessing
 import pandas as pd

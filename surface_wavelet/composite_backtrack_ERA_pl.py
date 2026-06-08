@@ -5,6 +5,7 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants as cnst, u_arrays, u_gis, u_grid, u_met
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ import pdb
 import pandas as pd
 from collections import OrderedDict
 import salem
-from utils import u_met, u_parallelise, u_gis, u_arrays, constants as cnst, u_grid
+from shared.utils import u_parallelise
 from scipy.interpolate import griddata
 
 

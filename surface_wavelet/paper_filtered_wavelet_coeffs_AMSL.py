@@ -5,13 +5,14 @@ Created on Thu Aug  4 10:15:40 2016
 @author: cornkle
 """
 
+from shared.utils import constants as cnst
 import numpy as np
 import xarray as xr
 import matplotlib
 import multiprocessing
 import ipdb
 import pandas as pd
-from utils import u_arrays, constants as cnst
+from shared.utils import u_arrays
 import pickle as pkl
 import collections
 

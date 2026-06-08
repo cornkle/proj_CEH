@@ -7,18 +7,19 @@ Routines rewriting stuff!
 @author: cornkle
 """
 
+from shared.utils import constants as cnst, u_darrays, u_grid, u_interpolate as uint
 import numpy as np
 import os
-from utils import u_arrays as uarr
+from shared.utils import u_arrays as uarr
 import pandas as pd
-from utils import u_time as ut, u_interpolate as uint, constants as cnst, u_darrays
+from shared.utils import u_time as ut
 #import datetime as dt
-from utils import u_grid
+from shared.utils import u_grid
 import xarray as xr
 import ipdb
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
-from utils import u_grid, u_interpolate as u_int
+from shared.utils import u_interpolate as u_int
 import glob
 from wavelet import util
 import datetime

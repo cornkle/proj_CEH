@@ -10,13 +10,13 @@ import pandas as pd
 import xarray as xr
 import pyproj
 
-from utils import constants as cnst
-from LMCS import glob_util
+from shared.utils import constants as cnst
+from shared.LMCS import glob_util
 
 
 REGIONS = glob_util.REGIONS
 
-YEARS = range(2000, 2021)
+YEARS = range(2000, 2022)
 NPROC = 4
 
 LMCS = cnst.lmcs_drive + "/MCS_Feng/global_v2/2d_fields/"

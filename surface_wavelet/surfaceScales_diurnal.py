@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import multiprocessing
 import pandas as pd
-from utils import constants as cnst
+from ceh.utils import constants as cnst
 import pickle as pkl
 import statsmodels.stats.proportion as prop
 

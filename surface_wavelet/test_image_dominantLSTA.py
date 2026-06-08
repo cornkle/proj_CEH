@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
-from utils import constants
+from ceh.utils import constants
 import pandas as pd
-from utils import u_plot
+from ceh.utils import u_plot
 
 #nice example 25.06.2006
 

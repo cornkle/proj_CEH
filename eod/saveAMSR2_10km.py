@@ -6,7 +6,7 @@ import glob
 from eod import rewrite_data
 import os
 import xarray as xr
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import numpy as np
 import pandas as pd
 import datetime
@@ -84,7 +84,7 @@ def saveAnomaly():
         encoding = {var: comp for var in ds.data_vars}
         ds.to_netcdf(path=cnst.elements_drive + 'global/AMSR2/daily/10km/day/sma_10km_'+date+'.nc', mode='w', encoding=encoding, format='NETCDF4')
 
-from utils import u_arrays
+from shared.utils import u_arrays
 def saveAnomalyDay():
 
     #allfiles = glob.glob(cnst.elements_drive + 'global/AMSR2/daily/10km/day/nc/AMSR2*.nc')

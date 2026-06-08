@@ -7,7 +7,7 @@ Created on Thu Aug  4 10:15:40 2016
 
 import numpy as np
 import xarray as xr
-from utils import constants
+from ceh.utils import constants
 
 
 

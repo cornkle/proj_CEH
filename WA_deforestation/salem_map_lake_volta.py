@@ -8,7 +8,7 @@ from scipy.stats.stats import pearsonr
 from matplotlib import patches
 from matplotlib import lines
 import shapely.geometry as shpg
-from utils import constants as cnst
+from shared.utils import constants as cnst
 
 
 path = cnst.network_data + 'MCSfiles/'

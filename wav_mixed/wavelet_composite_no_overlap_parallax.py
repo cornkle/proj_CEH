@@ -8,7 +8,7 @@ Created on Thu Aug  4 10:15:40 2016
 import numpy as np
 import xarray as xr
 from wavelet import util
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 from scipy import ndimage
 import matplotlib.pyplot as plt

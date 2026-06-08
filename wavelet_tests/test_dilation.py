@@ -3,7 +3,7 @@ import xarray as xr
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib
-from utils import u_arrays as ua
+from shared.utils import u_arrays as ua
 
 
 matplotlib.rc('xtick', labelsize=10)

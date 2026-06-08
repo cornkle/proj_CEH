@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy import ndimage
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import pickle as pkl
 
 matplotlib.rc('xtick', labelsize=10)

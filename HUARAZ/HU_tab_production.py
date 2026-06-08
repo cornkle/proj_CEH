@@ -9,7 +9,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 import salem
-from utils import constants as cnst
+from shared.utils import constants as cnst
 import multiprocessing
 
 

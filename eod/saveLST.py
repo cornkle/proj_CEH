@@ -5,7 +5,7 @@ import numpy as np
 from eod import msg
 import xarray as xr
 import os
-from utils import u_grid
+from shared.utils import u_grid
 import multiprocessing
 import pdb
 import pandas as pd

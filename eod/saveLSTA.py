@@ -3,11 +3,12 @@
 
 import multiprocessing
 import glob
+from shared.utils import constants as cnst
 from eod import rewrite_data
 import xarray as xr
 import numpy as np
 import pandas as pd
-from utils import constants as cnst, u_interpolate as uint
+from shared.utils import u_interpolate as uint
 
 def saveNetcdf():
 
