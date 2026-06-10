@@ -1,0 +1,28 @@
+name: work
+channels:
+  - conda-forge
+dependencies:
+  - autoflake
+  - bottleneck
+  - cdsapi
+  - fastparquet
+  - geopandas
+  - ipdb
+  - iris
+  - jupyter
+  - matplotlib
+  - metpy
+  - pyarrow
+  - salem
+  - scikit-image
+  - scikit-learn
+  - seaborn
+  - shap
+  - statsmodels
+  - xarray
+  - xesmf
+  - xgboost
+  - pip:
+    - proj-ceh==0.1.0
+
+prefix: "/users/global/cornkle/miniforge3/envs/work"
