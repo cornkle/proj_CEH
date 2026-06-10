@@ -2,7 +2,6 @@ import numpy as np
 from scipy import stats
 import xarray as xr
 import scipy.ndimage.interpolation as inter
-from shared.utils import constants
 from metpy import calc
 from metpy.units import units
 
@@ -31,7 +30,7 @@ def u_v_to_ws_wd(u,v):
     return ws,wd
 
 
-def era_Tlapse_height(month, temp, lon, lat):
+def era_Tlapse_height(file, month, temp, lon, lat):
     """
     Estimates the height (in metres) of a given atmospheric temperature from ERA-I monthly temperatures and
     geopotential heights on pressure levels
@@ -42,7 +41,7 @@ def era_Tlapse_height(month, temp, lon, lat):
     :param lat: latitude
     :return: approximate height above surface
     """
-    file =constants.ERA_MONTHLY_TUVWZ_AFRICA
+    file =file
     da = xr.open_dataset(file)
     da = da.sel(longitude=lon, latitude=lat, method='nearest')
     da = da.isel(month=month-1)
@@ -65,7 +64,7 @@ def era_Tlapse_height(month, temp, lon, lat):
     # plt.plot(zm[0:ismin+1], gradient*zm[0:ismin+1]+intercept)
     return height
 
-def era_wind_rotate(array, ptime, lat, lon, level=None, ref_angle=None):
+def era_wind_rotate(srfc, pl, array, ptime, lat, lon, level=None, ref_angle=None):
     """
 
     :param array: 2d array
@@ -88,10 +87,10 @@ def era_wind_rotate(array, ptime, lat, lon, level=None, ref_angle=None):
         ustr = 'u10'
         vstr = 'v10'
     if level == 0:
-        era = xr.open_dataset(constants.ERA_DAILY_SURFACE)
+        era = xr.open_dataset(srfc)
         point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime)
     else:
-        era = xr.open_dataset(constants.ERA_DAILY_PL)
+        era = xr.open_dataset(pl)
         point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime, level=level)
         ustr = 'u'
         vstr = 'v'
@@ -103,7 +102,7 @@ def era_wind_rotate(array, ptime, lat, lon, level=None, ref_angle=None):
 
     return rot_array
 
-def era_wind_rotate3d(array, ptime, lat, lon, level=None, ref_angle=None):
+def era_wind_rotate3d(array, srfc, pl, ptime, lat, lon, level=None, ref_angle=None):
     """
 
     :param array: 2d array
@@ -125,10 +124,10 @@ def era_wind_rotate3d(array, ptime, lat, lon, level=None, ref_angle=None):
         ustr = 'u10'
         vstr = 'v10'
     if level == 0:
-        era = xr.open_dataset(constants.ERA_DAILY_SURFACE)
+        era = xr.open_dataset(srfc)
         point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime)
     else:
-        era = xr.open_dataset(constants.ERA_DAILY_PL)
+        era = xr.open_dataset(pl)
         point = era.sel(latitude=lat, longitude=lon, method='nearest', time=ptime, level=level)
         ustr = 'u'
         vstr = 'v'
