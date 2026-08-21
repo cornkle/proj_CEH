@@ -2,13 +2,13 @@
 # Copy this to configs/paths.local.yml and fill in your actual paths
 # Do NOT commit paths.local.yml — it will be added to .gitignore
 
-machine: example
+machine: jasmin
 
 roots:
-  scratch: /path/to/scratch
+  scratch: /work/scratch-nopw2/cornkle
   network_data: /path/to/network_data
-  lmcs: /path/to/lmcs
-  other: /path/to/other
+  lmcs: /gws/ssde/j25b/lmcs
+  other: /gws/ssde/j25b/cocoon
 
 datasets:
   era5_hourly_surface: "{network_data}/data/ERA5_WAf/hourly/surface"

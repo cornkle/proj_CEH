@@ -428,9 +428,9 @@ if fdir == 'future':
 ATAG = str(sys.argv[3]) # anom or mean
 
 main = '/home/users/cornkle/linked_CP4/'
-main_lmcs = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/'
+main_lmcs = '/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/'
 data_path = main + '/'+fdir
-ancils_path = '/home/users/cornkle/impala/shared/CP4A/ncfiles/4km/ANCILS/'
+ancils_path = '/gws/ssde/j25b/impala/shared/CP4A/ncfiles/4km/ANCILS/'
 out_path = main_lmcs + 'WAf/CP4_box_JASMIN/mean3h_v2/pl_'+ATAG+'_'+ftag+'/'
 box = [-18, 25, 5, 25]  # W- E , S - N geographical coordinates box
 MINLAT = 8

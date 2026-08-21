@@ -22,7 +22,7 @@ def loop(hh):
     SHAPE = ['pl_', ''] #, 'pl_'
     XY = ['']  #'XDIR', 'YDIR', 
     
-    main_lmcs = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/mean3h_v2/'
+    main_lmcs = '/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/mean3h_v2'
 
     print('Doing hour', hh)
     
@@ -75,12 +75,16 @@ def loop(hh):
         
 
 ### Inputs:
-HOURS = [16]
-print('Doing', HOURS)
+if __name__ == '__main__':
 
-pool = multiprocessing.Pool(processes=3)
-res = pool.map(loop, HOURS)
-pool.close()
+    HOURS = [19]  # Can later change to [15, 16, 17], etc.
+    print('Doing', HOURS)
+
+    ctx = multiprocessing.get_context('spawn')
+    nproc = min(3, len(HOURS))
+
+    with ctx.Pool(processes=nproc) as pool:
+        res = pool.map(loop, HOURS)
 
 # for h in HOURS:
 #     loop(h)
