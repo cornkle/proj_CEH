@@ -36,7 +36,8 @@ plots/
 *.tif
 *.tiff
 *.tfw
-*.npz
+*ource /users/global/cornkle/miniforge3/bin/activate work
+npz
 *.nc
 
 # XML
@@ -50,5 +51,11 @@ plots/
 .DS_Store
 
 # Machine-specific config (local paths, credentials, etc)
+configs/paths.ceh-network.yml
 configs/paths.local.yml
 Thumbs.db
+# Machine-specific configuration
+configs/environments/paths.local.yml
+
+# Python build metadata
+*.egg-info/
