@@ -1,0 +1,30 @@
+Traceback (most recent call last):
+  File "/home/users/cornkle/pythonWorkspace/proj_CEH/JASMIN/CP4_sm_paper/LMCS_CP4_add_ICAPE_to_tables.py", line 529, in <module>
+    main()
+    ~~~~^^
+  File "/home/users/cornkle/pythonWorkspace/proj_CEH/JASMIN/CP4_sm_paper/LMCS_CP4_add_ICAPE_to_tables.py", line 524, in main
+    run_tag(args, tag, args.hist_table if tag == "hist" else args.fut_table)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/users/cornkle/pythonWorkspace/proj_CEH/JASMIN/CP4_sm_paper/LMCS_CP4_add_ICAPE_to_tables.py", line 443, in run_tag
+    frame, transposed = read_table(table)
+                        ~~~~~~~~~~^^^^^^^
+  File "/home/users/cornkle/pythonWorkspace/proj_CEH/JASMIN/CP4_sm_paper/LMCS_CP4_add_ICAPE_to_tables.py", line 81, in read_table
+    raw = pd.read_csv(path, index_col=0)
+  File "/home/users/cornkle/miniforge3/envs/work/lib/python3.14/site-packages/pandas/io/parsers/readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/home/users/cornkle/miniforge3/envs/work/lib/python3.14/site-packages/pandas/io/parsers/readers.py", line 306, in _read
+    return parser.read(nrows)
+           ~~~~~~~~~~~^^^^^^^
+  File "/home/users/cornkle/miniforge3/envs/work/lib/python3.14/site-packages/pandas/io/parsers/readers.py", line 1947, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+        ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        nrows
+        ^^^^^
+    )
+    ^
+  File "/home/users/cornkle/miniforge3/envs/work/lib/python3.14/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 217, in read
+    data = _concatenate_chunks(chunks, self.names)
+  File "/home/users/cornkle/miniforge3/envs/work/lib/python3.14/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 361, in _concatenate_chunks
+    warning_columns.append(column_names[name])
+                           ~~~~~~~~~~~~^^^^^^
+IndexError: list index out of range

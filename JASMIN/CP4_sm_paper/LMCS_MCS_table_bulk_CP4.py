@@ -15,7 +15,7 @@ TIMETAGS = ("hist", "fut")
 ANOMTAGS = ("anom", "mean")
 MAIN_PATH = "/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/mean3h_v2/"
 SKIP_VARS = ["lw_out_PBLtop", "lsRain"]
-HOURS = (17, 18)
+HOURS = (17, 18, 19)
 
 
 def dictionary(dummy):
@@ -27,6 +27,7 @@ def dictionary(dummy):
         dic[f"{vn}_0.25deg"] = []
         dic[f"{vn}_1deg"] = []
         dic[f"{vn}_2deg"] = []
+        dic[f"{vn}_fullBox"] = []
 
     for vn in dummy.data_vars:
         dic[f"{vn}_Smean"] = []
@@ -209,7 +210,7 @@ def file_loop(args):
             ds.close()
             return None
 
-    boxes = ((11, "_1deg"), (22, "_2deg"), (3, "_0.25deg"), (mask, "_Smean"))
+    boxes = ((11, "_1deg"), (22, "_2deg"), (3, "_0.25deg"), (mask, "_Smean"), (57, "_fullBox"))
 
     for dist, tag in boxes:
         for vn in ds.data_vars:
@@ -283,7 +284,7 @@ def run_case(timetag, anomtag, processes=4):
 
     df = pd.DataFrame.from_dict(mdic, orient="index")
     output_file = os.path.join(
-        MAIN_PATH, "tables", f"{timetag}_{anomtag}_table_JASMIN_3hmeansVersion_rainMask.csv"
+        MAIN_PATH, "tables", f"{timetag}_{anomtag}_table_JASMIN_3hmeansVersion_rainMask_fullBox.csv"
     )
     df.to_csv(output_file)
     print(f"Saved: {output_file}")

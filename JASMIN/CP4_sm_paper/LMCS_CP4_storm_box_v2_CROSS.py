@@ -237,7 +237,7 @@ def file_save(cp_dir, out_dir, vars, datestring, box, tthresh, pos):
             if "fut" in filepath:
                 ctag = 'future'
             
-            clim_files = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/WAf/climatology/'+ctag
+            clim_files = '/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/WAf/climatology/'+ctag
             
             ndatestring = str(ddate.month).zfill(2)+'-'+str(ddate.day).zfill(2)+'_'+str(h)
             if accum_3h == 1:

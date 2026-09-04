@@ -1,0 +1,58 @@
+netcdf fut_mean_Jul-Sep_18h_2d {
+dimensions:
+	latitude = 115 ;
+	longitude = 115 ;
+variables:
+	int64 latitude(latitude) ;
+	int64 longitude(longitude) ;
+	double lw_out_PBLtop(latitude, longitude) ;
+		lw_out_PBLtop:_FillValue = NaN ;
+	double lsRain(latitude, longitude) ;
+		lsRain:_FillValue = NaN ;
+	double tcwv(latitude, longitude) ;
+		tcwv:_FillValue = NaN ;
+	double sh(latitude, longitude) ;
+		sh:_FillValue = NaN ;
+	double lh(latitude, longitude) ;
+		lh:_FillValue = NaN ;
+	double t2(latitude, longitude) ;
+		t2:_FillValue = NaN ;
+	double q2(latitude, longitude) ;
+		q2:_FillValue = NaN ;
+	float shear(latitude, longitude) ;
+		shear:_FillValue = NaNf ;
+	float u_mid(latitude, longitude) ;
+		u_mid:_FillValue = NaNf ;
+	float u_srfc(latitude, longitude) ;
+		u_srfc:_FillValue = NaNf ;
+	float v_mid(latitude, longitude) ;
+		v_mid:_FillValue = NaNf ;
+	float v_srfc(latitude, longitude) ;
+		v_srfc:_FillValue = NaNf ;
+	float q_mid(latitude, longitude) ;
+		q_mid:_FillValue = NaNf ;
+	float t_mid(latitude, longitude) ;
+		t_mid:_FillValue = NaNf ;
+	float t_srfc(latitude, longitude) ;
+		t_srfc:_FillValue = NaNf ;
+	float q_srfc(latitude, longitude) ;
+		q_srfc:_FillValue = NaNf ;
+	double geoH_srfc(latitude, longitude) ;
+		geoH_srfc:_FillValue = NaN ;
+	double lsRain_noon(latitude, longitude) ;
+		lsRain_noon:_FillValue = NaN ;
+	double lwout_noon(latitude, longitude) ;
+		lwout_noon:_FillValue = NaN ;
+	double SM(latitude, longitude) ;
+		SM:_FillValue = NaN ;
+	double lw_net(latitude, longitude) ;
+		lw_net:_FillValue = NaN ;
+	double sw_in(latitude, longitude) ;
+		sw_in:_FillValue = NaN ;
+	double sw_net(latitude, longitude) ;
+		sw_net:_FillValue = NaN ;
+	double u10(latitude, longitude) ;
+		u10:_FillValue = NaN ;
+	double v10(latitude, longitude) ;
+		v10:_FillValue = NaN ;
+}

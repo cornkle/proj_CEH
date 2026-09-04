@@ -1,0 +1,26 @@
+import iris
+import matplotlib.pyplot as plt
+import numpy as np
+import cartopy.crs as ccrs
+
+test_cube = iris.load_cube("/gws/ssde/j25b/kscale/DYAMOND3_reruns/5km-RAL3p3-tuned/glm/field.pp/apverb.pp/glm.n2560_RAL3p3_tuned.apverb_20200731T1200Z.pp","moisture_content_of_soil_layer")
+
+SM_cube = test_cube.data
+SM_data = SM_cube[0,0,1200:2600,0:750]
+
+lat = test_cube.coord('latitude').points
+lon = test_cube.coord('longitude').points
+lat = lat[1200:2600]
+lon = lon[0:750]
+lon2D, lat2D = np.meshgrid(lon,lat)
+
+################################################################
+
+f=plt.figure()
+
+a1 = f.add_subplot(111,projection=ccrs.PlateCarree()) 
+plt.contourf(lon,lat,SM_data,transform=ccrs.PlateCarree())
+a1.grid() 
+a1.coastlines() 
+
+plt.show()

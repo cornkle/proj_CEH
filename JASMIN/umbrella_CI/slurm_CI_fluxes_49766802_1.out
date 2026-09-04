@@ -1,0 +1,287 @@
+================================================================================
+Array job ID : 49766802
+Array task   : 1
+Node         : host1141.jc.rl.ac.uk
+Experiment   : standard
+Lag          : -2 h
+Script       : /home/users/cornkle/pythonWorkspace/proj_CEH/JASMIN/umbrella_CI/umbrella_CI_composites_200km_fluxes.py
+Started      : 2026-09-04T16:47:19+01:00
+================================================================================
+2026-09-04 16:47:25 INFO aligned: 3431 rows (598 exact duplicate rows)
+2026-09-04 16:47:25 INFO right: 3745 rows (672 exact duplicate rows)
+2026-09-04 16:47:25 INFO reverse: 8585 rows (1493 exact duplicate rows)
+2026-09-04 16:47:25 INFO left: 5602 rows (978 exact duplicate rows)
+2026-09-04 16:47:27 INFO Ancillary metrics: 500/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 1000/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 1500/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 2000/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 2500/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 3000/3305 unique locations
+2026-09-04 16:47:28 INFO Ancillary metrics: 3305/3305 unique locations
+2026-09-04 16:47:28 INFO Starting composites for CI hours [14] at t=-2 h
+2026-09-04 16:47:28 INFO Filter summary:
+           all  inland  final
+category                     
+aligned    425     401    326
+left       847     819    687
+reverse   1579    1533   1312
+right      503     484    405
+2026-09-04 16:47:28 INFO Processing 2730 cases in 181 target-time groups; resuming at group 0
+2026-09-04 16:47:28 INFO Time group 1/181: 2020-04-01 12:00:00 (10 cases)
+2026-09-04 16:48:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:48:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:48:10 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:48:11 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:48:11 INFO Field times for 2020-04-01 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:48:30 INFO Checkpoint saved: group 1; successes={'aligned': 7, 'right': 2, 'reverse': 1, 'left': 0}; failures=0
+2026-09-04 16:48:30 INFO Time group 2/181: 2020-04-02 12:00:00 (11 cases)
+2026-09-04 16:49:16 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:49:16 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:49:16 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:49:16 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:49:16 INFO Field times for 2020-04-02 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:49:37 INFO Checkpoint saved: group 2; successes={'aligned': 14, 'right': 3, 'reverse': 2, 'left': 2}; failures=0
+2026-09-04 16:49:37 INFO Time group 3/181: 2020-04-03 12:00:00 (11 cases)
+2026-09-04 16:50:15 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:50:15 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:50:15 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:50:15 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:50:15 INFO Field times for 2020-04-03 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:50:36 INFO Checkpoint saved: group 3; successes={'aligned': 15, 'right': 3, 'reverse': 8, 'left': 6}; failures=0
+2026-09-04 16:50:36 INFO Time group 4/181: 2020-04-04 12:00:00 (11 cases)
+2026-09-04 16:51:13 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:51:13 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:51:14 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:51:14 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:51:14 INFO Field times for 2020-04-04 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:51:34 INFO Checkpoint saved: group 4; successes={'aligned': 15, 'right': 4, 'reverse': 18, 'left': 6}; failures=0
+2026-09-04 16:51:34 INFO Time group 5/181: 2020-04-05 12:00:00 (10 cases)
+2026-09-04 16:52:12 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:52:12 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:52:13 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:52:13 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:52:13 INFO Field times for 2020-04-05 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:52:32 INFO Checkpoint saved: group 5; successes={'aligned': 16, 'right': 5, 'reverse': 23, 'left': 9}; failures=0
+2026-09-04 16:52:32 INFO Time group 6/181: 2020-04-06 12:00:00 (16 cases)
+2026-09-04 16:53:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:53:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:53:11 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:53:11 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:53:11 INFO Field times for 2020-04-06 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:53:39 INFO Checkpoint saved: group 6; successes={'aligned': 19, 'right': 10, 'reverse': 28, 'left': 12}; failures=0
+2026-09-04 16:53:39 INFO Time group 7/181: 2020-04-07 12:00:00 (20 cases)
+2026-09-04 16:54:17 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:54:17 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:54:18 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:54:18 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:54:18 INFO Field times for 2020-04-07 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:54:51 INFO Checkpoint saved: group 7; successes={'aligned': 26, 'right': 10, 'reverse': 31, 'left': 22}; failures=0
+2026-09-04 16:54:51 INFO Time group 8/181: 2020-04-08 12:00:00 (8 cases)
+2026-09-04 16:55:28 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:55:28 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:55:29 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:55:29 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:55:29 INFO Field times for 2020-04-08 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:55:43 INFO Checkpoint saved: group 8; successes={'aligned': 27, 'right': 11, 'reverse': 34, 'left': 25}; failures=0
+2026-09-04 16:55:43 INFO Time group 9/181: 2020-04-09 12:00:00 (12 cases)
+2026-09-04 16:56:21 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:56:22 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:56:22 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:56:22 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:56:22 INFO Field times for 2020-04-09 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:56:46 INFO Checkpoint saved: group 9; successes={'aligned': 28, 'right': 15, 'reverse': 40, 'left': 26}; failures=0
+2026-09-04 16:56:46 INFO Time group 10/181: 2020-04-10 12:00:00 (16 cases)
+2026-09-04 16:57:25 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:57:26 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:57:26 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:57:26 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:57:26 INFO Field times for 2020-04-10 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:57:55 INFO Checkpoint saved: group 10; successes={'aligned': 30, 'right': 19, 'reverse': 45, 'left': 31}; failures=0
+2026-09-04 16:57:55 INFO Time group 11/181: 2020-04-11 12:00:00 (13 cases)
+2026-09-04 16:58:34 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:58:34 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:58:34 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:58:34 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:58:34 INFO Field times for 2020-04-11 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 16:58:58 INFO Checkpoint saved: group 11; successes={'aligned': 33, 'right': 19, 'reverse': 50, 'left': 36}; failures=0
+2026-09-04 16:58:58 INFO Time group 12/181: 2020-04-12 12:00:00 (13 cases)
+2026-09-04 16:59:37 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:59:37 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 16:59:38 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:59:38 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 16:59:38 INFO Field times for 2020-04-12 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:00:02 INFO Checkpoint saved: group 12; successes={'aligned': 34, 'right': 22, 'reverse': 54, 'left': 41}; failures=0
+2026-09-04 17:00:02 INFO Time group 13/181: 2020-04-13 12:00:00 (27 cases)
+2026-09-04 17:00:42 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:00:42 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:00:42 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:00:42 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:00:42 INFO Field times for 2020-04-13 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:01:31 INFO Checkpoint saved: group 13; successes={'aligned': 39, 'right': 27, 'reverse': 62, 'left': 50}; failures=0
+2026-09-04 17:01:31 INFO Time group 14/181: 2020-04-14 12:00:00 (8 cases)
+2026-09-04 17:02:11 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:02:11 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:02:11 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:02:12 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:02:12 INFO Field times for 2020-04-14 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:02:27 INFO Checkpoint saved: group 14; successes={'aligned': 44, 'right': 27, 'reverse': 62, 'left': 53}; failures=0
+2026-09-04 17:02:27 INFO Time group 15/181: 2020-04-15 12:00:00 (26 cases)
+2026-09-04 17:03:04 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:03:04 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:03:04 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:03:04 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:03:04 INFO Field times for 2020-04-15 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:03:49 INFO Checkpoint saved: group 15; successes={'aligned': 45, 'right': 28, 'reverse': 70, 'left': 69}; failures=0
+2026-09-04 17:03:49 INFO Time group 16/181: 2020-04-16 12:00:00 (22 cases)
+2026-09-04 17:04:29 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:04:30 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:04:30 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:04:30 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:04:30 INFO Field times for 2020-04-16 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:05:09 INFO Checkpoint saved: group 16; successes={'aligned': 47, 'right': 28, 'reverse': 80, 'left': 79}; failures=0
+2026-09-04 17:05:09 INFO Time group 17/181: 2020-04-17 12:00:00 (36 cases)
+2026-09-04 17:05:49 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:05:49 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:05:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:05:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:05:49 INFO Field times for 2020-04-17 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:07:01 INFO Checkpoint saved: group 17; successes={'aligned': 58, 'right': 35, 'reverse': 91, 'left': 86}; failures=0
+2026-09-04 17:07:01 INFO Time group 18/181: 2020-04-18 12:00:00 (19 cases)
+2026-09-04 17:07:44 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:07:45 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:07:45 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:07:45 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:07:45 INFO Field times for 2020-04-18 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:08:27 INFO Checkpoint saved: group 18; successes={'aligned': 61, 'right': 36, 'reverse': 97, 'left': 95}; failures=0
+2026-09-04 17:08:27 INFO Time group 19/181: 2020-04-19 12:00:00 (11 cases)
+2026-09-04 17:09:09 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:09:09 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:09:09 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:09:09 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:09:09 INFO Field times for 2020-04-19 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:09:30 INFO Checkpoint saved: group 19; successes={'aligned': 65, 'right': 36, 'reverse': 97, 'left': 102}; failures=0
+2026-09-04 17:09:30 INFO Time group 20/181: 2020-04-20 12:00:00 (14 cases)
+2026-09-04 17:10:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:10:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:10:10 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:10:11 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:10:11 INFO Field times for 2020-04-20 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:10:43 INFO Checkpoint saved: group 20; successes={'aligned': 67, 'right': 37, 'reverse': 103, 'left': 107}; failures=0
+2026-09-04 17:10:43 INFO Time group 21/181: 2020-04-21 12:00:00 (23 cases)
+2026-09-04 17:11:23 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:11:23 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:11:24 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:11:24 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:11:24 INFO Field times for 2020-04-21 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:12:08 INFO Checkpoint saved: group 21; successes={'aligned': 68, 'right': 44, 'reverse': 111, 'left': 114}; failures=0
+2026-09-04 17:12:08 INFO Time group 22/181: 2020-04-22 12:00:00 (26 cases)
+2026-09-04 17:12:48 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:12:48 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:12:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:12:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:12:49 INFO Field times for 2020-04-22 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:13:36 INFO Checkpoint saved: group 22; successes={'aligned': 74, 'right': 49, 'reverse': 121, 'left': 119}; failures=0
+2026-09-04 17:13:36 INFO Time group 23/181: 2020-04-23 12:00:00 (22 cases)
+2026-09-04 17:14:16 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:14:16 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:14:17 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:14:17 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:14:17 INFO Field times for 2020-04-23 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:14:57 INFO Checkpoint saved: group 23; successes={'aligned': 76, 'right': 49, 'reverse': 138, 'left': 122}; failures=0
+2026-09-04 17:14:57 INFO Time group 24/181: 2020-04-24 12:00:00 (24 cases)
+2026-09-04 17:15:38 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:15:38 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:15:38 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:15:39 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:15:39 INFO Field times for 2020-04-24 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:16:22 INFO Checkpoint saved: group 24; successes={'aligned': 79, 'right': 51, 'reverse': 151, 'left': 128}; failures=0
+2026-09-04 17:16:22 INFO Time group 25/181: 2020-04-25 12:00:00 (28 cases)
+2026-09-04 17:17:03 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:17:03 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:17:03 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:17:03 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:17:03 INFO Field times for 2020-04-25 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:17:52 INFO Checkpoint saved: group 25; successes={'aligned': 88, 'right': 56, 'reverse': 160, 'left': 133}; failures=0
+2026-09-04 17:17:52 INFO Time group 26/181: 2020-04-26 12:00:00 (8 cases)
+2026-09-04 17:18:32 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:18:33 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:18:33 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:18:33 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:18:33 INFO Field times for 2020-04-26 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:18:49 INFO Checkpoint saved: group 26; successes={'aligned': 89, 'right': 59, 'reverse': 162, 'left': 135}; failures=0
+2026-09-04 17:18:49 INFO Time group 27/181: 2020-04-27 12:00:00 (31 cases)
+2026-09-04 17:19:29 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:19:30 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:19:30 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:19:30 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:19:30 INFO Field times for 2020-04-27 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:20:24 INFO Checkpoint saved: group 27; successes={'aligned': 90, 'right': 60, 'reverse': 168, 'left': 158}; failures=0
+2026-09-04 17:20:24 INFO Time group 28/181: 2020-04-28 12:00:00 (31 cases)
+2026-09-04 17:21:04 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:21:04 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:21:05 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:21:05 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:21:05 INFO Field times for 2020-04-28 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:22:00 INFO Checkpoint saved: group 28; successes={'aligned': 96, 'right': 63, 'reverse': 184, 'left': 164}; failures=0
+2026-09-04 17:22:00 INFO Time group 29/181: 2020-04-29 12:00:00 (30 cases)
+2026-09-04 17:22:41 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:22:41 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:22:41 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:22:42 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:22:42 INFO Field times for 2020-04-29 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:23:36 INFO Checkpoint saved: group 29; successes={'aligned': 96, 'right': 71, 'reverse': 200, 'left': 170}; failures=0
+2026-09-04 17:23:36 INFO Time group 30/181: 2020-04-30 12:00:00 (32 cases)
+2026-09-04 17:24:17 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:24:17 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:24:17 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:24:18 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:24:18 INFO Field times for 2020-04-30 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:25:13 INFO Checkpoint saved: group 30; successes={'aligned': 99, 'right': 81, 'reverse': 212, 'left': 177}; failures=0
+2026-09-04 17:25:13 INFO Time group 31/181: 2020-05-01 12:00:00 (18 cases)
+2026-09-04 17:25:54 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:25:54 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:25:55 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:25:55 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:25:55 INFO Field times for 2020-05-01 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:26:27 INFO Checkpoint saved: group 31; successes={'aligned': 103, 'right': 82, 'reverse': 219, 'left': 183}; failures=0
+2026-09-04 17:26:27 INFO Time group 32/181: 2020-05-02 12:00:00 (31 cases)
+2026-09-04 17:27:08 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:27:08 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:27:08 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:27:08 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:27:08 INFO Field times for 2020-05-02 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:28:28 INFO Checkpoint saved: group 32; successes={'aligned': 104, 'right': 87, 'reverse': 239, 'left': 188}; failures=0
+2026-09-04 17:28:28 INFO Time group 33/181: 2020-05-03 12:00:00 (11 cases)
+2026-09-04 17:29:09 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:29:10 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:29:10 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:29:10 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:29:10 INFO Field times for 2020-05-03 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:29:31 INFO Checkpoint saved: group 33; successes={'aligned': 105, 'right': 89, 'reverse': 245, 'left': 190}; failures=0
+2026-09-04 17:29:31 INFO Time group 34/181: 2020-05-04 12:00:00 (15 cases)
+2026-09-04 17:30:12 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:30:12 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:30:13 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:30:13 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:30:13 INFO Field times for 2020-05-04 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:30:41 INFO Checkpoint saved: group 34; successes={'aligned': 106, 'right': 89, 'reverse': 249, 'left': 200}; failures=0
+2026-09-04 17:30:41 INFO Time group 35/181: 2020-05-05 12:00:00 (24 cases)
+2026-09-04 17:31:20 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:31:21 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:31:21 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:31:21 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:31:21 INFO Field times for 2020-05-05 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:32:04 INFO Checkpoint saved: group 35; successes={'aligned': 112, 'right': 95, 'reverse': 257, 'left': 204}; failures=0
+2026-09-04 17:32:04 INFO Time group 36/181: 2020-05-06 12:00:00 (17 cases)
+2026-09-04 17:32:48 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:32:48 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:32:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:32:49 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:32:49 INFO Field times for 2020-05-06 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00
+2026-09-04 17:33:19 INFO Checkpoint saved: group 36; successes={'aligned': 115, 'right': 100, 'reverse': 260, 'left': 210}; failures=0
+2026-09-04 17:33:19 INFO Time group 37/181: 2020-05-07 12:00:00 (34 cases)
+2026-09-04 17:33:58 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:33:58 WARNING m01s03i217 has no time-mean cell method; using the sole available cube
+2026-09-04 17:33:58 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:33:59 WARNING m01s03i234 has no time-mean cell method; using the sole available cube
+2026-09-04 17:33:59 INFO Field times for 2020-05-07 12:00:00: q_low=12:00, u10=12:00, v10=12:00, olr=12:02, sm=12:00, rain=12:00, u600=12:00, v600=12:00, w925=12:00, w850=12:00, w600=12:00, t1p5=12:00, sh_flux=12:00, lh_flux=12:00

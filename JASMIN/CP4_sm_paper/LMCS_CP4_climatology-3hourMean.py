@@ -153,19 +153,19 @@ else:
     FTAG = 'future'
 
 main = '/home/users/cornkle/linked_CP4/'
-main_lmcs = '/gws/nopw/j04/lmcs/cklein/CP_models/MCS_files/SAf/'
+main_lmcs = '/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/WAf/'
 data_path = main + '/'+fdir
 out_path = main_lmcs + 'climatology/'+FTAG+'/'
-box = [10,38, -36,-16] #SAf # WAf [-19, 30, 4, 26]  # W- E , S - N geographical coordinates box
+box = [-19, 30, 4, 26] #[10,38, -36,-16] #SAf # WAf [-19, 30, 4, 26]  # W- E , S - N geographical coordinates box
 
 years = np.array(np.arange(2003,2004), dtype=str)
-months = (['11', '12', '01']) #(['07', '08', '09'])
+months = (['07', '08', '09']) #(['07', '08', '09'])
 days = np.array(np.arange(1,31), dtype=str)
 
 HOUR= int(sys.argv[1]) # hour to extract
 
 
-vars = ['sw_net', 'lw_net', 'sw_in','sh', 'lh', 't2', 'q2', 'u10', 'v10','colWetMass', 'colDryMass'] #SM
+vars = ['sw_net', 'lw_net', 'sw_in','sh', 'lh', 't2', 'q2', 'u10', 'v10','colWetMass', 'colDryMass', 'SM'] #SM
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))

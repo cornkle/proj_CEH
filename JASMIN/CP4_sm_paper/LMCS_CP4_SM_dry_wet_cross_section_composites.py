@@ -13,6 +13,15 @@ MAIN_PATH = "/gws/ssde/j25b/lmcs/cklein/CP_models/MCS_files/WAf/CP4_box_JASMIN/m
 OUTDIR = os.path.join(MAIN_PATH, "composites")
 HOURS, DIRECTIONS = (17, 18), ("XDIR", "YDIR")
 PROCESSES, CHUNK_SIZE, DX_M = 4, 250, 4400
+SELECTIONS = ("all", "area_lt10000", "vmid_2deg_negative", "vmid_full_negative",
+              "vmid_full_negative_area_lt10000")
+SELECTION_DESCRIPTIONS = {
+    "all": "no additional wind or storm-area filter",
+    "area_lt10000": "cold-cloud area < 10000 km2",
+    "vmid_2deg_negative": "absolute mean-file v_mid_2deg < 0 m s-1",
+    "vmid_full_negative": "absolute mean-file full-box mean v_mid < 0 m s-1",
+    "vmid_full_negative_area_lt10000": "full-box mean v_mid < 0 m s-1 and cold-cloud area < 10000 km2",
+}
 
 
 def parse_key(path_or_name):
@@ -34,12 +43,18 @@ def file_hour(path):
 
 
 def read_groups(climate):
-    """Read the exact DRY/WET membership produced by the 2-D script."""
+    """Read every DRY/WET subset membership from the 2-D audit."""
     path = os.path.join(OUTDIR, f"{climate}_SM_composite_classification_17-18UTC.csv")
     table = pd.read_csv(path)
     table = table[table["classification"].isin(["dry", "wet"])].copy()
-    groups = {parse_key(row.file): row.classification for row in table.itertuples()}
-    print(f"{climate}: loaded {len(groups)} retained DRY/WET classifications from {path}")
+    missing = [selection for selection in SELECTIONS if selection != "all" and selection not in table]
+    if missing:
+        raise KeyError(f"{path} is missing {missing}; rerun the updated 2-D DRY/WET script first")
+    groups = {"all": {parse_key(row.file): row.classification for row in table.itertuples()}}
+    for selection in SELECTIONS[1:]:
+        keep = table[selection] if table[selection].dtype == bool else table[selection].astype(str).str.lower().eq("true")
+        groups[selection] = {parse_key(row.file): row.classification for row in table[keep].itertuples()}
+    print(f"{climate}: " + ", ".join(f"{selection}={len(groups[selection])}" for selection in SELECTIONS))
     return groups
 
 
@@ -126,9 +141,9 @@ def matched_files(climate, direction, groups):
     return pairs, stats
 
 
-def run_direction(climate, direction, groups):
+def run_direction(climate, direction, selection, groups):
     pairs, stats = matched_files(climate, direction, groups)
-    print(f"{climate} {direction}: {stats}")
+    print(f"{climate} {direction} {selection}: {stats}")
     if not pairs:
         print(f"No matched classified files for {climate} {direction}; skipping")
         return
@@ -165,21 +180,24 @@ def run_direction(climate, direction, groups):
             out = xr.Dataset(data_vars, coords=coords)
             out.attrs.update(climate=climate, dataset_type=kind, direction=direction, soil_moisture_class=group.upper(),
                              hours="17,18", n_storms=total[kind][group]["n"],
+                             selection=selection, additional_selection=SELECTION_DESCRIPTIONS[selection],
                              classification_source=f"{climate}_SM_composite_classification_17-18UTC.csv")
-            path = os.path.join(OUTDIR, f"{climate}_{kind}_{group}_{direction}_cross_section_17-18UTC.nc")
+            suffix = "" if selection == "all" else f"_{selection}"
+            path = os.path.join(OUTDIR, f"{climate}_{kind}_{group}_{direction}_cross_section_17-18UTC{suffix}.nc")
             out.to_netcdf(path, encoding={vn: {"zlib": True, "complevel": 4} for vn in out.data_vars})
             print(f"Saved {path} ({total[kind][group]['n']} storms)")
 
     pd.DataFrame(records, columns=["cross_section_file", "classification", "status"]).to_csv(
-        os.path.join(OUTDIR, f"{climate}_{direction}_cross_section_audit_17-18UTC.csv"), index=False)
+        os.path.join(OUTDIR, f"{climate}_{direction}_cross_section_audit_17-18UTC{'_' + selection if selection != 'all' else ''}.csv"), index=False)
 
 
 def main():
     os.makedirs(OUTDIR, exist_ok=True)
     for climate in ("hist", "fut"):
-        groups = read_groups(climate)
+        selections = read_groups(climate)
         for direction in DIRECTIONS:
-            run_direction(climate, direction, groups)
+            for selection in SELECTIONS:
+                run_direction(climate, direction, selection, selections[selection])
 
 
 if __name__ == "__main__":

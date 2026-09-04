@@ -1,4 +1,3 @@
-2006-09-28_18:00:00_32_lonXlat_[-3.3]_[9.4].ncimport numpy as np
 import xarray as xr
 import os
 import ipdb
@@ -165,7 +164,7 @@ days = np.array(np.arange(1,31), dtype=str)
 HOUR= int(sys.argv[1]) # hour to extract
 
 
-vars = ['sw_net', 'lw_net', 'sw_in','pblH','sh', 'lh', 't2', 'q2', 'SM', 'u10', 'v10','colWetMass', 'colDryMass', 'lw_out_PBLtop','lsRain','t_pl', 'u_pl', 'v_pl', 'q_pl', 'omega_pl', 'geoH_pl']
+vars = ['pblH','lw_out_PBLtop','lsRain','t_pl', 'u_pl', 'v_pl', 'q_pl', 'omega_pl', 'geoH_pl'] # as 3-hour means: 'sw_net', 'lw_net', 'sw_in','sh', 'lh', 't2', 'q2', 'SM', 'u10', 'v10','colWetMass', 'colDryMass', 
 datelist = []
 for y,m,d in itertools.product(years, months, days):
     datelist.append(y+m+str(d).zfill(2))
