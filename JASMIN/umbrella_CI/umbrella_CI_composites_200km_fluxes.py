@@ -646,7 +646,10 @@ def run_one_lag(args: argparse.Namespace, cases_with_filters: pd.DataFrame) -> N
             logging.info("Checkpoint saved: group %d; successes=%s; failures=%d", next_group, successful, len(failures))
 
     means = means_from_accumulators(sums, counts)
-    nc_path = run_dir / "200km_fluxes.nc"
+
+    ci_hour_tag = "_".join(f"{hour:02d}" for hour in args.ci_hours)
+    nc_path = run_dir / f"CI{ci_hour_tag}_200km_fluxes_{lag_tag(args.lag_hours)}.nc"
+  
     write_netcdf(nc_path, processor, means, counts, successful, args)
     pd.DataFrame({"category": DIRECTION_ORDER,
                   "attempted": [attempted[c] for c in DIRECTION_ORDER],
