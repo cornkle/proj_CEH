@@ -4,11 +4,19 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
+.gitignore
 
 # VS Code local settings
 .vscode/
 shapes/
 UPSCALE/
+
+#JASMIN
+*.slurm
+*.slum
+*.err
+*.out
+*.sh
 
 # Vim swap files
 *.swp

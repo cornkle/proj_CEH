@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcs-snapshots-cocoon-dev"
+version = "0.1.0"
+description = "Isolated development and regression-test framework for COCOON MCS sampling"
+requires-python = ">=3.9"
+# Existing scientific environment supplies numpy, xarray, pandas, scipy, shapely, skimage, pyproj, pyarrow.
+
+[tool.setuptools.packages.find]
+include = ["cocoon_core*", "datasets*", "models*", "reference*"]

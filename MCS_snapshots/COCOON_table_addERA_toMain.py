@@ -7,7 +7,7 @@ import xarray as xr
 import multiprocessing as mp
 from shared.paths import load_paths
 from shared.utils import u_darrays
-from shared.LMCS import glob_util
+from shared.COCOON import glob_util
 
 
 # ============================================================

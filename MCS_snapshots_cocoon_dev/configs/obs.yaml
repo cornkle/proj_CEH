@@ -1,0 +1,5 @@
+# Production-derived settings. The original code is preserved under reference/.
+input_root: /prj/global_water/MCS_Feng/global_v2/2d_fields
+production_base: /prj/global_water/MCS_5000km2_tables_v3/base_tables_tir-prcp
+production_era: /prj/global_water/MCS_5000km2_tables_v3/ERA5_storm_timeseries
+# No development script ever writes to these production paths.
